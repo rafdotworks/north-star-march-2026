@@ -1,0 +1,49 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core colors */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 0 0% 0%; /* Pure black */
+
+    /* Grays */
+    --gray-subtle: 0 0% 96%; /* For subtle backgrounds */
+    --gray-hover: 0 0% 90%; /* For hover states */
+    --gray-muted: 0 0% 45%; /* For secondary text */
+
+    /* Border */
+    --border: 0 0% 90%; /* Consistent with hover state */
+  }
+
+  .dark {
+    --background: 0 0% 0%; /* Pure black */
+    --foreground: 0 0% 100%; /* Pure white */
+    --gray-subtle: 0 0% 10%; /* Dark mode subtle */
+    --gray-hover: 0 0% 15%; /* Dark mode hover */
+    --gray-muted: 0 0% 55%; /* Dark mode secondary text */
+    --border: 0 0% 15%; /* Dark mode border */
+  }
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  @apply bg-background text-foreground;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+}
