@@ -87,8 +87,7 @@ export default function Page() {
               <span className="text-foreground">Based in Toronto.</span>
               <span className="text-foreground/60">
                 {" "}
-                I grew up on Italy's Amalfi Coast and lived in Amsterdam and
-                NYC.
+                I grew up on Italy's Amalfi Coast and lived in Lisbon and NYC.
               </span>
             </p>
 
