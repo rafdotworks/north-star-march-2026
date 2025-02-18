@@ -399,6 +399,7 @@ export default function Page() {
                     width={800}
                     height={600}
                     className="w-auto max-w-full max-h-[80vh] rounded-lg"
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <span
                     className="text-sm text-foreground/40"
