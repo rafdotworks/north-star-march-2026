@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import localFont from "next/font/local";
 import Link from "next/link";
+import Image from "next/image";
 
 const eduMarist = localFont({
   src: "../public/fonts/EduMarist-Regular.woff2",
@@ -213,9 +214,11 @@ export default function Page() {
                   className="aspect-[3/4] md:aspect-[2/3] cursor-pointer"
                   onClick={() => setIsPhotosModalOpen(true)}
                 >
-                  <img
+                  <Image
                     src={photo}
                     alt={`Photo ${index + 1}`}
+                    width={800}
+                    height={600}
                     className="w-full h-full object-cover rounded-lg"
                   />
                 </div>
@@ -390,11 +393,12 @@ export default function Page() {
                   className="w-full flex flex-col items-center space-y-3"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <img
+                  <Image
                     src={photo}
                     alt={`Photo ${index + 1}`}
+                    width={800}
+                    height={600}
                     className="w-auto max-w-full max-h-[80vh] rounded-lg"
-                    onClick={(e) => e.stopPropagation()}
                   />
                   <span
                     className="text-sm text-foreground/40"
