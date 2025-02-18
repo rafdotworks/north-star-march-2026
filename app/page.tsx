@@ -210,7 +210,7 @@ export default function Page() {
               {photos.slice(0, 3).map((photo, index) => (
                 <div
                   key={index}
-                  className="aspect-[4/3] cursor-pointer"
+                  className="aspect-[3/4] md:aspect-[2/3] cursor-pointer"
                   onClick={() => setIsPhotosModalOpen(true)}
                 >
                   <img
@@ -344,6 +344,11 @@ export default function Page() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsPhotosModalOpen(false);
+              }
+            }}
           >
             {/* Sticky close button */}
             <motion.button
@@ -351,7 +356,10 @@ export default function Page() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
               className="sticky top-6 float-right mr-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
-              onClick={() => setIsPhotosModalOpen(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsPhotosModalOpen(false);
+              }}
             >
               <svg
                 width="24"
@@ -370,7 +378,7 @@ export default function Page() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full max-w-4xl mx-auto px-6 pb-20 space-y-6"
+              className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
               onClick={(e) => e.stopPropagation()}
             >
               {photos.map((photo, index) => (
@@ -379,13 +387,21 @@ export default function Page() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="w-full"
+                  className="w-full flex flex-col items-center space-y-3"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <img
                     src={photo}
                     alt={`Photo ${index + 1}`}
-                    className="w-full rounded-lg"
+                    className="w-auto max-w-full max-h-[80vh] rounded-lg"
+                    onClick={(e) => e.stopPropagation()}
                   />
+                  <span
+                    className="text-sm text-foreground/40"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {photo.split("/").pop()?.split(".")[0]}
+                  </span>
                 </motion.div>
               ))}
             </motion.div>
