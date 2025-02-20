@@ -33,15 +33,15 @@ export default function Page() {
   ];
 
   const photos = [
-    "/photos/marianne.jpeg",
-    "/photos/josh.JPG",
-    "/photos/omar.JPG",
-    "/photos/jordi.JPG",
-    "/photos/adrien.JPG",
-    "/photos/flo.JPG",
-    "/photos/kelindi.JPG",
-    "/photos/vin.JPG",
-    "/photos/anna.JPG",
+    // "/photos/marianne.jpeg",
+    "/photos/josh.jpg",
+    "/photos/omar.jpg",
+    "/photos/adrien.jpg",
+    "/photos/jordi.jpg",
+    "/photos/flo.jpg",
+    "/photos/kelindi.jpg",
+    "/photos/vin.jpg",
+    "/photos/anna.jpg",
   ];
 
   useEffect(() => {
