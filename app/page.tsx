@@ -16,12 +16,14 @@ export default function Page() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
+    {}
+  );
 
   const images = [
-    "/work//theoriq.png",
+    "/work/theoriq.png",
     "/work/theoriq-prod-hero.png",
     "/work/atlas-1.png",
-    "/work/us.png",
     "/work/zalando-spread.png",
     "/work/wombo.png",
     "/work/defi.png",
@@ -33,15 +35,15 @@ export default function Page() {
   ];
 
   const photos = [
-    // "/photos/marianne.jpeg",
-    "/photos/josh.jpg",
-    "/photos/omar.jpg",
-    "/photos/adrien.jpg",
-    "/photos/jordi.jpg",
-    "/photos/flo.jpg",
-    "/photos/kelindi.jpg",
-    "/photos/vin.jpg",
-    "/photos/anna.jpg",
+    "/photos/marianne.jpeg",
+    "/photos/josh.JPG",
+    "/photos/omar.JPG",
+    "/photos/adrien.JPG",
+    "/photos/jordi.JPG",
+    "/photos/flo.JPG",
+    "/photos/kelindi.JPG",
+    "/photos/vin.JPG",
+    "/photos/anna.JPG",
   ];
 
   useEffect(() => {
@@ -58,14 +60,30 @@ export default function Page() {
     return () => clearInterval(interval);
   }, [isZoomed, images.length]);
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
+  const handleImageLoad = (src: string) => {
+    setLoadedImages((prev) => ({ ...prev, [src]: true }));
   };
 
-  const textVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
+  const fadeInAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: {
+      duration: 1.8,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.3,
+        delayChildren: 0.2,
+        duration: 1.2,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
   };
 
   if (!mounted) {
@@ -76,293 +94,215 @@ export default function Page() {
     <motion.main
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-      className="px-8 py-12 md:p-24 bg-background relative"
+      transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }}
+      className="px-4 sm:px-8 py-12 md:px-24 bg-background relative overflow-x-hidden"
     >
-      <motion.div className="flex items-center gap-4 mb-32">
-        <motion.h1
+      <div className="max-w-screen-xl mx-auto">
+        <motion.div
+          variants={fadeInAnimation}
+          initial="hidden"
+          animate="visible"
+          className="flex items-center gap-4 mb-32"
+        >
+          <h1
+            className={`text-2xl font-normal text-foreground ${eduMarist.className}`}
+          >
+            Raf
+          </h1>
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className={`text-2xl font-normal text-foreground ${eduMarist.className}`}
+          transition={{
+            duration: 2,
+            delay: 0.3,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="space-y-32"
         >
-          Raf
-        </motion.h1>
-      </motion.div>
+          <section className="md:grid md:grid-cols-[200px,minmax(0,1fr)] md:gap-16 w-full">
+            <h2 className="text-base font-normal mb-8 md:mb-0 text-foreground">
+              About
+            </h2>
 
-      <div className="space-y-32">
-        <motion.section
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-          className="md:grid md:grid-cols-[200px,1fr] md:gap-16"
-        >
-          <motion.h2
-            variants={textVariants}
-            transition={{ duration: 0.8 }}
-            className="text-base font-normal mb-8 md:mb-0 text-foreground"
-          >
-            About
-          </motion.h2>
+            <div className="space-y-6 text-base leading-relaxed">
+              <p className="text-foreground">
+                Product Designer who codes.{" "}
+                <span className="text-foreground/60">
+                  Currently leading design at Theoriq.
+                </span>
+                {/* <span className="text-foreground/60">
+                  {" "}
+                  With 7+ years of experience building products that have driven
+                  $100M+ in collective revenue.{" "}
+                </span> */}
+              </p>
 
-          <motion.div className="space-y-6 text-base leading-relaxed max-w-2xl">
-            <motion.p
-              variants={textVariants}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="text-foreground"
-            >
-              I'm a founding product designer who codes - currently leading
-              design at Theoriq across product, marketing and web.
-              <span className="text-foreground/60">
-                {" "}
-                7+ years building products driving $100M+ in collective revenue.{" "}
-              </span>
-            </motion.p>
+              <p>
+                <span className="text-foreground">Toronto-based.</span>
+                <span className="text-foreground/60">
+                  {" "}
+                  International background spanning Italy's Amalfi Coast,
+                  Lisbon, NYC and more.
+                </span>
+              </p>
 
-            <motion.p
-              variants={textVariants}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
-              <span className="text-foreground">Based in Toronto.</span>
-              <span className="text-foreground/60">
-                {" "}
-                I grew up on Italy's Amalfi Coast and lived in Lisbon and NYC.
-              </span>
-            </motion.p>
+              <p>
+                <span className="text-foreground">
+                  Values direct communication, proactive thinking, and inclusive
+                  design.
+                </span>
+                <span className="text-foreground/60">
+                  {" "}
+                  Yoga. Interiors. Mindfulness.{" "}
+                </span>
+              </p>
+            </div>
+          </section>
 
-            <motion.p
-              variants={textVariants}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            >
-              <span className="text-foreground">
-                I value direct communication, proactive thinking, and inclusive
-                design.
-              </span>
-              <span className="text-foreground/60">
-                {" "}
-                When not crafting digital experiences, you'll find me practicing
-                yoga, chasing the sun, and diving deep into interiors.
-              </span>
-            </motion.p>
-          </motion.div>
-        </motion.section>
+          <div className="md:grid md:grid-cols-[200px,1fr] md:gap-16 w-full">
+            <div className="mb-8 md:mb-0">
+              <h2 className="text-base font-normal text-foreground">
+                Selected works
+              </h2>
+            </div>
 
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-          className="md:grid md:grid-cols-[200px,1fr] md:gap-16"
-        >
-          <div className="mb-8 md:mb-0">
-            <motion.h2
-              variants={textVariants}
-              className="text-base font-normal text-foreground"
-            >
-              Selected works
-            </motion.h2>
+            <div className="space-y-6">
+              <div className="w-full mb-0 overflow-hidden relative">
+                <motion.img
+                  key={currentImageIndex}
+                  src={images[currentImageIndex]}
+                  alt="Work preview"
+                  className="w-full cursor-pointer bg-transparent max-w-full"
+                  style={{
+                    objectPosition: "center center",
+                    display: "block",
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    opacity: loadedImages[images[currentImageIndex]] ? 1 : 0,
+                  }}
+                  transition={{ duration: 0 }}
+                  onClick={() => setIsZoomed(true)}
+                  onLoad={() => handleImageLoad(images[currentImageIndex])}
+                />
+                {/* Preload next image */}
+                <img
+                  src={images[(currentImageIndex + 1) % images.length]}
+                  alt="Next work preview"
+                  className="hidden"
+                  onLoad={() =>
+                    handleImageLoad(
+                      images[(currentImageIndex + 1) % images.length]
+                    )
+                  }
+                />
+              </div>
+              <div className="flex gap-2 items-baseline mt-0">
+                <a
+                  href="https://rafvitale.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-base text-foreground/40 hover:text-foreground transition-colors"
+                >
+                  Open Portfolio ↗
+                </a>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <div
-              className="w-full overflow-hidden"
-              onClick={() => setIsZoomed(true)}
-            >
-              <img
-                src={images[currentImageIndex]}
-                alt="Work preview"
-                className="w-full cursor-pointer bg-transparent"
-              />
-            </div>
-            <div className="flex gap-2 items-baseline">
-              <a
-                href="https://rafvitale.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-base text-foreground/40 hover:text-foreground transition-colors"
+          <section className="md:grid md:grid-cols-[200px,1fr] md:gap-16 w-full">
+            <h2 className="text-base font-normal text-foreground">Photos</h2>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-3 gap-4">
+                {photos.slice(0, 3).map((photo, index) => (
+                  <motion.div
+                    key={index}
+                    className="aspect-[3/4] md:aspect-[2/3] cursor-pointer"
+                    initial={fadeInAnimation.initial}
+                    animate={{ opacity: loadedImages[photo] ? 1 : 0 }}
+                    transition={fadeInAnimation.transition}
+                    onClick={() => setIsPhotosModalOpen(true)}
+                  >
+                    <img
+                      src={photo}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg"
+                      onLoad={() => handleImageLoad(photo)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+              <button
+                onClick={() => setIsPhotosModalOpen(true)}
+                className="text-base text-foreground/60 hover:text-foreground transition-colors"
               >
-                Open Portfolio ↗
-              </a>
+                View all photos
+              </button>
             </div>
-          </div>
+          </section>
+
+          <section className="md:grid md:grid-cols-[200px,1fr] md:gap-16 w-full">
+            <h2 className="text-base font-normal mb-8 md:mb-0 text-foreground">
+              Contact
+            </h2>
+
+            <div className="space-y-6 max-w-2xl">
+              <div>
+                <p className="text-sm text-foreground/60">Email</p>
+                <a
+                  href="mailto:raf@raf.works"
+                  className="text-foreground/60 hover:text-foreground transition-colors"
+                >
+                  raf@raf.works
+                </a>
+              </div>
+
+              <div>
+                <p className="text-sm text-foreground/60">LinkedIn</p>
+                <a
+                  href="https://www.linkedin.com/in/raffaelevitaledesign"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground/60 hover:text-foreground transition-colors"
+                >
+                  raffaelevitaledesign
+                </a>
+              </div>
+
+              <div>
+                <p className="text-sm text-foreground/60">Twitter/X</p>
+                <a
+                  href="https://twitter.com/lfgraf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground/60 hover:text-foreground transition-colors"
+                >
+                  lfgraf
+                </a>
+              </div>
+            </div>
+          </section>
         </motion.div>
 
-        <motion.section
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-          className="md:grid md:grid-cols-[200px,1fr] md:gap-16 mb-32"
-        >
-          <motion.h2
-            variants={textVariants}
-            className="text-base font-normal mb-8 md:mb-0 text-foreground"
-          >
-            Photos
-          </motion.h2>
-
+        {/* Fullscreen Modal */}
+        {isZoomed && (
           <motion.div
-            variants={textVariants}
-            transition={{ delay: 0.2 }}
-            className="space-y-6"
-          >
-            <div className="grid grid-cols-3 gap-4">
-              {photos.slice(0, 3).map((photo, index) => (
-                <div
-                  key={index}
-                  className="aspect-[3/4] md:aspect-[2/3] cursor-pointer"
-                  onClick={() => setIsPhotosModalOpen(true)}
-                >
-                  <Image
-                    src={photo}
-                    alt={`Photo ${index + 1}`}
-                    width={800}
-                    height={600}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => setIsPhotosModalOpen(true)}
-              className="text-base text-foreground/60 hover:text-foreground transition-colors"
-            >
-              View all photos
-            </button>
-          </motion.div>
-        </motion.section>
-
-        <motion.section
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-          className="md:grid md:grid-cols-[200px,1fr] md:gap-16"
-        >
-          <motion.h2
-            variants={textVariants}
-            className="text-base font-normal mb-8 md:mb-0 text-foreground"
-          >
-            Contact
-          </motion.h2>
-
-          <motion.div
-            variants={textVariants}
-            transition={{ delay: 0.2 }}
-            className="space-y-6 max-w-2xl"
-          >
-            <div>
-              <p className="text-sm text-foreground/60">Email</p>
-              <a
-                href="mailto:raf@raf.works"
-                className="text-foreground/60 hover:text-foreground transition-colors"
-              >
-                raf@raf.works
-              </a>
-            </div>
-
-            <div>
-              <p className="text-sm text-foreground/60">LinkedIn</p>
-              <a
-                href="https://www.linkedin.com/in/raffaelevitaledesign"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/60 hover:text-foreground transition-colors"
-              >
-                raffaelevitaledesign
-              </a>
-            </div>
-
-            <div>
-              <p className="text-sm text-foreground/60">Twitter/X</p>
-              <a
-                href="https://twitter.com/lfgraf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/60 hover:text-foreground transition-colors"
-              >
-                lfgraf
-              </a>
-            </div>
-          </motion.div>
-        </motion.section>
-      </div>
-
-      {/* Fullscreen Modal */}
-      {isZoomed && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50 flex items-center justify-center p-6"
-          onClick={() => setIsZoomed(false)}
-        >
-          <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50 flex items-center justify-center p-6"
             onClick={() => setIsZoomed(false)}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </motion.button>
-          <motion.img
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            src={images[currentImageIndex]}
-            alt="Work preview"
-            className="w-full h-full object-contain"
-          />
-        </motion.div>
-      )}
-
-      {/* Photos Modal */}
-      {isPhotosModalOpen && (
-        <>
-          {/* Fixed backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-            onClick={() => setIsPhotosModalOpen(false)}
-          />
-
-          {/* Scrollable content */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 overflow-y-auto"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setIsPhotosModalOpen(false);
-              }
-            }}
-          >
-            {/* Sticky close button */}
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="sticky top-6 float-right mr-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsPhotosModalOpen(false);
-              }}
+              className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+              onClick={() => setIsZoomed(false)}
             >
               <svg
                 width="24"
@@ -375,44 +315,103 @@ export default function Page() {
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </motion.button>
-
-            {/* Content container */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+            <motion.img
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
-              onClick={(e) => e.stopPropagation()}
+              src={images[currentImageIndex]}
+              alt="Work preview"
+              className="w-full h-full object-contain"
+            />
+          </motion.div>
+        )}
+
+        {/* Photos Modal */}
+        {isPhotosModalOpen && (
+          <>
+            {/* Fixed backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+              onClick={() => setIsPhotosModalOpen(false)}
+            />
+
+            {/* Scrollable content */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 overflow-y-auto"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setIsPhotosModalOpen(false);
+                }
+              }}
             >
-              {photos.map((photo, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="w-full flex flex-col items-center space-y-3"
-                  onClick={(e) => e.stopPropagation()}
+              {/* Sticky close button */}
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="sticky top-6 float-right mr-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPhotosModalOpen(false);
+                }}
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 >
-                  <Image
-                    src={photo}
-                    alt={`Photo ${index + 1}`}
-                    width={800}
-                    height={600}
-                    className="w-auto max-w-full max-h-[80vh] rounded-lg"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <span
-                    className="text-sm text-foreground/40"
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </motion.button>
+
+              {/* Content container */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {photos.map((photo, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="w-full flex flex-col items-center space-y-3"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {photo.split("/").pop()?.split(".")[0]}
-                  </span>
-                </motion.div>
-              ))}
+                    <Image
+                      src={photo}
+                      alt={`Photo ${index + 1}`}
+                      width={800}
+                      height={600}
+                      className="w-auto max-w-full max-h-[80vh] rounded-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span
+                      className="text-sm text-foreground/40"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {photo.split("/").pop()?.split(".")[0]}
+                    </span>
+                  </motion.div>
+                ))}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </motion.main>
   );
 }
