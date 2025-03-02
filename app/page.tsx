@@ -357,7 +357,7 @@ export default function Page() {
                   }
                 />
               </div>
-              <div className="flex gap-2 items-baseline mt-0">
+              {/* <div className="flex gap-2 items-baseline mt-0">
                 <a
                   href="https://rafvitale.com"
                   target="_blank"
@@ -366,12 +366,14 @@ export default function Page() {
                 >
                   Open Portfolio ↗
                 </a>
-              </div>
+              </div> */}
             </div>
           </div>
 
           <section className="md:grid md:grid-cols-[200px,1fr] md:gap-16 w-full">
-            <h2 className="text-base font-normal text-foreground">Photos</h2>
+            <h2 className="text-base font-normal text-foreground mb-8 md:mb-0">
+              Photos
+            </h2>
 
             <div className="space-y-6">
               <div className="grid grid-cols-3 gap-4">
