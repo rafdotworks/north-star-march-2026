@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import localFont from "next/font/local";
 import Link from "next/link";
@@ -21,12 +21,16 @@ export default function Page() {
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
     {}
   );
   const [timeOfDay, setTimeOfDay] = useState<
     "morning" | "afternoon" | "evening" | "night"
   >("morning");
+
+  // Create refs for photos
+  const photoRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const images = [
     "/work/theoriq.png",
@@ -43,15 +47,15 @@ export default function Page() {
   ];
 
   const photos = [
-    "/photos/marianne.jpeg",
-    "/photos/josh.JPG",
-    "/photos/omar.JPG",
-    "/photos/adrien.JPG",
-    "/photos/jordi.JPG",
-    "/photos/flo.JPG",
-    "/photos/kelindi.JPG",
-    "/photos/vin.JPG",
-    "/photos/anna.JPG",
+    { src: "/photos/marianne.jpeg", name: "Marianne" },
+    { src: "/photos/josh.JPG", name: "Josh" },
+    { src: "/photos/omar.JPG", name: "Omar" },
+    { src: "/photos/adrien.JPG", name: "Adrien" },
+    { src: "/photos/jordi.JPG", name: "Jordi" },
+    { src: "/photos/flo.JPG", name: "Flo" },
+    { src: "/photos/kelindi.JPG", name: "Kelindi" },
+    { src: "/photos/vin.JPG", name: "Vin" },
+    { src: "/photos/anna.JPG", name: "Anna" },
   ];
 
   useEffect(() => {
@@ -161,6 +165,18 @@ export default function Page() {
   const handlePrevNote = () => {
     setCurrentNoteIndex((prev) => (prev - 1 + notes.length) % notes.length);
   };
+
+  // Effect to scroll to the selected photo when modal opens
+  useEffect(() => {
+    if (isPhotosModalOpen && photoRefs.current[currentPhotoIndex]) {
+      setTimeout(() => {
+        photoRefs.current[currentPhotoIndex]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 300); // Small delay to ensure modal is fully rendered
+    }
+  }, [isPhotosModalOpen, currentPhotoIndex]);
 
   if (!mounted) {
     return null;
@@ -424,17 +440,20 @@ export default function Page() {
                 {photos.slice(0, 3).map((photo, index) => (
                   <motion.div
                     key={index}
-                    className="aspect-[3/4] md:aspect-[2/3] cursor-pointer"
+                    className="aspect-[3/4] md:aspect-[2/3] cursor-pointer relative"
                     initial={fadeInAnimation.initial}
-                    animate={{ opacity: loadedImages[photo] ? 1 : 0 }}
+                    animate={{ opacity: loadedImages[photo.src] ? 1 : 0 }}
                     transition={fadeInAnimation.transition}
-                    onClick={() => setIsPhotosModalOpen(true)}
+                    onClick={() => {
+                      setCurrentPhotoIndex(index);
+                      setIsPhotosModalOpen(true);
+                    }}
                   >
                     <img
-                      src={photo}
-                      alt={`Photo ${index + 1}`}
-                      className="w-full h-full object-cover rounded-md"
-                      onLoad={() => handleImageLoad(photo)}
+                      src={photo.src}
+                      alt={`Photo of ${photo.name}`}
+                      className="w-full h-full object-cover"
+                      onLoad={() => handleImageLoad(photo.src)}
                     />
                   </motion.div>
                 ))}
@@ -443,6 +462,7 @@ export default function Page() {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
+                  setCurrentPhotoIndex(0);
                   setIsPhotosModalOpen(true);
                 }}
                 className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
@@ -654,15 +674,18 @@ export default function Page() {
                   className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
                 >
                   {/* Photos grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-16 md:gap-24">
                     {photos.map((photo, index) => (
                       <motion.div
                         key={index}
-                        className="aspect-[3/4] cursor-pointer"
+                        ref={(el) => {
+                          photoRefs.current[index] = el;
+                        }}
+                        className="aspect-[3/4] cursor-pointer relative max-w-2xl mx-auto w-full"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{
-                          opacity: loadedImages[photo] ? 1 : 0,
-                          y: loadedImages[photo] ? 0 : 10,
+                          opacity: loadedImages[photo.src] ? 1 : 0,
+                          y: loadedImages[photo.src] ? 0 : 10,
                         }}
                         transition={{
                           duration: 0.5,
@@ -672,11 +695,16 @@ export default function Page() {
                         whileTap={{ scale: 0.98 }}
                       >
                         <img
-                          src={photo}
-                          alt={`Photo ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
-                          onLoad={() => handleImageLoad(photo)}
+                          src={photo.src}
+                          alt={`Photo of ${photo.name}`}
+                          className="w-full h-full object-cover"
+                          onLoad={() => handleImageLoad(photo.src)}
                         />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 flex justify-center items-center">
+                          <span className="text-white text-sm font-light">
+                            {photo.name}
+                          </span>
+                        </div>
                       </motion.div>
                     ))}
                   </div>
