@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import localFont from "next/font/local";
+
+const ronzino = localFont({
+  src: "../public/fonts/Ronzino-Regular.otf",
+  variable: "--font-ronzino",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Raf | Founding Product Designer",
@@ -37,13 +44,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${ronzino.variable}`}>
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body>{children}</body>
+      <body className={ronzino.className}>{children}</body>
     </html>
   );
 }

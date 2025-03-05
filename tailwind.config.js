@@ -11,7 +11,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-inter)"],
+        sans: ["var(--font-ronzino)"],
+        serif: ["var(--font-ronzino)"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -53,8 +54,65 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            fontFamily: "var(--font-ronzino)",
+            color: "hsl(var(--foreground))",
+            a: {
+              color: "hsl(var(--foreground))",
+              "&:hover": {
+                color: "hsl(var(--foreground))",
+              },
+            },
+            h1: {
+              color: "hsl(var(--foreground))",
+              fontFamily: "var(--font-ronzino)",
+              fontWeight: "400",
+            },
+            h2: {
+              color: "hsl(var(--foreground))",
+              fontFamily: "var(--font-ronzino)",
+              fontWeight: "400",
+            },
+            h3: {
+              color: "hsl(var(--foreground))",
+              fontFamily: "var(--font-ronzino)",
+              fontWeight: "400",
+            },
+            h4: {
+              color: "hsl(var(--foreground))",
+              fontFamily: "var(--font-ronzino)",
+              fontWeight: "400",
+            },
+            h5: {
+              color: "hsl(var(--foreground))",
+              fontFamily: "var(--font-ronzino)",
+              fontWeight: "400",
+            },
+            h6: {
+              color: "hsl(var(--foreground))",
+              fontFamily: "var(--font-ronzino)",
+              fontWeight: "400",
+            },
+            strong: {
+              color: "hsl(var(--foreground))",
+              fontWeight: "500",
+            },
+            code: {
+              color: "hsl(var(--foreground))",
+            },
+            figcaption: {
+              color: "hsl(var(--muted-foreground))",
+            },
+            blockquote: {
+              color: "hsl(var(--foreground))",
+              borderLeftColor: "hsl(var(--border))",
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-}
-
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+};
