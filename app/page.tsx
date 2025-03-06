@@ -367,16 +367,16 @@ export default function Page() {
                   }
                 />
               </div>
-              {/* <div className="flex gap-2 items-baseline mt-0">
+              <div className="hidden md:block mt-4">
                 <a
                   href="https://rafvitale.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-base text-foreground/40 hover:text-foreground transition-colors"
+                  className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
                 >
-                  Open Portfolio ↗
+                  View all works ↗
                 </a>
-              </div> */}
+              </div>
             </div>
           </div>
 
