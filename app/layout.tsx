@@ -8,6 +8,12 @@ const ronzino = localFont({
   display: "swap",
 });
 
+const eduMarist = localFont({
+  src: "../public/fonts/EduMarist-Regular.woff2",
+  variable: "--font-edu-marist",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Raf | Founding Product Designer",
   description:
@@ -44,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${ronzino.variable}`}>
+    <html lang="en" className={`${ronzino.variable} ${eduMarist.variable}`}>
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" href="/favicon.png" />

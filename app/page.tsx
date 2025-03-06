@@ -2,16 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import localFont from "next/font/local";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { notes, Note, getCategoryColor } from "./data/notes";
-
-const eduMarist = localFont({
-  src: "../public/fonts/EduMarist-Regular.woff2",
-  variable: "--font-edu-marist",
-});
 
 export default function Page() {
   const [mounted, setMounted] = useState(false);
@@ -25,9 +19,17 @@ export default function Page() {
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
     {}
   );
-  const [timeOfDay, setTimeOfDay] = useState<
-    "morning" | "afternoon" | "evening" | "night"
-  >("morning");
+  const [timeState, setTimeState] = useState<{
+    hour: number;
+    minute: number;
+    timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night";
+    progress: number;
+  }>({
+    hour: 0,
+    minute: 0,
+    timeOfDay: "morning",
+    progress: 0,
+  });
 
   // Create refs for photos
   const photoRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -61,22 +63,71 @@ export default function Page() {
   useEffect(() => {
     setMounted(true);
 
-    // Set time of day based on current hour
-    const updateTimeOfDay = () => {
-      const hour = new Date().getHours();
-      if (hour >= 5 && hour < 12) {
-        setTimeOfDay("morning");
+    // Update time state
+    const updateTimeState = () => {
+      // Get current time in EST
+      const now = new Date();
+      // Convert to EST (UTC-5 or UTC-4 during daylight saving)
+      const estOffset = -5; // EST offset from UTC in hours
+      const isDST = () => {
+        // Simple DST check for US Eastern Time
+        const jan = new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
+        const jul = new Date(now.getFullYear(), 6, 1).getTimezoneOffset();
+        return Math.max(jan, jul) !== now.getTimezoneOffset();
+      };
+
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const estTime = new Date(utc + 3600000 * (estOffset + (isDST() ? 1 : 0)));
+
+      const hour = estTime.getHours();
+      const minute = estTime.getMinutes();
+
+      // Calculate time of day
+      let timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night";
+      if (hour >= 5 && hour < 8) {
+        timeOfDay = "dawn";
+      } else if (hour >= 8 && hour < 12) {
+        timeOfDay = "morning";
       } else if (hour >= 12 && hour < 17) {
-        setTimeOfDay("afternoon");
+        timeOfDay = "afternoon";
       } else if (hour >= 17 && hour < 21) {
-        setTimeOfDay("evening");
+        timeOfDay = "evening";
       } else {
-        setTimeOfDay("night");
+        timeOfDay = "night";
       }
+
+      // Calculate progress through current time period (0-1)
+      let progress = 0;
+      if (timeOfDay === "dawn") {
+        progress = ((hour - 5) * 60 + minute) / (3 * 60); // 3 hours
+      } else if (timeOfDay === "morning") {
+        progress = ((hour - 8) * 60 + minute) / (4 * 60); // 4 hours
+      } else if (timeOfDay === "afternoon") {
+        progress = ((hour - 12) * 60 + minute) / (5 * 60); // 5 hours
+      } else if (timeOfDay === "evening") {
+        progress = ((hour - 17) * 60 + minute) / (4 * 60); // 4 hours
+      } else {
+        // Night spans from 21 to 5, wrapping around midnight
+        if (hour >= 21) {
+          progress = ((hour - 21) * 60 + minute) / (8 * 60); // 8 hours total
+        } else {
+          progress = ((hour + 3) * 60 + minute) / (8 * 60); // 8 hours total
+        }
+      }
+
+      // Clamp progress between 0 and 1
+      progress = Math.max(0, Math.min(1, progress));
+
+      setTimeState({
+        hour,
+        minute,
+        timeOfDay,
+        progress,
+      });
     };
 
-    updateTimeOfDay();
-    const interval = setInterval(updateTimeOfDay, 60000); // Update every minute
+    updateTimeState();
+    const interval = setInterval(updateTimeState, 60000); // Update every minute
 
     return () => clearInterval(interval);
   }, []);
@@ -178,6 +229,18 @@ export default function Page() {
     }
   }, [isPhotosModalOpen, currentPhotoIndex]);
 
+  // Format time for display (12-hour format with AM/PM)
+  const formatTime = () => {
+    if (!mounted) return "";
+
+    const { hour, minute } = timeState;
+    const period = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+    const displayMinute = minute < 10 ? `0${minute}` : minute;
+
+    return `${displayHour}:${displayMinute} ${period} EST`;
+  };
+
   if (!mounted) {
     return null;
   }
@@ -191,65 +254,159 @@ export default function Page() {
     >
       {/* Immersive ambient background with animated elements */}
       <div className="fixed inset-0 z-0 overflow-hidden">
-        {/* Dynamic gradient based on time of day */}
-        <div
-          className={`absolute inset-0 opacity-20 transition-opacity duration-1000 ease-in-out ${
-            timeOfDay === "morning"
-              ? "bg-gradient-to-br from-amber-100/30 via-sky-200/20 to-transparent"
-              : timeOfDay === "afternoon"
-              ? "bg-gradient-to-br from-blue-100/30 via-amber-100/20 to-transparent"
-              : timeOfDay === "evening"
-              ? "bg-gradient-to-br from-amber-200/30 via-purple-200/20 to-transparent"
-              : "bg-gradient-to-br from-indigo-900/30 via-purple-900/20 to-transparent"
-          }`}
-        />
+        {/* Consistent subtle shadow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-100/30 via-transparent to-transparent dark:from-gray-900/30 opacity-20"></div>
 
-        {/* Subtle glow effect that changes with time of day */}
-        <div
-          className={`absolute top-[20%] left-[30%] w-[40vw] h-[40vh] rounded-full blur-[120px] opacity-15 transition-all duration-1000 ease-in-out ${
-            timeOfDay === "morning"
-              ? "bg-amber-200"
-              : timeOfDay === "afternoon"
-              ? "bg-blue-200"
-              : timeOfDay === "evening"
-              ? "bg-purple-300"
-              : "bg-indigo-500"
-          }`}
-        />
+        {/* Main shadow effect */}
+        <div className="absolute top-[10%] left-[20%] w-[60vw] h-[60vh] rounded-full blur-[150px] opacity-[0.08] bg-gray-400 dark:bg-gray-700 animate-slow-pulse"></div>
 
-        {/* Secondary glow for depth */}
+        {/* Secondary shadow for depth */}
+        <div className="absolute bottom-[5%] right-[15%] w-[40vw] h-[40vh] rounded-full blur-[180px] opacity-[0.06] bg-gray-500 dark:bg-gray-800"></div>
+
+        {/* Time-based design element at the top */}
+        {mounted && (
+          <>
+            {/* Dawn: Soft rising sun effect */}
+            {timeState.timeOfDay === "dawn" && (
+              <div
+                className="absolute top-0 inset-x-0 h-[25vh] bg-gradient-to-b from-amber-100/20 via-pink-100/10 to-transparent dark:from-amber-900/20 dark:via-pink-900/10"
+                style={{
+                  clipPath: `polygon(0 0, 100% 0, 100% ${
+                    20 + timeState.progress * 80
+                  }%, 0 ${20 + timeState.progress * 80}%)`,
+                  opacity: 0.3 + timeState.progress * 0.3,
+                }}
+              >
+                <div
+                  className="absolute top-[10%] left-[40%] w-[20vw] h-[20vw] rounded-full blur-[80px] bg-amber-200/30 dark:bg-amber-700/20"
+                  style={{
+                    transform: `translateY(${timeState.progress * 30}px)`,
+                  }}
+                ></div>
+              </div>
+            )}
+
+            {/* Morning: Bright, energetic rays */}
+            {timeState.timeOfDay === "morning" && (
+              <div className="absolute top-0 inset-x-0 h-[20vh] overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-[15vh] bg-gradient-to-b from-blue-50/30 to-transparent dark:from-blue-900/20"></div>
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-[-10vh] bg-yellow-100/10 dark:bg-yellow-400/5"
+                    style={{
+                      left: `${15 + i * 20}%`,
+                      height: `${30 + Math.sin(i) * 10}vh`,
+                      width: "2px",
+                      transform: `rotate(${-5 + i * 2.5}deg) scaleY(${
+                        0.7 + timeState.progress * 0.3
+                      })`,
+                      opacity: 0.2 + timeState.progress * 0.3,
+                      boxShadow: "0 0 15px 5px rgba(255, 249, 219, 0.2)",
+                    }}
+                  ></div>
+                ))}
+              </div>
+            )}
+
+            {/* Afternoon: Warm, productive glow */}
+            {timeState.timeOfDay === "afternoon" && (
+              <div className="absolute top-0 inset-x-0 h-[15vh]">
+                <div className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-blue-50/20 via-transparent to-transparent dark:from-blue-900/10"></div>
+                <div
+                  className="absolute top-[20%] right-[30%] w-[25vw] h-[10vh] rounded-full blur-[100px] bg-amber-100/20 dark:bg-amber-700/10"
+                  style={{
+                    opacity: 0.2 + (1 - timeState.progress) * 0.3,
+                  }}
+                ></div>
+              </div>
+            )}
+
+            {/* Evening: Warm sunset colors */}
+            {timeState.timeOfDay === "evening" && (
+              <div className="absolute top-0 inset-x-0 h-[20vh] overflow-hidden">
+                <div
+                  className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-orange-100/30 via-pink-100/20 to-transparent dark:from-orange-900/20 dark:via-pink-900/10"
+                  style={{
+                    opacity: 0.3 + (1 - timeState.progress) * 0.4,
+                  }}
+                ></div>
+                <div
+                  className="absolute top-[10%] right-[20%] w-[30vw] h-[8vh] rounded-full blur-[80px] bg-orange-200/30 dark:bg-orange-700/20"
+                  style={{
+                    transform: `translateY(${(1 - timeState.progress) * 20}px)`,
+                  }}
+                ></div>
+              </div>
+            )}
+
+            {/* Night: Starry, mysterious atmosphere */}
+            {timeState.timeOfDay === "night" && (
+              <div className="absolute top-0 inset-x-0 h-[30vh] overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-indigo-900/30 via-purple-900/20 to-transparent opacity-30 dark:opacity-40"></div>
+                {[...Array(20)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute rounded-full bg-white dark:bg-white animate-twinkle"
+                    style={{
+                      top: `${Math.random() * 100}%`,
+                      left: `${Math.random() * 100}%`,
+                      width: `${Math.random() * 2 + 1}px`,
+                      height: `${Math.random() * 2 + 1}px`,
+                      opacity: Math.random() * 0.5 + 0.3,
+                      animationDelay: `${Math.random() * 10}s`,
+                      animationDuration: `${Math.random() * 5 + 3}s`,
+                    }}
+                  ></div>
+                ))}
+                <div className="absolute top-[20%] left-[70%] w-[10vw] h-[10vw] rounded-full blur-[100px] bg-indigo-200/10 dark:bg-indigo-500/10 animate-slow-pulse"></div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Noise texture overlay */}
         <div
-          className={`absolute bottom-[10%] right-[20%] w-[30vw] h-[30vh] rounded-full blur-[150px] opacity-10 transition-all duration-1000 ease-in-out ${
-            timeOfDay === "morning"
-              ? "bg-sky-200"
-              : timeOfDay === "afternoon"
-              ? "bg-amber-300"
-              : timeOfDay === "evening"
-              ? "bg-pink-300"
-              : "bg-purple-600"
-          }`}
-        />
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: "repeat",
+            mixBlendMode: "overlay",
+          }}
+        >
+          {/* Animated noise layer for subtle movement */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "repeat",
+              mixBlendMode: "difference",
+              opacity: 0.2,
+              animation: "noise 8s infinite alternate",
+            }}
+          ></div>
+        </div>
 
         {/* Subtle animated particle effect */}
         <div className="absolute inset-0 opacity-[0.02]">
           <div
-            className="absolute top-1/4 left-1/3 w-1 h-1 rounded-full bg-white animate-pulse"
+            className="absolute top-1/4 left-1/3 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
             style={{ animationDelay: "0s", animationDuration: "4s" }}
           />
           <div
-            className="absolute top-1/2 left-1/4 w-1 h-1 rounded-full bg-white animate-pulse"
+            className="absolute top-1/2 left-1/4 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
             style={{ animationDelay: "0.5s", animationDuration: "5s" }}
           />
           <div
-            className="absolute top-3/4 left-2/3 w-1 h-1 rounded-full bg-white animate-pulse"
+            className="absolute top-3/4 left-2/3 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
             style={{ animationDelay: "1s", animationDuration: "6s" }}
           />
           <div
-            className="absolute top-1/3 left-3/4 w-1 h-1 rounded-full bg-white animate-pulse"
+            className="absolute top-1/3 left-3/4 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
             style={{ animationDelay: "1.5s", animationDuration: "4.5s" }}
           />
           <div
-            className="absolute top-2/3 left-1/2 w-1 h-1 rounded-full bg-white animate-pulse"
+            className="absolute top-2/3 left-1/2 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
             style={{ animationDelay: "2s", animationDuration: "5.5s" }}
           />
         </div>
@@ -265,11 +422,21 @@ export default function Page() {
           {/* Subtle glow effect behind the name */}
           <div className="absolute w-12 h-12 rounded-full bg-foreground/5 blur-xl -z-10 left-0 transform -translate-x-1/4"></div>
 
-          <h1
-            className={`text-2xl font-normal text-foreground ${eduMarist.className} relative z-10`}
-          >
+          <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
             Raf
           </h1>
+
+          {/* Display current time in EST */}
+          {mounted && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              transition={{ delay: 1, duration: 1.5 }}
+              className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[180px] text-right hidden md:block"
+            >
+              {formatTime()}
+            </motion.p>
+          )}
         </motion.div>
 
         <motion.div

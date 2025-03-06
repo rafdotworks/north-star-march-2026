@@ -13,6 +13,21 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-ronzino)"],
         serif: ["var(--font-ronzino)"],
+        "edu-marist": ["var(--font-edu-marist)"],
+      },
+      animation: {
+        "slow-pulse": "slow-pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        twinkle: "twinkle 5s ease-in-out infinite",
+      },
+      keyframes: {
+        "slow-pulse": {
+          "0%, 100%": { opacity: "0.08", transform: "scale(1)" },
+          "50%": { opacity: "0.12", transform: "scale(1.05)" },
+        },
+        twinkle: {
+          "0%, 100%": { opacity: "0.3", transform: "scale(1)" },
+          "50%": { opacity: "0.8", transform: "scale(1.2)" },
+        },
       },
       colors: {
         border: "hsl(var(--border))",
