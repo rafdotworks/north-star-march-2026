@@ -289,9 +289,9 @@ export default function Page() {
 
             <div className="space-y-6 text-base leading-relaxed">
               <p className="text-foreground">
-                Product Designer who codes.{" "}
+                Raf is a Product Designer{" "}
                 <span className="text-foreground/60">
-                  Currently leading design at Theoriq.
+                  - founding designer and design engineer.{" "}
                 </span>
                 {/* <span className="text-foreground/60">
                   {" "}
@@ -301,22 +301,29 @@ export default function Page() {
               </p>
 
               <p>
-                <span className="text-foreground">Toronto-based.</span>
                 <span className="text-foreground/60">
                   {" "}
-                  International background spanning Italy's Amalfi Coast,
-                  Lisbon, NYC and more.
+                  Originally from Italy and now
+                </span>{" "}
+                <span className="text-foreground">based in Toronto,</span>
+                <span className="text-foreground/60">
+                  {" "}
+                  Raf has 8 years of experience working in-house and as a
+                  contractor for big companies and small startups,
+                </span>
+                <span className="text-foreground">
+                  {" "}
+                  pursuing excellence
+                </span>{" "}
+                <span className="text-foreground/60">
+                  {" "}
+                  with a deep passion for craft and collaboration.
                 </span>
               </p>
 
               <p>
-                <span className="text-foreground">
-                  Values direct communication, proactive thinking, and inclusive
-                  design.
-                </span>
                 <span className="text-foreground/60">
-                  {" "}
-                  Yoga. Interiors. Mindfulness.{" "}
+                  He enjoys portrait photography, yoga, and interior design.
                 </span>
               </p>
             </div>
