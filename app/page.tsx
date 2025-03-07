@@ -31,6 +31,21 @@ export default function Page() {
     progress: 0,
   });
 
+  // Add weather state
+  const [weatherState, setWeatherState] = useState<{
+    temperature: number | null;
+    condition: string | null;
+    isLoading: boolean;
+    showWeatherEffect: boolean;
+    clickPosition: { x: number; y: number } | null;
+  }>({
+    temperature: null,
+    condition: null,
+    isLoading: true,
+    showWeatherEffect: false,
+    clickPosition: null,
+  });
+
   // Create refs for photos
   const photoRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -126,10 +141,79 @@ export default function Page() {
       });
     };
 
-    updateTimeState();
-    const interval = setInterval(updateTimeState, 60000); // Update every minute
+    // Fetch weather data for Toronto
+    const fetchWeatherData = async () => {
+      try {
+        // Use a real weather API to get accurate Toronto weather
+        // Using OpenMeteo API which doesn't require an API key
+        const response = await fetch(
+          "https://api.open-meteo.com/v1/forecast?latitude=43.65&longitude=-79.38&current=temperature_2m,weather_code&timezone=America%2FNew_York"
+        );
 
-    return () => clearInterval(interval);
+        if (!response.ok) {
+          throw new Error("Weather data fetch failed");
+        }
+
+        const data = await response.json();
+
+        // Map OpenMeteo weather codes to our condition names
+        // https://open-meteo.com/en/docs
+        const mapWeatherCode = (code: number): string => {
+          // Clear
+          if ([0].includes(code)) return "Clear";
+          // Mainly clear, partly cloudy
+          if ([1, 2].includes(code)) return "Partly Cloudy";
+          // Overcast
+          if ([3].includes(code)) return "Clouds";
+          // Fog, depositing rime fog
+          if ([45, 48].includes(code)) return "Fog";
+          // Drizzle: light, moderate, dense intensity
+          if ([51, 53, 55].includes(code)) return "Drizzle";
+          // Freezing Drizzle: light and dense intensity
+          if ([56, 57].includes(code)) return "Freezing Drizzle";
+          // Rain: slight, moderate, heavy intensity
+          if ([61, 63, 65].includes(code)) return "Rain";
+          // Freezing Rain: light and heavy intensity
+          if ([66, 67].includes(code)) return "Freezing Rain";
+          // Snow fall: slight, moderate, heavy intensity
+          if ([71, 73, 75].includes(code)) return "Snow";
+          // Snow grains
+          if ([77].includes(code)) return "Snow";
+          // Rain showers: slight, moderate, violent
+          if ([80, 81, 82].includes(code)) return "Rain";
+          // Snow showers slight and heavy
+          if ([85, 86].includes(code)) return "Snow";
+          // Thunderstorm: slight or moderate, with/without hail
+          if ([95, 96, 99].includes(code)) return "Thunderstorm";
+
+          return "Clear"; // Default
+        };
+
+        setWeatherState((prev) => ({
+          ...prev,
+          temperature: Math.round(data.current.temperature_2m),
+          condition: mapWeatherCode(data.current.weather_code),
+          isLoading: false,
+        }));
+      } catch (error) {
+        console.error("Error fetching weather data:", error);
+        setWeatherState((prev) => ({
+          ...prev,
+          isLoading: false,
+        }));
+      }
+    };
+
+    updateTimeState();
+    fetchWeatherData();
+
+    const interval = setInterval(updateTimeState, 60000); // Update every minute
+    const weatherInterval = setInterval(fetchWeatherData, 30 * 60000); // Update weather every 30 minutes
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(weatherInterval);
+    };
   }, []);
 
   // Add keyboard navigation for modal
@@ -239,6 +323,261 @@ export default function Page() {
     const displayMinute = minute < 10 ? `0${minute}` : minute;
 
     return `${displayHour}:${displayMinute} ${period} EST`;
+  };
+
+  // Calculate time difference between user's local time and EST
+  const getTimeDifference = () => {
+    if (!mounted) return "";
+
+    // Get user's local time
+    const localDate = new Date();
+
+    // Get EST time
+    const estOffset = -5; // EST offset from UTC in hours
+    const isDSTActive = () => {
+      // Simple DST check for US Eastern Time
+      const jan = new Date(localDate.getFullYear(), 0, 1).getTimezoneOffset();
+      const jul = new Date(localDate.getFullYear(), 6, 1).getTimezoneOffset();
+      return Math.max(jan, jul) !== localDate.getTimezoneOffset();
+    };
+
+    // Calculate the difference in hours
+    const localOffset = -localDate.getTimezoneOffset() / 60; // Convert minutes to hours and invert (getTimezoneOffset returns negative for east of UTC)
+    const estAdjustedOffset = estOffset + (isDSTActive() ? 1 : 0); // Adjust for DST
+    const hourDifference = localOffset - estAdjustedOffset;
+
+    // Format the difference message
+    if (hourDifference === 0) {
+      return "You're in the same timezone as Raf";
+    } else if (hourDifference > 0) {
+      return `You're ${hourDifference} hour${
+        hourDifference !== 1 ? "s" : ""
+      } ahead of Raf`;
+    } else {
+      return `You're ${Math.abs(hourDifference)} hour${
+        Math.abs(hourDifference) !== 1 ? "s" : ""
+      } behind Raf`;
+    }
+  };
+
+  // Toggle weather effect display
+  const toggleWeatherEffect = (e: React.MouseEvent) => {
+    // Get click position
+    const clickPosition = {
+      x: e.clientX,
+      y: e.clientY,
+    };
+
+    setWeatherState((prev) => ({
+      ...prev,
+      showWeatherEffect: !prev.showWeatherEffect,
+      // Always store the current click position, whether showing or hiding
+      clickPosition: clickPosition,
+    }));
+  };
+
+  // Get weather condition color based on condition
+  const getWeatherColor = () => {
+    if (!weatherState.condition) return "rgba(125, 125, 125, 0.2)";
+
+    const conditions: { [key: string]: string } = {
+      Clear: "rgba(255, 200, 0, 0.3)",
+      "Partly Cloudy": "rgba(230, 230, 230, 0.3)",
+      Clouds: "rgba(200, 200, 200, 0.3)",
+      Rain: "rgba(0, 125, 255, 0.3)",
+      Drizzle: "rgba(100, 150, 255, 0.3)",
+      "Freezing Drizzle": "rgba(180, 200, 255, 0.3)",
+      "Freezing Rain": "rgba(150, 180, 255, 0.3)",
+      Thunderstorm: "rgba(100, 100, 255, 0.4)",
+      Snow: "rgba(220, 240, 255, 0.3)",
+      Mist: "rgba(200, 200, 220, 0.3)",
+      Fog: "rgba(180, 180, 200, 0.3)",
+      Haze: "rgba(200, 180, 150, 0.3)",
+    };
+
+    return conditions[weatherState.condition] || "rgba(125, 125, 125, 0.2)";
+  };
+
+  // Get weather icon based on condition
+  const getWeatherIcon = (condition: string | null) => {
+    if (!condition) return null;
+
+    const icons: { [key: string]: JSX.Element } = {
+      Clear: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
+        </svg>
+      ),
+      "Partly Cloudy": (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path d="M4.5 10.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+          <path d="M17.5 6.5c0-2.76-2.24-5-5-5s-5 2.24-5 5c0 .34.04.67.09 1h-.09c-1.66 0-3 1.34-3 3s1.34 3 3 3h10c1.66 0 3-1.34 3-3s-1.34-3-3-3h-.09c.05-.33.09-.66.09-1z" />
+        </svg>
+      ),
+      Clouds: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M4.5 9.75a6 6 0 0111.573-2.226 3.75 3.75 0 014.133 4.303A4.5 4.5 0 0118 20.25H6.75a5.25 5.25 0 01-2.23-10.004 6.072 6.072 0 01-.02-.496z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      Rain: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M12 5.25a6.75 6.75 0 00-6.75 6.75c0 3.296 2.114 6.258 5.25 7.31V22.5a.75.75 0 001.5 0v-3.19c3.136-1.052 5.25-4.014 5.25-7.31A6.75 6.75 0 0012 5.25zM15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      Drizzle: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path d="M13.5 6.379V3.75a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 10.125a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.75 3.75 3.75 0 0 0-3-3.746ZM4.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 0 20.625 3.75 3.75 0 0 0 3.75 24.375 3.75 3.75 0 0 0 7.5 20.625a3.75 3.75 0 0 0-3-3.746ZM13.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 20.625a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.75 3.75 3.75 0 0 0-3-3.746Z" />
+        </svg>
+      ),
+      "Freezing Drizzle": (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H10a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0zm6.22 6.22a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H16a.75.75 0 010-1.5h7.19l-6.22-6.22a.75.75 0 010-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      "Freezing Rain": (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H10a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0zm6.22 6.22a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H16a.75.75 0 010-1.5h7.19l-6.22-6.22a.75.75 0 010-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      Thunderstorm: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      Snow: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M6.75 9a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H6.75zM6 12.75a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H6.75a.75.75 0 01-.75-.75zM6.75 16.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H6.75z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      Mist: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3 9a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 9zm0 6.75a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      Fog: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3 9a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 9zm0 6.75a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      Haze: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3 9a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 9zm0 6.75a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+    };
+
+    return (
+      icons[condition] || (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-3 h-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z"
+            clipRule="evenodd"
+          />
+        </svg>
+      )
+    );
   };
 
   if (!mounted) {
@@ -426,16 +765,40 @@ export default function Page() {
             Raf
           </h1>
 
-          {/* Display current time in EST */}
+          {/* Display current time in EST with weather */}
           {mounted && (
-            <motion.p
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
               transition={{ delay: 1, duration: 1.5 }}
-              className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[180px] text-right hidden md:block"
+              className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
             >
-              {formatTime()}
-            </motion.p>
+              <div className="flex items-center justify-end space-x-2">
+                <span>{getTimeDifference()}</span>
+                {weatherState.temperature !== null && (
+                  <>
+                    <span className="opacity-30">|</span>
+                    <div
+                      className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                      onClick={toggleWeatherEffect}
+                      title="Toronto weather - click to see effect"
+                    >
+                      <span>{weatherState.temperature}°C</span>
+                      {weatherState.condition && (
+                        <span className="ml-1 text-sm">
+                          {getWeatherIcon(weatherState.condition)}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              {weatherState.isLoading && (
+                <p className="text-[10px] opacity-50 mt-1">
+                  Loading Toronto weather...
+                </p>
+              )}
+            </motion.div>
           )}
         </motion.div>
 
@@ -488,7 +851,7 @@ export default function Page() {
                 <span className="text-foreground/60">
                   Originally from Italy, and now{" "}
                   <span className="text-foreground">based in Toronto</span>, Raf
-                  enjoys portrait photography, yoga, and fancy offices.{" "}
+                  enjoys portrait photography, yoga, and offices.{" "}
                 </span>
               </p>
             </div>
@@ -1190,6 +1553,129 @@ export default function Page() {
               </motion.div>
             </>
           )}
+        </AnimatePresence>
+
+        {/* Weather effect overlay */}
+        <AnimatePresence>
+          {weatherState.showWeatherEffect &&
+            weatherState.condition &&
+            weatherState.clickPosition && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  clipPath: `circle(0px at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
+                }}
+                animate={{
+                  opacity: 0.6,
+                  clipPath: `circle(150vw at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
+                }}
+                exit={{
+                  opacity: 0,
+                  clipPath: `circle(0px at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
+                }}
+                transition={{
+                  duration: 1.2,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                key="weather-effect"
+                className="fixed inset-0 pointer-events-none z-[5]"
+                style={{ backgroundColor: getWeatherColor() }}
+              >
+                {weatherState.condition === "Rain" && (
+                  <div className="absolute inset-0 overflow-hidden">
+                    {[...Array(20)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute bg-blue-200/30 dark:bg-blue-300/20 rounded-full"
+                        style={{
+                          top: `${Math.random() * -10}%`,
+                          left: `${Math.random() * 100}%`,
+                          width: "1px",
+                          height: `${Math.random() * 20 + 10}px`,
+                          opacity: Math.random() * 0.4 + 0.2,
+                          animation: `rainDrop ${
+                            Math.random() * 1 + 0.5
+                          }s linear ${Math.random() * 2}s infinite`,
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
+
+                {(weatherState.condition === "Snow" ||
+                  weatherState.condition === "Freezing Rain" ||
+                  weatherState.condition === "Freezing Drizzle") && (
+                  <div className="absolute inset-0 overflow-hidden">
+                    {[...Array(30)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute bg-white rounded-full"
+                        style={{
+                          top: `${Math.random() * -10}%`,
+                          left: `${Math.random() * 100}%`,
+                          width: `${Math.random() * 3 + 1}px`,
+                          height: `${Math.random() * 3 + 1}px`,
+                          opacity: Math.random() * 0.5 + 0.3,
+                          animation: `snowfall ${
+                            Math.random() * 5 + 10
+                          }s linear ${Math.random() * 5}s infinite`,
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
+
+                {weatherState.condition === "Thunderstorm" && (
+                  <div className="absolute inset-0 overflow-hidden">
+                    <div
+                      className="absolute bg-yellow-100/30 dark:bg-yellow-100/20"
+                      style={{
+                        top: "10%",
+                        left: "30%",
+                        width: "2px",
+                        height: "100px",
+                        transform: "rotate(15deg)",
+                        animation: "lightning 8s ease-in-out infinite",
+                      }}
+                    ></div>
+                    <div
+                      className="absolute bg-yellow-100/30 dark:bg-yellow-100/20"
+                      style={{
+                        top: "20%",
+                        right: "40%",
+                        width: "3px",
+                        height: "150px",
+                        transform: "rotate(-10deg)",
+                        animation: "lightning 12s ease-in-out 3s infinite",
+                      }}
+                    ></div>
+                  </div>
+                )}
+
+                {(weatherState.condition === "Fog" ||
+                  weatherState.condition === "Mist" ||
+                  weatherState.condition === "Haze") && (
+                  <div className="absolute inset-0 overflow-hidden">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute bg-gray-200/20 dark:bg-gray-300/10 rounded-full blur-xl"
+                        style={{
+                          top: `${20 + Math.random() * 60}%`,
+                          left: `${Math.random() * 100}%`,
+                          width: `${Math.random() * 200 + 100}px`,
+                          height: `${Math.random() * 100 + 50}px`,
+                          opacity: Math.random() * 0.3 + 0.1,
+                          animation: `fogMove ${
+                            Math.random() * 50 + 50
+                          }s linear ${Math.random() * 10}s infinite alternate`,
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
         </AnimatePresence>
       </div>
     </motion.main>
