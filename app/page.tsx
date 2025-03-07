@@ -301,6 +301,69 @@ export default function Page() {
     setCurrentNoteIndex((prev) => (prev - 1 + notes.length) % notes.length);
   };
 
+  // Custom variants for card transitions
+  const cardVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+      scale: 0.9,
+      zIndex: 0,
+      boxShadow: "0px 0px 0px rgba(0, 0, 0, 0.1)",
+      borderRadius: "0.75rem",
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      zIndex: 1,
+      boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.15)",
+      borderRadius: "0.75rem",
+      transition: {
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.4 },
+        scale: { duration: 0.4 },
+        boxShadow: { duration: 0.5 },
+        borderRadius: { duration: 0.3 },
+      },
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 300 : -300,
+      opacity: 0,
+      scale: 0.9,
+      zIndex: 0,
+      boxShadow: "0px 0px 0px rgba(0, 0, 0, 0.1)",
+      borderRadius: "0.75rem",
+      transition: {
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.4 },
+        scale: { duration: 0.4 },
+        boxShadow: { duration: 0.5 },
+        borderRadius: { duration: 0.3 },
+      },
+    }),
+  };
+
+  // Track the direction of navigation
+  const [direction, setDirection] = useState(0);
+
+  // Update direction when navigating
+  const navigateWithDirection = (newDirection: number, newIndex: number) => {
+    setDirection(newDirection);
+    setCurrentNoteIndex(newIndex);
+  };
+
+  // Modified navigation handlers
+  const handleNextNoteWithDirection = () => {
+    navigateWithDirection(1, (currentNoteIndex + 1) % notes.length);
+  };
+
+  const handlePrevNoteWithDirection = () => {
+    navigateWithDirection(
+      -1,
+      (currentNoteIndex - 1 + notes.length) % notes.length
+    );
+  };
+
   // Effect to scroll to the selected photo when modal opens
   useEffect(() => {
     if (isPhotosModalOpen && photoRefs.current[currentPhotoIndex]) {
@@ -1011,7 +1074,7 @@ export default function Page() {
                   .map((note, index) => (
                     <motion.div
                       key={note.id}
-                      className="py-7 first:pt-0 cursor-pointer"
+                      className="py-7 first:pt-0 cursor-pointer group"
                       initial={fadeInAnimation.initial}
                       animate={{ opacity: 1 }}
                       transition={{
@@ -1019,34 +1082,66 @@ export default function Page() {
                         delay: index * 0.1,
                       }}
                       onClick={() => handleOpenNote(index)}
+                      whileHover={{ x: 2 }}
                     >
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-start">
-                        <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
+                        <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px] font-mono">
                           {new Date(note.date).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
                           })}
                         </div>
-                        <div className="flex-1">
-                          <p className="text-base text-foreground hover:text-foreground/90 transition-colors line-clamp-2">
-                            {note.title} {note.excerpt}
-                          </p>
+                        <div className="flex-1 relative">
+                          {/* Category indicator */}
+                          <div
+                            className={`absolute -left-3 top-1.5 w-1.5 h-1.5 rounded-full ${
+                              getCategoryColor(note.category).split(" ")[1]
+                            } opacity-70`}
+                          ></div>
+
+                          <div className="flex flex-col gap-1">
+                            <p className="text-base text-foreground group-hover:text-foreground/90 transition-colors font-medium">
+                              {note.title}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                              {note.excerpt ||
+                                note.content
+                                  .replace(/^#.*$/m, "")
+                                  .trim()
+                                  .split("\n")[0]}
+                            </p>
+                          </div>
+
+                          {/* Subtle hover effect */}
+                          <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-200 dark:bg-gray-700 group-hover:w-full transition-all duration-300"></div>
                         </div>
                       </div>
                     </motion.div>
                   ))}
               </div>
-              <Link
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleOpenAllNotes();
-                }}
-                className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
+
+              {/* View all notes button */}
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                onClick={handleOpenAllNotes}
+                className="text-sm text-foreground/50 hover:text-foreground transition-colors flex items-center gap-1 group"
               >
-                View all notes
-              </Link>
+                <span>View all notes</span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  className="transform group-hover:translate-x-1 transition-transform"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </motion.button>
             </div>
           </section>
 
@@ -1370,6 +1465,9 @@ export default function Page() {
                     exit={{ opacity: 0, y: -5, rotate: -0.5 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
                     className="absolute inset-x-0 top-4 mx-auto w-[98%] h-[calc(100%-16px)] bg-white/80 dark:bg-zinc-900/80 rounded-xl shadow-lg -z-10"
+                    style={{
+                      boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.05)",
+                    }}
                   ></motion.div>
                   <motion.div
                     initial={{ opacity: 0, y: 10, rotate: 0.5 }}
@@ -1377,143 +1475,211 @@ export default function Page() {
                     exit={{ opacity: 0, y: -5, rotate: 0.5 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="absolute inset-x-0 top-2 mx-auto w-[99%] h-[calc(100%-8px)] bg-white/90 dark:bg-zinc-900/90 rounded-xl shadow-lg -z-20"
+                    style={{
+                      boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.08)",
+                    }}
                   ></motion.div>
 
-                  {/* Main content card */}
-                  <motion.div
-                    key={currentNoteIndex}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl px-6 md:px-12 py-16 pb-24 relative"
-                    onClick={(e) => e.stopPropagation()}
+                  {/* Main content card with horizontal transition */}
+                  <AnimatePresence
+                    initial={false}
+                    custom={direction}
+                    mode="wait"
                   >
-                    {/* Date in top right corner */}
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.3, duration: 0.4 }}
-                      className="absolute top-6 left-6 text-xs text-foreground/40"
-                    >
-                      {new Date(
-                        notes[currentNoteIndex].date
-                      ).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </motion.div>
-
-                    {/* Close button - positioned in top right */}
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ delay: 0.2, duration: 0.3 }}
-                      className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsNotesModalOpen(false);
+                      key={currentNoteIndex}
+                      custom={direction}
+                      variants={cardVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative"
+                      style={{
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
                       }}
-                      aria-label="Close notes"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M18 6L6 18M6 6l12 12" />
-                      </svg>
-                    </motion.button>
+                      {/* Card inner content with padding */}
+                      <div className="px-6 md:px-12 py-16 pb-24">
+                        {/* Header area with controls */}
+                        <div className="absolute top-0 left-0 right-0 h-20 px-6 flex items-center justify-between">
+                          {/* Left side - Date */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3, duration: 0.4 }}
+                            className="text-xs text-foreground/40 font-mono"
+                          >
+                            {new Date(
+                              notes[currentNoteIndex].date
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </motion.div>
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1, duration: 0.5 }}
-                      className="prose prose-invert max-w-none mt-12"
-                    >
-                      <ReactMarkdown>
-                        {notes[currentNoteIndex].content}
-                      </ReactMarkdown>
-                    </motion.div>
+                          {/* Right side - Category and Close button */}
+                          <div className="flex items-center gap-3">
+                            {/* Category badge */}
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.2, duration: 0.4 }}
+                              className={`text-xs px-3 py-1 rounded-full ${getCategoryColor(
+                                notes[currentNoteIndex].category
+                              )}`}
+                            >
+                              {notes[currentNoteIndex].category}
+                            </motion.div>
 
-                    {/* Subtle navigation controls */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
-                      className="mt-16 flex justify-center items-center gap-8"
-                    >
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePrevNote();
-                        }}
-                        className="text-foreground/40 hover:text-foreground transition-colors p-2"
-                        aria-label="Previous note"
-                      >
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
+                            {/* Close button */}
+                            <motion.button
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ delay: 0.2, duration: 0.3 }}
+                              className="rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsNotesModalOpen(false);
+                              }}
+                              aria-label="Close notes"
+                            >
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M18 6L6 18M6 6l12 12" />
+                              </svg>
+                            </motion.button>
+                          </div>
+                        </div>
+
+                        {/* Subtle decorative elements */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-300/20 via-gray-400/30 to-gray-300/20 dark:from-gray-700/20 dark:via-gray-600/30 dark:to-gray-700/20"></div>
+
+                        {/* Corner decorations */}
+                        <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none">
+                          <div className="absolute top-0 left-0 w-[1px] h-8 bg-gradient-to-b from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                          <div className="absolute top-0 left-0 w-8 h-[1px] bg-gradient-to-r from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                        </div>
+
+                        <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none">
+                          <div className="absolute top-0 right-0 w-[1px] h-8 bg-gradient-to-b from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                          <div className="absolute top-0 right-0 w-8 h-[1px] bg-gradient-to-l from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                        </div>
+
+                        <div className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none">
+                          <div className="absolute bottom-0 left-0 w-[1px] h-8 bg-gradient-to-t from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                          <div className="absolute bottom-0 left-0 w-8 h-[1px] bg-gradient-to-r from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                        </div>
+
+                        <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none">
+                          <div className="absolute bottom-0 right-0 w-[1px] h-8 bg-gradient-to-t from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                          <div className="absolute bottom-0 right-0 w-8 h-[1px] bg-gradient-to-l from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                        </div>
+
+                        <div className="absolute -left-4 top-20 w-8 h-8 rounded-full bg-gray-200/10 dark:bg-gray-700/10"></div>
+                        <div className="absolute -right-4 top-40 w-12 h-12 rounded-full bg-gray-200/10 dark:bg-gray-700/10"></div>
+
+                        {/* Enhanced note content */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1, duration: 0.5 }}
+                          className="prose dark:prose-invert max-w-none mt-12 relative"
                         >
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </motion.button>
+                          <div className="text-gray-600 dark:text-gray-300 leading-relaxed tracking-wide prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-h1:text-3xl prose-h1:font-medium prose-h1:mb-6 prose-h1:border-b prose-h1:border-gray-200 dark:prose-h1:border-gray-700 prose-h1:pb-2 prose-h2:text-2xl prose-h2:font-medium prose-h2:mt-8 prose-h2:mb-4 prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-p:mb-4 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ul:space-y-2 prose-ul:mb-6 prose-ul:text-gray-600 dark:prose-ul:text-gray-300 prose-li:text-gray-600 dark:prose-li:text-gray-300 prose-strong:font-medium prose-strong:text-gray-800 dark:prose-strong:text-gray-200">
+                            <ReactMarkdown>
+                              {notes[currentNoteIndex].content}
+                            </ReactMarkdown>
+                          </div>
+                        </motion.div>
 
-                      {/* Note selector dots */}
-                      <div className="flex gap-3">
-                        {notes.map((_, index) => (
+                        {/* Subtle navigation controls */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3, duration: 0.5 }}
+                          className="mt-16 flex justify-center items-center gap-8"
+                        >
                           <motion.button
-                            key={index}
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setCurrentNoteIndex(index);
+                              handlePrevNoteWithDirection();
                             }}
-                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                              currentNoteIndex === index
-                                ? "bg-foreground w-3"
-                                : "bg-foreground/30"
-                            }`}
-                            aria-label={`Go to note ${index + 1}`}
-                          />
-                        ))}
-                      </div>
+                            className="text-foreground/40 hover:text-foreground transition-colors p-2"
+                            aria-label="Previous note"
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            >
+                              <path d="M19 12H5M12 19l-7-7 7-7" />
+                            </svg>
+                          </motion.button>
 
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleNextNote();
-                        }}
-                        className="text-foreground/40 hover:text-foreground transition-colors p-2"
-                        aria-label="Next note"
-                      >
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                        >
-                          <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                      </motion.button>
+                          {/* Note selector dots */}
+                          <div className="flex gap-3">
+                            {notes.map((_, index) => (
+                              <motion.button
+                                key={index}
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigateWithDirection(
+                                    index > currentNoteIndex ? 1 : -1,
+                                    index
+                                  );
+                                }}
+                                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                                  currentNoteIndex === index
+                                    ? "bg-foreground w-3"
+                                    : "bg-foreground/30"
+                                }`}
+                                aria-label={`Go to note ${index + 1}`}
+                              />
+                            ))}
+                          </div>
+
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleNextNoteWithDirection();
+                            }}
+                            className="text-foreground/40 hover:text-foreground transition-colors p-2"
+                            aria-label="Next note"
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            >
+                              <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                          </motion.button>
+                        </motion.div>
+                      </div>
                     </motion.div>
-                  </motion.div>
+                  </AnimatePresence>
                 </div>
               </motion.div>
             </>
