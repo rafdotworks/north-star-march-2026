@@ -326,7 +326,7 @@ export default function Page() {
   };
 
   // Calculate time difference between user's local time and EST
-  const getTimeDifference = () => {
+  const getTimeDifference = (isMobile = false) => {
     if (!mounted) return "";
 
     // Get user's local time
@@ -347,16 +347,28 @@ export default function Page() {
     const hourDifference = localOffset - estAdjustedOffset;
 
     // Format the difference message
-    if (hourDifference === 0) {
-      return "You're in the same timezone as Raf";
-    } else if (hourDifference > 0) {
-      return `You're ${hourDifference} hour${
-        hourDifference !== 1 ? "s" : ""
-      } ahead of Raf`;
+    if (isMobile) {
+      // Shorter messages for mobile
+      if (hourDifference === 0) {
+        return "Same timezone";
+      } else if (hourDifference > 0) {
+        return `${hourDifference}h ahead`;
+      } else {
+        return `${Math.abs(hourDifference)}h behind`;
+      }
     } else {
-      return `You're ${Math.abs(hourDifference)} hour${
-        Math.abs(hourDifference) !== 1 ? "s" : ""
-      } behind Raf`;
+      // Full messages for desktop
+      if (hourDifference === 0) {
+        return "You're in the same timezone as Raf";
+      } else if (hourDifference > 0) {
+        return `You're ${hourDifference} hour${
+          hourDifference !== 1 ? "s" : ""
+        } ahead of Raf`;
+      } else {
+        return `You're ${Math.abs(hourDifference)} hour${
+          Math.abs(hourDifference) !== 1 ? "s" : ""
+        } behind Raf`;
+      }
     }
   };
 
@@ -580,6 +592,31 @@ export default function Page() {
     );
   };
 
+  const backgroundElements = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        delay: 0.2,
+        duration: 2.5,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
+
+  const slideInFromBottom = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 0.6,
+      y: 0,
+      transition: {
+        duration: 1.2,
+        delay: 1.2,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
+
   if (!mounted) {
     return null;
   }
@@ -774,7 +811,7 @@ export default function Page() {
               className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
             >
               <div className="flex items-center justify-end space-x-2">
-                <span>{getTimeDifference()}</span>
+                <span>{getTimeDifference(false)}</span>
                 {weatherState.temperature !== null && (
                   <>
                     <span className="opacity-30">|</span>
@@ -797,6 +834,54 @@ export default function Page() {
                 <p className="text-[10px] opacity-50 mt-1">
                   Loading Toronto weather...
                 </p>
+              )}
+            </motion.div>
+          )}
+
+          {/* Mobile time and weather display */}
+          {mounted && (
+            <motion.div
+              variants={slideInFromBottom}
+              initial="hidden"
+              animate="visible"
+              className="absolute right-0 top-0 text-xs text-foreground/40 font-light md:hidden"
+            >
+              <motion.div
+                className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.8, duration: 0.8 }}
+              >
+                <span>{getTimeDifference(true)}</span>
+
+                {weatherState.temperature !== null && (
+                  <>
+                    <span className="opacity-30">•</span>
+                    <div
+                      className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                      onClick={toggleWeatherEffect}
+                      title="Toronto weather - click to see effect"
+                    >
+                      <span>{weatherState.temperature}°C</span>
+                      {weatherState.condition && (
+                        <span className="ml-1 text-xs">
+                          {getWeatherIcon(weatherState.condition)}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </motion.div>
+
+              {weatherState.isLoading && (
+                <motion.p
+                  className="text-[9px] opacity-50 mt-1 text-right"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.5 }}
+                  transition={{ delay: 2.2, duration: 0.8 }}
+                >
+                  Loading weather...
+                </motion.p>
               )}
             </motion.div>
           )}
@@ -851,7 +936,7 @@ export default function Page() {
                 <span className="text-foreground/60">
                   Originally from Italy, and now{" "}
                   <span className="text-foreground">based in Toronto</span>, Raf
-                  enjoys portrait photography, yoga, and offices.{" "}
+                  enjoys portrait photography, yoga, and office spaces.{" "}
                 </span>
               </p>
             </div>
