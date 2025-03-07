@@ -458,7 +458,7 @@ export default function Page() {
               <p className="text-foreground">
                 Raf is a Product Designer{" "}
                 <span className="text-foreground/60">
-                  - founding designer and design engineer.{" "}
+                  ≈ founding designer and design engineer.{" "}
                 </span>
                 {/* <span className="text-foreground/60">
                   {" "}
@@ -468,29 +468,27 @@ export default function Page() {
               </p>
 
               <p>
+                <span className="text-foreground/60">Raf is </span>
+                <span className="text-foreground">driven by </span>
                 <span className="text-foreground/60">
                   {" "}
-                  Originally from Italy and now
-                </span>{" "}
-                <span className="text-foreground">based in Toronto,</span>
-                <span className="text-foreground/60">
-                  {" "}
-                  Raf has 8 years of experience working in-house and as a
-                  contractor for big companies and small startups,
-                </span>
-                <span className="text-foreground">
-                  {" "}
-                  pursuing excellence
-                </span>{" "}
-                <span className="text-foreground/60">
-                  {" "}
-                  with a deep passion for craft and collaboration.
+                  a deep passion for craft, collaboration, and a relentless
+                  pursuit of <span className="text-foreground">excellence</span>
+                  . He has designed experiences and systems at companies like
+                  Theoriq, CurbCutOS, Atlas, Zalando, Apple{" "}
+                  {/* <span className="inline-block text-[12px] align-text-top text-foreground/40 font-light">
+                    (internship)
+                  </span>{" "} */}
+                  and clients such as w.ai, US.court, Tela, Ethos, Lyfe,
+                  Artscapy.
                 </span>
               </p>
 
               <p>
                 <span className="text-foreground/60">
-                  He enjoys portrait photography, yoga, and interior design.
+                  Originally from Italy, and now{" "}
+                  <span className="text-foreground">based in Toronto</span>, Raf
+                  enjoys portrait photography, yoga, and fancy offices.{" "}
                 </span>
               </p>
             </div>
