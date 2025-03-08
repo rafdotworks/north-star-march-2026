@@ -1082,10 +1082,11 @@ export default function Page() {
                         delay: index * 0.1,
                       }}
                       onClick={() => handleOpenNote(index)}
-                      whileHover={{ x: 2 }}
+                      whileHover={{ y: -3 }}
+                      whileTap={{ y: 0 }}
                     >
-                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-start">
-                        <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px] font-mono">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-baseline">
+                        <div className="text-xs text-foreground/40 whitespace-nowrap min-w-[90px] font-light tracking-tight">
                           {new Date(note.date).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
@@ -1112,9 +1113,6 @@ export default function Page() {
                                   .split("\n")[0]}
                             </p>
                           </div>
-
-                          {/* Subtle hover effect */}
-                          <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-200 dark:bg-gray-700 group-hover:w-full transition-all duration-300"></div>
                         </div>
                       </div>
                     </motion.div>
