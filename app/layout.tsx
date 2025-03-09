@@ -15,11 +15,11 @@ const eduMarist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Raf | Founding Product Designer",
+  title: "Raf | Product Designer",
   description:
-    "Founding product designer who codes. Currently leading design at Theoriq.",
+    "Product designer, founding product designer and design engineer based in Toronto.",
   openGraph: {
-    title: "Raf | Founding Product Designer",
+    title: "Raf | Product Designer",
     description:
       "Founding product designer who codes. Currently leading design at Theoriq.",
     url: "https://raf.works",
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Raf | Founding Product Designer",
+    title: "Raf | Product Designer",
     description:
-      "Founding product designer who codes. Currently leading design at Theoriq.",
+      "Product designer, founding product designer and design engineer based in Toronto.",
     creator: "@lfgraf",
     images: ["/og-image.png"], // Same image as OG
   },
