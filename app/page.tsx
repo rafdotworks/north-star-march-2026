@@ -19,6 +19,8 @@ export default function Page() {
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
     {}
   );
+  // Camera focus effect state
+  const [blurAmount, setBlurAmount] = useState(12); // Initial blur amount (pixels)
   const [timeState, setTimeState] = useState<{
     hour: number;
     minute: number;
@@ -76,6 +78,40 @@ export default function Page() {
   ];
   useEffect(() => {
     setMounted(true);
+
+    // Camera focus animation effect
+    const focusAnimation = () => {
+      // Start with a blur and gradually reduce it using a more camera-like easing
+      const totalDuration = 1200; // 1.2 seconds total (reduced from 2.5s)
+      const startTime = Date.now();
+      const initialBlur = 8; // Reduced initial blur amount
+
+      const focusInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(1, elapsed / totalDuration);
+
+        // Use a cubic easing function for more natural camera focus feel
+        // Starts slow, accelerates in the middle, then slows down at the end
+        const easedProgress =
+          progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+        const newBlur = initialBlur * (1 - easedProgress);
+
+        setBlurAmount(newBlur);
+
+        if (progress >= 1) {
+          clearInterval(focusInterval);
+          setBlurAmount(0);
+        }
+      }, 16); // ~60fps for smooth animation
+
+      return () => clearInterval(focusInterval);
+    };
+
+    // Start the focus animation
+    const focusCleanup = focusAnimation();
 
     // Update time state
     const updateTimeState = () => {
@@ -212,6 +248,7 @@ export default function Page() {
     return () => {
       clearInterval(interval);
       clearInterval(weatherInterval);
+      focusCleanup();
     };
   }, []);
 
@@ -700,720 +737,609 @@ export default function Page() {
   }
 
   return (
-    <motion.main
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }}
-      className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden"
+    <div
+      style={{
+        filter: `blur(${blurAmount}px)`,
+        transition: "filter 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
+      }}
     >
-      {/* Immersive ambient background with animated elements */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
-        {/* Consistent subtle shadow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-100/30 via-transparent to-transparent dark:from-gray-900/30 opacity-20"></div>
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }}
+        className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden"
+      >
+        {/* Immersive ambient background with animated elements */}
+        <div className="fixed inset-0 z-0 overflow-hidden">
+          {/* Consistent subtle shadow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-100/30 via-transparent to-transparent dark:from-gray-900/30 opacity-20"></div>
 
-        {/* Main shadow effect */}
-        <div className="absolute top-[10%] left-[20%] w-[60vw] h-[60vh] rounded-full blur-[150px] opacity-[0.08] bg-gray-400 dark:bg-gray-700 animate-slow-pulse"></div>
+          {/* Main shadow effect */}
+          <div className="absolute top-[10%] left-[20%] w-[60vw] h-[60vh] rounded-full blur-[150px] opacity-[0.08] bg-gray-400 dark:bg-gray-700 animate-slow-pulse"></div>
 
-        {/* Secondary shadow for depth */}
-        <div className="absolute bottom-[5%] right-[15%] w-[40vw] h-[40vh] rounded-full blur-[180px] opacity-[0.06] bg-gray-500 dark:bg-gray-800"></div>
+          {/* Secondary shadow for depth */}
+          <div className="absolute bottom-[5%] right-[15%] w-[40vw] h-[40vh] rounded-full blur-[180px] opacity-[0.06] bg-gray-500 dark:bg-gray-800"></div>
 
-        {/* Subtle gradient light at the bottom */}
-        <div className="absolute bottom-0 inset-x-0 h-[30vh] bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-40"></div>
+          {/* Subtle gradient light at the bottom */}
+          <div className="absolute bottom-0 inset-x-0 h-[30vh] bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-40"></div>
 
-        {/* Time-based design element at the top */}
-        {mounted && (
-          <>
-            {/* Dawn: Soft rising sun effect */}
-            {timeState.timeOfDay === "dawn" && (
-              <div
-                className="absolute top-0 inset-x-0 h-[25vh] bg-gradient-to-b from-amber-100/20 via-pink-100/10 to-transparent dark:from-amber-900/20 dark:via-pink-900/10"
-                style={{
-                  clipPath: `polygon(0 0, 100% 0, 100% ${
-                    20 + timeState.progress * 80
-                  }%, 0 ${20 + timeState.progress * 80}%)`,
-                  opacity: 0.3 + timeState.progress * 0.3,
-                }}
-              >
+          {/* Time-based design element at the top */}
+          {mounted && (
+            <>
+              {/* Dawn: Soft rising sun effect */}
+              {timeState.timeOfDay === "dawn" && (
                 <div
-                  className="absolute top-[10%] left-[40%] w-[20vw] h-[20vw] rounded-full blur-[80px] bg-amber-200/30 dark:bg-amber-700/20"
+                  className="absolute top-0 inset-x-0 h-[25vh] bg-gradient-to-b from-amber-100/20 via-pink-100/10 to-transparent dark:from-amber-900/20 dark:via-pink-900/10"
                   style={{
-                    transform: `translateY(${timeState.progress * 30}px)`,
+                    clipPath: `polygon(0 0, 100% 0, 100% ${
+                      20 + timeState.progress * 80
+                    }%, 0 ${20 + timeState.progress * 80}%)`,
+                    opacity: 0.3 + timeState.progress * 0.3,
                   }}
-                ></div>
-              </div>
-            )}
-
-            {/* Morning: Bright, energetic rays */}
-            {timeState.timeOfDay === "morning" && (
-              <div className="absolute top-0 inset-x-0 h-[20vh] overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-[15vh] bg-gradient-to-b from-blue-50/30 to-transparent dark:from-blue-900/20"></div>
-                {[...Array(5)].map((_, i) => (
+                >
                   <div
-                    key={i}
-                    className="absolute top-[-10vh] bg-yellow-100/10 dark:bg-yellow-400/5"
+                    className="absolute top-[10%] left-[40%] w-[20vw] h-[20vw] rounded-full blur-[80px] bg-amber-200/30 dark:bg-amber-700/20"
                     style={{
-                      left: `${15 + i * 20}%`,
-                      height: `${30 + Math.sin(i) * 10}vh`,
-                      width: "2px",
-                      transform: `rotate(${-5 + i * 2.5}deg) scaleY(${
-                        0.7 + timeState.progress * 0.3
-                      })`,
-                      opacity: 0.2 + timeState.progress * 0.3,
-                      boxShadow: "0 0 15px 5px rgba(255, 249, 219, 0.2)",
+                      transform: `translateY(${timeState.progress * 30}px)`,
                     }}
                   ></div>
-                ))}
-              </div>
-            )}
+                </div>
+              )}
 
-            {/* Afternoon: Warm, productive glow */}
-            {timeState.timeOfDay === "afternoon" && (
-              <div className="absolute top-0 inset-x-0 h-[15vh]">
-                <div className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-blue-50/20 via-transparent to-transparent dark:from-blue-900/10"></div>
-                <div
-                  className="absolute top-[20%] right-[30%] w-[25vw] h-[10vh] rounded-full blur-[100px] bg-amber-100/20 dark:bg-amber-700/10"
-                  style={{
-                    opacity: 0.2 + (1 - timeState.progress) * 0.3,
-                  }}
-                ></div>
-              </div>
-            )}
+              {/* Morning: Bright, energetic rays */}
+              {timeState.timeOfDay === "morning" && (
+                <div className="absolute top-0 inset-x-0 h-[20vh] overflow-hidden">
+                  <div className="absolute top-0 inset-x-0 h-[15vh] bg-gradient-to-b from-blue-50/30 to-transparent dark:from-blue-900/20"></div>
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute top-[-10vh] bg-yellow-100/10 dark:bg-yellow-400/5"
+                      style={{
+                        left: `${15 + i * 20}%`,
+                        height: `${30 + Math.sin(i) * 10}vh`,
+                        width: "2px",
+                        transform: `rotate(${-5 + i * 2.5}deg) scaleY(${
+                          0.7 + timeState.progress * 0.3
+                        })`,
+                        opacity: 0.2 + timeState.progress * 0.3,
+                        boxShadow: "0 0 15px 5px rgba(255, 249, 219, 0.2)",
+                      }}
+                    ></div>
+                  ))}
+                </div>
+              )}
 
-            {/* Evening: Warm sunset colors */}
-            {timeState.timeOfDay === "evening" && (
-              <div className="absolute top-0 inset-x-0 h-[20vh] overflow-hidden">
-                <div
-                  className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-orange-100/30 via-pink-100/20 to-transparent dark:from-orange-900/20 dark:via-pink-900/10"
-                  style={{
-                    opacity: 0.3 + (1 - timeState.progress) * 0.4,
-                  }}
-                ></div>
-                <div
-                  className="absolute top-[10%] right-[20%] w-[30vw] h-[8vh] rounded-full blur-[80px] bg-orange-200/30 dark:bg-orange-700/20"
-                  style={{
-                    transform: `translateY(${(1 - timeState.progress) * 20}px)`,
-                  }}
-                ></div>
-              </div>
-            )}
-
-            {/* Night: Starry, mysterious atmosphere */}
-            {timeState.timeOfDay === "night" && (
-              <div className="absolute top-0 inset-x-0 h-[30vh] overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-indigo-900/30 via-purple-900/20 to-transparent opacity-30 dark:opacity-40"></div>
-                {[...Array(20)].map((_, i) => (
+              {/* Afternoon: Warm, productive glow */}
+              {timeState.timeOfDay === "afternoon" && (
+                <div className="absolute top-0 inset-x-0 h-[15vh]">
+                  <div className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-blue-50/20 via-transparent to-transparent dark:from-blue-900/10"></div>
                   <div
-                    key={i}
-                    className="absolute rounded-full bg-white dark:bg-white animate-twinkle"
+                    className="absolute top-[20%] right-[30%] w-[25vw] h-[10vh] rounded-full blur-[100px] bg-amber-100/20 dark:bg-amber-700/10"
                     style={{
-                      top: `${Math.random() * 100}%`,
-                      left: `${Math.random() * 100}%`,
-                      width: `${Math.random() * 2 + 1}px`,
-                      height: `${Math.random() * 2 + 1}px`,
-                      opacity: Math.random() * 0.5 + 0.3,
-                      animationDelay: `${Math.random() * 10}s`,
-                      animationDuration: `${Math.random() * 5 + 3}s`,
+                      opacity: 0.2 + (1 - timeState.progress) * 0.3,
                     }}
                   ></div>
-                ))}
-                <div className="absolute top-[20%] left-[70%] w-[10vw] h-[10vw] rounded-full blur-[100px] bg-indigo-200/10 dark:bg-indigo-500/10 animate-slow-pulse"></div>
-              </div>
-            )}
-          </>
-        )}
+                </div>
+              )}
 
-        {/* Time-based design element at the bottom */}
-        {mounted && (
-          <>
-            {/* Dawn: Soft rising sun reflection at bottom */}
-            {timeState.timeOfDay === "dawn" && (
-              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-amber-100/40 via-pink-100/20 to-transparent dark:from-amber-900/40 dark:via-pink-900/20 opacity-40">
-                <div className="absolute bottom-[10%] right-[40%] w-[25vw] h-[25vw] rounded-full blur-[100px] bg-amber-200/30 dark:bg-amber-700/20"></div>
-              </div>
-            )}
+              {/* Evening: Warm sunset colors */}
+              {timeState.timeOfDay === "evening" && (
+                <div className="absolute top-0 inset-x-0 h-[20vh] overflow-hidden">
+                  <div
+                    className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-orange-100/30 via-pink-100/20 to-transparent dark:from-orange-900/20 dark:via-pink-900/10"
+                    style={{
+                      opacity: 0.3 + (1 - timeState.progress) * 0.4,
+                    }}
+                  ></div>
+                  <div
+                    className="absolute top-[10%] right-[20%] w-[30vw] h-[8vh] rounded-full blur-[80px] bg-orange-200/30 dark:bg-orange-700/20"
+                    style={{
+                      transform: `translateY(${
+                        (1 - timeState.progress) * 20
+                      }px)`,
+                    }}
+                  ></div>
+                </div>
+              )}
 
-            {/* Morning: Subtle light reflection */}
-            {timeState.timeOfDay === "morning" && (
-              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-blue-50/40 via-blue-50/20 to-transparent dark:from-blue-900/30 dark:via-blue-900/10 opacity-40">
-                <div className="absolute bottom-[5%] left-[30%] w-[30vw] h-[15vh] rounded-full blur-[100px] bg-yellow-100/20 dark:bg-yellow-700/10"></div>
-              </div>
-            )}
+              {/* Night: Starry, mysterious atmosphere */}
+              {timeState.timeOfDay === "night" && (
+                <div className="absolute top-0 inset-x-0 h-[30vh] overflow-hidden">
+                  <div className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-indigo-900/30 via-purple-900/20 to-transparent opacity-30 dark:opacity-40"></div>
+                  {[...Array(20)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute rounded-full bg-white dark:bg-white animate-twinkle"
+                      style={{
+                        top: `${Math.random() * 100}%`,
+                        left: `${Math.random() * 100}%`,
+                        width: `${Math.random() * 2 + 1}px`,
+                        height: `${Math.random() * 2 + 1}px`,
+                        opacity: Math.random() * 0.5 + 0.3,
+                        animationDelay: `${Math.random() * 10}s`,
+                        animationDuration: `${Math.random() * 5 + 3}s`,
+                      }}
+                    ></div>
+                  ))}
+                  <div className="absolute top-[20%] left-[70%] w-[10vw] h-[10vw] rounded-full blur-[100px] bg-indigo-200/10 dark:bg-indigo-500/10 animate-slow-pulse"></div>
+                </div>
+              )}
+            </>
+          )}
 
-            {/* Afternoon: Warm glow reflection */}
-            {timeState.timeOfDay === "afternoon" && (
-              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-amber-50/40 via-amber-50/20 to-transparent dark:from-amber-900/30 dark:via-amber-900/10 opacity-40">
-                <div className="absolute bottom-[10%] left-[30%] w-[30vw] h-[12vh] rounded-full blur-[100px] bg-amber-100/30 dark:bg-amber-700/15 opacity-50"></div>
-              </div>
-            )}
+          {/* Time-based design element at the bottom */}
+          {mounted && (
+            <>
+              {/* Dawn: Soft rising sun reflection at bottom */}
+              {timeState.timeOfDay === "dawn" && (
+                <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-amber-100/40 via-pink-100/20 to-transparent dark:from-amber-900/40 dark:via-pink-900/20 opacity-40">
+                  <div className="absolute bottom-[10%] right-[40%] w-[25vw] h-[25vw] rounded-full blur-[100px] bg-amber-200/30 dark:bg-amber-700/20"></div>
+                </div>
+              )}
 
-            {/* Evening: Sunset reflection */}
-            {timeState.timeOfDay === "evening" && (
-              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-orange-100/40 via-pink-100/20 to-transparent dark:from-orange-900/30 dark:via-pink-900/15 opacity-40">
-                <div className="absolute bottom-[5%] left-[20%] w-[35vw] h-[10vh] rounded-full blur-[100px] bg-orange-200/30 dark:bg-orange-700/20 opacity-50"></div>
-              </div>
-            )}
+              {/* Morning: Subtle light reflection */}
+              {timeState.timeOfDay === "morning" && (
+                <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-blue-50/40 via-blue-50/20 to-transparent dark:from-blue-900/30 dark:via-blue-900/10 opacity-40">
+                  <div className="absolute bottom-[5%] left-[30%] w-[30vw] h-[15vh] rounded-full blur-[100px] bg-yellow-100/20 dark:bg-yellow-700/10"></div>
+                </div>
+              )}
 
-            {/* Night: Starry reflection */}
-            {timeState.timeOfDay === "night" && (
-              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-indigo-900/40 via-purple-900/20 to-transparent opacity-40">
-                <div className="absolute bottom-[10%] right-[30%] w-[15vw] h-[15vw] rounded-full blur-[100px] bg-indigo-200/15 dark:bg-indigo-500/15 opacity-50"></div>
-              </div>
-            )}
-          </>
-        )}
+              {/* Afternoon: Warm glow reflection */}
+              {timeState.timeOfDay === "afternoon" && (
+                <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-amber-50/40 via-amber-50/20 to-transparent dark:from-amber-900/30 dark:via-amber-900/10 opacity-40">
+                  <div className="absolute bottom-[10%] left-[30%] w-[30vw] h-[12vh] rounded-full blur-[100px] bg-amber-100/30 dark:bg-amber-700/15 opacity-50"></div>
+                </div>
+              )}
 
-        {/* Noise texture overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "repeat",
-            mixBlendMode: "overlay",
-          }}
-        >
-          {/* Animated noise layer for subtle movement */}
+              {/* Evening: Sunset reflection */}
+              {timeState.timeOfDay === "evening" && (
+                <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-orange-100/40 via-pink-100/20 to-transparent dark:from-orange-900/30 dark:via-pink-900/15 opacity-40">
+                  <div className="absolute bottom-[5%] left-[20%] w-[35vw] h-[10vh] rounded-full blur-[100px] bg-orange-200/30 dark:bg-orange-700/20 opacity-50"></div>
+                </div>
+              )}
+
+              {/* Night: Starry reflection */}
+              {timeState.timeOfDay === "night" && (
+                <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-indigo-900/40 via-purple-900/20 to-transparent opacity-40">
+                  <div className="absolute bottom-[10%] right-[30%] w-[15vw] h-[15vw] rounded-full blur-[100px] bg-indigo-200/15 dark:bg-indigo-500/15 opacity-50"></div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Noise texture overlay */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 opacity-[0.03] pointer-events-none"
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
               backgroundRepeat: "repeat",
-              mixBlendMode: "difference",
-              opacity: 0.2,
-              animation: "noise 8s infinite alternate",
+              mixBlendMode: "overlay",
             }}
-          ></div>
-        </div>
-
-        {/* Subtle animated particle effect */}
-        <div className="absolute inset-0 opacity-[0.02]">
-          <div
-            className="absolute top-1/4 left-1/3 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
-            style={{ animationDelay: "0s", animationDuration: "4s" }}
-          />
-          <div
-            className="absolute top-1/2 left-1/4 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
-            style={{ animationDelay: "0.5s", animationDuration: "5s" }}
-          />
-          <div
-            className="absolute top-3/4 left-2/3 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
-            style={{ animationDelay: "1s", animationDuration: "6s" }}
-          />
-          <div
-            className="absolute top-1/3 left-3/4 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
-            style={{ animationDelay: "1.5s", animationDuration: "4.5s" }}
-          />
-          <div
-            className="absolute top-2/3 left-1/2 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
-            style={{ animationDelay: "2s", animationDuration: "5.5s" }}
-          />
-        </div>
-      </div>
-
-      <div className="max-w-screen-xl mx-auto relative z-10">
-        <motion.div
-          variants={fadeInAnimation}
-          initial="hidden"
-          animate="visible"
-          className="flex items-center gap-4 mb-40 relative"
-        >
-          {/* Subtle glow effect behind the name */}
-          <div className="absolute w-12 h-12 rounded-full bg-foreground/5 blur-xl -z-10 left-0 transform -translate-x-1/4"></div>
-
-          <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
-            Raf
-          </h1>
-
-          {/* Display current time in EST with weather */}
-          {mounted && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              transition={{ delay: 1, duration: 1.5 }}
-              className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
-            >
-              <div className="flex items-center justify-end space-x-2">
-                <span>{getTimeDifference(false)}</span>
-                {weatherState.temperature !== null && (
-                  <>
-                    <span className="opacity-30">|</span>
-                    <div
-                      className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                      onClick={toggleWeatherEffect}
-                      title="Toronto weather - click to see effect"
-                    >
-                      <span>{weatherState.temperature}°C</span>
-                      {weatherState.condition && (
-                        <span className="ml-1 text-sm">
-                          {getWeatherIcon(weatherState.condition)}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-              {weatherState.isLoading && (
-                <p className="text-[10px] opacity-50 mt-1">
-                  Loading Toronto weather...
-                </p>
-              )}
-            </motion.div>
-          )}
-
-          {/* Mobile time and weather display */}
-          {mounted && (
-            <motion.div
-              variants={slideInFromBottom}
-              initial="hidden"
-              animate="visible"
-              className="absolute right-0 top-0 text-xs text-foreground/40 font-light md:hidden"
-            >
-              <motion.div
-                className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.8, duration: 0.8 }}
-              >
-                <span>{getTimeDifference(true)}</span>
-
-                {weatherState.temperature !== null && (
-                  <>
-                    <span className="opacity-30">•</span>
-                    <div
-                      className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                      onClick={toggleWeatherEffect}
-                      title="Toronto weather - click to see effect"
-                    >
-                      <span>{weatherState.temperature}°C</span>
-                      {weatherState.condition && (
-                        <span className="ml-1 text-xs">
-                          {getWeatherIcon(weatherState.condition)}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </motion.div>
-
-              {weatherState.isLoading && (
-                <motion.p
-                  className="text-[9px] opacity-50 mt-1 text-right"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.5 }}
-                  transition={{ delay: 2.2, duration: 0.8 }}
-                >
-                  Loading weather...
-                </motion.p>
-              )}
-            </motion.div>
-          )}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 2,
-            delay: 0.3,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="space-y-36"
-        >
-          <section className="md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20 w-full">
-            <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
-              About
-            </h2>
-
-            <div className="space-y-6 text-base leading-relaxed">
-              <p className="text-foreground">
-                Raf is a Product Designer{" "}
-                <span className="text-foreground/60">
-                  ≈ founding designer and design engineer.{" "}
-                </span>
-                {/* <span className="text-foreground/60">
-                  {" "}
-                  With 7+ years of experience building products that have driven
-                  $100M+ in collective revenue.{" "}
-                </span> */}
-              </p>
-
-              <p>
-                <span className="text-foreground/60">Raf is </span>
-                <span className="text-foreground">driven by </span>
-                <span className="text-foreground/60">
-                  {" "}
-                  a deep passion for craft, collaboration, and a relentless
-                  pursuit of <span className="text-foreground">excellence</span>
-                  . He has designed experiences and systems at companies like
-                  Theoriq, CurbCutOS, Atlas, Zalando, Apple{" "}
-                  {/* <span className="inline-block text-[12px] align-text-top text-foreground/40 font-light">
-                    (internship)
-                  </span>{" "} */}
-                  and clients such as w.ai, US.court, Tela, Ethos, Lyfe,
-                  Artscapy.
-                </span>
-              </p>
-
-              <p>
-                <span className="text-foreground/60">
-                  Originally from Italy, and now{" "}
-                  <span className="text-foreground">based in Toronto</span>, Raf
-                  enjoys portrait photography, yoga, and office spaces.{" "}
-                </span>
-              </p>
-            </div>
-          </section>
-
-          <div className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-            <div className="mb-10 md:mb-0">
-              <h2 className="text-base font-normal text-foreground">
-                Selected works
-              </h2>
-            </div>
-
-            <div className="space-y-8">
-              <div className="w-full mb-0 overflow-hidden relative">
-                <motion.img
-                  key={currentImageIndex}
-                  src={images[currentImageIndex]}
-                  alt="Work preview"
-                  className="w-full cursor-pointer bg-transparent max-w-full"
-                  style={{
-                    objectPosition: "center center",
-                    display: "block",
-                  }}
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: loadedImages[images[currentImageIndex]] ? 1 : 0,
-                  }}
-                  transition={{ duration: 0 }}
-                  onClick={() => setIsZoomed(true)}
-                  onLoad={() => handleImageLoad(images[currentImageIndex])}
-                />
-                {/* Preload next image */}
-                <img
-                  src={images[(currentImageIndex + 1) % images.length]}
-                  alt="Next work preview"
-                  className="hidden"
-                  onLoad={() =>
-                    handleImageLoad(
-                      images[(currentImageIndex + 1) % images.length]
-                    )
-                  }
-                />
-              </div>
-              <div className="hidden md:block mt-4">
-                <a
-                  href="https://rafvitale.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
-                >
-                  View all works ↗
-                </a>
-              </div>
-            </div>
+          >
+            {/* Animated noise layer for subtle movement */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                backgroundRepeat: "repeat",
+                mixBlendMode: "difference",
+                opacity: 0.2,
+                animation: "noise 8s infinite alternate",
+              }}
+            ></div>
           </div>
 
-          {/* Notes Section */}
-          <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-            <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
-              Notes
-            </h2>
+          {/* Subtle animated particle effect */}
+          <div className="absolute inset-0 opacity-[0.02]">
+            <div
+              className="absolute top-1/4 left-1/3 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
+              style={{ animationDelay: "0s", animationDuration: "4s" }}
+            />
+            <div
+              className="absolute top-1/2 left-1/4 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
+              style={{ animationDelay: "0.5s", animationDuration: "5s" }}
+            />
+            <div
+              className="absolute top-3/4 left-2/3 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
+              style={{ animationDelay: "1s", animationDuration: "6s" }}
+            />
+            <div
+              className="absolute top-1/3 left-3/4 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
+              style={{ animationDelay: "1.5s", animationDuration: "4.5s" }}
+            />
+            <div
+              className="absolute top-2/3 left-1/2 w-1 h-1 rounded-full bg-foreground/50 animate-pulse"
+              style={{ animationDelay: "2s", animationDuration: "5.5s" }}
+            />
+          </div>
+        </div>
 
-            <div className="space-y-8">
-              <div className="flex flex-col divide-y divide-foreground/5">
-                {/* Sort notes by date (newest first) and show only the 3 most recent */}
-                {notes
-                  .sort(
-                    (a, b) =>
-                      new Date(b.date).getTime() - new Date(a.date).getTime()
-                  )
-                  .slice(0, 3)
-                  .map((note, index) => (
-                    <motion.div
-                      key={note.id}
-                      layoutId={`note-card-${index}`}
-                      id={`note-card-${index}`}
-                      className="py-7 first:pt-0 cursor-pointer group"
-                      initial={fadeInAnimation.initial}
-                      animate={{ opacity: 1 }}
-                      transition={{
-                        duration: 0.5,
-                        delay: index * 0.1,
-                      }}
-                      onClick={(e) => handleOpenNoteWithAnimation(index, e)}
-                      whileHover={{ y: -3 }}
-                      whileTap={{ y: 0 }}
-                    >
-                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-baseline">
-                        <div className="text-xs text-foreground/40 whitespace-nowrap min-w-[90px] font-light tracking-tight">
-                          {new Date(note.date).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </div>
-                        <div className="flex-1 relative">
-                          {/* Category indicator */}
-                          <div
-                            className={`absolute -left-3 top-1.5 w-1.5 h-1.5 rounded-full ${
-                              getCategoryColor(note.category).split(" ")[1]
-                            } opacity-70`}
-                          ></div>
+        <div className="max-w-screen-xl mx-auto relative z-10">
+          <motion.div
+            variants={fadeInAnimation}
+            initial="hidden"
+            animate="visible"
+            className="flex items-center gap-4 mb-40 relative"
+          >
+            {/* Subtle glow effect behind the name */}
+            <div className="absolute w-12 h-12 rounded-full bg-foreground/5 blur-xl -z-10 left-0 transform -translate-x-1/4"></div>
 
-                          <div className="flex flex-col gap-1">
-                            <p className="text-base text-foreground group-hover:text-foreground/90 transition-colors font-medium">
-                              {note.title}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                              {note.excerpt ||
-                                note.content
-                                  .replace(/^#.*$/m, "")
-                                  .trim()
-                                  .split("\n")[0]}
-                            </p>
+            <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
+              Raf
+            </h1>
+
+            {/* Display current time in EST with weather */}
+            {mounted && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.6 }}
+                transition={{ delay: 1, duration: 1.5 }}
+                className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
+              >
+                <div className="flex items-center justify-end space-x-2">
+                  <span>{getTimeDifference(false)}</span>
+                  {weatherState.temperature !== null && (
+                    <>
+                      <span className="opacity-30">|</span>
+                      <div
+                        className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                        onClick={toggleWeatherEffect}
+                        title="Toronto weather - click to see effect"
+                      >
+                        <span>{weatherState.temperature}°C</span>
+                        {weatherState.condition && (
+                          <span className="ml-1 text-sm">
+                            {getWeatherIcon(weatherState.condition)}
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+                {weatherState.isLoading && (
+                  <p className="text-[10px] opacity-50 mt-1">
+                    Loading Toronto weather...
+                  </p>
+                )}
+              </motion.div>
+            )}
+
+            {/* Mobile time and weather display */}
+            {mounted && (
+              <motion.div
+                variants={slideInFromBottom}
+                initial="hidden"
+                animate="visible"
+                className="absolute right-0 top-0 text-xs text-foreground/40 font-light md:hidden"
+              >
+                <motion.div
+                  className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.8, duration: 0.8 }}
+                >
+                  <span>{getTimeDifference(true)}</span>
+
+                  {weatherState.temperature !== null && (
+                    <>
+                      <span className="opacity-30">•</span>
+                      <div
+                        className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                        onClick={toggleWeatherEffect}
+                        title="Toronto weather - click to see effect"
+                      >
+                        <span>{weatherState.temperature}°C</span>
+                        {weatherState.condition && (
+                          <span className="ml-1 text-xs">
+                            {getWeatherIcon(weatherState.condition)}
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+
+                {weatherState.isLoading && (
+                  <motion.p
+                    className="text-[9px] opacity-50 mt-1 text-right"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.5 }}
+                    transition={{ delay: 2.2, duration: 0.8 }}
+                  >
+                    Loading weather...
+                  </motion.p>
+                )}
+              </motion.div>
+            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 2,
+              delay: 0.3,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="space-y-36"
+          >
+            <section className="md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20 w-full">
+              <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
+                About
+              </h2>
+
+              <div className="space-y-6 text-base leading-relaxed">
+                <p className="text-foreground">
+                  Raf is a Product Designer{" "}
+                  <span className="text-foreground/60">
+                    ≈ founding designer and design engineer.{" "}
+                  </span>
+                  {/* <span className="text-foreground/60">
+                    {" "}
+                    With 7+ years of experience building products that have driven
+                    $100M+ in collective revenue.{" "}
+                  </span> */}
+                </p>
+
+                <p>
+                  <span className="text-foreground/60">Raf is </span>
+                  <span className="text-foreground">driven by </span>
+                  <span className="text-foreground/60">
+                    {" "}
+                    a deep passion for craft, collaboration, and a relentless
+                    pursuit of{" "}
+                    <span className="text-foreground">excellence</span>. He has
+                    designed experiences and systems at companies like Theoriq,
+                    CurbCutOS, Atlas, Zalando, Apple{" "}
+                    {/* <span className="inline-block text-[12px] align-text-top text-foreground/40 font-light">
+                      (internship)
+                    </span>{" "} */}
+                    and clients such as w.ai, US.court, Tela, Ethos, Lyfe,
+                    Artscapy.
+                  </span>
+                </p>
+
+                <p>
+                  <span className="text-foreground/60">
+                    Originally from Italy, and now{" "}
+                    <span className="text-foreground">based in Toronto</span>,
+                    Raf enjoys portrait photography, yoga, and office spaces.{" "}
+                  </span>
+                </p>
+              </div>
+            </section>
+
+            <div className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
+              <div className="mb-10 md:mb-0">
+                <h2 className="text-base font-normal text-foreground">
+                  Selected works
+                </h2>
+              </div>
+
+              <div className="space-y-8">
+                <div className="w-full mb-0 overflow-hidden relative">
+                  <motion.img
+                    key={currentImageIndex}
+                    src={images[currentImageIndex]}
+                    alt="Work preview"
+                    className="w-full cursor-pointer bg-transparent max-w-full"
+                    style={{
+                      objectPosition: "center center",
+                      display: "block",
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: loadedImages[images[currentImageIndex]] ? 1 : 0,
+                    }}
+                    transition={{ duration: 0 }}
+                    onClick={() => setIsZoomed(true)}
+                    onLoad={() => handleImageLoad(images[currentImageIndex])}
+                  />
+                  {/* Preload next image */}
+                  <img
+                    src={images[(currentImageIndex + 1) % images.length]}
+                    alt="Next work preview"
+                    className="hidden"
+                    onLoad={() =>
+                      handleImageLoad(
+                        images[(currentImageIndex + 1) % images.length]
+                      )
+                    }
+                  />
+                </div>
+                <div className="hidden md:block mt-4">
+                  <a
+                    href="https://rafvitale.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    View all works ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Notes Section */}
+            <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
+              <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
+                Notes
+              </h2>
+
+              <div className="space-y-8">
+                <div className="flex flex-col divide-y divide-foreground/5">
+                  {/* Sort notes by date (newest first) and show only the 3 most recent */}
+                  {notes
+                    .sort(
+                      (a, b) =>
+                        new Date(b.date).getTime() - new Date(a.date).getTime()
+                    )
+                    .slice(0, 3)
+                    .map((note, index) => (
+                      <motion.div
+                        key={note.id}
+                        id={`note-card-${index}`}
+                        className="py-7 first:pt-0 cursor-pointer group"
+                        initial={fadeInAnimation.initial}
+                        animate={{ opacity: 1 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: index * 0.1,
+                        }}
+                        onClick={(e) => handleOpenNoteWithAnimation(index, e)}
+                        whileHover={{ y: -3 }}
+                        whileTap={{ y: 0 }}
+                      >
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-baseline">
+                          <div className="text-xs text-foreground/40 whitespace-nowrap min-w-[90px] font-light tracking-tight">
+                            {new Date(note.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </div>
+                          <div className="flex-1 relative">
+                            {/* Category indicator */}
+                            <div
+                              className={`absolute -left-3 top-1.5 w-1.5 h-1.5 rounded-full ${
+                                getCategoryColor(note.category).split(" ")[1]
+                              } opacity-70`}
+                            ></div>
+
+                            <div className="flex flex-col gap-1">
+                              <p className="text-base text-foreground group-hover:text-foreground/90 transition-colors font-medium">
+                                {note.title}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                                {note.excerpt ||
+                                  note.content
+                                    .replace(/^#.*$/m, "")
+                                    .trim()
+                                    .split("\n")[0]}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
+                    ))}
+                </div>
+
+                {/* View all notes button */}
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  onClick={handleOpenAllNotes}
+                  className="text-sm text-foreground/50 hover:text-foreground transition-colors"
+                >
+                  View all notes
+                </motion.button>
+              </div>
+            </section>
+
+            <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
+              <h2 className="text-base font-normal text-foreground mb-10 md:mb-0">
+                Photos
+              </h2>
+
+              <div className="space-y-8">
+                <div className="grid grid-cols-3 gap-3">
+                  {photos.slice(0, 3).map((photo, index) => (
+                    <motion.div
+                      key={index}
+                      className="aspect-[3/4] md:aspect-[2/3] cursor-pointer relative"
+                      initial={fadeInAnimation.initial}
+                      animate={{ opacity: loadedImages[photo.src] ? 1 : 0 }}
+                      transition={fadeInAnimation.transition}
+                      onClick={() => {
+                        setCurrentPhotoIndex(index);
+                        setIsPhotosModalOpen(true);
+                      }}
+                    >
+                      <img
+                        src={photo.src}
+                        alt={`Photo of ${photo.name}`}
+                        className="w-full h-full object-cover"
+                        onLoad={() => handleImageLoad(photo.src)}
+                      />
                     </motion.div>
                   ))}
+                </div>
+                <Link
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentPhotoIndex(0);
+                    setIsPhotosModalOpen(true);
+                  }}
+                  className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
+                >
+                  View all photos
+                </Link>
               </div>
+            </section>
 
-              {/* View all notes button */}
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                onClick={handleOpenAllNotes}
-                className="text-sm text-foreground/50 hover:text-foreground transition-colors"
-              >
-                View all notes
-              </motion.button>
-            </div>
-          </section>
+            <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
+              <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
+                Contact
+              </h2>
 
-          <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-            <h2 className="text-base font-normal text-foreground mb-10 md:mb-0">
-              Photos
-            </h2>
-
-            <div className="space-y-8">
-              <div className="grid grid-cols-3 gap-3">
-                {photos.slice(0, 3).map((photo, index) => (
-                  <motion.div
-                    key={index}
-                    className="aspect-[3/4] md:aspect-[2/3] cursor-pointer relative"
-                    initial={fadeInAnimation.initial}
-                    animate={{ opacity: loadedImages[photo.src] ? 1 : 0 }}
-                    transition={fadeInAnimation.transition}
-                    onClick={() => {
-                      setCurrentPhotoIndex(index);
-                      setIsPhotosModalOpen(true);
-                    }}
+              <div className="space-y-8 max-w-2xl">
+                <div>
+                  <p className="text-sm text-foreground/50 mb-1">Email</p>
+                  <a
+                    href="mailto:raf@raf.works"
+                    className="text-base text-foreground/80 hover:text-foreground transition-colors"
                   >
-                    <img
-                      src={photo.src}
-                      alt={`Photo of ${photo.name}`}
-                      className="w-full h-full object-cover"
-                      onLoad={() => handleImageLoad(photo.src)}
-                    />
-                  </motion.div>
-                ))}
+                    raf@raf.works
+                  </a>
+                </div>
+
+                <div>
+                  <p className="text-sm text-foreground/50 mb-1">LinkedIn</p>
+                  <a
+                    href="https://www.linkedin.com/in/raffaelevitaledesign"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-base text-foreground/80 hover:text-foreground transition-colors"
+                  >
+                    raffaelevitaledesign
+                  </a>
+                </div>
+
+                <div>
+                  <p className="text-sm text-foreground/50 mb-1">Twitter/X</p>
+                  <a
+                    href="https://twitter.com/lfgraf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-base text-foreground/80 hover:text-foreground transition-colors"
+                  >
+                    lfgraf
+                  </a>
+                </div>
               </div>
-              <Link
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentPhotoIndex(0);
-                  setIsPhotosModalOpen(true);
-                }}
-                className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
-              >
-                View all photos
-              </Link>
-            </div>
-          </section>
+            </section>
+          </motion.div>
 
-          <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-            <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
-              Contact
-            </h2>
-
-            <div className="space-y-8 max-w-2xl">
-              <div>
-                <p className="text-sm text-foreground/50 mb-1">Email</p>
-                <a
-                  href="mailto:raf@raf.works"
-                  className="text-base text-foreground/80 hover:text-foreground transition-colors"
-                >
-                  raf@raf.works
-                </a>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/50 mb-1">LinkedIn</p>
-                <a
-                  href="https://www.linkedin.com/in/raffaelevitaledesign"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-base text-foreground/80 hover:text-foreground transition-colors"
-                >
-                  raffaelevitaledesign
-                </a>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/50 mb-1">Twitter/X</p>
-                <a
-                  href="https://twitter.com/lfgraf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-base text-foreground/80 hover:text-foreground transition-colors"
-                >
-                  lfgraf
-                </a>
-              </div>
-            </div>
-          </section>
-        </motion.div>
-
-        {/* Fullscreen Modal */}
-        <AnimatePresence>
-          {isZoomed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50 flex items-center justify-center p-6"
-              onClick={() => setIsZoomed(false)}
-            >
-              <motion.button
+          {/* Fullscreen Modal */}
+          <AnimatePresence>
+            {isZoomed && (
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ delay: 0.2, duration: 0.2 }}
-                className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50 flex items-center justify-center p-6"
                 onClick={() => setIsZoomed(false)}
               >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </motion.button>
-
-              <motion.img
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.3 }}
-                src={images[currentImageIndex]}
-                alt="Work preview"
-                className="w-full h-full object-contain"
-              />
-
-              {/* Navigation controls at the bottom */}
-              <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-8">
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  exit={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.2 }}
-                  className="rounded-full bg-gray-200/10 backdrop-blur-sm p-1.5 hover:bg-gray-200/20 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex((prev) =>
-                      prev === 0 ? images.length - 1 : prev - 1
-                    );
-                  }}
-                  aria-label="Previous image"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  >
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                </motion.button>
-
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  exit={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.2 }}
-                  className="rounded-full bg-gray-200/10 backdrop-blur-sm p-1.5 hover:bg-gray-200/20 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-                  }}
-                  aria-label="Next image"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  >
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Photos Modal */}
-        <AnimatePresence>
-          {isPhotosModalOpen && (
-            <>
-              {/* Fixed backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                onClick={() => setIsPhotosModalOpen(false)}
-              />
-
-              {/* Scrollable content */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed inset-0 z-50 overflow-y-auto"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) {
-                    setIsPhotosModalOpen(false);
-                  }
-                }}
-              >
-                {/* Sticky close button */}
                 <motion.button
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ delay: 0.2, duration: 0.3 }}
-                  className="sticky top-6 float-right mr-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsPhotosModalOpen(false);
-                  }}
+                  transition={{ delay: 0.2, duration: 0.2 }}
+                  className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                  onClick={() => setIsZoomed(false)}
                 >
                   <svg
                     width="24"
@@ -1427,378 +1353,114 @@ export default function Page() {
                   </svg>
                 </motion.button>
 
-                {/* Content container */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
-                >
-                  {/* Photos grid */}
-                  <div className="grid grid-cols-1 gap-16 md:gap-24">
-                    {photos.map((photo, index) => (
-                      <motion.div
-                        key={index}
-                        ref={(el) => {
-                          photoRefs.current[index] = el;
-                        }}
-                        className="aspect-[3/4] cursor-pointer relative max-w-2xl mx-auto w-full"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{
-                          opacity: loadedImages[photo.src] ? 1 : 0,
-                          y: loadedImages[photo.src] ? 0 : 10,
-                        }}
-                        transition={{
-                          duration: 0.5,
-                          delay: index * 0.05,
-                        }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <img
-                          src={photo.src}
-                          alt={`Photo of ${photo.name}`}
-                          className="w-full h-full object-cover"
-                          onLoad={() => handleImageLoad(photo.src)}
-                        />
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 flex justify-center items-center">
-                          <span className="text-white text-sm font-light">
-                            {photo.name}
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+                <motion.img
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.3 }}
+                  src={images[currentImageIndex]}
+                  alt="Work preview"
+                  className="w-full h-full object-contain"
+                />
 
-        {/* Notes Modal */}
-        <AnimatePresence>
-          {isNotesModalOpen && (
-            <>
-              {/* Fixed backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                onClick={handleCloseNote}
-              />
-
-              {/* Scrollable content */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed inset-0 z-50 overflow-y-auto"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) {
-                    handleCloseNote(e);
-                  }
-                }}
-                // Add tabIndex to prevent focus issues on mobile
-                tabIndex={-1}
-                // Add outline: none to remove focus outline
-                style={{ outline: "none" }}
-              >
-                {/* Card stack container */}
-                <div className="w-full max-w-3xl mx-auto relative my-12 pt-4 md:my-12 md:pt-4 sm:my-0 sm:pt-0">
-                  {/* Background cards for stack effect - hide on mobile */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, rotate: -0.5 }}
-                    animate={{ opacity: 1, y: 0, rotate: -0.5 }}
-                    exit={{ opacity: 0, y: -5, rotate: -0.5 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                    className="absolute inset-x-0 top-4 mx-auto w-[98%] h-[calc(100%-16px)] bg-white/80 dark:bg-zinc-900/80 rounded-xl shadow-lg -z-10 hidden sm:block"
-                    style={{
-                      boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.05)",
+                {/* Navigation controls at the bottom */}
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-8">
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.6 }}
+                    exit={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.2 }}
+                    className="rounded-full bg-gray-200/10 backdrop-blur-sm p-1.5 hover:bg-gray-200/20 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex((prev) =>
+                        prev === 0 ? images.length - 1 : prev - 1
+                      );
                     }}
-                  ></motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, rotate: 0.5 }}
-                    animate={{ opacity: 1, y: 0, rotate: 0.5 }}
-                    exit={{ opacity: 0, y: -5, rotate: 0.5 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="absolute inset-x-0 top-2 mx-auto w-[99%] h-[calc(100%-8px)] bg-white/90 dark:bg-zinc-900/90 rounded-xl shadow-lg -z-20 hidden sm:block"
-                    style={{
-                      boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.08)",
-                    }}
-                  ></motion.div>
-
-                  {/* Main content card with horizontal transition */}
-                  <AnimatePresence
-                    initial={false}
-                    custom={direction}
-                    mode="wait"
+                    aria-label="Previous image"
                   >
-                    <motion.div
-                      key={currentNoteIndex}
-                      custom={direction}
-                      variants={cardVariants}
-                      initial={isNotesModalOpen ? "enter" : false}
-                      animate="center"
-                      exit="exit"
-                      className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative sm:rounded-xl sm:w-full h-screen sm:h-auto"
-                      style={{
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                      }}
-                      layoutId={`note-card-${currentNoteIndex}`}
-                      id={`note-card-modal-${currentNoteIndex}`}
-                      onClick={(e) => e.stopPropagation()}
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
                     >
-                      {/* Card inner content with padding */}
-                      <div className="px-6 md:px-12 py-16 pb-24 h-full sm:h-auto overflow-y-auto">
-                        {/* Header area with controls */}
-                        <div className="absolute top-0 left-0 right-0 h-24 px-6 flex items-center justify-between bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm z-10">
-                          {/* Left side - Date and Title */}
-                          <div className="flex flex-col">
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.2 }}
-                              className="text-xs text-foreground/40 font-light"
-                            >
-                              {new Date(
-                                notes[currentNoteIndex].date
-                              ).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
-                            </motion.div>
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.2 }}
-                              className="text-base font-medium text-foreground mt-1"
-                            >
-                              {notes[currentNoteIndex].title}
-                            </motion.div>
-                          </div>
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </motion.button>
 
-                          {/* Right side - Category and Close button */}
-                          <div className="flex items-center gap-3">
-                            {/* Category badge */}
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.2, duration: 0.4 }}
-                              className={`text-xs px-3 py-1 rounded-full ${getCategoryColor(
-                                notes[currentNoteIndex].category
-                              )}`}
-                            >
-                              {notes[currentNoteIndex].category}
-                            </motion.div>
-
-                            {/* Close button - for all devices */}
-                            <motion.button
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
-                              onClick={handleCloseNote}
-                              aria-label="Close note"
-                            >
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                              >
-                                <path d="M18 6L6 18M6 6l12 12" />
-                              </svg>
-                            </motion.button>
-                          </div>
-                        </div>
-
-                        {/* Subtle decorative elements - hidden on mobile for simplicity */}
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-300/20 via-gray-400/30 to-gray-300/20 dark:from-gray-700/20 dark:via-gray-600/30 dark:to-gray-700/20 hidden sm:block"></div>
-
-                        {/* Corner decorations - hidden on mobile for simplicity */}
-                        <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none hidden sm:block">
-                          <div className="absolute top-0 left-0 w-[1px] h-8 bg-gradient-to-b from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
-                          <div className="absolute top-0 left-0 w-8 h-[1px] bg-gradient-to-r from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
-                        </div>
-
-                        <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none hidden sm:block">
-                          <div className="absolute top-0 right-0 w-[1px] h-8 bg-gradient-to-b from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
-                          <div className="absolute top-0 right-0 w-8 h-[1px] bg-gradient-to-l from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
-                        </div>
-
-                        <div className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none hidden sm:block">
-                          <div className="absolute bottom-0 left-0 w-[1px] h-8 bg-gradient-to-t from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
-                          <div className="absolute bottom-0 left-0 w-8 h-[1px] bg-gradient-to-r from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
-                        </div>
-
-                        <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none hidden sm:block">
-                          <div className="absolute bottom-0 right-0 w-[1px] h-8 bg-gradient-to-t from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
-                          <div className="absolute bottom-0 right-0 w-8 h-[1px] bg-gradient-to-l from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
-                        </div>
-
-                        <div className="absolute -left-4 top-20 w-8 h-8 rounded-full bg-gray-200/10 dark:bg-gray-700/10 hidden sm:block"></div>
-                        <div className="absolute -right-4 top-40 w-12 h-12 rounded-full bg-gray-200/10 dark:bg-gray-700/10 hidden sm:block"></div>
-
-                        {/* Enhanced note content */}
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.2 }}
-                          className="prose dark:prose-invert max-w-none mt-16 relative pb-20 sm:pb-0"
-                        >
-                          <div className="text-gray-600 dark:text-gray-300 leading-relaxed tracking-wide prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-h1:text-3xl prose-h1:font-medium prose-h1:mb-6 prose-h1:border-b prose-h1:border-gray-200 dark:prose-h1:border-gray-700 prose-h1:pb-2 prose-h2:text-2xl prose-h2:font-medium prose-h2:mt-8 prose-h2:mb-4 prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-p:mb-4 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ul:space-y-2 prose-ul:mb-6 prose-ul:text-gray-600 dark:prose-ul:text-gray-300 prose-li:text-gray-600 dark:prose-li:text-gray-300 prose-strong:font-medium prose-strong:text-gray-800 dark:prose-strong:text-gray-200">
-                            <ReactMarkdown
-                              components={{
-                                // Override h1 to prevent duplicate titles
-                                h1: ({ node, ...props }) => null,
-                              }}
-                            >
-                              {notes[currentNoteIndex].content}
-                            </ReactMarkdown>
-                          </div>
-                        </motion.div>
-
-                        {/* Subtle navigation controls - hidden on mobile when scrolling */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3, duration: 0.5 }}
-                          className="mt-16 flex justify-center items-center gap-8 mb-16 sm:mb-0 hidden sm:flex"
-                        >
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePrevNoteWithDirection();
-                            }}
-                            className="text-foreground/40 hover:text-foreground transition-colors p-2"
-                            aria-label="Previous note"
-                          >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                            >
-                              <path d="M19 12H5M12 19l-7-7 7-7" />
-                            </svg>
-                          </motion.button>
-
-                          {/* Note selector dots */}
-                          <div className="flex gap-3">
-                            {notes.map((_, index) => (
-                              <motion.button
-                                key={index}
-                                whileHover={{ scale: 1.2 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigateWithDirection(
-                                    index > currentNoteIndex ? 1 : -1,
-                                    index
-                                  );
-                                }}
-                                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                                  currentNoteIndex === index
-                                    ? "bg-foreground w-3"
-                                    : "bg-foreground/30"
-                                }`}
-                                aria-label={`Go to note ${index + 1}`}
-                              />
-                            ))}
-                          </div>
-
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleNextNoteWithDirection();
-                            }}
-                            className="text-foreground/40 hover:text-foreground transition-colors p-2"
-                            aria-label="Next note"
-                          >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                            >
-                              <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                          </motion.button>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.6 }}
+                    exit={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.2 }}
+                    className="rounded-full bg-gray-200/10 backdrop-blur-sm p-1.5 hover:bg-gray-200/20 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(
+                        (prev) => (prev + 1) % images.length
+                      );
+                    }}
+                    aria-label="Next image"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </motion.button>
                 </div>
               </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
 
-        {/* All Notes Modal */}
-        <AnimatePresence>
-          {isAllNotesModalOpen && (
-            <>
-              {/* Fixed backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                onClick={() => setIsAllNotesModalOpen(false)}
-              />
+          {/* Photos Modal */}
+          <AnimatePresence>
+            {isPhotosModalOpen && (
+              <>
+                {/* Fixed backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+                  onClick={() => setIsPhotosModalOpen(false)}
+                />
 
-              {/* Scrollable content */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed inset-0 z-50 overflow-y-auto"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) {
-                    setIsAllNotesModalOpen(false);
-                  }
-                }}
-              >
-                {/* Content container */}
+                {/* Scrollable content */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
-                  onClick={(e) => e.stopPropagation()}
+                  className="fixed inset-0 z-50 overflow-y-auto"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) {
+                      setIsPhotosModalOpen(false);
+                    }
+                  }}
                 >
-                  {/* Close button - positioned in top right */}
+                  {/* Sticky close button */}
                   <motion.button
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
-                    className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                    className="sticky top-6 float-right mr-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsAllNotesModalOpen(false);
+                      setIsPhotosModalOpen(false);
                     }}
-                    aria-label="Close all notes"
                   >
                     <svg
                       width="24"
@@ -1812,214 +1474,604 @@ export default function Page() {
                     </svg>
                   </motion.button>
 
-                  <motion.h2
-                    initial={{ opacity: 0, y: 5 }}
+                  {/* Content container */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.4 }}
-                    className="text-3xl font-medium mb-8 text-foreground"
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
                   >
-                    All Notes
-                  </motion.h2>
-
-                  <div className="flex flex-col divide-y divide-foreground/10">
-                    {notes
-                      .sort(
-                        (a, b) =>
-                          new Date(b.date).getTime() -
-                          new Date(a.date).getTime()
-                      )
-                      .map((note, index) => (
+                    {/* Photos grid */}
+                    <div className="grid grid-cols-1 gap-16 md:gap-24">
+                      {photos.map((photo, index) => (
                         <motion.div
-                          key={note.id}
-                          className="py-6 first:pt-0 cursor-pointer"
+                          key={index}
+                          ref={(el) => {
+                            photoRefs.current[index] = el;
+                          }}
+                          className="aspect-[3/4] cursor-pointer relative max-w-2xl mx-auto w-full"
                           initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
+                          animate={{
+                            opacity: loadedImages[photo.src] ? 1 : 0,
+                            y: loadedImages[photo.src] ? 0 : 10,
+                          }}
                           transition={{
-                            duration: 0.3,
+                            duration: 0.5,
                             delay: index * 0.05,
                           }}
-                          whileHover={{ x: 2 }}
-                          onClick={() => {
-                            setCurrentNoteIndex(index);
-                            setIsAllNotesModalOpen(false);
-                            setTimeout(() => setIsNotesModalOpen(true), 100);
-                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
-                            <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
-                              {new Date(note.date).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-lg text-foreground hover:text-foreground/90 transition-colors mb-1">
-                                {note.title}
-                              </p>
-                              <p className="text-base text-foreground/60 line-clamp-2">
-                                {note.excerpt}
-                              </p>
-                            </div>
+                          <img
+                            src={photo.src}
+                            alt={`Photo of ${photo.name}`}
+                            className="w-full h-full object-cover"
+                            onLoad={() => handleImageLoad(photo.src)}
+                          />
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 flex justify-center items-center">
+                            <span className="text-white text-sm font-light">
+                              {photo.name}
+                            </span>
                           </div>
                         </motion.div>
                       ))}
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Notes Modal */}
+          <AnimatePresence>
+            {isNotesModalOpen && (
+              <>
+                {/* Fixed backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+                  onClick={handleCloseNote}
+                />
+
+                {/* Scrollable content */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="fixed inset-0 z-50 overflow-y-auto"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) {
+                      handleCloseNote(e);
+                    }
+                  }}
+                  // Add tabIndex to prevent focus issues on mobile
+                  tabIndex={-1}
+                  // Add outline: none to remove focus outline
+                  style={{ outline: "none" }}
+                >
+                  {/* Card stack container */}
+                  <div className="w-full max-w-3xl mx-auto relative my-12 pt-4 md:my-12 md:pt-4 sm:my-0 sm:pt-0">
+                    {/* Background cards for stack effect - hide on mobile */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, rotate: -0.5 }}
+                      animate={{ opacity: 1, y: 0, rotate: -0.5 }}
+                      exit={{ opacity: 0, y: -5, rotate: -0.5 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="absolute inset-x-0 top-4 mx-auto w-[98%] h-[calc(100%-16px)] bg-white/80 dark:bg-zinc-900/80 rounded-xl shadow-lg -z-10 hidden sm:block"
+                      style={{
+                        boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.05)",
+                      }}
+                    ></motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, rotate: 0.5 }}
+                      animate={{ opacity: 1, y: 0, rotate: 0.5 }}
+                      exit={{ opacity: 0, y: -5, rotate: 0.5 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      className="absolute inset-x-0 top-2 mx-auto w-[99%] h-[calc(100%-8px)] bg-white/90 dark:bg-zinc-900/90 rounded-xl shadow-lg -z-20 hidden sm:block"
+                      style={{
+                        boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.08)",
+                      }}
+                    ></motion.div>
+
+                    {/* Main content card with horizontal transition */}
+                    <AnimatePresence
+                      initial={false}
+                      custom={direction}
+                      mode="wait"
+                    >
+                      <motion.div
+                        key={currentNoteIndex}
+                        custom={direction}
+                        variants={cardVariants}
+                        initial={isNotesModalOpen ? "enter" : false}
+                        animate="center"
+                        exit="exit"
+                        className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative sm:rounded-xl sm:w-full h-screen sm:h-auto"
+                        style={{
+                          backdropFilter: "blur(10px)",
+                          WebkitBackdropFilter: "blur(10px)",
+                        }}
+                        id={`note-card-modal-${currentNoteIndex}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Card inner content with padding */}
+                        <div className="px-6 md:px-12 py-16 pb-24 h-full sm:h-auto overflow-y-auto">
+                          {/* Header area with controls */}
+                          <div className="absolute top-0 left-0 right-0 h-24 px-6 flex items-center justify-between bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm z-10">
+                            {/* Left side - Date and Title */}
+                            <div className="flex flex-col">
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2 }}
+                                className="text-xs text-foreground/40 font-light"
+                              >
+                                {new Date(
+                                  notes[currentNoteIndex].date
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                              </motion.div>
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2 }}
+                                className="text-base font-medium text-foreground mt-1"
+                              >
+                                {notes[currentNoteIndex].title}
+                              </motion.div>
+                            </div>
+
+                            {/* Right side - Category and Close button */}
+                            <div className="flex items-center gap-3">
+                              {/* Category badge */}
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2, duration: 0.4 }}
+                                className={`text-xs px-3 py-1 rounded-full ${getCategoryColor(
+                                  notes[currentNoteIndex].category
+                                )}`}
+                              >
+                                {notes[currentNoteIndex].category}
+                              </motion.div>
+
+                              {/* Close button - for all devices */}
+                              <motion.button
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                                onClick={handleCloseNote}
+                                aria-label="Close note"
+                              >
+                                <svg
+                                  width="20"
+                                  height="20"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
+                                  <path d="M18 6L6 18M6 6l12 12" />
+                                </svg>
+                              </motion.button>
+                            </div>
+                          </div>
+
+                          {/* Subtle decorative elements - hidden on mobile for simplicity */}
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-300/20 via-gray-400/30 to-gray-300/20 dark:from-gray-700/20 dark:via-gray-600/30 dark:to-gray-700/20 hidden sm:block"></div>
+
+                          {/* Corner decorations - hidden on mobile for simplicity */}
+                          <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none hidden sm:block">
+                            <div className="absolute top-0 left-0 w-[1px] h-8 bg-gradient-to-b from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                            <div className="absolute top-0 left-0 w-8 h-[1px] bg-gradient-to-r from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                          </div>
+
+                          <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none hidden sm:block">
+                            <div className="absolute top-0 right-0 w-[1px] h-8 bg-gradient-to-b from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                            <div className="absolute top-0 right-0 w-8 h-[1px] bg-gradient-to-l from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                          </div>
+
+                          <div className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none hidden sm:block">
+                            <div className="absolute bottom-0 left-0 w-[1px] h-8 bg-gradient-to-t from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                            <div className="absolute bottom-0 left-0 w-8 h-[1px] bg-gradient-to-r from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                          </div>
+
+                          <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none hidden sm:block">
+                            <div className="absolute bottom-0 right-0 w-[1px] h-8 bg-gradient-to-t from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                            <div className="absolute bottom-0 right-0 w-8 h-[1px] bg-gradient-to-l from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
+                          </div>
+
+                          <div className="absolute -left-4 top-20 w-8 h-8 rounded-full bg-gray-200/10 dark:bg-gray-700/10 hidden sm:block"></div>
+                          <div className="absolute -right-4 top-40 w-12 h-12 rounded-full bg-gray-200/10 dark:bg-gray-700/10 hidden sm:block"></div>
+
+                          {/* Enhanced note content */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.2 }}
+                            className="prose dark:prose-invert max-w-none mt-16 relative pb-20 sm:pb-0"
+                          >
+                            <div className="text-gray-600 dark:text-gray-300 leading-relaxed tracking-wide prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-h1:text-3xl prose-h1:font-medium prose-h1:mb-6 prose-h1:border-b prose-h1:border-gray-200 dark:prose-h1:border-gray-700 prose-h1:pb-2 prose-h2:text-2xl prose-h2:font-medium prose-h2:mt-8 prose-h2:mb-4 prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-p:mb-4 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ul:space-y-2 prose-ul:mb-6 prose-ul:text-gray-600 dark:prose-ul:text-gray-300 prose-li:text-gray-600 dark:prose-li:text-gray-300 prose-strong:font-medium prose-strong:text-gray-800 dark:prose-strong:text-gray-200">
+                              <ReactMarkdown
+                                components={{
+                                  // Override h1 to prevent duplicate titles
+                                  h1: ({ node, ...props }) => null,
+                                }}
+                              >
+                                {notes[currentNoteIndex].content}
+                              </ReactMarkdown>
+                            </div>
+                          </motion.div>
+
+                          {/* Subtle navigation controls - hidden on mobile when scrolling */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3, duration: 0.5 }}
+                            className="mt-16 flex justify-center items-center gap-8 mb-16 sm:mb-0 hidden sm:flex"
+                          >
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePrevNoteWithDirection();
+                              }}
+                              className="text-foreground/40 hover:text-foreground transition-colors p-2"
+                              aria-label="Previous note"
+                            >
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              >
+                                <path d="M19 12H5M12 19l-7-7 7-7" />
+                              </svg>
+                            </motion.button>
+
+                            {/* Note selector dots */}
+                            <div className="flex gap-3">
+                              {notes.map((_, index) => (
+                                <motion.button
+                                  key={index}
+                                  whileHover={{ scale: 1.2 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigateWithDirection(
+                                      index > currentNoteIndex ? 1 : -1,
+                                      index
+                                    );
+                                  }}
+                                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                                    currentNoteIndex === index
+                                      ? "bg-foreground w-3"
+                                      : "bg-foreground/30"
+                                  }`}
+                                  aria-label={`Go to note ${index + 1}`}
+                                />
+                              ))}
+                            </div>
+
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNextNoteWithDirection();
+                              }}
+                              className="text-foreground/40 hover:text-foreground transition-colors p-2"
+                              aria-label="Next note"
+                            >
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              >
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                              </svg>
+                            </motion.button>
+                          </motion.div>
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
                 </motion.div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Weather effect overlay */}
-        <AnimatePresence>
-          {weatherState.showWeatherEffect &&
-            weatherState.condition &&
-            weatherState.clickPosition && (
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  clipPath: `circle(0px at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
-                }}
-                animate={{
-                  opacity: 0.6,
-                  clipPath: `circle(300vw at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
-                }}
-                exit={{
-                  opacity: 0,
-                  clipPath: `circle(0px at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
-                }}
-                transition={{
-                  duration: 1.2,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                key="weather-effect"
-                className="fixed inset-0 pointer-events-none z-[5]"
-                style={{ backgroundColor: getWeatherColor() }}
-              >
-                {weatherState.condition === "Rain" && (
-                  <div className="absolute inset-0 overflow-hidden">
-                    {[...Array(20)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute bg-blue-200/30 dark:bg-blue-300/20 rounded-full"
-                        style={{
-                          top: `${Math.random() * -10}%`,
-                          left: `${Math.random() * 100}%`,
-                          width: "1px",
-                          height: `${Math.random() * 20 + 10}px`,
-                          opacity: Math.random() * 0.4 + 0.2,
-                          animation: `rainDrop ${
-                            Math.random() * 1 + 0.5
-                          }s linear ${Math.random() * 2}s infinite`,
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                )}
-
-                {(weatherState.condition === "Snow" ||
-                  weatherState.condition === "Freezing Rain" ||
-                  weatherState.condition === "Freezing Drizzle") && (
-                  <div className="absolute inset-0 overflow-hidden">
-                    {[...Array(30)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute bg-white rounded-full"
-                        style={{
-                          top: `${Math.random() * -10}%`,
-                          left: `${Math.random() * 100}%`,
-                          width: `${Math.random() * 3 + 1}px`,
-                          height: `${Math.random() * 3 + 1}px`,
-                          opacity: Math.random() * 0.5 + 0.3,
-                          animation: `snowfall ${
-                            Math.random() * 5 + 10
-                          }s linear ${Math.random() * 5}s infinite`,
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                )}
-
-                {weatherState.condition === "Thunderstorm" && (
-                  <div className="absolute inset-0 overflow-hidden">
-                    <div
-                      className="absolute bg-yellow-100/30 dark:bg-yellow-100/20"
-                      style={{
-                        top: "10%",
-                        left: "30%",
-                        width: "2px",
-                        height: "100px",
-                        transform: "rotate(15deg)",
-                        animation: "lightning 8s ease-in-out infinite",
-                      }}
-                    ></div>
-                    <div
-                      className="absolute bg-yellow-100/30 dark:bg-yellow-100/20"
-                      style={{
-                        top: "20%",
-                        right: "40%",
-                        width: "3px",
-                        height: "150px",
-                        transform: "rotate(-10deg)",
-                        animation: "lightning 12s ease-in-out 3s infinite",
-                      }}
-                    ></div>
-                  </div>
-                )}
-
-                {(weatherState.condition === "Fog" ||
-                  weatherState.condition === "Mist" ||
-                  weatherState.condition === "Haze") && (
-                  <div className="absolute inset-0 overflow-hidden">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute bg-gray-200/20 dark:bg-gray-300/10 rounded-full blur-xl"
-                        style={{
-                          top: `${20 + Math.random() * 60}%`,
-                          left: `${Math.random() * 100}%`,
-                          width: `${Math.random() * 200 + 100}px`,
-                          height: `${Math.random() * 100 + 50}px`,
-                          opacity: Math.random() * 0.3 + 0.1,
-                          animation: `fogMove ${
-                            Math.random() * 50 + 50
-                          }s linear ${Math.random() * 10}s infinite alternate`,
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
+              </>
             )}
-        </AnimatePresence>
+          </AnimatePresence>
 
-        {/* Bottom gradient for main content */}
-        <div className="relative w-full h-40 mt-20 overflow-hidden">
-          <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-60"></div>
+          {/* All Notes Modal */}
+          <AnimatePresence>
+            {isAllNotesModalOpen && (
+              <>
+                {/* Fixed backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+                  onClick={() => setIsAllNotesModalOpen(false)}
+                />
 
-          {/* Time-based accent for bottom content gradient */}
-          {mounted && (
-            <>
-              {timeState.timeOfDay === "dawn" && (
-                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-amber-100/30 to-transparent dark:from-amber-900/30 opacity-40"></div>
+                {/* Scrollable content */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="fixed inset-0 z-50 overflow-y-auto"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) {
+                      setIsAllNotesModalOpen(false);
+                    }
+                  }}
+                >
+                  {/* Content container */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Close button - positioned in top right */}
+                    <motion.button
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ delay: 0.2, duration: 0.3 }}
+                      className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsAllNotesModalOpen(false);
+                      }}
+                      aria-label="Close all notes"
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </motion.button>
+
+                    <motion.h2
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.4 }}
+                      className="text-3xl font-medium mb-8 text-foreground"
+                    >
+                      All Notes
+                    </motion.h2>
+
+                    <div className="flex flex-col divide-y divide-foreground/10">
+                      {notes
+                        .sort(
+                          (a, b) =>
+                            new Date(b.date).getTime() -
+                            new Date(a.date).getTime()
+                        )
+                        .map((note, index) => (
+                          <motion.div
+                            key={note.id}
+                            className="py-6 first:pt-0 cursor-pointer"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.3,
+                              delay: index * 0.05,
+                            }}
+                            whileHover={{ x: 2 }}
+                            onClick={() => {
+                              setCurrentNoteIndex(index);
+                              setIsAllNotesModalOpen(false);
+                              setTimeout(() => setIsNotesModalOpen(true), 100);
+                            }}
+                          >
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
+                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
+                                {new Date(note.date).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  }
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-lg text-foreground hover:text-foreground/90 transition-colors mb-1">
+                                  {note.title}
+                                </p>
+                                <p className="text-base text-foreground/60 line-clamp-2">
+                                  {note.excerpt}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Weather effect overlay */}
+          <AnimatePresence>
+            {weatherState.showWeatherEffect &&
+              weatherState.condition &&
+              weatherState.clickPosition && (
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    clipPath: `circle(0px at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
+                  }}
+                  animate={{
+                    opacity: 0.6,
+                    clipPath: `circle(300vw at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    clipPath: `circle(0px at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  key="weather-effect"
+                  className="fixed inset-0 pointer-events-none z-[5]"
+                  style={{ backgroundColor: getWeatherColor() }}
+                >
+                  {weatherState.condition === "Rain" && (
+                    <div className="absolute inset-0 overflow-hidden">
+                      {[...Array(20)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute bg-blue-200/30 dark:bg-blue-300/20 rounded-full"
+                          style={{
+                            top: `${Math.random() * -10}%`,
+                            left: `${Math.random() * 100}%`,
+                            width: "1px",
+                            height: `${Math.random() * 20 + 10}px`,
+                            opacity: Math.random() * 0.4 + 0.2,
+                            animation: `rainDrop ${
+                              Math.random() * 1 + 0.5
+                            }s linear ${Math.random() * 2}s infinite`,
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
+
+                  {(weatherState.condition === "Snow" ||
+                    weatherState.condition === "Freezing Rain" ||
+                    weatherState.condition === "Freezing Drizzle") && (
+                    <div className="absolute inset-0 overflow-hidden">
+                      {[...Array(30)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute bg-white rounded-full"
+                          style={{
+                            top: `${Math.random() * -10}%`,
+                            left: `${Math.random() * 100}%`,
+                            width: `${Math.random() * 3 + 1}px`,
+                            height: `${Math.random() * 3 + 1}px`,
+                            opacity: Math.random() * 0.5 + 0.3,
+                            animation: `snowfall ${
+                              Math.random() * 5 + 10
+                            }s linear ${Math.random() * 5}s infinite`,
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
+
+                  {weatherState.condition === "Thunderstorm" && (
+                    <div className="absolute inset-0 overflow-hidden">
+                      <div
+                        className="absolute bg-yellow-100/30 dark:bg-yellow-100/20"
+                        style={{
+                          top: "10%",
+                          left: "30%",
+                          width: "2px",
+                          height: "100px",
+                          transform: "rotate(15deg)",
+                          animation: "lightning 8s ease-in-out infinite",
+                        }}
+                      ></div>
+                      <div
+                        className="absolute bg-yellow-100/30 dark:bg-yellow-100/20"
+                        style={{
+                          top: "20%",
+                          right: "40%",
+                          width: "3px",
+                          height: "150px",
+                          transform: "rotate(-10deg)",
+                          animation: "lightning 12s ease-in-out 3s infinite",
+                        }}
+                      ></div>
+                    </div>
+                  )}
+
+                  {(weatherState.condition === "Fog" ||
+                    weatherState.condition === "Mist" ||
+                    weatherState.condition === "Haze") && (
+                    <div className="absolute inset-0 overflow-hidden">
+                      {[...Array(5)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute bg-gray-200/20 dark:bg-gray-300/10 rounded-full blur-xl"
+                          style={{
+                            top: `${20 + Math.random() * 60}%`,
+                            left: `${Math.random() * 100}%`,
+                            width: `${Math.random() * 200 + 100}px`,
+                            height: `${Math.random() * 100 + 50}px`,
+                            opacity: Math.random() * 0.3 + 0.1,
+                            animation: `fogMove ${
+                              Math.random() * 50 + 50
+                            }s linear ${
+                              Math.random() * 10
+                            }s infinite alternate`,
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
               )}
-              {timeState.timeOfDay === "morning" && (
-                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-blue-50/30 to-transparent dark:from-blue-900/20 opacity-40"></div>
-              )}
-              {timeState.timeOfDay === "afternoon" && (
-                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-amber-50/30 to-transparent dark:from-amber-900/20 opacity-40"></div>
-              )}
-              {timeState.timeOfDay === "evening" && (
-                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-orange-100/30 to-transparent dark:from-orange-900/20 opacity-40"></div>
-              )}
-              {timeState.timeOfDay === "night" && (
-                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-indigo-900/30 to-transparent opacity-40"></div>
-              )}
-            </>
-          )}
+          </AnimatePresence>
+
+          {/* Bottom gradient for main content - fixed to viewport */}
+          <div className="fixed left-0 right-0 bottom-0 h-40 w-screen overflow-hidden z-10">
+            <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-60"></div>
+
+            {/* Time-based accent for bottom content gradient */}
+            {mounted && (
+              <>
+                {timeState.timeOfDay === "dawn" && (
+                  <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-amber-100/30 to-transparent dark:from-amber-900/30 opacity-40"></div>
+                )}
+                {timeState.timeOfDay === "morning" && (
+                  <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-blue-50/30 to-transparent dark:from-blue-900/20 opacity-40"></div>
+                )}
+                {timeState.timeOfDay === "afternoon" && (
+                  <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-amber-50/30 to-transparent dark:from-amber-900/20 opacity-40"></div>
+                )}
+                {timeState.timeOfDay === "evening" && (
+                  <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-orange-100/30 to-transparent dark:from-orange-900/20 opacity-40"></div>
+                )}
+                {timeState.timeOfDay === "night" && (
+                  <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-indigo-900/30 to-transparent opacity-40"></div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </motion.main>
+      </motion.main>
+    </div>
   );
 }
