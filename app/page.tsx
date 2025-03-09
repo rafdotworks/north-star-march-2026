@@ -74,7 +74,6 @@ export default function Page() {
     { src: "/photos/vin.JPG", name: "Vin" },
     { src: "/photos/anna.JPG", name: "Anna" },
   ];
-
   useEffect(() => {
     setMounted(true);
 
@@ -312,6 +311,20 @@ export default function Page() {
 
     setCurrentNoteIndex(index);
     setIsNotesModalOpen(true);
+
+    // Prevent background scrolling on mobile
+    if (window.innerWidth < 640) {
+      document.body.style.overflow = "hidden";
+    }
+  };
+
+  const handleCloseNote = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Re-enable scrolling
+    document.body.style.overflow = "";
+
+    // Simply close the modal without any additional animations or timeouts
+    setIsNotesModalOpen(false);
   };
 
   const handleOpenAllNotes = () => {
@@ -326,44 +339,21 @@ export default function Page() {
     setCurrentNoteIndex((prev) => (prev - 1 + notes.length) % notes.length);
   };
 
-  // Custom variants for card transitions
+  // Custom variants for card transitions - simplified for elegance
   const cardVariants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
       opacity: 0,
-      scale: 0.9,
-      zIndex: 0,
-      boxShadow: "0px 0px 0px rgba(0, 0, 0, 0.1)",
-      borderRadius: "0.75rem",
     }),
     center: {
-      x: 0,
       opacity: 1,
-      scale: 1,
-      zIndex: 1,
-      boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.15)",
-      borderRadius: "0.75rem",
       transition: {
-        x: { type: "spring", stiffness: 300, damping: 30 },
-        opacity: { duration: 0.4 },
-        scale: { duration: 0.4 },
-        boxShadow: { duration: 0.5 },
-        borderRadius: { duration: 0.3 },
+        opacity: { duration: 0.2 },
       },
     },
     exit: (direction: number) => ({
-      x: direction < 0 ? 300 : -300,
       opacity: 0,
-      scale: 0.9,
-      zIndex: 0,
-      boxShadow: "0px 0px 0px rgba(0, 0, 0, 0.1)",
-      borderRadius: "0.75rem",
       transition: {
-        x: { type: "spring", stiffness: 300, damping: 30 },
-        opacity: { duration: 0.4 },
-        scale: { duration: 0.4 },
-        boxShadow: { duration: 0.5 },
-        borderRadius: { duration: 0.3 },
+        opacity: { duration: 0.2 },
       },
     }),
   };
@@ -727,6 +717,9 @@ export default function Page() {
         {/* Secondary shadow for depth */}
         <div className="absolute bottom-[5%] right-[15%] w-[40vw] h-[40vh] rounded-full blur-[180px] opacity-[0.06] bg-gray-500 dark:bg-gray-800"></div>
 
+        {/* Subtle gradient light at the bottom */}
+        <div className="absolute bottom-0 inset-x-0 h-[30vh] bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-40"></div>
+
         {/* Time-based design element at the top */}
         {mounted && (
           <>
@@ -824,6 +817,46 @@ export default function Page() {
                   ></div>
                 ))}
                 <div className="absolute top-[20%] left-[70%] w-[10vw] h-[10vw] rounded-full blur-[100px] bg-indigo-200/10 dark:bg-indigo-500/10 animate-slow-pulse"></div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Time-based design element at the bottom */}
+        {mounted && (
+          <>
+            {/* Dawn: Soft rising sun reflection at bottom */}
+            {timeState.timeOfDay === "dawn" && (
+              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-amber-100/40 via-pink-100/20 to-transparent dark:from-amber-900/40 dark:via-pink-900/20 opacity-40">
+                <div className="absolute bottom-[10%] right-[40%] w-[25vw] h-[25vw] rounded-full blur-[100px] bg-amber-200/30 dark:bg-amber-700/20"></div>
+              </div>
+            )}
+
+            {/* Morning: Subtle light reflection */}
+            {timeState.timeOfDay === "morning" && (
+              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-blue-50/40 via-blue-50/20 to-transparent dark:from-blue-900/30 dark:via-blue-900/10 opacity-40">
+                <div className="absolute bottom-[5%] left-[30%] w-[30vw] h-[15vh] rounded-full blur-[100px] bg-yellow-100/20 dark:bg-yellow-700/10"></div>
+              </div>
+            )}
+
+            {/* Afternoon: Warm glow reflection */}
+            {timeState.timeOfDay === "afternoon" && (
+              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-amber-50/40 via-amber-50/20 to-transparent dark:from-amber-900/30 dark:via-amber-900/10 opacity-40">
+                <div className="absolute bottom-[10%] left-[30%] w-[30vw] h-[12vh] rounded-full blur-[100px] bg-amber-100/30 dark:bg-amber-700/15 opacity-50"></div>
+              </div>
+            )}
+
+            {/* Evening: Sunset reflection */}
+            {timeState.timeOfDay === "evening" && (
+              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-orange-100/40 via-pink-100/20 to-transparent dark:from-orange-900/30 dark:via-pink-900/15 opacity-40">
+                <div className="absolute bottom-[5%] left-[20%] w-[35vw] h-[10vh] rounded-full blur-[100px] bg-orange-200/30 dark:bg-orange-700/20 opacity-50"></div>
+              </div>
+            )}
+
+            {/* Night: Starry reflection */}
+            {timeState.timeOfDay === "night" && (
+              <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-indigo-900/40 via-purple-900/20 to-transparent opacity-40">
+                <div className="absolute bottom-[10%] right-[30%] w-[15vw] h-[15vw] rounded-full blur-[100px] bg-indigo-200/15 dark:bg-indigo-500/15 opacity-50"></div>
               </div>
             )}
           </>
@@ -1100,6 +1133,7 @@ export default function Page() {
                     <motion.div
                       key={note.id}
                       layoutId={`note-card-${index}`}
+                      id={`note-card-${index}`}
                       className="py-7 first:pt-0 cursor-pointer group"
                       initial={fadeInAnimation.initial}
                       animate={{ opacity: 1 }}
@@ -1453,7 +1487,7 @@ export default function Page() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                onClick={() => setIsNotesModalOpen(false)}
+                onClick={handleCloseNote}
               />
 
               {/* Scrollable content */}
@@ -1465,19 +1499,23 @@ export default function Page() {
                 className="fixed inset-0 z-50 overflow-y-auto"
                 onClick={(e) => {
                   if (e.target === e.currentTarget) {
-                    setIsNotesModalOpen(false);
+                    handleCloseNote(e);
                   }
                 }}
+                // Add tabIndex to prevent focus issues on mobile
+                tabIndex={-1}
+                // Add outline: none to remove focus outline
+                style={{ outline: "none" }}
               >
                 {/* Card stack container */}
-                <div className="w-full max-w-3xl mx-auto relative my-12 pt-4">
-                  {/* Background cards for stack effect */}
+                <div className="w-full max-w-3xl mx-auto relative my-12 pt-4 md:my-12 md:pt-4 sm:my-0 sm:pt-0">
+                  {/* Background cards for stack effect - hide on mobile */}
                   <motion.div
                     initial={{ opacity: 0, y: 10, rotate: -0.5 }}
                     animate={{ opacity: 1, y: 0, rotate: -0.5 }}
                     exit={{ opacity: 0, y: -5, rotate: -0.5 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="absolute inset-x-0 top-4 mx-auto w-[98%] h-[calc(100%-16px)] bg-white/80 dark:bg-zinc-900/80 rounded-xl shadow-lg -z-10"
+                    className="absolute inset-x-0 top-4 mx-auto w-[98%] h-[calc(100%-16px)] bg-white/80 dark:bg-zinc-900/80 rounded-xl shadow-lg -z-10 hidden sm:block"
                     style={{
                       boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.05)",
                     }}
@@ -1487,7 +1525,7 @@ export default function Page() {
                     animate={{ opacity: 1, y: 0, rotate: 0.5 }}
                     exit={{ opacity: 0, y: -5, rotate: 0.5 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="absolute inset-x-0 top-2 mx-auto w-[99%] h-[calc(100%-8px)] bg-white/90 dark:bg-zinc-900/90 rounded-xl shadow-lg -z-20"
+                    className="absolute inset-x-0 top-2 mx-auto w-[99%] h-[calc(100%-8px)] bg-white/90 dark:bg-zinc-900/90 rounded-xl shadow-lg -z-20 hidden sm:block"
                     style={{
                       boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.08)",
                     }}
@@ -1506,33 +1544,44 @@ export default function Page() {
                       initial={isNotesModalOpen ? "enter" : false}
                       animate="center"
                       exit="exit"
-                      className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative"
+                      className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative sm:rounded-xl sm:w-full h-screen sm:h-auto"
                       style={{
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
                       }}
                       layoutId={`note-card-${currentNoteIndex}`}
+                      id={`note-card-modal-${currentNoteIndex}`}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Card inner content with padding */}
-                      <div className="px-6 md:px-12 py-16 pb-24">
+                      <div className="px-6 md:px-12 py-16 pb-24 h-full sm:h-auto overflow-y-auto">
                         {/* Header area with controls */}
-                        <div className="absolute top-0 left-0 right-0 h-20 px-6 flex items-center justify-between">
-                          {/* Left side - Date */}
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3, duration: 0.4 }}
-                            className="text-xs text-foreground/40 font-light"
-                          >
-                            {new Date(
-                              notes[currentNoteIndex].date
-                            ).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </motion.div>
+                        <div className="absolute top-0 left-0 right-0 h-24 px-6 flex items-center justify-between bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm z-10">
+                          {/* Left side - Date and Title */}
+                          <div className="flex flex-col">
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-xs text-foreground/40 font-light"
+                            >
+                              {new Date(
+                                notes[currentNoteIndex].date
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </motion.div>
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-base font-medium text-foreground mt-1"
+                            >
+                              {notes[currentNoteIndex].title}
+                            </motion.div>
+                          </div>
 
                           {/* Right side - Category and Close button */}
                           <div className="flex items-center gap-3">
@@ -1548,18 +1597,15 @@ export default function Page() {
                               {notes[currentNoteIndex].category}
                             </motion.div>
 
-                            {/* Close button */}
+                            {/* Close button - for all devices */}
                             <motion.button
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
-                              transition={{ delay: 0.2, duration: 0.3 }}
+                              transition={{ duration: 0.2 }}
                               className="rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setIsNotesModalOpen(false);
-                              }}
-                              aria-label="Close notes"
+                              onClick={handleCloseNote}
+                              aria-label="Close note"
                             >
                               <svg
                                 width="20"
@@ -1575,53 +1621,58 @@ export default function Page() {
                           </div>
                         </div>
 
-                        {/* Subtle decorative elements */}
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-300/20 via-gray-400/30 to-gray-300/20 dark:from-gray-700/20 dark:via-gray-600/30 dark:to-gray-700/20"></div>
+                        {/* Subtle decorative elements - hidden on mobile for simplicity */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-300/20 via-gray-400/30 to-gray-300/20 dark:from-gray-700/20 dark:via-gray-600/30 dark:to-gray-700/20 hidden sm:block"></div>
 
-                        {/* Corner decorations */}
-                        <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none">
+                        {/* Corner decorations - hidden on mobile for simplicity */}
+                        <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none hidden sm:block">
                           <div className="absolute top-0 left-0 w-[1px] h-8 bg-gradient-to-b from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
                           <div className="absolute top-0 left-0 w-8 h-[1px] bg-gradient-to-r from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
                         </div>
 
-                        <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none">
+                        <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none hidden sm:block">
                           <div className="absolute top-0 right-0 w-[1px] h-8 bg-gradient-to-b from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
                           <div className="absolute top-0 right-0 w-8 h-[1px] bg-gradient-to-l from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
                         </div>
 
-                        <div className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none">
+                        <div className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none hidden sm:block">
                           <div className="absolute bottom-0 left-0 w-[1px] h-8 bg-gradient-to-t from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
                           <div className="absolute bottom-0 left-0 w-8 h-[1px] bg-gradient-to-r from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
                         </div>
 
-                        <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none">
+                        <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none hidden sm:block">
                           <div className="absolute bottom-0 right-0 w-[1px] h-8 bg-gradient-to-t from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
                           <div className="absolute bottom-0 right-0 w-8 h-[1px] bg-gradient-to-l from-transparent to-gray-200/30 dark:to-gray-700/30"></div>
                         </div>
 
-                        <div className="absolute -left-4 top-20 w-8 h-8 rounded-full bg-gray-200/10 dark:bg-gray-700/10"></div>
-                        <div className="absolute -right-4 top-40 w-12 h-12 rounded-full bg-gray-200/10 dark:bg-gray-700/10"></div>
+                        <div className="absolute -left-4 top-20 w-8 h-8 rounded-full bg-gray-200/10 dark:bg-gray-700/10 hidden sm:block"></div>
+                        <div className="absolute -right-4 top-40 w-12 h-12 rounded-full bg-gray-200/10 dark:bg-gray-700/10 hidden sm:block"></div>
 
                         {/* Enhanced note content */}
                         <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1, duration: 0.5 }}
-                          className="prose dark:prose-invert max-w-none mt-12 relative"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.2 }}
+                          className="prose dark:prose-invert max-w-none mt-16 relative pb-20 sm:pb-0"
                         >
                           <div className="text-gray-600 dark:text-gray-300 leading-relaxed tracking-wide prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-h1:text-3xl prose-h1:font-medium prose-h1:mb-6 prose-h1:border-b prose-h1:border-gray-200 dark:prose-h1:border-gray-700 prose-h1:pb-2 prose-h2:text-2xl prose-h2:font-medium prose-h2:mt-8 prose-h2:mb-4 prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-p:mb-4 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ul:space-y-2 prose-ul:mb-6 prose-ul:text-gray-600 dark:prose-ul:text-gray-300 prose-li:text-gray-600 dark:prose-li:text-gray-300 prose-strong:font-medium prose-strong:text-gray-800 dark:prose-strong:text-gray-200">
-                            <ReactMarkdown>
+                            <ReactMarkdown
+                              components={{
+                                // Override h1 to prevent duplicate titles
+                                h1: ({ node, ...props }) => null,
+                              }}
+                            >
                               {notes[currentNoteIndex].content}
                             </ReactMarkdown>
                           </div>
                         </motion.div>
 
-                        {/* Subtle navigation controls */}
+                        {/* Subtle navigation controls - hidden on mobile when scrolling */}
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.3, duration: 0.5 }}
-                          className="mt-16 flex justify-center items-center gap-8"
+                          className="mt-16 flex justify-center items-center gap-8 mb-16 sm:mb-0 hidden sm:flex"
                         >
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -1832,7 +1883,7 @@ export default function Page() {
                 }}
                 animate={{
                   opacity: 0.6,
-                  clipPath: `circle(150vw at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
+                  clipPath: `circle(300vw at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
                 }}
                 exit={{
                   opacity: 0,
@@ -1942,6 +1993,32 @@ export default function Page() {
               </motion.div>
             )}
         </AnimatePresence>
+
+        {/* Bottom gradient for main content */}
+        <div className="relative w-full h-40 mt-20 overflow-hidden">
+          <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-60"></div>
+
+          {/* Time-based accent for bottom content gradient */}
+          {mounted && (
+            <>
+              {timeState.timeOfDay === "dawn" && (
+                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-amber-100/30 to-transparent dark:from-amber-900/30 opacity-40"></div>
+              )}
+              {timeState.timeOfDay === "morning" && (
+                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-blue-50/30 to-transparent dark:from-blue-900/20 opacity-40"></div>
+              )}
+              {timeState.timeOfDay === "afternoon" && (
+                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-amber-50/30 to-transparent dark:from-amber-900/20 opacity-40"></div>
+              )}
+              {timeState.timeOfDay === "evening" && (
+                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-orange-100/30 to-transparent dark:from-orange-900/20 opacity-40"></div>
+              )}
+              {timeState.timeOfDay === "night" && (
+                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-indigo-900/30 to-transparent opacity-40"></div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </motion.main>
   );
