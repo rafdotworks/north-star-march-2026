@@ -289,6 +289,31 @@ export default function Page() {
     setIsNotesModalOpen(true);
   };
 
+  // Track the clicked note position for animation
+  const [clickedNotePosition, setClickedNotePosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+  });
+
+  // Enhanced note opening with position tracking for animation
+  const handleOpenNoteWithAnimation = (index: number, e: React.MouseEvent) => {
+    // Get the clicked element's position
+    const element = e.currentTarget as HTMLElement;
+    const rect = element.getBoundingClientRect();
+
+    setClickedNotePosition({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    });
+
+    setCurrentNoteIndex(index);
+    setIsNotesModalOpen(true);
+  };
+
   const handleOpenAllNotes = () => {
     setIsAllNotesModalOpen(true);
   };
@@ -1074,6 +1099,7 @@ export default function Page() {
                   .map((note, index) => (
                     <motion.div
                       key={note.id}
+                      layoutId={`note-card-${index}`}
                       className="py-7 first:pt-0 cursor-pointer group"
                       initial={fadeInAnimation.initial}
                       animate={{ opacity: 1 }}
@@ -1081,7 +1107,7 @@ export default function Page() {
                         duration: 0.5,
                         delay: index * 0.1,
                       }}
-                      onClick={() => handleOpenNote(index)}
+                      onClick={(e) => handleOpenNoteWithAnimation(index, e)}
                       whileHover={{ y: -3 }}
                       whileTap={{ y: 0 }}
                     >
@@ -1125,20 +1151,9 @@ export default function Page() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
                 onClick={handleOpenAllNotes}
-                className="text-sm text-foreground/50 hover:text-foreground transition-colors flex items-center gap-1 group"
+                className="text-sm text-foreground/50 hover:text-foreground transition-colors"
               >
-                <span>View all notes</span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="transform group-hover:translate-x-1 transition-transform"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                View all notes
               </motion.button>
             </div>
           </section>
@@ -1488,7 +1503,7 @@ export default function Page() {
                       key={currentNoteIndex}
                       custom={direction}
                       variants={cardVariants}
-                      initial="enter"
+                      initial={isNotesModalOpen ? "enter" : false}
                       animate="center"
                       exit="exit"
                       className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative"
@@ -1496,6 +1511,7 @@ export default function Page() {
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
                       }}
+                      layoutId={`note-card-${currentNoteIndex}`}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Card inner content with padding */}
@@ -1507,7 +1523,7 @@ export default function Page() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.3, duration: 0.4 }}
-                            className="text-xs text-foreground/40 font-mono"
+                            className="text-xs text-foreground/40 font-light"
                           >
                             {new Date(
                               notes[currentNoteIndex].date
