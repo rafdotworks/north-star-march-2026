@@ -444,47 +444,53 @@ export default function Page() {
   const getTimeDifference = (isMobile = false) => {
     if (!mounted) return "";
 
-    // Get user's local time
+    // Get current time in user's local timezone
     const localDate = new Date();
 
-    // Get EST time
-    const estOffset = -5; // EST offset from UTC in hours
-    const isDSTActive = () => {
-      // Simple DST check for US Eastern Time
-      const jan = new Date(localDate.getFullYear(), 0, 1).getTimezoneOffset();
-      const jul = new Date(localDate.getFullYear(), 6, 1).getTimezoneOffset();
-      return Math.max(jan, jul) !== localDate.getTimezoneOffset();
+    // Get current time in EST/EDT (US Eastern Time)
+    const estOptions = {
+      timeZone: "America/New_York",
+      hour: "numeric" as const,
+      minute: "numeric" as const,
+      hour12: true,
     };
+    const estTimeString = new Intl.DateTimeFormat("en-US", estOptions).format(
+      localDate
+    );
 
-    // Calculate the difference in hours
-    const localOffset = -localDate.getTimezoneOffset() / 60; // Convert minutes to hours and invert (getTimezoneOffset returns negative for east of UTC)
-    const estAdjustedOffset = estOffset + (isDSTActive() ? 1 : 0); // Adjust for DST
-    const hourDifference = localOffset - estAdjustedOffset;
+    // For debugging - keep track of hour difference
+    const estHourOptions = {
+      timeZone: "America/New_York",
+      hour: "numeric" as const,
+      hour12: false,
+    };
+    const estHour = parseInt(
+      new Intl.DateTimeFormat("en-US", estHourOptions).format(localDate)
+    );
 
-    // Format the difference message
-    if (isMobile) {
-      // Shorter messages for mobile
-      if (hourDifference === 0) {
-        return "Same timezone";
-      } else if (hourDifference > 0) {
-        return `${hourDifference}h ahead`;
-      } else {
-        return `${Math.abs(hourDifference)}h behind`;
-      }
-    } else {
-      // Full messages for desktop
-      if (hourDifference === 0) {
-        return "You're in the same timezone as Raf";
-      } else if (hourDifference > 0) {
-        return `You're ${hourDifference} hour${
-          hourDifference !== 1 ? "s" : ""
-        } ahead of Raf`;
-      } else {
-        return `You're ${Math.abs(hourDifference)} hour${
-          Math.abs(hourDifference) !== 1 ? "s" : ""
-        } behind Raf`;
-      }
+    // Get local hour using the same format for consistency
+    const localOptions = { hour: "numeric" as const, hour12: false };
+    const localHour = parseInt(
+      new Intl.DateTimeFormat("en-US", localOptions).format(localDate)
+    );
+
+    // Calculate hour difference for debugging
+    let hourDifference = localHour - estHour;
+
+    // Adjust for day boundary crossings
+    if (hourDifference > 12) {
+      hourDifference -= 24;
+    } else if (hourDifference < -12) {
+      hourDifference += 24;
     }
+
+    // Add console logging for debugging
+    console.log(
+      `Local hour: ${localHour}, EST hour: ${estHour}, Difference: ${hourDifference}, EST time: ${estTimeString}`
+    );
+
+    // Return the EST time instead of difference message
+    return estTimeString;
   };
 
   // Toggle weather effect display
@@ -969,88 +975,92 @@ export default function Page() {
             </h1>
 
             {/* Display current time in EST with weather */}
-            {mounted && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.6 }}
-                transition={{ delay: 1, duration: 1.5 }}
-                className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
-              >
-                <div className="flex items-center justify-end space-x-2">
-                  <span>{getTimeDifference(false)}</span>
-                  {weatherState.temperature !== null && (
-                    <>
-                      <span className="opacity-30">|</span>
-                      <div
-                        className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                        onClick={toggleWeatherEffect}
-                        title="Toronto weather - click to see effect"
-                      >
-                        <span>{weatherState.temperature}°C</span>
-                        {weatherState.condition && (
-                          <span className="ml-1 text-sm">
-                            {getWeatherIcon(weatherState.condition)}
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-                {weatherState.isLoading && (
-                  <p className="text-[10px] opacity-50 mt-1">
-                    Loading Toronto weather...
-                  </p>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: mounted ? 0.6 : 0 }}
+              transition={{ delay: 1, duration: 1.5 }}
+              className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
+            >
+              <div className="flex items-center justify-end space-x-2">
+                <span className="min-h-[1.5rem] flex items-center">
+                  {mounted ? getTimeDifference(false) : ""}
+                </span>
+                {weatherState.temperature !== null && (
+                  <>
+                    <span className="opacity-30 flex items-center">|</span>
+                    <div
+                      className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                      onClick={toggleWeatherEffect}
+                      title="Toronto weather - click to see effect"
+                    >
+                      <span className="flex items-center">
+                        {weatherState.temperature}°C
+                      </span>
+                      {weatherState.condition && (
+                        <span className="ml-1 text-sm flex items-center">
+                          {getWeatherIcon(weatherState.condition)}
+                        </span>
+                      )}
+                    </div>
+                  </>
                 )}
-              </motion.div>
-            )}
+              </div>
+              {weatherState.isLoading && (
+                <p className="text-[10px] opacity-50 mt-1">
+                  Loading Toronto weather...
+                </p>
+              )}
+            </motion.div>
 
             {/* Mobile time and weather display */}
-            {mounted && (
+            <motion.div
+              variants={slideInFromBottom}
+              initial="hidden"
+              animate="visible"
+              className="absolute right-0 top-0 text-xs text-foreground/40 font-light md:hidden"
+            >
               <motion.div
-                variants={slideInFromBottom}
-                initial="hidden"
-                animate="visible"
-                className="absolute right-0 top-0 text-xs text-foreground/40 font-light md:hidden"
+                className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.8, duration: 0.8 }}
               >
-                <motion.div
-                  className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.8, duration: 0.8 }}
-                >
-                  <span>{getTimeDifference(true)}</span>
+                <span className="min-h-[1.25rem] flex items-center">
+                  {mounted ? getTimeDifference(true) : ""}
+                </span>
 
-                  {weatherState.temperature !== null && (
-                    <>
-                      <span className="opacity-30">•</span>
-                      <div
-                        className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                        onClick={toggleWeatherEffect}
-                        title="Toronto weather - click to see effect"
-                      >
-                        <span>{weatherState.temperature}°C</span>
-                        {weatherState.condition && (
-                          <span className="ml-1 text-xs">
-                            {getWeatherIcon(weatherState.condition)}
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-
-                {weatherState.isLoading && (
-                  <motion.p
-                    className="text-[9px] opacity-50 mt-1 text-right"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.5 }}
-                    transition={{ delay: 2.2, duration: 0.8 }}
-                  >
-                    Loading weather...
-                  </motion.p>
+                {weatherState.temperature !== null && (
+                  <>
+                    <span className="opacity-30 flex items-center">•</span>
+                    <div
+                      className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                      onClick={toggleWeatherEffect}
+                      title="Toronto weather - click to see effect"
+                    >
+                      <span className="flex items-center">
+                        {weatherState.temperature}°C
+                      </span>
+                      {weatherState.condition && (
+                        <span className="ml-1 text-xs flex items-center">
+                          {getWeatherIcon(weatherState.condition)}
+                        </span>
+                      )}
+                    </div>
+                  </>
                 )}
               </motion.div>
-            )}
+
+              {weatherState.isLoading && (
+                <motion.p
+                  className="text-[9px] opacity-50 mt-1 text-right"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.5 }}
+                  transition={{ delay: 2.2, duration: 0.8 }}
+                >
+                  Loading weather...
+                </motion.p>
+              )}
+            </motion.div>
           </motion.div>
 
           <motion.div
@@ -1718,7 +1728,7 @@ export default function Page() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3, duration: 0.5 }}
-                            className="mt-16 flex justify-center items-center gap-8 mb-16 sm:mb-0 hidden sm:flex"
+                            className="mt-16 flex justify-center items-center gap-8 mb-16 sm:mb-0 sm:flex"
                           >
                             <motion.button
                               whileHover={{ scale: 1.05 }}
