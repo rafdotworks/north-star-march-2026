@@ -58,7 +58,7 @@ export default function Page() {
     "/work/zalando-spread.png",
     "/work/wombo.png",
     "/work/defi.png",
-    "/work/ethos.png",
+    // "/work/ethos.png",
     "/work/tela.png",
     "/work/art-02.png",
     "/work/zalando-dodont.png",
@@ -1104,8 +1104,8 @@ export default function Page() {
                     {/* <span className="inline-block text-[12px] align-text-top text-foreground/40 font-light">
                       (internship)
                     </span>{" "} */}
-                    and clients such as w.ai, US.court, Tela, Ethos, Lyfe,
-                    Artscapy.
+                    and clients such as w.ai, US.court, Tela, Lyfe, Artscapy and
+                    more.
                   </span>
                 </p>
 
@@ -1132,7 +1132,7 @@ export default function Page() {
                     key={currentImageIndex}
                     src={images[currentImageIndex]}
                     alt="Work preview"
-                    className="w-full cursor-pointer bg-transparent max-w-full"
+                    className="w-full bg-transparent max-w-full"
                     style={{
                       objectPosition: "center center",
                       display: "block",
@@ -1142,7 +1142,6 @@ export default function Page() {
                       opacity: loadedImages[images[currentImageIndex]] ? 1 : 0,
                     }}
                     transition={{ duration: 0 }}
-                    onClick={() => setIsZoomed(true)}
                     onLoad={() => handleImageLoad(images[currentImageIndex])}
                   />
                   {/* Preload next image */}
@@ -1294,7 +1293,7 @@ export default function Page() {
                 Contact
               </h2>
 
-              <div className="space-y-8 max-w-2xl">
+              <div className="space-y-8 max-w-2xl relative z-20">
                 <div>
                   <p className="text-sm text-foreground/50 mb-1">Email</p>
                   <a
@@ -1340,7 +1339,7 @@ export default function Page() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50 flex items-center justify-center p-6"
+                className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50 flex items-start pt-[15vh] md:items-center md:pt-0 justify-center"
                 onClick={() => setIsZoomed(false)}
               >
                 <motion.button
@@ -1348,7 +1347,7 @@ export default function Page() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ delay: 0.2, duration: 0.2 }}
-                  className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                  className="fixed top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors z-[60]"
                   onClick={() => setIsZoomed(false)}
                 >
                   <svg
@@ -1370,11 +1369,12 @@ export default function Page() {
                   transition={{ duration: 0.3 }}
                   src={images[currentImageIndex]}
                   alt="Work preview"
-                  className="w-full h-full object-contain"
+                  className="max-h-[75vh] max-w-[90vw] object-contain transform -translate-y-[5vh]"
+                  style={{ display: "block" }}
                 />
 
                 {/* Navigation controls at the bottom */}
-                <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-8">
+                <div className="fixed bottom-4 left-0 right-0 flex justify-center items-center gap-8 z-10">
                   <motion.button
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 0.6 }}
