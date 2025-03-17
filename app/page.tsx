@@ -10,28 +10,47 @@ import { notes, Note, getCategoryColor } from "./data/notes";
 export default function Page() {
   const [mounted, setMounted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isZoomed, setIsZoomed] = useState(false);
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
     {}
   );
+  // Track loading progress for images
+  const [imageLoadingProgress, setImageLoadingProgress] = useState<{
+    [key: string]: number;
+  }>({});
+  // Add progress indicator state
+  const [transitionProgress, setTransitionProgress] = useState(0);
+  // Add state to track if slideshow is paused
+  const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
   // Camera focus effect state
   const [blurAmount, setBlurAmount] = useState(12); // Initial blur amount (pixels)
+  // Add state to track scroll position
+  const [scrollY, setScrollY] = useState(0);
   const [timeState, setTimeState] = useState<{
     hour: number;
     minute: number;
     timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night";
     progress: number;
   }>({
-    hour: 0,
-    minute: 0,
-    timeOfDay: "morning",
-    progress: 0,
+    hour: new Date().getHours(),
+    minute: new Date().getMinutes(),
+    timeOfDay: (() => {
+      const hour = new Date().getHours();
+      if (hour >= 5 && hour < 8) return "dawn";
+      if (hour >= 8 && hour < 12) return "morning";
+      if (hour >= 12 && hour < 17) return "afternoon";
+      if (hour >= 17 && hour < 21) return "evening";
+      return "night";
+    })(),
+    progress: 0.5, // Default to middle of the time period for a balanced look
   });
+  const [focusAnimationRun, setFocusAnimationRun] = useState(false);
 
   // Add weather state
   const [weatherState, setWeatherState] = useState<{
@@ -40,12 +59,16 @@ export default function Page() {
     isLoading: boolean;
     showWeatherEffect: boolean;
     clickPosition: { x: number; y: number } | null;
+    location: string;
+    customLocation: boolean;
   }>({
     temperature: null,
     condition: null,
     isLoading: true,
     showWeatherEffect: false,
     clickPosition: null,
+    location: "Toronto",
+    customLocation: false,
   });
 
   // Create refs for photos
@@ -55,8 +78,10 @@ export default function Page() {
     "/work/theoriq.png",
     "/work/theoriq-prod-hero.png",
     "/work/wai.png",
+
     //"/work/wai-2.png",
     "/work/defi.png",
+    "/work/curbcut.png",
     "/work/art-02.png",
     "/work/ethos.png",
     "/work/atlas-1.png",
@@ -67,8 +92,33 @@ export default function Page() {
     "/work/apple.png",
   ];
 
+  // Map work images to their corresponding Vimeo video URLs
+  const workVideos: { [key: string]: string } = {
+    "/work/theoriq-prod-hero.png":
+      "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+    "/work/defi.png":
+      "https://player.vimeo.com/video/1034767734?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+    "/work/theoriq.png":
+      "https://player.vimeo.com/video/1033459080?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+    "/work/atlas-1.png":
+      "https://player.vimeo.com/video/1034334194?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+    "/work/curbcut.png":
+      "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+  };
+
   // Preload component to ensure all images are loaded
   const ImagePreloader = () => {
+    // Track when all images are loaded
+    useEffect(() => {
+      // Check if all images are loaded
+      const allImagesLoaded = images.every((src) => loadedImages[src]);
+
+      // If all images are loaded, make sure the slideshow is ready to run
+      if (allImagesLoaded && mounted) {
+        console.log("All images preloaded successfully");
+      }
+    }, [loadedImages]);
+
     return (
       <div className="hidden">
         {images.map((src, index) => (
@@ -81,6 +131,21 @@ export default function Page() {
         ))}
       </div>
     );
+  };
+
+  // Generate a dominant color placeholder for images
+  const getImagePlaceholder = (index: number) => {
+    // A set of subtle, design-friendly placeholder colors that match your aesthetic
+    const placeholderColors = [
+      "rgba(245, 245, 245, 0.8)", // Light gray
+      "rgba(240, 240, 245, 0.8)", // Light blue-gray
+      "rgba(245, 240, 235, 0.8)", // Light warm gray
+      "rgba(235, 240, 245, 0.8)", // Light cool gray
+      "rgba(240, 245, 240, 0.8)", // Light mint
+    ];
+
+    // Use the image index to select a color, cycling through the options
+    return placeholderColors[index % placeholderColors.length];
   };
 
   const photos = [
@@ -97,223 +162,508 @@ export default function Page() {
   useEffect(() => {
     setMounted(true);
 
-    // Camera focus animation effect
-    const focusAnimation = () => {
-      // Start with a blur and gradually reduce it using a more camera-like easing
-      const totalDuration = 1100; // 1.2 seconds total (reduced from 2.5s)
-      const startTime = Date.now();
-      const initialBlur = 8; // Reduced initial blur amount
-
-      const focusInterval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(1, elapsed / totalDuration);
-
-        // Use a cubic easing function for more natural camera focus feel
-        // Starts slow, accelerates in the middle, then slows down at the end
-        const easedProgress =
-          progress < 0.5
-            ? 4 * progress * progress * progress
-            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-
-        const newBlur = initialBlur * (1 - easedProgress);
-
-        setBlurAmount(newBlur);
-
-        if (progress >= 1) {
-          clearInterval(focusInterval);
-          setBlurAmount(0);
-        }
-      }, 16); // ~60fps for smooth animation
-
-      return () => clearInterval(focusInterval);
-    };
-
-    // Start the focus animation
-    const focusCleanup = focusAnimation();
-
-    // Update time state
-    const updateTimeState = () => {
-      // Get current time in EST
-      const now = new Date();
-      // Convert to EST (UTC-5 or UTC-4 during daylight saving)
-      const estOffset = -5; // EST offset from UTC in hours
-      const isDST = () => {
-        // Simple DST check for US Eastern Time
-        const jan = new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
-        const jul = new Date(now.getFullYear(), 6, 1).getTimezoneOffset();
-        return Math.max(jan, jul) !== now.getTimezoneOffset();
-      };
-
-      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      const estTime = new Date(utc + 3600000 * (estOffset + (isDST() ? 1 : 0)));
-
-      const hour = estTime.getHours();
-      const minute = estTime.getMinutes();
-
-      // Calculate time of day
-      let timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night";
-      if (hour >= 5 && hour < 8) {
-        timeOfDay = "dawn";
-      } else if (hour >= 8 && hour < 12) {
-        timeOfDay = "morning";
-      } else if (hour >= 12 && hour < 17) {
-        timeOfDay = "afternoon";
-      } else if (hour >= 17 && hour < 21) {
-        timeOfDay = "evening";
-      } else {
-        timeOfDay = "night";
-      }
-
-      // Calculate progress through current time period (0-1)
-      let progress = 0;
-      if (timeOfDay === "dawn") {
-        progress = ((hour - 5) * 60 + minute) / (3 * 60); // 3 hours
-      } else if (timeOfDay === "morning") {
-        progress = ((hour - 8) * 60 + minute) / (4 * 60); // 4 hours
-      } else if (timeOfDay === "afternoon") {
-        progress = ((hour - 12) * 60 + minute) / (5 * 60); // 5 hours
-      } else if (timeOfDay === "evening") {
-        progress = ((hour - 17) * 60 + minute) / (4 * 60); // 4 hours
-      } else {
-        // Night spans from 21 to 5, wrapping around midnight
-        if (hour >= 21) {
-          progress = ((hour - 21) * 60 + minute) / (8 * 60); // 8 hours total
-        } else {
-          progress = ((hour + 3) * 60 + minute) / (8 * 60); // 8 hours total
-        }
-      }
-
-      // Clamp progress between 0 and 1
-      progress = Math.max(0, Math.min(1, progress));
-
-      setTimeState({
-        hour,
-        minute,
-        timeOfDay,
-        progress,
-      });
-    };
-
-    // Fetch weather data for Toronto
-    const fetchWeatherData = async () => {
-      try {
-        // Use a real weather API to get accurate Toronto weather
-        // Using OpenMeteo API which doesn't require an API key
-        const response = await fetch(
-          "https://api.open-meteo.com/v1/forecast?latitude=43.65&longitude=-79.38&current=temperature_2m,weather_code&timezone=America%2FNew_York"
-        );
-
-        if (!response.ok) {
-          throw new Error("Weather data fetch failed");
-        }
-
-        const data = await response.json();
-
-        // Map OpenMeteo weather codes to our condition names
-        // https://open-meteo.com/en/docs
-        const mapWeatherCode = (code: number): string => {
-          // Clear
-          if ([0].includes(code)) return "Clear";
-          // Mainly clear, partly cloudy
-          if ([1, 2].includes(code)) return "Partly Cloudy";
-          // Overcast
-          if ([3].includes(code)) return "Clouds";
-          // Fog, depositing rime fog
-          if ([45, 48].includes(code)) return "Fog";
-          // Drizzle: light, moderate, dense intensity
-          if ([51, 53, 55].includes(code)) return "Drizzle";
-          // Freezing Drizzle: light and dense intensity
-          if ([56, 57].includes(code)) return "Freezing Drizzle";
-          // Rain: slight, moderate, heavy intensity
-          if ([61, 63, 65].includes(code)) return "Rain";
-          // Freezing Rain: light and heavy intensity
-          if ([66, 67].includes(code)) return "Freezing Rain";
-          // Snow fall: slight, moderate, heavy intensity
-          if ([71, 73, 75].includes(code)) return "Snow";
-          // Snow grains
-          if ([77].includes(code)) return "Snow";
-          // Rain showers: slight, moderate, violent
-          if ([80, 81, 82].includes(code)) return "Rain";
-          // Snow showers slight and heavy
-          if ([85, 86].includes(code)) return "Snow";
-          // Thunderstorm: slight or moderate, with/without hail
-          if ([95, 96, 99].includes(code)) return "Thunderstorm";
-
-          return "Clear"; // Default
-        };
-
-        setWeatherState((prev) => ({
-          ...prev,
-          temperature: Math.round(data.current.temperature_2m),
-          condition: mapWeatherCode(data.current.weather_code),
-          isLoading: false,
-        }));
-      } catch (error) {
-        console.error("Error fetching weather data:", error);
-        setWeatherState((prev) => ({
-          ...prev,
-          isLoading: false,
-        }));
-      }
-    };
-
-    updateTimeState();
+    // Fetch weather data
     fetchWeatherData();
 
-    const interval = setInterval(updateTimeState, 60000); // Update every minute
-    const weatherInterval = setInterval(fetchWeatherData, 30 * 60000); // Update weather every 30 minutes
+    // Set up interval to update time
+    const timeInterval = setInterval(updateTimeState, 1000);
+
+    // Set up keyboard event listener
+    window.addEventListener("keydown", handleKeyDown);
+
+    // Start the slideshow after a short delay to ensure images are loaded
+    const slideshowTimer = setTimeout(() => {
+      if (
+        !isPhotosModalOpen &&
+        !isNotesModalOpen &&
+        !isAllNotesModalOpen &&
+        !isSlideshowPaused
+      ) {
+        // Set to the first image and start progress
+        setCurrentImageIndex(0);
+        setTransitionProgress(0);
+      }
+    }, 1000);
 
     return () => {
-      clearInterval(interval);
-      clearInterval(weatherInterval);
-      focusCleanup();
+      clearInterval(timeInterval);
+      clearTimeout(slideshowTimer);
+      window.removeEventListener("keydown", handleKeyDown);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Add keyboard navigation for modal
+  // Update scrollbar color when weather condition changes
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isZoomed) return;
+    if (mounted && weatherState.condition) {
+      updateScrollbarColor();
+    }
+  }, [mounted, weatherState.condition]);
 
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-        setCurrentImageIndex((prev) =>
-          prev === 0 ? images.length - 1 : prev - 1
-        );
-      } else if (e.key === "Escape") {
-        setIsZoomed(false);
+  // Camera focus animation effect
+  const focusAnimation = () => {
+    // Start with a blur and gradually reduce it using a more camera-like easing
+    const totalDuration = 2500; // 2.5 seconds total (increased from 1.1s)
+    const startTime = Date.now();
+    const initialBlur = 15; // Increased initial blur amount
+
+    // Set initial blur
+    setBlurAmount(initialBlur);
+
+    const focusInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(1, elapsed / totalDuration);
+
+      // Use a cubic easing function for more natural camera focus feel
+      // Starts slow, accelerates in the middle, then slows down at the end
+      const easedProgress =
+        progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      const newBlur = initialBlur * (1 - easedProgress);
+
+      setBlurAmount(newBlur);
+
+      if (progress >= 1) {
+        clearInterval(focusInterval);
+        // Ensure blur is completely removed
+        setBlurAmount(0);
       }
+    }, 16); // ~60fps for smooth animation
+
+    return () => {
+      clearInterval(focusInterval);
+      // Ensure blur is completely removed when cleaning up
+      setBlurAmount(0);
+    };
+  };
+
+  // Add a useEffect to handle the focus animation with proper cleanup
+  useEffect(() => {
+    // Only run the focus animation once when the component mounts
+    if (mounted && !focusAnimationRun) {
+      setFocusAnimationRun(true);
+      const cleanup = focusAnimation();
+      return () => {
+        if (cleanup) cleanup();
+      };
+    }
+  }, [mounted, focusAnimationRun]);
+
+  // Update time state
+  const updateTimeState = () => {
+    // Get current time in EST
+    const now = new Date();
+    // Convert to EST (UTC-5 or UTC-4 during daylight saving)
+    const estOffset = -5; // EST offset from UTC in hours
+    const isDST = () => {
+      // Simple DST check for US Eastern Time
+      const jan = new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
+      const jul = new Date(now.getFullYear(), 6, 1).getTimezoneOffset();
+      return Math.max(jan, jul) !== now.getTimezoneOffset();
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isZoomed, images.length]);
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const estTime = new Date(utc + 3600000 * (estOffset + (isDST() ? 1 : 0)));
 
-  useEffect(() => {
+    const hour = estTime.getHours();
+    const minute = estTime.getMinutes();
+
+    // Calculate time of day
+    let timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night";
+    if (hour >= 5 && hour < 8) {
+      timeOfDay = "dawn";
+    } else if (hour >= 8 && hour < 12) {
+      timeOfDay = "morning";
+    } else if (hour >= 12 && hour < 17) {
+      timeOfDay = "afternoon";
+    } else if (hour >= 17 && hour < 21) {
+      timeOfDay = "evening";
+    } else {
+      timeOfDay = "night";
+    }
+
+    // Calculate progress through current time period (0-1)
+    let progress = 0;
+    if (timeOfDay === "dawn") {
+      progress = ((hour - 5) * 60 + minute) / (3 * 60); // 3 hours
+    } else if (timeOfDay === "morning") {
+      progress = ((hour - 8) * 60 + minute) / (4 * 60); // 4 hours
+    } else if (timeOfDay === "afternoon") {
+      progress = ((hour - 12) * 60 + minute) / (5 * 60); // 5 hours
+    } else if (timeOfDay === "evening") {
+      progress = ((hour - 17) * 60 + minute) / (4 * 60); // 4 hours
+    } else {
+      // Night spans from 21 to 5, wrapping around midnight
+      if (hour >= 21) {
+        progress = ((hour - 21) * 60 + minute) / (8 * 60); // 8 hours total
+      } else {
+        progress = ((hour + 3) * 60 + minute) / (8 * 60); // 8 hours total
+      }
+    }
+
+    // Clamp progress between 0 and 1
+    progress = Math.max(0, Math.min(1, progress));
+
+    setTimeState({
+      hour,
+      minute,
+      timeOfDay,
+      progress,
+    });
+  };
+
+  // Fetch weather data for the specified location
+  const fetchWeatherData = async (location: string = "Toronto") => {
+    try {
+      // Define coordinates for supported cities
+      const cityCoordinates: { [key: string]: { lat: number; lon: number } } = {
+        Toronto: { lat: 43.65, lon: -79.38 },
+        "New York": { lat: 40.71, lon: -74.01 },
+        London: { lat: 51.51, lon: -0.13 },
+        Paris: { lat: 48.85, lon: 2.35 },
+        Tokyo: { lat: 35.68, lon: 139.77 },
+        Sydney: { lat: -33.87, lon: 151.21 },
+        Berlin: { lat: 52.52, lon: 13.41 },
+        "San Francisco": { lat: 37.77, lon: -122.42 },
+      };
+
+      // Get coordinates for the requested location or default to Toronto
+      const coordinates =
+        cityCoordinates[location] || cityCoordinates["Toronto"];
+
+      // Use a real weather API to get accurate weather data
+      // Using OpenMeteo API which doesn't require an API key
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.lat}&longitude=${coordinates.lon}&current=temperature_2m,weather_code&timezone=America%2FNew_York`
+      );
+
+      if (!response.ok) {
+        throw new Error("Weather data fetch failed");
+      }
+
+      const data = await response.json();
+
+      // Map OpenMeteo weather codes to our condition names
+      // https://open-meteo.com/en/docs
+      const mapWeatherCode = (code: number): string => {
+        // Clear
+        if ([0].includes(code)) return "Clear";
+        // Mainly clear, partly cloudy
+        if ([1, 2].includes(code)) return "Partly Cloudy";
+        // Overcast
+        if ([3].includes(code)) return "Clouds";
+        // Fog, depositing rime fog
+        if ([45, 48].includes(code)) return "Fog";
+        // Drizzle: light, moderate, dense intensity
+        if ([51, 53, 55].includes(code)) return "Drizzle";
+        // Freezing Drizzle: light and dense intensity
+        if ([56, 57].includes(code)) return "Freezing Drizzle";
+        // Rain: slight, moderate, heavy intensity
+        if ([61, 63, 65].includes(code)) return "Rain";
+        // Freezing Rain: light and heavy intensity
+        if ([66, 67].includes(code)) return "Freezing Rain";
+        // Snow fall: slight, moderate, heavy intensity
+        if ([71, 73, 75].includes(code)) return "Snow";
+        // Snow grains
+        if ([77].includes(code)) return "Snow";
+        // Rain showers: slight, moderate, violent
+        if ([80, 81, 82].includes(code)) return "Rain";
+        // Snow showers slight and heavy
+        if ([85, 86].includes(code)) return "Snow";
+        // Thunderstorm: slight or moderate, with/without hail
+        if ([95, 96, 99].includes(code)) return "Thunderstorm";
+
+        return "Clear"; // Default
+      };
+
+      setWeatherState((prev) => ({
+        ...prev,
+        temperature: Math.round(data.current.temperature_2m),
+        condition: mapWeatherCode(data.current.weather_code),
+        isLoading: false,
+        location: location,
+        customLocation: location !== "Toronto",
+      }));
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+      setWeatherState((prev) => ({
+        ...prev,
+        isLoading: false,
+      }));
+    }
+  };
+
+  // Add keyboard navigation for modal
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // Handle escape key for modals
+    if (e.key === "Escape") {
+      if (
+        isPhotosModalOpen ||
+        isNotesModalOpen ||
+        isAllNotesModalOpen ||
+        isVideoModalOpen
+      ) {
+        // Close any open modal
+        setIsPhotosModalOpen(false);
+        setIsNotesModalOpen(false);
+        setIsAllNotesModalOpen(false);
+        setIsVideoModalOpen(false);
+      }
+      return;
+    }
+
+    // Skip other keys if any modal is open
     if (
-      isZoomed ||
       isPhotosModalOpen ||
       isNotesModalOpen ||
-      isAllNotesModalOpen
+      isAllNotesModalOpen ||
+      isVideoModalOpen
     )
-      return; // Don't run interval if any modal is open
+      return;
 
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 5000);
+    // Handle arrow keys for navigation
+    if (e.key === "ArrowRight") {
+      // If no note is open, navigate to next image
+      if (!isNotesModalOpen) {
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+        setTransitionProgress(0);
+      } else {
+        handleNextNote();
+      }
+    } else if (e.key === "ArrowLeft") {
+      // If no note is open, navigate to previous image
+      if (!isNotesModalOpen) {
+        setCurrentImageIndex(
+          (prev) => (prev - 1 + images.length) % images.length
+        );
+        setTransitionProgress(0);
+      } else {
+        handlePrevNote();
+      }
+    }
+  };
 
-    return () => clearInterval(interval);
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      handleKeyDown(e);
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
   }, [
-    isZoomed,
     isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
+    isVideoModalOpen,
+    // Remove isZoomed from dependency array
     images.length,
   ]);
 
+  // Add a separate useEffect to start the slideshow immediately when mounted
+  useEffect(() => {
+    if (
+      mounted &&
+      !isPhotosModalOpen &&
+      !isNotesModalOpen &&
+      !isAllNotesModalOpen &&
+      !isVideoModalOpen &&
+      !isSlideshowPaused
+    ) {
+      // Force the first image transition after a short delay
+      const startTimer = setTimeout(() => {
+        // Start with the first image
+        setCurrentImageIndex(0);
+        // Reset progress
+        setTransitionProgress(0);
+      }, 800);
+
+      return () => clearTimeout(startTimer);
+    }
+  }, [
+    mounted,
+    isPhotosModalOpen,
+    isNotesModalOpen,
+    isAllNotesModalOpen,
+    isVideoModalOpen,
+    isSlideshowPaused,
+  ]);
+
+  // Add a ref for the slideshow container
+  const slideshowRef = useRef<HTMLDivElement>(null);
+
+  // Add state to track if slideshow is in viewport
+  const [isInViewport, setIsInViewport] = useState(false);
+
+  // Use IntersectionObserver to detect when slideshow is visible
+  useEffect(() => {
+    if (!mounted) return;
+
+    const slideshowElement = slideshowRef.current;
+    if (!slideshowElement) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        setIsInViewport(entry.isIntersecting);
+      },
+      { threshold: 0.1 } // Trigger when at least 10% of the element is visible
+    );
+
+    observer.observe(slideshowElement);
+
+    return () => {
+      if (slideshowElement) {
+        observer.unobserve(slideshowElement);
+      }
+    };
+  }, [mounted]);
+
+  // Force the slideshow to start when it becomes visible
+  useEffect(() => {
+    if (
+      isInViewport &&
+      !isPhotosModalOpen &&
+      !isNotesModalOpen &&
+      !isAllNotesModalOpen &&
+      !isVideoModalOpen
+    ) {
+      // Reset progress to start the slideshow
+      setTransitionProgress(0);
+      console.log("Slideshow visible in viewport, ensuring it is running");
+    }
+  }, [
+    isInViewport,
+    isPhotosModalOpen,
+    isNotesModalOpen,
+    isAllNotesModalOpen,
+    isVideoModalOpen,
+  ]);
+
+  // Main slideshow interval effect - simplified to use a reliable interval
+  useEffect(() => {
+    // Only pause if a modal is open
+    if (
+      !mounted ||
+      isPhotosModalOpen ||
+      isNotesModalOpen ||
+      isAllNotesModalOpen ||
+      isVideoModalOpen
+    )
+      return;
+
+    // Simple interval-based slideshow
+    const slideshowInterval = setInterval(() => {
+      // Move to the next image in sequence
+      setCurrentImageIndex((prev) => {
+        const next = (prev + 1) % images.length;
+        console.log(`Changing from image ${prev} to ${next}`);
+        return next;
+      });
+      // Reset progress
+      setTransitionProgress(0);
+      setLastImageChangeTime(Date.now());
+    }, 3500); // 3.5 seconds per image
+
+    return () => clearInterval(slideshowInterval);
+  }, [
+    mounted,
+    isPhotosModalOpen,
+    isNotesModalOpen,
+    isAllNotesModalOpen,
+    isVideoModalOpen,
+    images.length,
+  ]);
+
+  // Progress bar animation
+  useEffect(() => {
+    // Only run if no modal is open
+    if (
+      !mounted ||
+      isPhotosModalOpen ||
+      isNotesModalOpen ||
+      isAllNotesModalOpen ||
+      isVideoModalOpen
+    )
+      return;
+
+    let animationFrameId: number;
+    let lastTimestamp = performance.now();
+    let progress = transitionProgress;
+
+    const updateProgress = (timestamp: number) => {
+      const elapsed = timestamp - lastTimestamp;
+
+      // Update progress approximately every 40ms (25fps)
+      if (elapsed > 40) {
+        // For a 3500ms total duration
+        progress += elapsed / 35;
+
+        // Cap at 100%
+        if (progress > 100) progress = 100;
+
+        setTransitionProgress(progress);
+        lastTimestamp = timestamp;
+      }
+
+      animationFrameId = requestAnimationFrame(updateProgress);
+    };
+
+    animationFrameId = requestAnimationFrame(updateProgress);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [
+    mounted,
+    isPhotosModalOpen,
+    isNotesModalOpen,
+    isAllNotesModalOpen,
+    isVideoModalOpen,
+    transitionProgress,
+  ]);
+
   const handleImageLoad = (src: string) => {
-    setLoadedImages((prev) => ({ ...prev, [src]: true }));
+    // Add a slight delay before marking the image as loaded
+    // This creates a more noticeable blur transition effect
+    setTimeout(() => {
+      setLoadedImages((prev) => {
+        const newState = { ...prev, [src]: true };
+
+        // Check if all images are loaded
+        const allLoaded = images.every((imgSrc) => newState[imgSrc]);
+
+        // If all images are loaded and we're in a state where slideshow should run
+        if (
+          allLoaded &&
+          mounted &&
+          !isPhotosModalOpen &&
+          !isNotesModalOpen &&
+          !isAllNotesModalOpen &&
+          !isVideoModalOpen
+        ) {
+          // Force progress to start with a small delay to ensure UI is ready
+          setTimeout(() => {
+            setTransitionProgress(0);
+          }, 200);
+        }
+
+        return newState;
+      });
+    }, 800); // 800ms delay before removing blur
+  };
+
+  // Track progressive loading of images
+  const handleImageProgress = (src: string, event: ProgressEvent) => {
+    if (event.lengthComputable) {
+      const progress = Math.round((event.loaded / event.total) * 100);
+      setImageLoadingProgress((prev) => ({ ...prev, [src]: progress }));
+    }
   };
 
   const fadeInAnimation = {
@@ -514,17 +864,12 @@ export default function Page() {
 
   // Toggle weather effect display
   const toggleWeatherEffect = (e: React.MouseEvent) => {
-    // Get click position
-    const clickPosition = {
-      x: e.clientX,
-      y: e.clientY,
-    };
-
+    // Instead of using click position, we'll display the effect at the top of the page
     setWeatherState((prev) => ({
       ...prev,
       showWeatherEffect: !prev.showWeatherEffect,
-      // Always store the current click position, whether showing or hiding
-      clickPosition: clickPosition,
+      // Set a fixed position at the top of the page
+      clickPosition: { x: window.innerWidth / 2, y: 0 },
     }));
   };
 
@@ -550,6 +895,82 @@ export default function Page() {
     return conditions[weatherState.condition] || "rgba(125, 125, 125, 0.2)";
   };
 
+  // Get scrollbar color based on weather condition
+  const updateScrollbarColor = () => {
+    if (!weatherState.condition) return;
+
+    // Define scrollbar colors based on weather conditions
+    const scrollbarColors: {
+      [key: string]: { color: string; hoverColor: string };
+    } = {
+      Clear: {
+        color: "rgba(255, 200, 0, 0.2)",
+        hoverColor: "rgba(255, 200, 0, 0.3)",
+      },
+      "Partly Cloudy": {
+        color: "rgba(180, 180, 180, 0.2)",
+        hoverColor: "rgba(180, 180, 180, 0.3)",
+      },
+      Clouds: {
+        color: "rgba(150, 150, 150, 0.2)",
+        hoverColor: "rgba(150, 150, 150, 0.3)",
+      },
+      Rain: {
+        color: "rgba(0, 125, 255, 0.2)",
+        hoverColor: "rgba(0, 125, 255, 0.3)",
+      },
+      Drizzle: {
+        color: "rgba(100, 150, 255, 0.2)",
+        hoverColor: "rgba(100, 150, 255, 0.3)",
+      },
+      "Freezing Drizzle": {
+        color: "rgba(180, 200, 255, 0.2)",
+        hoverColor: "rgba(180, 200, 255, 0.3)",
+      },
+      "Freezing Rain": {
+        color: "rgba(150, 180, 255, 0.2)",
+        hoverColor: "rgba(150, 180, 255, 0.3)",
+      },
+      Thunderstorm: {
+        color: "rgba(100, 100, 255, 0.25)",
+        hoverColor: "rgba(100, 100, 255, 0.35)",
+      },
+      Snow: {
+        color: "rgba(220, 240, 255, 0.2)",
+        hoverColor: "rgba(220, 240, 255, 0.3)",
+      },
+      Mist: {
+        color: "rgba(200, 200, 220, 0.2)",
+        hoverColor: "rgba(200, 200, 220, 0.3)",
+      },
+      Fog: {
+        color: "rgba(180, 180, 200, 0.2)",
+        hoverColor: "rgba(180, 180, 200, 0.3)",
+      },
+      Haze: {
+        color: "rgba(200, 180, 150, 0.2)",
+        hoverColor: "rgba(200, 180, 150, 0.3)",
+      },
+    };
+
+    const defaultColor = {
+      color: "rgba(125, 125, 125, 0.15)",
+      hoverColor: "rgba(125, 125, 125, 0.25)",
+    };
+
+    const colors = scrollbarColors[weatherState.condition] || defaultColor;
+
+    // Update CSS variables
+    document.documentElement.style.setProperty(
+      "--scrollbar-color",
+      colors.color
+    );
+    document.documentElement.style.setProperty(
+      "--scrollbar-hover-color",
+      colors.hoverColor
+    );
+  };
+
   // Get weather icon based on condition
   const getWeatherIcon = (condition: string | null) => {
     if (!condition) return null;
@@ -560,7 +981,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
         </svg>
@@ -570,7 +991,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path d="M4.5 10.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
           <path d="M17.5 6.5c0-2.76-2.24-5-5-5s-5 2.24-5 5c0 .34.04.67.09 1h-.09c-1.66 0-3 1.34-3 3s1.34 3 3 3h10c1.66 0 3-1.34 3-3s-1.34-3-3-3h-.09c.05-.33.09-.66.09-1z" />
@@ -581,7 +1002,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -595,7 +1016,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -609,7 +1030,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path d="M13.5 6.379V3.75a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 10.125a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.75 3.75 3.75 0 0 0-3-3.746ZM4.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 0 20.625 3.75 3.75 0 0 0 3.75 24.375 3.75 3.75 0 0 0 7.5 20.625a3.75 3.75 0 0 0-3-3.746ZM13.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 20.625a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.75 3.75 3.75 0 0 0-3-3.746Z" />
         </svg>
@@ -619,7 +1040,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -633,7 +1054,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -647,7 +1068,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -661,7 +1082,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -675,7 +1096,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -689,7 +1110,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -703,7 +1124,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -720,7 +1141,7 @@ export default function Page() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-3 h-3"
+          className="w-3 h-3 inline-block align-middle"
         >
           <path
             fillRule="evenodd"
@@ -757,6 +1178,111 @@ export default function Page() {
     },
   };
 
+  // Add a function to handle opening the video modal
+  const handleOpenVideoModal = (imageSrc: string) => {
+    const videoUrl = workVideos[imageSrc];
+    if (videoUrl) {
+      setCurrentVideoUrl(videoUrl);
+      setIsVideoModalOpen(true);
+
+      // Reset slideshow progress when opening modal
+      setTransitionProgress(0);
+    }
+  };
+
+  // Add a function to handle closing the video modal
+  const handleCloseVideoModal = () => {
+    setIsVideoModalOpen(false);
+    setCurrentVideoUrl(null);
+
+    // Reset slideshow progress when closing modal
+    setTransitionProgress(0);
+    setLastImageChangeTime(Date.now());
+  };
+
+  // Add a state to track the last time the image changed
+  const [lastImageChangeTime, setLastImageChangeTime] = useState<number>(
+    Date.now()
+  );
+
+  // Add a fallback mechanism to restart the slideshow if it gets stuck
+  useEffect(() => {
+    // Skip only if a modal is open
+    if (
+      isPhotosModalOpen ||
+      isNotesModalOpen ||
+      isAllNotesModalOpen ||
+      isVideoModalOpen ||
+      !mounted
+    )
+      return;
+
+    // Check if the slideshow is stuck (no image change for more than 7 seconds)
+    const checkInterval = setInterval(() => {
+      const currentTime = Date.now();
+      const timeSinceLastChange = currentTime - lastImageChangeTime;
+
+      // If no image change for more than 7 seconds (twice the normal interval), restart the slideshow
+      if (timeSinceLastChange > 7000) {
+        console.log("Slideshow appears stuck, restarting...");
+        // Force the next image in sequence
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+        // Reset progress
+        setTransitionProgress(0);
+        setLastImageChangeTime(currentTime);
+      }
+    }, 2000); // Check every 2 seconds
+
+    return () => clearInterval(checkInterval);
+  }, [
+    isPhotosModalOpen,
+    isNotesModalOpen,
+    isAllNotesModalOpen,
+    isVideoModalOpen,
+    lastImageChangeTime,
+    mounted,
+    images.length,
+  ]);
+
+  // Update lastImageChangeTime whenever the image changes
+  useEffect(() => {
+    setLastImageChangeTime(Date.now());
+  }, [currentImageIndex]);
+
+  // Add an effect to ensure the slideshow starts immediately when the page loads
+  useEffect(() => {
+    if (mounted) {
+      // Start with the first image
+      setCurrentImageIndex(0);
+      setTransitionProgress(0);
+      setLastImageChangeTime(Date.now());
+
+      // Log that the slideshow is starting
+      console.log("Slideshow starting with first image");
+    }
+  }, [mounted]);
+
+  // Add effect to track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Change weather location (simplified to just show Toronto)
+  const changeWeatherLocation = () => {
+    fetchWeatherData("Toronto");
+    // Show the weather effect
+    setWeatherState((prev) => ({
+      ...prev,
+      showWeatherEffect: true,
+      clickPosition: { x: window.innerWidth / 2, y: 0 },
+    }));
+  };
+
   if (!mounted) {
     return null;
   }
@@ -764,8 +1290,9 @@ export default function Page() {
   return (
     <div
       style={{
-        filter: `blur(${blurAmount}px)`,
-        transition: "filter 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
+        filter: blurAmount > 0 ? `blur(${blurAmount}px)` : "none",
+        transition: "filter 2s cubic-bezier(0.22, 1, 0.36, 1)",
+        position: "relative", // Ensure proper positioning context
       }}
     >
       <motion.main
@@ -788,8 +1315,13 @@ export default function Page() {
           {/* Subtle gradient light at the bottom */}
           <div className="absolute bottom-0 inset-x-0 h-[30vh] bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-40"></div>
 
+          {/* Base bottom gradient that appears immediately */}
+          <div className="absolute bottom-0 inset-x-0 h-[25vh] bg-gradient-to-t from-gray-100/40 via-gray-100/20 to-transparent dark:from-gray-900/40 dark:via-gray-900/15 opacity-30">
+            <div className="absolute bottom-[5%] left-[25%] w-[30vw] h-[12vh] rounded-full blur-[100px] bg-gray-200/20 dark:bg-gray-700/15 opacity-40"></div>
+          </div>
+
           {/* Time-based design element at the top */}
-          {mounted && (
+          {mounted ? (
             <>
               {/* Dawn: Soft rising sun effect */}
               {timeState.timeOfDay === "dawn" && (
@@ -890,10 +1422,10 @@ export default function Page() {
                 </div>
               )}
             </>
-          )}
+          ) : null}
 
           {/* Time-based design element at the bottom */}
-          {mounted && (
+          {mounted ? (
             <>
               {/* Dawn: Soft rising sun reflection at bottom */}
               {timeState.timeOfDay === "dawn" && (
@@ -930,7 +1462,7 @@ export default function Page() {
                 </div>
               )}
             </>
-          )}
+          ) : null}
 
           {/* Noise texture overlay */}
           <div
@@ -1010,13 +1542,15 @@ export default function Page() {
                     <div
                       className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
                       onClick={toggleWeatherEffect}
-                      title="Toronto weather - click to see effect"
+                      title={`${weatherState.location} weather - click to see effect`}
                     >
-                      <span className="flex items-center">
-                        {weatherState.temperature}°C
+                      <span className="flex items-center justify-center">
+                        {weatherState.temperature}°C{" "}
+                        {weatherState.customLocation &&
+                          `(${weatherState.location})`}
                       </span>
                       {weatherState.condition && (
-                        <span className="ml-1 text-sm flex items-center">
+                        <span className="ml-1 text-xs flex items-center justify-center">
                           {getWeatherIcon(weatherState.condition)}
                         </span>
                       )}
@@ -1026,7 +1560,7 @@ export default function Page() {
               </div>
               {weatherState.isLoading && (
                 <p className="text-[10px] opacity-50 mt-1">
-                  Loading Toronto weather...
+                  Loading {weatherState.location} weather...
                 </p>
               )}
             </motion.div>
@@ -1054,13 +1588,15 @@ export default function Page() {
                     <div
                       className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
                       onClick={toggleWeatherEffect}
-                      title="Toronto weather - click to see effect"
+                      title={`${weatherState.location} weather - click to see effect`}
                     >
-                      <span className="flex items-center">
-                        {weatherState.temperature}°C
+                      <span className="flex items-center justify-center">
+                        {weatherState.temperature}°C{" "}
+                        {weatherState.customLocation &&
+                          `(${weatherState.location})`}
                       </span>
                       {weatherState.condition && (
-                        <span className="ml-1 text-xs flex items-center">
+                        <span className="ml-1 text-xs flex items-center justify-center">
                           {getWeatherIcon(weatherState.condition)}
                         </span>
                       )}
@@ -1146,50 +1682,151 @@ export default function Page() {
               </div>
 
               <div className="space-y-8">
-                <div className="w-full mb-0 overflow-hidden relative">
-                  {/* Invisible placeholder to maintain container height */}
-                  <img
-                    src={images[0]}
-                    alt="Height placeholder"
-                    className="w-full invisible"
-                    style={{ display: "block" }}
-                  />
-                  <div className="absolute inset-0">
-                    <AnimatePresence mode="sync">
-                      <motion.img
-                        key={currentImageIndex}
-                        src={images[currentImageIndex]}
-                        alt="Work preview"
-                        className="w-full h-full bg-transparent max-w-full"
+                <div
+                  ref={slideshowRef}
+                  className="w-full mb-0 overflow-hidden relative"
+                  onMouseEnter={() => {
+                    // Don't pause on hover anymore
+                    // setIsSlideshowPaused(true);
+                  }}
+                  onMouseLeave={() => {
+                    // Don't need to unpause since we're not pausing on hover
+                    // setIsSlideshowPaused(false);
+                    // setTransitionProgress(0);
+                  }}
+                >
+                  {/* Replace the AnimatePresence with a crossfade effect */}
+                  <div className="relative w-full h-full">
+                    {images.map((src, index) => (
+                      <motion.div
+                        key={src}
+                        className="relative"
                         style={{
-                          objectPosition: "center center",
-                          display: "block",
-                          objectFit: "contain",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          opacity: index === currentImageIndex ? 1 : 0,
+                          zIndex: index === currentImageIndex ? 2 : 1,
+                          transition:
+                            "opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1)",
                         }}
-                        initial={{ opacity: 0, scale: 1.02 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{
-                          duration: 0.8,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        onLoad={() =>
-                          handleImageLoad(images[currentImageIndex])
-                        }
-                      />
-                    </AnimatePresence>
+                      >
+                        <motion.div
+                          className={`relative w-full h-full ${
+                            workVideos[src] ? "cursor-pointer group" : ""
+                          }`}
+                          onClick={() => {
+                            if (workVideos[src]) {
+                              handleOpenVideoModal(src);
+                            }
+                          }}
+                        >
+                          <img
+                            src={src}
+                            alt={`Work preview ${index + 1}`}
+                            className={`w-full bg-transparent max-w-full ${
+                              workVideos[src]
+                                ? "transition-all duration-300 hover:brightness-105"
+                                : ""
+                            }`}
+                            style={{
+                              objectPosition: "center center",
+                              display: "block",
+                              filter: !loadedImages[src] ? "blur(8px)" : "none",
+                              transition:
+                                "filter 1.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
+                            }}
+                            onLoad={() => handleImageLoad(src)}
+                          />
+                          {workVideos[src] && index === currentImageIndex && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110">
+                                <svg
+                                  width="18"
+                                  height="18"
+                                  viewBox="0 0 24 24"
+                                  fill="white"
+                                  stroke="none"
+                                  className="ml-0.5"
+                                >
+                                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      </motion.div>
+                    ))}
+
+                    {/* Placeholder for sizing (to maintain layout) */}
+                    <img
+                      src={images[0]}
+                      alt="Layout placeholder"
+                      className="w-full invisible"
+                    />
                   </div>
-                  {/* Preload next image */}
-                  <img
-                    src={images[(currentImageIndex + 1) % images.length]}
-                    alt="Next work preview"
-                    className="hidden"
-                    onLoad={() =>
-                      handleImageLoad(
-                        images[(currentImageIndex + 1) % images.length]
-                      )
-                    }
-                  />
+
+                  {/* Loading indicator */}
+                  {!loadedImages[images[currentImageIndex]] && (
+                    <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm bg-background/10">
+                      <div className="w-6 h-6 border-2 border-foreground/10 border-t-foreground/30 rounded-full animate-spin"></div>
+                    </div>
+                  )}
+
+                  {/* Subtle progress indicator */}
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground/5">
+                    <motion.div
+                      className={`h-full ${
+                        isSlideshowPaused
+                          ? "bg-foreground/30"
+                          : "bg-foreground/20"
+                      }`}
+                      style={{ width: `${transitionProgress}%` }}
+                      transition={{ ease: "linear" }}
+                    />
+                  </div>
+
+                  {/* Image navigation dots */}
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                    {images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setCurrentImageIndex(index);
+                          setTransitionProgress(0);
+                        }}
+                        className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                          index === currentImageIndex
+                            ? "bg-foreground/40 scale-110"
+                            : "bg-foreground/20 hover:bg-foreground/30"
+                        }`}
+                        aria-label={`View image ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pause indicator */}
+                  {isSlideshowPaused && (
+                    <div className="absolute top-4 right-4 bg-background/70 backdrop-blur-sm rounded-full p-1.5 opacity-70">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-foreground/70"
+                      >
+                        <rect x="6" y="4" width="4" height="16"></rect>
+                        <rect x="14" y="4" width="4" height="16"></rect>
+                      </svg>
+                    </div>
+                  )}
                 </div>
                 <div className="hidden md:block mt-4">
                   <a
@@ -1366,104 +2003,254 @@ export default function Page() {
             </section>
           </motion.div>
 
-          {/* Fullscreen Modal */}
+          {/* Weather effect overlay */}
           <AnimatePresence>
-            {isZoomed && (
+            {weatherState.showWeatherEffect && weatherState.clickPosition && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50 flex items-start pt-[15vh] md:items-center md:pt-0 justify-center"
-                onClick={() => setIsZoomed(false)}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{
+                  opacity: scrollY > 80 ? 0 : 1,
+                  y: 0,
+                  translateY:
+                    scrollY > 10 ? `-${Math.min(scrollY / 2, 50)}%` : 0,
+                }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.22, 1, 0.36, 1],
+                  opacity: { duration: 0.3 },
+                }}
+                className="fixed inset-x-0 top-0 pointer-events-auto z-50 overflow-hidden"
+                style={{
+                  height: "auto",
+                }}
               >
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ delay: 0.2, duration: 0.2 }}
-                  className="fixed top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors z-[60]"
-                  onClick={() => setIsZoomed(false)}
+                {/* Weather banner */}
+                <div
+                  className="w-full py-3 px-6 flex items-center justify-between backdrop-blur-sm"
+                  style={{
+                    background: `${getWeatherColor()}`,
+                    boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+                    animation: "weatherBannerGlow 3s infinite ease-in-out",
+                    transition:
+                      "background-color 0.6s ease-in-out, transform 0.6s ease-in-out",
+                  }}
+                  aria-live="polite"
+                  role="status"
                 >
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </motion.button>
+                  {/* Weather condition text */}
+                  <div className="flex items-center space-x-3">
+                    <span className="text-foreground/90 flex items-center">
+                      {weatherState.condition && (
+                        <span className="mr-2 text-base flex items-center justify-center">
+                          {getWeatherIcon(weatherState.condition)}
+                        </span>
+                      )}
+                      <span className="font-light text-xs flex items-center">
+                        It's {weatherState.condition?.toLowerCase() || "clear"}{" "}
+                        in {weatherState.location}{" "}
+                        <span className="ml-1 text-foreground/70">
+                          and {weatherState.temperature}°C
+                        </span>
+                      </span>
+                    </span>
+                  </div>
 
-                <motion.img
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.3 }}
-                  src={images[currentImageIndex]}
-                  alt="Work preview"
-                  className="max-h-[75vh] max-w-[90vw] object-contain transform -translate-y-[5vh]"
-                  style={{ display: "block" }}
-                />
-
-                {/* Navigation controls at the bottom */}
-                <div className="fixed bottom-4 left-0 right-0 flex justify-center items-center gap-8 z-10">
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.6 }}
-                    exit={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.2 }}
-                    className="rounded-full bg-gray-200/10 backdrop-blur-sm p-1.5 hover:bg-gray-200/20 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentImageIndex((prev) =>
-                        prev === 0 ? images.length - 1 : prev - 1
-                      );
-                    }}
-                    aria-label="Previous image"
+                  {/* Close button */}
+                  <button
+                    onClick={() =>
+                      setWeatherState((prev) => ({
+                        ...prev,
+                        showWeatherEffect: false,
+                      }))
+                    }
+                    className="text-foreground/60 hover:text-foreground/80 transition-colors"
+                    aria-label="Close weather banner"
                   >
                     <svg
-                      width="16"
-                      height="16"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="1.5"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      <path d="M15 18l-6-6 6-6" />
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
-                  </motion.button>
-
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.6 }}
-                    exit={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.2 }}
-                    className="rounded-full bg-gray-200/10 backdrop-blur-sm p-1.5 hover:bg-gray-200/20 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentImageIndex(
-                        (prev) => (prev + 1) % images.length
-                      );
-                    }}
-                    aria-label="Next image"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    >
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </motion.button>
+                  </button>
                 </div>
+
+                {/* Background effect */}
+                <div
+                  className="absolute w-full h-[300px] blur-[100px] -z-10"
+                  style={{
+                    background: getWeatherColor(),
+                    opacity: 0.6,
+                    top: "-150px",
+                  }}
+                ></div>
+
+                {/* Weather animation effects based on condition */}
+                {(weatherState.condition === "Rain" ||
+                  weatherState.condition === "Drizzle") && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {[...Array(25)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute w-[1px] h-[10px] bg-blue-200/50"
+                        style={{
+                          left: `${Math.random() * 100}%`,
+                          top: `-10px`,
+                          animationDuration: `${0.5 + Math.random() * 0.7}s`,
+                          animationDelay: `${Math.random() * 0.5}s`,
+                          animationIterationCount: "infinite",
+                          animationName: "rainDrop",
+                          animationTimingFunction: "ease-in-out",
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
+
+                {weatherState.condition === "Snow" && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {[...Array(30)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute rounded-full bg-white/80"
+                        style={{
+                          width: `${2 + Math.random() * 3}px`,
+                          height: `${2 + Math.random() * 3}px`,
+                          left: `${Math.random() * 100}%`,
+                          top: `-5px`,
+                          animationDuration: `${2 + Math.random() * 3}s`,
+                          animationDelay: `${Math.random() * 1}s`,
+                          animationIterationCount: "infinite",
+                          animationName: "snowfall",
+                          animationTimingFunction: "ease-in-out",
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
+
+                {weatherState.condition === "Thunderstorm" && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div
+                      className="absolute inset-0 bg-blue-900/10"
+                      style={{
+                        animationDuration: "4s",
+                        animationIterationCount: "infinite",
+                        animationName: "lightning",
+                        animationTimingFunction: "ease-out",
+                      }}
+                    ></div>
+                    {/* Add rain drops for thunderstorm too */}
+                    {[...Array(20)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute w-[1px] h-[15px] bg-blue-200/40"
+                        style={{
+                          left: `${Math.random() * 100}%`,
+                          top: `-15px`,
+                          animationDuration: `${0.3 + Math.random() * 0.5}s`,
+                          animationDelay: `${Math.random() * 0.5}s`,
+                          animationIterationCount: "infinite",
+                          animationName: "rainDrop",
+                          animationTimingFunction: "linear",
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
+
+                {(weatherState.condition === "Fog" ||
+                  weatherState.condition === "Mist" ||
+                  weatherState.condition === "Haze") && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {[...Array(6)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute h-[40px] w-full bg-gray-200/15 rounded-full blur-xl"
+                        style={{
+                          top: `${5 + i * 12}px`,
+                          left: `${i % 2 === 0 ? -10 : 10}%`,
+                          animationDuration: `${15 + Math.random() * 10}s`,
+                          animationDelay: `${i * 1.5}s`,
+                          animationIterationCount: "infinite",
+                          animationName: "fogMove",
+                          animationTimingFunction: "ease-in-out",
+                          animationDirection:
+                            i % 2 === 0 ? "normal" : "reverse",
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
+
+                {weatherState.condition === "Clear" && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute rounded-full"
+                        style={{
+                          background: "rgba(255, 200, 0, 0.2)",
+                          width: `${30 + i * 10}px`,
+                          height: `${30 + i * 10}px`,
+                          left: `${20 + i * 15}%`,
+                          top: `${10 + i * 5}px`,
+                          filter: "blur(8px)",
+                          opacity: 0.6 - i * 0.1,
+                          transform: `scale(${1 + i * 0.1})`,
+                          animation: `pulse ${
+                            3 + i
+                          }s infinite alternate ease-in-out`,
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
+
+                {weatherState.condition === "Partly Cloudy" && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div
+                      className="absolute rounded-full"
+                      style={{
+                        background: "rgba(255, 200, 0, 0.2)",
+                        width: "50px",
+                        height: "50px",
+                        left: "30%",
+                        top: "15px",
+                        filter: "blur(8px)",
+                        opacity: 0.6,
+                        animation: "pulse 4s infinite alternate ease-in-out",
+                      }}
+                    ></div>
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute rounded-full bg-gray-200/30"
+                        style={{
+                          width: `${40 + i * 15}px`,
+                          height: `${20 + i * 8}px`,
+                          left: `${40 + i * 15}%`,
+                          top: `${15 + i * 5}px`,
+                          filter: "blur(8px)",
+                          opacity: 0.5 - i * 0.1,
+                          animation: `fogMove ${
+                            10 + i * 5
+                          }s infinite alternate ease-in-out`,
+                          animationDelay: `${i * 2}s`,
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -1965,131 +2752,6 @@ export default function Page() {
             )}
           </AnimatePresence>
 
-          {/* Weather effect overlay */}
-          <AnimatePresence>
-            {weatherState.showWeatherEffect &&
-              weatherState.condition &&
-              weatherState.clickPosition && (
-                <motion.div
-                  initial={{
-                    opacity: 0,
-                    clipPath: `circle(0px at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
-                  }}
-                  animate={{
-                    opacity: 0.6,
-                    clipPath: `circle(300vw at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    clipPath: `circle(0px at ${weatherState.clickPosition.x}px ${weatherState.clickPosition.y}px)`,
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  key="weather-effect"
-                  className="fixed inset-0 pointer-events-none z-[5]"
-                  style={{ backgroundColor: getWeatherColor() }}
-                >
-                  {weatherState.condition === "Rain" && (
-                    <div className="absolute inset-0 overflow-hidden">
-                      {[...Array(20)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute bg-blue-200/30 dark:bg-blue-300/20 rounded-full"
-                          style={{
-                            top: `${Math.random() * -10}%`,
-                            left: `${Math.random() * 100}%`,
-                            width: "1px",
-                            height: `${Math.random() * 20 + 10}px`,
-                            opacity: Math.random() * 0.4 + 0.2,
-                            animation: `rainDrop ${
-                              Math.random() * 1 + 0.5
-                            }s linear ${Math.random() * 2}s infinite`,
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-
-                  {(weatherState.condition === "Snow" ||
-                    weatherState.condition === "Freezing Rain" ||
-                    weatherState.condition === "Freezing Drizzle") && (
-                    <div className="absolute inset-0 overflow-hidden">
-                      {[...Array(30)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute bg-white rounded-full"
-                          style={{
-                            top: `${Math.random() * -10}%`,
-                            left: `${Math.random() * 100}%`,
-                            width: `${Math.random() * 3 + 1}px`,
-                            height: `${Math.random() * 3 + 1}px`,
-                            opacity: Math.random() * 0.5 + 0.3,
-                            animation: `snowfall ${
-                              Math.random() * 5 + 10
-                            }s linear ${Math.random() * 5}s infinite`,
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-
-                  {weatherState.condition === "Thunderstorm" && (
-                    <div className="absolute inset-0 overflow-hidden">
-                      <div
-                        className="absolute bg-yellow-100/30 dark:bg-yellow-100/20"
-                        style={{
-                          top: "10%",
-                          left: "30%",
-                          width: "2px",
-                          height: "100px",
-                          transform: "rotate(15deg)",
-                          animation: "lightning 8s ease-in-out infinite",
-                        }}
-                      ></div>
-                      <div
-                        className="absolute bg-yellow-100/30 dark:bg-yellow-100/20"
-                        style={{
-                          top: "20%",
-                          right: "40%",
-                          width: "3px",
-                          height: "150px",
-                          transform: "rotate(-10deg)",
-                          animation: "lightning 12s ease-in-out 3s infinite",
-                        }}
-                      ></div>
-                    </div>
-                  )}
-
-                  {(weatherState.condition === "Fog" ||
-                    weatherState.condition === "Mist" ||
-                    weatherState.condition === "Haze") && (
-                    <div className="absolute inset-0 overflow-hidden">
-                      {[...Array(5)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute bg-gray-200/20 dark:bg-gray-300/10 rounded-full blur-xl"
-                          style={{
-                            top: `${20 + Math.random() * 60}%`,
-                            left: `${Math.random() * 100}%`,
-                            width: `${Math.random() * 200 + 100}px`,
-                            height: `${Math.random() * 100 + 50}px`,
-                            opacity: Math.random() * 0.3 + 0.1,
-                            animation: `fogMove ${
-                              Math.random() * 50 + 50
-                            }s linear ${
-                              Math.random() * 10
-                            }s infinite alternate`,
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              )}
-          </AnimatePresence>
-
           {/* Bottom gradient for main content - fixed to viewport */}
           <div className="fixed left-0 right-0 bottom-0 h-40 w-screen overflow-hidden z-10">
             <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-60"></div>
@@ -2118,6 +2780,88 @@ export default function Page() {
         </div>
       </motion.main>
       <ImagePreloader />
+
+      {/* Video Modal */}
+      <AnimatePresence>
+        {isVideoModalOpen && currentVideoUrl && (
+          <>
+            {/* Fixed backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed inset-0 backdrop-blur-md bg-black/85 z-50"
+              onClick={handleCloseVideoModal}
+            />
+
+            {/* Scrollable content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  handleCloseVideoModal();
+                }
+              }}
+            >
+              {/* Sticky close button */}
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="absolute top-6 right-6 z-10 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCloseVideoModal();
+                }}
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </motion.button>
+
+              {/* Content container */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
+                onClick={(e) => e.stopPropagation()} // Prevent clicks on content from closing modal
+              >
+                {/* Video embed */}
+                <div className="aspect-video w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[80vw] rounded-lg overflow-hidden shadow-2xl">
+                  <iframe
+                    src={currentVideoUrl || ""}
+                    className="w-full h-full"
+                    frameBorder="0"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    title="Project Video"
+                    onEnded={() => handleCloseVideoModal()}
+                    style={{
+                      background: "#000000",
+                      borderRadius: "8px",
+                    }}
+                  ></iframe>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
