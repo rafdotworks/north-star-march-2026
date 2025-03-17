@@ -54,16 +54,34 @@ export default function Page() {
   const images = [
     "/work/theoriq.png",
     "/work/theoriq-prod-hero.png",
-    "/work/atlas-1.png",
-    "/work/zalando-spread.png",
-    "/work/wombo.png",
+    "/work/wai.png",
+    //"/work/wai-2.png",
     "/work/defi.png",
-    // "/work/ethos.png",
-    "/work/tela.png",
     "/work/art-02.png",
+    "/work/ethos.png",
+    "/work/atlas-1.png",
+    "/work/us.png",
+    "/work/tela.png",
     "/work/zalando-dodont.png",
+    "/work/zalando-spread.png",
     "/work/apple.png",
   ];
+
+  // Preload component to ensure all images are loaded
+  const ImagePreloader = () => {
+    return (
+      <div className="hidden">
+        {images.map((src, index) => (
+          <img
+            key={`preload-${index}`}
+            src={src}
+            alt="Preloaded image"
+            onLoad={() => handleImageLoad(src)}
+          />
+        ))}
+      </div>
+    );
+  };
 
   const photos = [
     { src: "/photos/marianne.jpeg", name: "Marianne" },
@@ -82,7 +100,7 @@ export default function Page() {
     // Camera focus animation effect
     const focusAnimation = () => {
       // Start with a blur and gradually reduce it using a more camera-like easing
-      const totalDuration = 1200; // 1.2 seconds total (reduced from 2.5s)
+      const totalDuration = 1100; // 1.2 seconds total (reduced from 2.5s)
       const startTime = Date.now();
       const initialBlur = 8; // Reduced initial blur amount
 
@@ -283,7 +301,7 @@ export default function Page() {
 
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [
@@ -355,6 +373,7 @@ export default function Page() {
     }
   };
 
+  // Remove the ref and useEffect for scrolling
   const handleCloseNote = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Re-enable scrolling
@@ -1128,22 +1147,38 @@ export default function Page() {
 
               <div className="space-y-8">
                 <div className="w-full mb-0 overflow-hidden relative">
-                  <motion.img
-                    key={currentImageIndex}
-                    src={images[currentImageIndex]}
-                    alt="Work preview"
-                    className="w-full bg-transparent max-w-full"
-                    style={{
-                      objectPosition: "center center",
-                      display: "block",
-                    }}
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: loadedImages[images[currentImageIndex]] ? 1 : 0,
-                    }}
-                    transition={{ duration: 0 }}
-                    onLoad={() => handleImageLoad(images[currentImageIndex])}
+                  {/* Invisible placeholder to maintain container height */}
+                  <img
+                    src={images[0]}
+                    alt="Height placeholder"
+                    className="w-full invisible"
+                    style={{ display: "block" }}
                   />
+                  <div className="absolute inset-0">
+                    <AnimatePresence mode="sync">
+                      <motion.img
+                        key={currentImageIndex}
+                        src={images[currentImageIndex]}
+                        alt="Work preview"
+                        className="w-full h-full bg-transparent max-w-full"
+                        style={{
+                          objectPosition: "center center",
+                          display: "block",
+                          objectFit: "contain",
+                        }}
+                        initial={{ opacity: 0, scale: 1.02 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{
+                          duration: 0.8,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        onLoad={() =>
+                          handleImageLoad(images[currentImageIndex])
+                        }
+                      />
+                    </AnimatePresence>
+                  </div>
                   {/* Preload next image */}
                   <img
                     src={images[(currentImageIndex + 1) % images.length]}
@@ -1247,7 +1282,7 @@ export default function Page() {
             </section>
 
             <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <h2 className="text-base font-normal text-foreground mb-10 md:mb-0">
+              <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
                 Photos
               </h2>
 
@@ -1553,7 +1588,7 @@ export default function Page() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="fixed inset-0 z-50 overflow-y-auto"
+                  className="fixed inset-0 z-50 flex items-center justify-center"
                   onClick={(e) => {
                     if (e.target === e.currentTarget) {
                       handleCloseNote(e);
@@ -1564,8 +1599,8 @@ export default function Page() {
                   // Add outline: none to remove focus outline
                   style={{ outline: "none" }}
                 >
-                  {/* Card stack container */}
-                  <div className="w-full max-w-3xl mx-auto relative my-12 pt-4 md:my-12 md:pt-4 sm:my-0 sm:pt-0">
+                  {/* Card stack container - centered in viewport */}
+                  <div className="w-full max-w-3xl mx-auto px-4 relative">
                     {/* Background cards for stack effect - hide on mobile */}
                     <motion.div
                       initial={{ opacity: 0, y: 10, rotate: -0.5 }}
@@ -1601,7 +1636,7 @@ export default function Page() {
                         initial={isNotesModalOpen ? "enter" : false}
                         animate="center"
                         exit="exit"
-                        className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative sm:rounded-xl sm:w-full h-screen sm:h-auto"
+                        className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative sm:rounded-xl sm:w-full shadow-xl"
                         style={{
                           backdropFilter: "blur(10px)",
                           WebkitBackdropFilter: "blur(10px)",
@@ -1610,7 +1645,7 @@ export default function Page() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         {/* Card inner content with padding */}
-                        <div className="px-6 md:px-12 py-16 pb-24 h-full sm:h-auto overflow-y-auto">
+                        <div className="px-6 md:px-12 py-16 pb-24 overflow-y-auto max-h-[80vh]">
                           {/* Header area with controls */}
                           <div className="absolute top-0 left-0 right-0 h-24 px-6 flex items-center justify-between bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm z-10">
                             {/* Left side - Date and Title */}
@@ -2082,6 +2117,7 @@ export default function Page() {
           </div>
         </div>
       </motion.main>
+      <ImagePreloader />
     </div>
   );
 }
