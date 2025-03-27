@@ -50,7 +50,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${ronzino.variable} ${eduMarist.variable}`}>
+    <html
+      lang="en"
+      className={`${ronzino.variable} ${eduMarist.variable} dark:bg-[#5C2E2E] dark:text-[#F8F6F1]`}
+    >
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" href="/favicon.png" />

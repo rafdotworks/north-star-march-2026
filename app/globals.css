@@ -140,28 +140,34 @@
 
 @layer base {
   :root {
-    /* Core colors */
-    --background: 0 0% 100%; /* Pure white */
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    /* Core colors - Light Mode */
+    --background: 40 33% 97%; /* #F8F6F1 - cream */
+    --foreground: 0 35% 23%; /* #5C2E2E - dark brown */
+    --card: 40 33% 97%;
+    --card-foreground: 0 35% 23%;
+    --popover: 40 33% 97%;
+    --popover-foreground: 0 35% 23%;
+    --primary: 0 35% 23%; /* #5C2E2E - dark brown */
+    --primary-foreground: 40 33% 97%;
+    --secondary: 25 35% 45%; /* #8E5E3F - medium brown */
+    --secondary-foreground: 40 33% 97%;
+    --muted: 25 35% 45%;
+    --muted-foreground: 25 35% 45%;
+    --accent: 32 99% 50%; /* #FE8C01 - bright orange */
+    --accent-foreground: 0 35% 23%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --destructive-foreground: 40 33% 97%;
+    --border: 25 35% 45%;
+    --input: 25 35% 45%;
+    --ring: 32 99% 50%;
     --radius: 0.5rem;
     --font-sans: var(--font-ronzino);
+
+    /* Additional brown shades */
+    --brown-subtle: 40 33% 97%;
+    --brown-hover: 25 35% 90%;
+    --brown-muted: 25 35% 45%;
+    --brown-border: 25 35% 45%;
 
     /* Grays */
     --gray-subtle: 0 0% 96%; /* For subtle backgrounds */
@@ -176,30 +182,41 @@
     --scrollbar-hover-color: rgba(125, 125, 125, 0.25);
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --gray-subtle: 0 0% 10%; /* Dark mode subtle */
-    --gray-hover: 0 0% 15%; /* Dark mode hover */
-    --gray-muted: 0 0% 55%; /* Dark mode secondary text */
-    --border: 240 3.7% 15.9%; /* Dark mode border */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 0 35% 23%; /* #5C2E2E - dark brown */
+      --foreground: 40 33% 97%; /* #F8F6F1 - cream */
+      --card: 0 35% 23%;
+      --card-foreground: 40 33% 97%;
+      --popover: 0 35% 23%;
+      --popover-foreground: 40 33% 97%;
+      --primary: 40 33% 97%;
+      --primary-foreground: 0 35% 23%;
+      --secondary: 25 35% 65%; /* #B89078 - lighter brown */
+      --secondary-foreground: 40 33% 97%;
+      --muted: 25 35% 65%;
+      --muted-foreground: 25 35% 65%;
+      --accent: 32 99% 50%; /* #FE8C01 - bright orange */
+      --accent-foreground: 0 35% 23%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 40 33% 97%;
+      --border: 25 35% 65%;
+      --input: 25 35% 65%;
+      --ring: 32 99% 50%;
+    }
+  }
+}
+
+/* Add system preference support */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not(.dark) {
+    color-scheme: light;
   }
 }
 
@@ -211,11 +228,22 @@ body {
   font-feature-settings: "liga", "kern";
   letter-spacing: -0.01em;
   font-size: 16px;
+  overscroll-behavior: none;
+  height: 100%;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Utility classes for active links */
+  .active-link {
+    color: #fe8c01;
+  }
+
+  .hover-accent:hover {
+    color: #fe8c01;
   }
 }
 
@@ -348,6 +376,25 @@ a {
   @apply transition-colors duration-200;
 }
 
+/* Link hover and active states */
+a:hover,
+a:active,
+a:focus,
+button:hover,
+button:active,
+button:focus:not(:disabled) {
+  @apply text-foreground/80;
+}
+
+/* Buttons with bg need special handling */
+button.bg-primary:hover,
+button.bg-secondary:hover,
+button.bg-accent:hover,
+button[class*="bg-"]:hover {
+  color: inherit;
+  filter: brightness(1.1);
+}
+
 .rounded-lg {
   @apply rounded-md;
 }
@@ -355,4 +402,175 @@ a {
 .shadow-lg,
 .shadow-xl {
   @apply shadow-md;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+  overscroll-behavior: none;
+  height: 100%;
+}
+
+/* Snap scroll container */
+.snap-y {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: 100vh;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+  min-height: 100vh;
+}
+
+/* Hide scrollbar but keep functionality */
+.snap-y::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-y {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Dark mode specific shadow adjustments */
+@media (prefers-color-scheme: dark) {
+  .shadow-lg,
+  .shadow-xl {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-md {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-sm {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Light mode shadow defaults */
+.shadow-lg,
+.shadow-xl {
+  @apply shadow-md;
+}
+
+/* Card and highlight adjustments for dark mode */
+@media (prefers-color-scheme: dark) {
+  /* Clean card backgrounds */
+  .bg-white\/95,
+  .bg-white\/90,
+  .bg-white\/80 {
+    background-color: hsl(0 35% 20%); /* Slightly darker than background */
+  }
+
+  /* Simple border for cards */
+  .rounded-xl {
+    border: 1px solid hsl(0 35% 26%); /* Slightly lighter than background */
+  }
+
+  /* Clean shadows */
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-md {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Text selection styling */
+::selection {
+  background-color: rgba(254, 140, 1, 0.2); /* #FE8C01 with opacity */
+  color: currentColor;
+}
+
+/* Firefox specific selection styling */
+::-moz-selection {
+  background-color: rgba(254, 140, 1, 0.2); /* #FE8C01 with opacity */
+  color: currentColor;
+}
+
+/* Link hover and active states */
+a:hover,
+a:active,
+a:focus,
+button:hover,
+button:active,
+button:focus:not(:disabled) {
+  @apply text-foreground/80;
+}
+
+/* Notes styling with brown theme */
+.prose .text-gray-600 {
+  @apply text-foreground/70;
+}
+
+.prose .text-gray-300 {
+  @apply text-foreground/70;
+}
+
+/* Notes layout styling */
+.note-card:hover .note-title {
+  @apply text-foreground;
+}
+
+.note-card:hover .note-date {
+  @apply text-foreground/60;
+}
+
+.note-card:hover .note-excerpt {
+  @apply text-foreground/80;
+}
+
+.note-category {
+  @apply bg-accent/10 text-accent;
+}
+
+/* Prose elements styling */
+.prose .prose-headings\:text-gray-800 h1,
+.prose .prose-headings\:text-gray-800 h2,
+.prose .prose-headings\:text-gray-800 h3,
+.prose .prose-headings\:text-gray-100 h1,
+.prose .prose-headings\:text-gray-100 h2,
+.prose .prose-headings\:text-gray-100 h3 {
+  @apply text-foreground;
+}
+
+.prose .prose-p\:text-gray-600 p,
+.prose .prose-p\:text-gray-300 p {
+  @apply text-foreground/80;
+}
+
+.prose .prose-ul\:text-gray-600 ul,
+.prose .prose-ul\:text-gray-300 ul,
+.prose .prose-li\:text-gray-600 li,
+.prose .prose-li\:text-gray-300 li {
+  @apply text-foreground/80;
+}
+
+.prose .prose-strong\:text-gray-800 strong,
+.prose .prose-strong\:text-gray-200 strong {
+  @apply text-foreground;
+}
+
+.prose .prose-blockquote\:text-gray-600 blockquote,
+.prose .prose-blockquote\:text-gray-300 blockquote {
+  @apply text-foreground/80;
+}
+
+.prose .prose-a\:text-blue-500,
+.prose .prose-a\:text-blue-400 {
+  @apply text-accent;
+}
+
+.prose .prose-a\:text-blue-500:hover,
+.prose .prose-a\:text-blue-400:hover {
+  @apply text-accent underline;
+}
+
+/* Border colors for note elements */
+.prose .prose-h1\:border-gray-200,
+.prose .prose-h1\:border-gray-700,
+.prose .prose-blockquote\:border-gray-200,
+.prose .prose-blockquote\:border-gray-700 {
+  @apply border-foreground/10;
 }
