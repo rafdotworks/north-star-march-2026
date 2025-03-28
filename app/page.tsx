@@ -42,7 +42,7 @@ export default function Page() {
   // Add state to track if slideshow is paused
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
   // Camera focus effect state
-  const [blurAmount, setBlurAmount] = useState(12); // Initial blur amount (pixels)
+  const [blurAmount, setBlurAmount] = useState(25); // Increased from 12 to 25 for stronger initial blur
   // Add state to track scroll position
   const [scrollY, setScrollY] = useState(0);
   const [timeState, setTimeState] = useState<{
@@ -216,9 +216,9 @@ export default function Page() {
   // Camera focus animation effect
   const focusAnimation = () => {
     // Start with a blur and gradually reduce it using a more camera-like easing
-    const totalDuration = 2500; // 2.5 seconds total (increased from 1.1s)
+    const totalDuration = 2500; // 2.5 seconds total
     const startTime = Date.now();
-    const initialBlur = 15; // Increased initial blur amount
+    const initialBlur = 25; // Increased from 15 to 25 for stronger initial blur
 
     // Set initial blur
     setBlurAmount(initialBlur);
@@ -682,7 +682,7 @@ export default function Page() {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
     transition: {
-      duration: 1.8,
+      duration: 2,
       ease: [0.22, 1, 0.36, 1],
     },
   };
@@ -1310,14 +1310,26 @@ export default function Page() {
     <div
       style={{
         filter: blurAmount > 0 ? `blur(${blurAmount}px)` : "none",
-        transition: "filter 2s cubic-bezier(0.22, 1, 0.36, 1)",
+        transition: "filter 3s cubic-bezier(0.22, 1, 0.36, 1)",
         position: "relative",
       }}
     >
+      {/* Bottom gradient for main content - fixed to viewport */}
+      <div className="fixed left-0 right-0 bottom-0 h-[15px] w-screen overflow-hidden z-50 pointer-events-none">
+        <motion.div
+          className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-background/60 to-transparent"
+          style={{
+            backdropFilter: `blur(${Math.min(scrollY / 150, 2)}px)`,
+            opacity: Math.min(scrollY / 300, 1),
+            transition: "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+        />
+      </div>
+
       <motion.main
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 3.5, ease: [0.22, 1, 0.36, 1] }}
         className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden"
       >
         <div className="max-w-screen-xl mx-auto relative z-10">
@@ -2535,11 +2547,6 @@ export default function Page() {
               </>
             )}
           </AnimatePresence>
-
-          {/* Bottom gradient for main content - fixed to viewport */}
-          <div className="fixed left-0 right-0 bottom-0 h-[15px] w-screen overflow-hidden z-10 pointer-events-none">
-            <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-background/60 to-transparent backdrop-blur-[3px]"></div>
-          </div>
         </div>
       </motion.main>
 
