@@ -2537,17 +2537,8 @@ export default function Page() {
           </AnimatePresence>
 
           {/* Bottom gradient for main content - fixed to viewport */}
-          <div className="fixed left-0 right-0 bottom-0 h-40 w-screen overflow-hidden z-10">
-            <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-gray-100/50 via-gray-100/20 to-transparent dark:from-gray-900/50 dark:via-gray-900/20 opacity-0"></div>
-
-            {/* Time-based accent for bottom content gradient */}
-            {mounted && (
-              <>
-                {timeState.timeOfDay === "dawn" && (
-                  <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-amber-100/30 to-transparent dark:from-amber-900/30 opacity-0"></div>
-                )}
-              </>
-            )}
+          <div className="fixed left-0 right-0 bottom-0 h-[15px] w-screen overflow-hidden z-10 pointer-events-none">
+            <div className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-background/60 to-transparent backdrop-blur-[3px]"></div>
           </div>
         </div>
       </motion.main>
