@@ -17,11 +17,11 @@ const eduMarist = localFont({
 export const metadata: Metadata = {
   title: "Raf | Product Designer",
   description:
-    "Product designer, founding product designer and design engineer based in Toronto.",
+    "Founding Product Designer and Design Engineer based in Toronto.",
   openGraph: {
     title: "Raf | Product Designer",
     description:
-      "Founding product designer who codes. Currently leading design at Theoriq.",
+      "Founding Product Designer and Design Engineer based in Toronto.",
     url: "https://raf.works",
     siteName: "Raf",
     images: [
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Raf | Product Designer",
     description:
-      "Product designer, founding product designer and design engineer based in Toronto.",
+      "Founding Product Designer and Design Engineer based in Toronto.",
     creator: "@lfgraf",
     images: ["/og-image.png"], // Same image as OG
   },
