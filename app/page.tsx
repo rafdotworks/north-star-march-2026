@@ -833,20 +833,10 @@ export default function Page() {
       timeZone: "America/New_York",
       hour: "numeric" as const,
       minute: "numeric" as const,
-      hour12: true,
-    };
-    const estTimeString = new Intl.DateTimeFormat("en-US", estOptions).format(
-      localDate
-    );
-
-    // For debugging - keep track of hour difference
-    const estHourOptions = {
-      timeZone: "America/New_York",
-      hour: "numeric" as const,
       hour12: false,
     };
     const estHour = parseInt(
-      new Intl.DateTimeFormat("en-US", estHourOptions).format(localDate)
+      new Intl.DateTimeFormat("en-US", estOptions).format(localDate)
     );
 
     // Get local hour using the same format for consistency
@@ -855,7 +845,7 @@ export default function Page() {
       new Intl.DateTimeFormat("en-US", localOptions).format(localDate)
     );
 
-    // Calculate hour difference for debugging
+    // Calculate hour difference
     let hourDifference = localHour - estHour;
 
     // Adjust for day boundary crossings
@@ -865,13 +855,18 @@ export default function Page() {
       hourDifference += 24;
     }
 
-    // Add console logging for debugging
-    console.log(
-      `Local hour: ${localHour}, EST hour: ${estHour}, Difference: ${hourDifference}, EST time: ${estTimeString}`
-    );
-
-    // Return the EST time instead of difference message
-    return estTimeString;
+    // Generate the appropriate message based on the time difference
+    if (hourDifference === 0) {
+      return "You are in the same timezone as Raf";
+    } else if (hourDifference > 0) {
+      return `Raf is ${hourDifference} hour${
+        hourDifference === 1 ? "" : "s"
+      } behind you`;
+    } else {
+      return `Raf is ${Math.abs(hourDifference)} hour${
+        Math.abs(hourDifference) === 1 ? "" : "s"
+      } ahead of you`;
+    }
   };
 
   // Toggle weather effect display
@@ -1717,24 +1712,9 @@ export default function Page() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.5 }}
                   onClick={handleOpenAllNotes}
-                  className="text-sm text-foreground/50 hover:text-foreground transition-colors flex items-center gap-1 group"
+                  className="text-sm text-foreground/50 hover:text-foreground transition-colors"
                 >
                   View all notes
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="transform transition-transform group-hover:translate-x-0.5"
-                  >
-                    <path d="M5 12h14" />
-                    <path d="m12 5 7 7-7 7" />
-                  </svg>
                 </motion.button>
               </div>
             </section>
@@ -1848,7 +1828,7 @@ export default function Page() {
               >
                 {/* Weather banner */}
                 <div
-                  className="w-full py-3 px-6 flex items-center justify-between backdrop-blur-sm"
+                  className="w-full backdrop-blur-sm relative overflow-hidden"
                   style={{
                     background: `${getWeatherColor()}`,
                     boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
@@ -1859,50 +1839,75 @@ export default function Page() {
                   aria-live="polite"
                   role="status"
                 >
-                  {/* Weather condition text */}
-                  <div className="flex items-center space-x-3">
-                    <span className="text-foreground/90 flex items-center">
-                      {weatherState.condition && (
-                        <span className="mr-2 text-base flex items-center justify-center">
-                          {getWeatherIcon(weatherState.condition)}
-                        </span>
-                      )}
-                      <span className="font-light text-xs flex items-center">
-                        It's {weatherState.condition?.toLowerCase() || "clear"}{" "}
-                        in {weatherState.location}{" "}
-                        <span className="ml-1 text-foreground/70">
-                          and {weatherState.temperature}°C
-                        </span>
-                      </span>
-                    </span>
+                  <div className="max-w-screen-xl mx-auto">
+                    <div className="flex items-center justify-between px-6 sm:px-10 md:px-28 py-3">
+                      <div className="flex items-center space-x-3">
+                        {weatherState.condition && (
+                          <motion.span
+                            className="mr-2 text-xs flex items-center justify-center"
+                            animate={{
+                              rotate:
+                                weatherState.condition === "Snow"
+                                  ? [0, 10, -10, 0]
+                                  : 0,
+                              scale:
+                                weatherState.condition === "Thunderstorm"
+                                  ? [1, 1.1, 1]
+                                  : 1,
+                            }}
+                            transition={{
+                              duration:
+                                weatherState.condition === "Snow" ? 4 : 0.3,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                            }}
+                          >
+                            {getWeatherIcon(weatherState.condition)}
+                          </motion.span>
+                        )}
+                        <motion.span
+                          className="font-light text-xs flex items-center"
+                          animate={{
+                            opacity: [0.8, 1, 0.8],
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          Raf is in {weatherState.location} - where it's{" "}
+                          {weatherState.condition?.toLowerCase() || "clear"} and{" "}
+                          {weatherState.temperature}°C
+                        </motion.span>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setWeatherState((prev) => ({
+                            ...prev,
+                            showWeatherEffect: false,
+                          }))
+                        }
+                        className="text-foreground/60 hover:text-foreground/80 transition-colors relative z-10"
+                        aria-label="Close weather banner"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-
-                  {/* Close button */}
-                  <button
-                    onClick={() =>
-                      setWeatherState((prev) => ({
-                        ...prev,
-                        showWeatherEffect: false,
-                      }))
-                    }
-                    className="text-foreground/60 hover:text-foreground/80 transition-colors"
-                    aria-label="Close weather banner"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
                 </div>
 
                 {/* Background effect */}

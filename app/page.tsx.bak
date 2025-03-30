@@ -1718,10 +1718,10 @@ export default function Page() {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="transform transition-transform group-hover:translate-x-0.5"
+                    className="transform transition-transform group-hover:scale-110"
                   >
-                    <path d="M5 12h14" />
-                    <path d="m12 5 7 7-7 7" />
+                    <path d="M12 3v18" />
+                    <path d="M3 12h18" />
                   </svg>
                 </motion.button>
               </div>
