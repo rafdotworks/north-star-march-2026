@@ -1327,7 +1327,7 @@ export default function Page() {
         transition={{ duration: 3.5, ease: [0.22, 1, 0.36, 1] }}
         className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden"
       >
-        <div className="max-w-screen-xl mx-auto relative z-10">
+        <div className="w-full max-w-screen-xl mx-auto relative z-10">
           <motion.div
             variants={fadeInAnimation}
             initial="hidden"
@@ -1450,22 +1450,21 @@ export default function Page() {
                 <p className="text-foreground">
                   Raf is a Product Designer{" "}
                   <span className="text-foreground/60">
-                    ≈ founding designer and design engineer.{" "}
+                    ≈ founding designer and design engineer,{" "}
                   </span>
-                </p>
-
-                <p>
-                  <span className="text-foreground/60">He is </span>
-                  <span className="text-foreground">driven by </span>
+                  driven by{" "}
                   <span className="text-foreground/60">
-                    {" "}
                     a deep passion for craft, collaboration, and a relentless
                     pursuit of{" "}
-                    <span className="text-foreground">excellence</span>. He has
-                    designed experiences and systems at companies like Theoriq,
-                    CurbCutOS, Atlas, Zalando, Apple and clients such as w.ai,
-                    US.court, Tela, Lyfe, Artscapy and more.
                   </span>
+                  <span className="text-foreground">excellence</span>
+                  <span className="text-foreground/60">.</span>
+                </p>
+
+                <p className="text-foreground/60">
+                  He has designed and built for companies like Theoriq,
+                  CurbCutOS, various crypto startups and Zalando. He has also
+                  worked with clients like w.ai, US.court, Artscapy, and more.
                 </p>
 
                 <p>
@@ -1839,8 +1838,8 @@ export default function Page() {
                   aria-live="polite"
                   role="status"
                 >
-                  <div className="max-w-screen-xl mx-auto">
-                    <div className="flex items-center justify-between px-6 sm:px-10 md:px-28 py-3">
+                  <div className="w-full max-w-screen-xl mx-auto px-6 sm:px-10 md:px-28">
+                    <div className="flex items-center justify-between py-3">
                       <div className="flex items-center space-x-3">
                         {weatherState.condition && (
                           <motion.span
