@@ -1662,7 +1662,13 @@ export default function Page() {
                         duration: 0.5,
                         delay: index * 0.1,
                       }}
-                      onClick={(e) => handleOpenNoteWithAnimation(index, e)}
+                      onClick={(e) => {
+                        // Find the correct index in the original notes array
+                        const originalIndex = notes.findIndex(
+                          (n) => n.id === note.id
+                        );
+                        handleOpenNoteWithAnimation(originalIndex, e);
+                      }}
                       whileHover={{ y: -2 }}
                       whileTap={{ y: 0 }}
                     >
@@ -2328,19 +2334,42 @@ export default function Page() {
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2 }}
-                            className="prose dark:prose-invert max-w-none mt-20 relative pb-20 sm:pb-0"
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="prose dark:prose-invert max-w-none mt-16 relative pb-8 sm:pb-0 min-h-[40vh] note-content"
                           >
-                            <div className="text-foreground/70 leading-relaxed tracking-wide">
+                            <motion.div
+                              key={currentNoteIndex}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              transition={{
+                                duration: 0.4,
+                                ease: [0.22, 1, 0.36, 1],
+                              }}
+                              className="text-foreground/70 leading-relaxed tracking-wide"
+                            >
                               <ReactMarkdown
                                 components={{
-                                  // Override h1 to prevent duplicate titles
                                   h1: ({ node, ...props }) => null,
+                                  p: ({ node, children, ...props }) => (
+                                    <p className="leading-relaxed" {...props}>
+                                      {children}
+                                    </p>
+                                  ),
+                                  blockquote: ({
+                                    node,
+                                    children,
+                                    ...props
+                                  }) => (
+                                    <blockquote className="!pl-6" {...props}>
+                                      {children}
+                                    </blockquote>
+                                  ),
                                 }}
                               >
                                 {notes[currentNoteIndex].content}
                               </ReactMarkdown>
-                            </div>
+                            </motion.div>
                           </motion.div>
 
                           {/* Navigation controls with enhanced styling */}
