@@ -1039,7 +1039,7 @@ export default function Page() {
           fill="currentColor"
           className="w-3 h-3 inline-block align-middle"
         >
-          <path d="M13.5 6.379V3.75a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 10.125a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.75 3.75 3.75 0 0 0-3-3.746ZM4.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 0 20.625 3.75 3.75 0 0 0 3.75 24.375 3.75 3.75 0 0 0 7.5 20.625a3.75 3.75 0 0 0-3-3.746ZM13.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 20.625a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.75 3.75 3.75 0 0 0-3-3.746Z" />
+          <path d="M13.5 6.379V3.75a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 10.125a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.746ZM4.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 0 20.625 3.75 3.75 0 0 0 3.75 24.375 3.75 3.75 0 0 0 7.5 20.625a3.75 3.75 0 0 0-3-3.746ZM13.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 20.625a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.75 3.75 3.75 0 0 0-3-3.746Z" />
         </svg>
       ),
       "Freezing Drizzle": (
@@ -1332,103 +1332,95 @@ export default function Page() {
             variants={fadeInAnimation}
             initial="hidden"
             animate="visible"
-            className="flex items-center gap-4 mb-40 relative"
+            className="flex items-center mb-40 relative md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20"
           >
-            <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
-              Raf
-            </h1>
+            <div className="hidden md:block" />
+            <div className="flex items-center justify-between w-full relative">
+              <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
+                Raf
+              </h1>
 
-            {/* Display current time in EST with weather */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: mounted ? 0.6 : 0 }}
-              transition={{ delay: 1, duration: 1.5 }}
-              className="absolute right-0 top-0 text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
-            >
-              <div className="flex items-center justify-end space-x-2">
-                <span className="min-h-[1.5rem] flex items-center">
-                  {mounted ? getTimeDifference(false) : ""}
-                </span>
-                {weatherState.temperature !== null && (
-                  <>
-                    <span className="opacity-30 flex items-center">|</span>
-                    <div
-                      className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                      onClick={toggleWeatherEffect}
-                      title={`${weatherState.location} weather - click to see effect`}
-                    >
-                      <span className="flex items-center justify-center">
-                        {weatherState.temperature}°C{" "}
-                        {weatherState.customLocation &&
-                          `(${weatherState.location})`}
-                      </span>
-                      {weatherState.condition && (
-                        <span className="ml-1 text-xs flex items-center justify-center">
-                          {getWeatherIcon(weatherState.condition)}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-              {weatherState.isLoading && (
-                <p className="text-[10px] opacity-50 mt-1">
-                  Loading {weatherState.location} weather...
-                </p>
-              )}
-            </motion.div>
-
-            {/* Mobile time and weather display */}
-            <motion.div
-              variants={slideInFromBottom}
-              initial="hidden"
-              animate="visible"
-              className="absolute right-0 top-0 text-xs text-foreground/40 font-light md:hidden"
-            >
+              {/* Display current time in EST with weather */}
               <motion.div
-                className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.8, duration: 0.8 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: mounted ? 0.6 : 0 }}
+                transition={{ delay: 1, duration: 1.5 }}
+                className="text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
               >
-                <span className="min-h-[1.25rem] flex items-center">
-                  {mounted ? getTimeDifference(true) : ""}
-                </span>
-
-                {weatherState.temperature !== null && (
-                  <>
-                    <span className="opacity-30 flex items-center">•</span>
-                    <div
-                      className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                      onClick={toggleWeatherEffect}
-                      title={`${weatherState.location} weather - click to see effect`}
-                    >
-                      <span className="flex items-center justify-center">
-                        {weatherState.temperature}°C{" "}
-                        {weatherState.customLocation &&
-                          `(${weatherState.location})`}
-                      </span>
-                      {weatherState.condition && (
-                        <span className="ml-1 text-xs flex items-center justify-center">
-                          {getWeatherIcon(weatherState.condition)}
+                <div className="flex items-center justify-end space-x-2">
+                  <span className="min-h-[1.5rem] flex items-center">
+                    {mounted ? getTimeDifference(false) : ""}
+                  </span>
+                  {weatherState.temperature !== null && (
+                    <>
+                      <span className="opacity-30 flex items-center">|</span>
+                      <div
+                        className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                        onClick={toggleWeatherEffect}
+                        title={`${weatherState.location} weather - click to see effect`}
+                      >
+                        <span className="flex items-center justify-center">
+                          {weatherState.temperature}°C{" "}
+                          {weatherState.customLocation &&
+                            `(${weatherState.location})`}
                         </span>
-                      )}
-                    </div>
-                  </>
+                        {weatherState.condition && (
+                          <span className="ml-1 text-xs flex items-center justify-center">
+                            {getWeatherIcon(weatherState.condition)}
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+                {weatherState.isLoading && (
+                  <p className="text-[10px] opacity-50 mt-1">
+                    Loading {weatherState.location} weather...
+                  </p>
                 )}
               </motion.div>
 
-              {weatherState.isLoading && (
-                <motion.p
-                  className="text-[9px] opacity-50 mt-1 text-right"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.5 }}
-                  transition={{ delay: 2.2, duration: 0.8 }}
+              {/* Mobile time and weather display */}
+              <motion.div
+                variants={slideInFromBottom}
+                initial="hidden"
+                animate="visible"
+                className="text-xs text-foreground/40 font-light md:hidden flex items-center"
+              >
+                <motion.div
+                  className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.8, duration: 0.8 }}
                 >
-                  Loading weather...
-                </motion.p>
-              )}
-            </motion.div>
+                  <span className="min-h-[1.25rem] flex items-center">
+                    {mounted ? getTimeDifference(true) : ""}
+                  </span>
+
+                  {weatherState.temperature !== null && (
+                    <>
+                      <span className="opacity-30 flex items-center">•</span>
+                      <div
+                        className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                        onClick={toggleWeatherEffect}
+                        title={`${weatherState.location} weather - click to see effect`}
+                      >
+                        <span className="flex items-center justify-center">
+                          {weatherState.temperature}°C{" "}
+                          {weatherState.customLocation &&
+                            `(${weatherState.location})`}
+                        </span>
+                        {weatherState.condition && (
+                          <span className="ml-1 text-xs flex items-center justify-center">
+                            {getWeatherIcon(weatherState.condition)}
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              </motion.div>
+            </div>
           </motion.div>
 
           <motion.div
@@ -1442,52 +1434,67 @@ export default function Page() {
             className="space-y-36"
           >
             <section className="md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20 w-full">
-              <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
-                About
-              </h2>
+              <div className="hidden md:block" />
 
               <div className="space-y-6 text-base leading-relaxed">
-                <p className="text-foreground">
-                  Raf is a Product Designer{" "}
-                  <span className="text-foreground/60">
-                    ≈ founding designer and design engineer,{" "}
-                  </span>
-                  driven by{" "}
-                  <span className="text-foreground/60">
-                    a deep passion for craft, collaboration, and a relentless
-                    pursuit of{" "}
-                  </span>
-                  <span className="text-foreground">excellence</span>
-                  <span className="text-foreground/60">.</span>
-                </p>
+                {/* Desktop version */}
+                <div className="hidden md:block space-y-6">
+                  <p className="text-foreground">
+                    Raf is a Product Designer{" "}
+                    <span className="text-foreground/60">
+                      ≈ founding designer and design engineer,{" "}
+                    </span>
+                    driven by{" "}
+                    <span className="text-foreground/60">
+                      a deep passion for craft, collaboration, and a relentless
+                      pursuit of{" "}
+                    </span>
+                    <span className="text-foreground">excellence</span>
+                    <span className="text-foreground/60">.</span>
+                  </p>
 
-                <p className="text-foreground/60">
-                  He has designed and built for companies like Theoriq,
-                  CurbCutOS, various crypto startups and Zalando. He has also
-                  worked with clients like w.ai, US.court, Artscapy, and more.
-                </p>
+                  <p className="text-foreground/60">
+                    He has designed and built for companies like Theoriq,
+                    CurbCutOS, various crypto startups and Zalando. He has also
+                    worked with clients like w.ai, US.court, Artscapy, and more.
+                  </p>
 
-                <p>
-                  <span className="text-foreground/60">
-                    Originally from Italy, and now{" "}
-                    <span className="text-foreground">based in Toronto</span>,
-                    Raf enjoys portraits, yoga, and office spaces.{" "}
-                  </span>
-                </p>
+                  <p>
+                    <span className="text-foreground/60">
+                      Originally from Italy, and now{" "}
+                      <span className="text-foreground">based in Toronto</span>,
+                      Raf enjoys portraits, yoga, and office spaces.{" "}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Mobile version - single line */}
+                <div className="block md:hidden">
+                  <p className="text-foreground leading-relaxed">
+                    Raf is a Product Designer{" "}
+                    <span className="text-foreground/60">
+                      ≈ founding designer and design engineer,{" "}
+                    </span>
+                    <span className="text-foreground">based in Toronto</span>
+                    <span className="text-foreground/60">
+                      , driven by a deep passion for craft, collaboration and a
+                      relentless pursuit of{" "}
+                    </span>
+                    <span className="text-foreground">excellence</span>
+                    <span className="text-foreground/60">.</span>
+                  </p>
+                </div>
               </div>
             </section>
 
             <div className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <div className="mb-10 md:mb-0">
-                <h2 className="text-base font-normal text-foreground">
-                  Selected works
-                </h2>
-              </div>
+              <div className="hidden md:block" />
 
               <div className="space-y-8">
+                {/* Desktop Slideshow */}
                 <div
                   ref={slideshowRef}
-                  className="w-full mb-0 overflow-hidden relative"
+                  className="w-full mb-0 overflow-hidden relative hidden md:block"
                   onMouseEnter={() => {
                     // Don't pause on hover anymore
                     // setIsSlideshowPaused(true);
@@ -1578,13 +1585,6 @@ export default function Page() {
                     />
                   </div>
 
-                  {/* Loading indicator */}
-                  {!loadedImages[images[currentImageIndex]] && (
-                    <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm bg-background/10">
-                      <div className="w-6 h-6 border-2 border-foreground/10 border-t-foreground/30 rounded-full animate-spin"></div>
-                    </div>
-                  )}
-
                   {/* Progress line */}
                   <div className="absolute bottom-0 left-0 right-0 h-[3px] z-20 overflow-hidden">
                     <div
@@ -1609,27 +1609,68 @@ export default function Page() {
                       }}
                     />
                   </div>
-
-                  {isSlideshowPaused && (
-                    <div className="absolute top-4 right-4 bg-background/70 backdrop-blur-sm rounded-full p-1.5 opacity-70">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-foreground/70"
-                      >
-                        <rect x="6" y="4" width="4" height="16"></rect>
-                        <rect x="14" y="4" width="4" height="16"></rect>
-                      </svg>
-                    </div>
-                  )}
                 </div>
+
+                {/* Mobile Vertical Gallery */}
+                <div className="md:hidden space-y-6">
+                  {images.map((src, index) => (
+                    <motion.div
+                      key={src}
+                      className="relative w-full"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.5,
+                        delay: index * 0.1,
+                      }}
+                    >
+                      <motion.div
+                        className={`relative w-full ${
+                          workVideos[src] ? "cursor-pointer" : ""
+                        }`}
+                        onClick={() => {
+                          if (workVideos[src]) {
+                            handleOpenVideoModal(src);
+                          }
+                        }}
+                      >
+                        <Image
+                          src={src}
+                          alt={`Work preview ${index + 1}`}
+                          width={1200}
+                          height={800}
+                          loader={imageLoader}
+                          className="w-full bg-transparent max-w-full rounded-lg"
+                          style={{
+                            objectPosition: "center center",
+                            display: "block",
+                            filter: !loadedImages[src] ? "blur(8px)" : "none",
+                            transition: "filter 0.5s ease-out",
+                          }}
+                          onLoad={() => handleImageLoad(src)}
+                          loading={index < 3 ? "eager" : "lazy"}
+                          priority={index < 3}
+                          quality={75}
+                        />
+                        {workVideos[src] && (
+                          <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg">
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="white"
+                              stroke="none"
+                              className="ml-0.5"
+                            >
+                              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                          </div>
+                        )}
+                      </motion.div>
+                    </motion.div>
+                  ))}
+                </div>
+
                 <div className="mt-4">
                   <a
                     href="https://rafvitale.com"
@@ -1637,7 +1678,18 @@ export default function Page() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
                   >
-                    View all works ↗
+                    View all works{" "}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      className="w-3.5 h-3.5 ml-1 relative -top-[0.5px]"
+                    >
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
                   </a>
                 </div>
               </div>
@@ -1645,9 +1697,7 @@ export default function Page() {
 
             {/* Notes Section */}
             <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
-                Notes
-              </h2>
+              <div className="hidden md:block" />
 
               <div className="space-y-6">
                 <div className="flex flex-col divide-y divide-foreground/[0.03]">
@@ -1669,15 +1719,7 @@ export default function Page() {
                         );
                         handleOpenNoteWithAnimation(originalIndex, e);
                       }}
-                      whileHover={{ y: -2 }}
-                      whileTap={{ y: 0 }}
                     >
-                      <motion.div
-                        className="absolute inset-0 bg-foreground/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        initial={false}
-                        whileHover={{ scale: 1.02 }}
-                        transition={{ duration: 0.2 }}
-                      />
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-baseline relative">
                         <div className="text-xs text-foreground/40 whitespace-nowrap min-w-[90px] font-light tracking-tight group-hover:text-foreground/50 transition-colors note-date">
                           {new Date(note.date).toLocaleDateString("en-US", {
@@ -1690,7 +1732,7 @@ export default function Page() {
                           <motion.div
                             className={`absolute -left-3 top-1.5 w-1.5 h-1.5 rounded-full ${
                               getCategoryColor(note.category).split(" ")[1]
-                            } opacity-70 group-hover:scale-125 group-hover:opacity-100`}
+                            } opacity-70 group-hover:opacity-100 transition-opacity`}
                             transition={{ duration: 0.2 }}
                           />
                           <div className="flex flex-col gap-1.5">
@@ -1717,7 +1759,7 @@ export default function Page() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.5 }}
                   onClick={handleOpenAllNotes}
-                  className="text-sm text-foreground/50 hover:text-foreground transition-colors"
+                  className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
                 >
                   View all notes
                 </motion.button>
@@ -1725,9 +1767,7 @@ export default function Page() {
             </section>
 
             <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
-                Photos
-              </h2>
+              <div className="hidden md:block" />
 
               <div className="space-y-8">
                 <div className="grid grid-cols-3 gap-3">
@@ -1759,7 +1799,7 @@ export default function Page() {
                     setCurrentPhotoIndex(0);
                     setIsPhotosModalOpen(true);
                   }}
-                  className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
+                  className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
                 >
                   View all photos
                 </Link>
@@ -1767,9 +1807,7 @@ export default function Page() {
             </section>
 
             <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <h2 className="text-base font-normal mb-10 md:mb-0 text-foreground">
-                Contact
-              </h2>
+              <div className="hidden md:block" />
 
               <div className="space-y-8 max-w-2xl relative z-20">
                 <div>
@@ -1844,75 +1882,80 @@ export default function Page() {
                   aria-live="polite"
                   role="status"
                 >
-                  <div className="w-full max-w-screen-xl mx-auto px-6 sm:px-10 md:px-28">
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex items-center space-x-3">
-                        {weatherState.condition && (
-                          <motion.span
-                            className="mr-2 text-xs flex items-center justify-center"
-                            animate={{
-                              rotate:
-                                weatherState.condition === "Snow"
-                                  ? [0, 10, -10, 0]
-                                  : 0,
-                              scale:
-                                weatherState.condition === "Thunderstorm"
-                                  ? [1, 1.1, 1]
-                                  : 1,
-                            }}
-                            transition={{
-                              duration:
-                                weatherState.condition === "Snow" ? 4 : 0.3,
-                              repeat: Infinity,
-                              ease: "easeInOut",
-                            }}
+                  <motion.main className="px-6 sm:px-10 md:px-28 relative overflow-x-hidden">
+                    <div className="w-full max-w-screen-xl mx-auto relative">
+                      <div className="md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20 w-full">
+                        <div className="hidden md:block" />
+                        <div className="flex items-center justify-between py-3 w-full">
+                          <div className="flex items-center space-x-3">
+                            {weatherState.condition && (
+                              <motion.span
+                                className="mr-2 text-xs flex items-center justify-center"
+                                animate={{
+                                  rotate:
+                                    weatherState.condition === "Snow"
+                                      ? [0, 10, -10, 0]
+                                      : 0,
+                                  scale:
+                                    weatherState.condition === "Thunderstorm"
+                                      ? [1, 1.1, 1]
+                                      : 1,
+                                }}
+                                transition={{
+                                  duration:
+                                    weatherState.condition === "Snow" ? 4 : 0.3,
+                                  repeat: Infinity,
+                                  ease: "easeInOut",
+                                }}
+                              >
+                                {getWeatherIcon(weatherState.condition)}
+                              </motion.span>
+                            )}
+                            <motion.span
+                              className="font-light text-xs flex items-center"
+                              animate={{
+                                opacity: [0.8, 1, 0.8],
+                              }}
+                              transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                ease: "easeInOut",
+                              }}
+                            >
+                              Raf is in {weatherState.location} - where it's{" "}
+                              {weatherState.condition?.toLowerCase() || "clear"}{" "}
+                              and {weatherState.temperature}°C
+                            </motion.span>
+                          </div>
+                          <button
+                            onClick={() =>
+                              setWeatherState((prev) => ({
+                                ...prev,
+                                showWeatherEffect: false,
+                              }))
+                            }
+                            className="text-foreground/60 hover:text-foreground/80 transition-colors relative z-10"
+                            aria-label="Close weather banner"
                           >
-                            {getWeatherIcon(weatherState.condition)}
-                          </motion.span>
-                        )}
-                        <motion.span
-                          className="font-light text-xs flex items-center"
-                          animate={{
-                            opacity: [0.8, 1, 0.8],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          Raf is in {weatherState.location} - where it's{" "}
-                          {weatherState.condition?.toLowerCase() || "clear"} and{" "}
-                          {weatherState.temperature}°C
-                        </motion.span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() =>
-                          setWeatherState((prev) => ({
-                            ...prev,
-                            showWeatherEffect: false,
-                          }))
-                        }
-                        className="text-foreground/60 hover:text-foreground/80 transition-colors relative z-10"
-                        aria-label="Close weather banner"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                      </button>
                     </div>
-                  </div>
+                  </motion.main>
                 </div>
 
                 {/* Background effect */}
@@ -2519,16 +2562,7 @@ export default function Page() {
                       </svg>
                     </motion.button>
 
-                    <motion.h2
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2, duration: 0.4 }}
-                      className="text-3xl font-medium mb-8 text-foreground"
-                    >
-                      All Notes
-                    </motion.h2>
-
-                    <div className="flex flex-col divide-y divide-foreground/10">
+                    <div className="flex flex-col divide-y divide-foreground/10 mt-8">
                       {notes
                         .sort(
                           (a, b) =>
