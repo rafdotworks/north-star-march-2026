@@ -1673,7 +1673,7 @@ export default function Page() {
 
                 <div className="mt-4">
                   <a
-                    href="https://rafvitale.com"
+                    href="https://deck.raf.works"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
