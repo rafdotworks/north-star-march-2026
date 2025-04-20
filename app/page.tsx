@@ -1332,9 +1332,8 @@ export default function Page() {
             variants={fadeInAnimation}
             initial="hidden"
             animate="visible"
-            className="flex items-center mb-40 relative md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20"
+            className="flex items-center mb-40 relative"
           >
-            <div className="hidden md:block" />
             <div className="flex items-center justify-between w-full relative">
               <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
                 Raf
@@ -1433,68 +1432,37 @@ export default function Page() {
             }}
             className="space-y-36"
           >
-            <section className="md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20 w-full">
-              <div className="hidden md:block" />
-
-              <div className="space-y-6 text-base leading-relaxed">
-                {/* Desktop version */}
-                <div className="hidden md:block space-y-6">
-                  <p className="text-foreground">
-                    Raf is a Product Designer{" "}
-                    <span className="text-foreground/60">
-                      ≈ founding designer and design engineer,{" "}
+            <section className="w-full">
+              <div className="space-y-8">
+                {/* Desktop version - now used for all screen sizes */}
+                <div className="space-y-6">
+                  <p className="text-foreground tracking-tight text-lg">
+                    <span className="text-foreground font-medium">
+                      Product Designer
+                    </span>{" "}
+                    {/* <span className="text-foreground/70">
+                      ≈ founding designer and design engineer;
+                    </span>{" "}
+                    {""} */}
+                    <span className="text-foreground/70">
+                      driven by craft, collaboration, and a relentless pursuit
+                      of{" "}
                     </span>
-                    driven by{" "}
-                    <span className="text-foreground/60">
-                      a deep passion for craft, collaboration, and a relentless
-                      pursuit of{" "}
+                    <span className="text-foreground font-medium">
+                      excellence
                     </span>
-                    <span className="text-foreground">excellence</span>
-                    <span className="text-foreground/60">.</span>
-                  </p>
-
-                  <p className="text-foreground/60">
-                    He has designed and built for companies like Theoriq,
-                    CurbCutOS, various crypto startups and Zalando. He has also
-                    worked with clients like w.ai, US.court, Artscapy, and more.
-                  </p>
-
-                  <p>
-                    <span className="text-foreground/60">
-                      Originally from Italy, and now{" "}
-                      <span className="text-foreground">based in Toronto</span>,
-                      Raf enjoys portraits, yoga, and office spaces.{" "}
-                    </span>
-                  </p>
-                </div>
-
-                {/* Mobile version - single line */}
-                <div className="block md:hidden">
-                  <p className="text-foreground leading-relaxed">
-                    Raf is a Product Designer{" "}
-                    <span className="text-foreground/60">
-                      ≈ founding designer and design engineer,{" "}
-                    </span>
-                    <span className="text-foreground">based in Toronto</span>
-                    <span className="text-foreground/60">
-                      , driven by a deep passion for craft, collaboration and a
-                      relentless pursuit of{" "}
-                    </span>
-                    <span className="text-foreground">excellence</span>
-                    <span className="text-foreground/60">.</span>
+                    <span className="text-foreground/70">.</span>
                   </p>
                 </div>
               </div>
             </section>
 
-            <div className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <div className="hidden md:block" />
-
+            <div className="w-full">
               <div className="space-y-8">
-                {/* Desktop Slideshow */}
+                {/* Desktop Slideshow - now used for all screen sizes */}
                 <div
                   ref={slideshowRef}
-                  className="w-full mb-0 overflow-hidden relative hidden md:block"
+                  className="w-full mb-0 overflow-hidden relative"
                   onMouseEnter={() => {
                     // Don't pause on hover anymore
                     // setIsSlideshowPaused(true);
@@ -1611,66 +1579,6 @@ export default function Page() {
                   </div>
                 </div>
 
-                {/* Mobile Vertical Gallery */}
-                <div className="md:hidden space-y-6">
-                  {images.map((src, index) => (
-                    <motion.div
-                      key={src}
-                      className="relative w-full"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.5,
-                        delay: index * 0.1,
-                      }}
-                    >
-                      <motion.div
-                        className={`relative w-full ${
-                          workVideos[src] ? "cursor-pointer" : ""
-                        }`}
-                        onClick={() => {
-                          if (workVideos[src]) {
-                            handleOpenVideoModal(src);
-                          }
-                        }}
-                      >
-                        <Image
-                          src={src}
-                          alt={`Work preview ${index + 1}`}
-                          width={1200}
-                          height={800}
-                          loader={imageLoader}
-                          className="w-full bg-transparent max-w-full rounded-lg"
-                          style={{
-                            objectPosition: "center center",
-                            display: "block",
-                            filter: !loadedImages[src] ? "blur(8px)" : "none",
-                            transition: "filter 0.5s ease-out",
-                          }}
-                          onLoad={() => handleImageLoad(src)}
-                          loading={index < 3 ? "eager" : "lazy"}
-                          priority={index < 3}
-                          quality={75}
-                        />
-                        {workVideos[src] && (
-                          <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="white"
-                              stroke="none"
-                              className="ml-0.5"
-                            >
-                              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
-                          </div>
-                        )}
-                      </motion.div>
-                    </motion.div>
-                  ))}
-                </div>
-
                 <div className="mt-4">
                   <a
                     href="https://deck.raf.works"
@@ -1695,10 +1603,58 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Notes Section */}
-            <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <div className="hidden md:block" />
+            {/* About Section */}
+            <section className="w-full">
+              <div className="space-y-8">
+                <div className="space-y-6">
+                  <p className="text-foreground/70 tracking-tight text-lg">
+                    Raf has designed and built products for{" "}
+                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                      Theoriq
+                    </span>
+                    ,{" "}
+                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                      CurbCutOS
+                    </span>
+                    , various crypto startups and{" "}
+                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                      Zalando
+                    </span>
+                    .<br /> He has also partnered with clients like{" "}
+                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                      w.ai
+                    </span>
+                    ,{" "}
+                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                      US.court
+                    </span>
+                    ,{" "}
+                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                      Artscapy
+                    </span>
+                    , and many more.
+                  </p>
 
+                  <p className="tracking-tight text-lg">
+                    <span className="text-foreground/70">
+                      Originally from{" "}
+                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                        Italy
+                      </span>
+                      , where he studied software and design, and now{" "}
+                      <span className="text-foreground font-medium">
+                        based in Toronto
+                      </span>
+                      ,<br /> Raf enjoys portraitures, yoga, and inspiring
+                      workspaces.{" "}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Notes Section */}
+            <section className="w-full">
               <div className="space-y-6">
                 <div className="flex flex-col divide-y divide-foreground/[0.03]">
                   {sortedNotes.map((note, index) => (
@@ -1766,9 +1722,7 @@ export default function Page() {
               </div>
             </section>
 
-            <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <div className="hidden md:block" />
-
+            <section className="w-full">
               <div className="space-y-8">
                 <div className="grid grid-cols-3 gap-3">
                   {photos.slice(0, 3).map((photo, index) => (
@@ -1806,9 +1760,7 @@ export default function Page() {
               </div>
             </section>
 
-            <section className="md:grid md:grid-cols-[180px,1fr] md:gap-20 w-full">
-              <div className="hidden md:block" />
-
+            <section className="w-full">
               <div className="space-y-8 max-w-2xl relative z-20">
                 <div>
                   <p className="text-sm text-foreground/50 mb-1">Email</p>
