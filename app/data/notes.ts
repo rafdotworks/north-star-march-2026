@@ -1,15 +1,83 @@
-export type NoteCategory = "personal" | "work" | "ideas" | "travel";
-
 export interface Note {
   id: string;
   title: string;
   excerpt: string;
   content: string;
   date: string;
-  category: NoteCategory;
 }
 
 export const notes: Note[] = [
+  {
+    id: "note-6",
+    title: "Config, SF, and slowing down",
+    excerpt: "Reflections on Config 2025 and the importance of calm in design.",
+    content: `San Francisco felt alive. Config pulsed with energy—people building fast, launching faster. The whole industry feels like it's in motion, always reaching for what's next.
+
+But I left with a different instinct: to slow down.
+
+There's power in stillness. In choosing clarity over noise. Calm over chaos. I'm more certain than ever that design isn't about keeping pace with the rush. It's about creating space. For thoughtfulness. For care. For simplicity that serves, not just decorates.
+
+I'm glad to see Figma evolve and expand. But what matters more is how we use the tools, not just what they can do. Speed is tempting, but I don't think the goal is to go from zero to one as fast as possible. The goal is to go somewhere meaningful; together.
+
+And for that, we need trust. Not consensus. Not applause. Listening, really listening, is more important than being liked. 
+
+I'm leaning into the best work coming from honest collaboration and quiet conviction. 
+
+Progress, not performance. Care, not noise. That's the direction I want to move in.`,
+    date: "2025-05-09",
+  },
+  {
+    id: "note-5",
+    title: "'Why are there frequent job changes on your LinkedIn?'",
+    excerpt: " ",
+    content: `# Why are there frequent job changes on your LinkedIn?
+
+## The Questions That Matter
+
+Two questions have stayed with me recently:
+
+1. **"Why are there frequent job changes on your LinkedIn?"**
+2. **"What does true co-creation look like for you?"**
+
+These weren't trick questions. They were real ones — the kind that reveal who someone is, not just what they've done.
+
+---
+
+## On Career Transitions
+
+When asked about the job changes, I responded with what felt true (thank you Granola.so for your transcript):
+
+> I've always been intentional about where I spend my energy. Every move has been tied to growth, to learning something new, or to stepping into the kind of environment where I could truly stretch. I've left roles by choice — not due to performance issues — but because I felt the arc had completed, or the environment no longer allowed me to thrive.
+
+> I'm most drawn to places where there's product ambiguity and room to bring clarity. Where cross-functional collaboration isn't just a slide deck idea — it's how work actually happens. I look for teams with strong technical minds I can learn from, and people who are genuinely passionate about what they're building. I'm not chasing a ladder. I'm chasing momentum and meaning."
+
+---
+
+## On True Co-Creation
+
+Then came a question I wish more people asked:
+
+> What does true co-creation look like for you?
+
+And I knew exactly how to answer:
+
+> True co-creation is about pace, trust, and alignment. It's not about endless prep or sign-offs — it's about shortening the space between planning and building.
+
+> When it works well, we move from input to action quickly — gathering what we need, syncing as a team, then creating something tangible within days. Even hours, sometimes. It doesn't need to be final. It just needs to be real.
+
+> What matters is having clear direction, even if informal — a shared pulse. When you can feel the 'go' without having to ask twice, that's where the magic begins. That's the kind of collaboration I seek.
+
+---
+
+## Final Thoughts
+
+These questions went deeper than the usual script. They asked about intention. About how I move, and how I create.
+
+And we need more of those.
+
+`,
+    date: "2025-04-11",
+  },
   {
     id: "note-4",
     title: "My Personality Tests",
@@ -41,7 +109,6 @@ The Color Code uses colors to represent core motivations and personality traits.
 
 These results paint a picture of someone who is action-oriented, leadership-focused, and determined to achieve goals. They highlight my strengths—like confidence and vision—while nudging me toward growth in areas like patience and emotional connection. I'm excited to use these insights to enhance how I work, relate to others, and approach life's challenges.`,
     date: "2025-03-06",
-    category: "personal",
   },
   {
     id: "note-3",
@@ -138,7 +205,6 @@ Let's build something exceptional together. Our startup studio's track record of
 3. **Measure Real Impact**: Track how many users actually achieve their goals rather than just how many use your product. This will guide more effective product development.
 4. **Partner Smart**: Whether with our studio or other partners, work with those who have built what you're building. The right partnership can cut your time-to-market in half and help avoid common pitfalls.`,
     date: "2025-02-15",
-    category: "work",
   },
   {
     id: "note-1",
@@ -157,7 +223,6 @@ These songs have been profoundly influential in my life, each bringing unique em
 
 `,
     date: "2025-03-05",
-    category: "personal",
   },
   {
     id: "note-2",
@@ -171,76 +236,5 @@ Then it happened—I slipped on a patch of that hidden ice. One second I was wal
 
 The pain's still there, nagging me every day since. But here's the thing: it's also made me grateful. Falling like that opened my eyes to something new about winter here. Now I'm more careful, paying attention to each step I take. It could've been so much worse, and I'm thankful it wasn't. This whole thing's been a wake-up call to stay present and watch where I'm going.`,
     date: "2025-02-26",
-    category: "personal",
-  },
-  {
-    id: "note-5",
-    title: "'Why are there frequent job changes on your LinkedIn?'",
-    excerpt: " ",
-    content: `# Why are there frequent job changes on your LinkedIn?
-
-> *"The most meaningful conversations aren't the ones filled with answers — they're the ones sparked by the right questions."*
-
-## The Questions That Matter
-
-Two questions have stayed with me recently:
-
-1. **"Why are there frequent job changes on your LinkedIn?"**
-2. **"What does true co-creation look like for you?"**
-
-These weren't trick questions. They were real ones — the kind that reveal who someone is, not just what they've done.
-
----
-
-## On Career Transitions
-
-When asked about the job changes, I responded with what felt true (thank you Granola.so for your transcript):
-
-> "I've always been intentional about where I spend my energy. Every move has been tied to growth, to learning something new, or to stepping into the kind of environment where I could truly stretch. I've left roles by choice — not due to performance issues — but because I felt the arc had completed, or the environment no longer allowed me to thrive.
-
-> I'm most drawn to places where there's product ambiguity and room to bring clarity. Where cross-functional collaboration isn't just a slide deck idea — it's how work actually happens. I look for teams with strong technical minds I can learn from, and people who are genuinely passionate about what they're building. I'm not chasing a ladder. I'm chasing momentum and meaning."
-
----
-
-## On True Co-Creation
-
-Then came a question I wish more people asked:
-
-> What does true co-creation look like for you?
-
-And I knew exactly how to answer:
-
-> True co-creation is about pace, trust, and alignment. It's not about endless prep or sign-offs — it's about shortening the space between planning and building.
-
-> When it works well, we move from input to action quickly — gathering what we need, syncing as a team, then creating something tangible within days. Even hours, sometimes. It doesn't need to be final. It just needs to be real.
-
-> What matters is having clear direction, even if informal — a shared pulse. When you can feel the 'go' without having to ask twice, that's where the magic begins. That's the kind of collaboration I seek.
-
----
-
-## Final Thoughts
-
-These questions went deeper than the usual script. They asked about intention. About how I move, and how I create.
-
-And we need more of those.
-
-`,
-    date: "2025-04-11",
-    category: "work",
   },
 ];
-
-export const getCategoryColor = (category: NoteCategory): string => {
-  switch (category) {
-    case "personal":
-      return "bg-secondary/10 text-secondary";
-    case "work":
-      return "bg-accent/10 text-accent";
-    case "ideas":
-      return "bg-green-500/10 text-green-500";
-    case "travel":
-      return "bg-amber-500/10 text-amber-500";
-    default:
-      return "bg-gray-500/10 text-gray-500";
-  }
-};

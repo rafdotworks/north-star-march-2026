@@ -5,7 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
-import { notes, Note, getCategoryColor } from "./data/notes";
+import { notes, Note } from "./data/notes";
+import { works } from "./data/works";
+import { Play } from "lucide-react";
+
+interface Work {
+  title: string;
+  description: string;
+  image: string;
+  video?: string;
+}
 
 // Add image optimization configuration
 const imageLoader = ({
@@ -45,6 +54,10 @@ export default function Page() {
   const [blurAmount, setBlurAmount] = useState(25); // Increased from 12 to 25 for stronger initial blur
   // Add state to track scroll position
   const [scrollY, setScrollY] = useState(0);
+  // Add state to track if initial animations have completed
+  const [animationsComplete, setAnimationsComplete] = useState(false);
+  // Add state to track if critical content is loaded
+  const [criticalContentLoaded, setCriticalContentLoaded] = useState(false);
   const [timeState, setTimeState] = useState<{
     hour: number;
     minute: number;
@@ -102,7 +115,7 @@ export default function Page() {
     "/work/tela.png",
     "/work/zalando-dodont.png",
     "/work/zalando-spread.png",
-    "/work/apple.png",
+    // "/work/apple.png",
   ];
 
   // Map work images to their corresponding Vimeo video URLs
@@ -184,13 +197,25 @@ export default function Page() {
     // Set up keyboard event listener
     window.addEventListener("keydown", handleKeyDown);
 
+    // Check if critical images are loaded
+    const checkCriticalContent = () => {
+      const firstThreeImages = images.slice(0, 3);
+      const allCriticalLoaded = firstThreeImages.every(
+        (src) => loadedImages[src]
+      );
+      if (allCriticalLoaded) {
+        setCriticalContentLoaded(true);
+      }
+    };
+
     // Start the slideshow after a short delay to ensure images are loaded
     const slideshowTimer = setTimeout(() => {
       if (
         !isPhotosModalOpen &&
         !isNotesModalOpen &&
         !isAllNotesModalOpen &&
-        !isSlideshowPaused
+        !isSlideshowPaused &&
+        criticalContentLoaded
       ) {
         // Set to the first image and start progress
         setCurrentImageIndex(0);
@@ -198,9 +223,17 @@ export default function Page() {
       }
     }, 1000);
 
+    // Mark animations as complete after initial load
+    const animationTimer = setTimeout(() => {
+      setAnimationsComplete(true);
+    }, 3500);
+
+    checkCriticalContent();
+
     return () => {
       clearInterval(timeInterval);
       clearTimeout(slideshowTimer);
+      clearTimeout(animationTimer);
       window.removeEventListener("keydown", handleKeyDown);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -216,9 +249,9 @@ export default function Page() {
   // Camera focus animation effect
   const focusAnimation = () => {
     // Start with a blur and gradually reduce it using a more camera-like easing
-    const totalDuration = 2500; // 2.5 seconds total
+    const totalDuration = 2500; // Restored to original 2.5s duration
     const startTime = Date.now();
-    const initialBlur = 25; // Increased from 15 to 25 for stronger initial blur
+    const initialBlur = 25; // Keep the stronger initial blur
 
     // Set initial blur
     setBlurAmount(initialBlur);
@@ -561,6 +594,7 @@ export default function Page() {
   useEffect(() => {
     if (
       !mounted ||
+      !criticalContentLoaded ||
       isPhotosModalOpen ||
       isNotesModalOpen ||
       isAllNotesModalOpen ||
@@ -571,67 +605,18 @@ export default function Page() {
 
     const slideshowInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 3500);
+    }, 4500); // Increased from 3500ms to 4500ms to add 1 second display time
 
     return () => clearInterval(slideshowInterval);
   }, [
     mounted,
+    criticalContentLoaded,
     isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
     isSlideshowPaused,
     images.length,
-  ]);
-
-  // Progress bar animation
-  useEffect(() => {
-    // Only run if no modal is open
-    if (
-      !mounted ||
-      isPhotosModalOpen ||
-      isNotesModalOpen ||
-      isAllNotesModalOpen ||
-      isVideoModalOpen
-    )
-      return;
-
-    let animationFrameId: number;
-    let lastTimestamp = performance.now();
-    let progress = transitionProgress;
-
-    const updateProgress = (timestamp: number) => {
-      const elapsed = timestamp - lastTimestamp;
-
-      // Update progress approximately every 40ms (25fps)
-      if (elapsed > 40) {
-        // For a 3500ms total duration
-        progress += elapsed / 35;
-
-        // Cap at 100%
-        if (progress > 100) progress = 100;
-
-        setTransitionProgress(progress);
-        lastTimestamp = timestamp;
-      }
-
-      animationFrameId = requestAnimationFrame(updateProgress);
-    };
-
-    animationFrameId = requestAnimationFrame(updateProgress);
-
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [
-    mounted,
-    isPhotosModalOpen,
-    isNotesModalOpen,
-    isAllNotesModalOpen,
-    isVideoModalOpen,
-    transitionProgress,
   ]);
 
   // Add preloading for critical images
@@ -641,6 +626,7 @@ export default function Page() {
       images.slice(0, 3).forEach((src) => {
         const img = new window.Image();
         img.src = src;
+        img.onload = () => handleImageLoad(src);
       });
     }
   }, [mounted]);
@@ -649,6 +635,16 @@ export default function Page() {
   const handleImageLoad = (src: string) => {
     setLoadedImages((prev) => {
       const newState = { ...prev, [src]: true };
+
+      // Check if critical images (first 3) are loaded
+      const firstThreeImages = images.slice(0, 3);
+      const criticalLoaded = firstThreeImages.every(
+        (imgSrc) => newState[imgSrc]
+      );
+
+      if (criticalLoaded && !criticalContentLoaded) {
+        setCriticalContentLoaded(true);
+      }
 
       // Check if all images are loaded
       const allLoaded = images.every((imgSrc) => newState[imgSrc]);
@@ -1297,1210 +1293,1101 @@ export default function Page() {
       .slice(0, 3);
   }, []);
 
-  if (!mounted) {
-    return null;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoVisible, setIsVideoVisible] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVideoVisible(true);
+            if (videoRef.current) {
+              // Add a small delay for mobile devices
+              setTimeout(() => {
+                videoRef.current?.play().catch((error) => {
+                  console.log("Video autoplay failed:", error);
+                  setVideoError(true);
+                });
+              }, 100);
+            }
+          } else {
+            setIsVideoVisible(false);
+            if (videoRef.current) {
+              videoRef.current.pause();
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.1, // Reduced threshold for better mobile detection
+        rootMargin: "50px", // Added margin to start loading earlier
+      }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => {
+      if (videoRef.current) {
+        observer.unobserve(videoRef.current);
+      }
+    };
+  }, []);
+
+  if (!mounted || !criticalContentLoaded) {
+    // Return a minimal loading state with proper layout to prevent shifts
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="px-6 sm:px-10 py-16 md:px-28">
+          <div className="w-full max-w-screen-xl mx-auto">
+            {/* Placeholder for header */}
+            <div className="flex items-center mb-40 opacity-0">
+              <h1 className="text-2xl font-normal">Raf</h1>
+            </div>
+            {/* Placeholder for content */}
+            <div className="space-y-36 opacity-0">
+              <div className="w-full h-[600px] bg-foreground/5 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div
-      style={{
-        filter: blurAmount > 0 ? `blur(${blurAmount}px)` : "none",
-        transition: "filter 3s cubic-bezier(0.22, 1, 0.36, 1)",
-        position: "relative",
-      }}
-    >
-      {/* Bottom gradient for main content - fixed to viewport */}
-      <div className="fixed left-0 right-0 bottom-0 h-[15px] w-screen overflow-hidden z-50 pointer-events-none">
-        <motion.div
-          className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-background/60 to-transparent"
-          style={{
-            backdropFilter: `blur(${Math.min(scrollY / 150, 2)}px)`,
-            opacity: Math.min(scrollY / 300, 1),
-            transition: "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-        />
-      </div>
-
-      <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 3.5, ease: [0.22, 1, 0.36, 1] }}
-        className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden"
+    <>
+      <div
+        style={{
+          filter: blurAmount > 0 ? `blur(${blurAmount}px)` : "none",
+          transition: "filter 3s cubic-bezier(0.22, 1, 0.36, 1)", // Restored to original 3s duration
+          position: "relative",
+        }}
       >
-        <div className="w-full max-w-screen-xl mx-auto relative z-10">
+        {/* Bottom gradient for main content - fixed to viewport */}
+        <div className="fixed left-0 right-0 bottom-0 h-[15px] w-screen overflow-hidden z-50 pointer-events-none">
           <motion.div
-            variants={fadeInAnimation}
-            initial="hidden"
-            animate="visible"
-            className="flex items-center mb-40 relative"
-          >
-            <div className="flex items-center justify-between w-full relative">
-              <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
-                Raf
-              </h1>
+            className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-background/60 to-transparent"
+            style={{
+              backdropFilter: `blur(${Math.min(scrollY / 150, 2)}px)`,
+              opacity: Math.min(scrollY / 300, 1),
+              transition: "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          />
+        </div>
 
-              {/* Display current time in EST with weather */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: mounted ? 0.6 : 0 }}
-                transition={{ delay: 1, duration: 1.5 }}
-                className="text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
-              >
-                <div className="flex items-center justify-end space-x-2">
-                  <span className="min-h-[1.5rem] flex items-center">
-                    {mounted ? getTimeDifference(false) : ""}
-                  </span>
-                  {weatherState.temperature !== null && (
-                    <>
-                      <span className="opacity-30 flex items-center">|</span>
-                      <div
-                        className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                        onClick={toggleWeatherEffect}
-                        title={`${weatherState.location} weather - click to see effect`}
-                      >
-                        <span className="flex items-center justify-center">
-                          {weatherState.temperature}°C{" "}
-                          {weatherState.customLocation &&
-                            `(${weatherState.location})`}
-                        </span>
-                        {weatherState.condition && (
-                          <span className="ml-1 text-xs flex items-center justify-center">
-                            {getWeatherIcon(weatherState.condition)}
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-                {weatherState.isLoading && (
-                  <p className="text-[10px] opacity-50 mt-1">
-                    Loading {weatherState.location} weather...
-                  </p>
-                )}
-              </motion.div>
+        <motion.main
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            duration: 2, // Restored to original 2s duration
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden"
+          style={{
+            minHeight: "100vh",
+            willChange: "auto",
+          }}
+        >
+          <div className="w-full max-w-screen-xl mx-auto relative z-10">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: 1.5, // Restored to original 1.5s duration
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="flex items-center mb-40 relative"
+              style={{
+                transform: "translateZ(0)",
+                backfaceVisibility: "hidden",
+              }}
+            >
+              <div className="flex items-center justify-between w-full relative">
+                <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
+                  Raf
+                </h1>
 
-              {/* Mobile time and weather display */}
-              <motion.div
-                variants={slideInFromBottom}
-                initial="hidden"
-                animate="visible"
-                className="text-xs text-foreground/40 font-light md:hidden flex items-center"
-              >
+                {/* Display current time in EST with weather */}
                 <motion.div
-                  className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.8, duration: 0.8 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: mounted ? 0.6 : 0 }}
+                  transition={{ delay: 1, duration: 1.5 }}
+                  className="text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
                 >
-                  <span className="min-h-[1.25rem] flex items-center">
-                    {mounted ? getTimeDifference(true) : ""}
-                  </span>
-
-                  {weatherState.temperature !== null && (
-                    <>
-                      <span className="opacity-30 flex items-center">•</span>
-                      <div
-                        className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                        onClick={toggleWeatherEffect}
-                        title={`${weatherState.location} weather - click to see effect`}
-                      >
-                        <span className="flex items-center justify-center">
-                          {weatherState.temperature}°C{" "}
-                          {weatherState.customLocation &&
-                            `(${weatherState.location})`}
-                        </span>
-                        {weatherState.condition && (
-                          <span className="ml-1 text-xs flex items-center justify-center">
-                            {getWeatherIcon(weatherState.condition)}
+                  <div className="flex items-center justify-end space-x-2">
+                    <span className="min-h-[1.5rem] flex items-center">
+                      {mounted ? getTimeDifference(false) : ""}
+                    </span>
+                    {weatherState.temperature !== null && (
+                      <>
+                        <span className="opacity-30 flex items-center">|</span>
+                        <div
+                          className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                          onClick={toggleWeatherEffect}
+                          title={`${weatherState.location} weather - click to see effect`}
+                        >
+                          <span className="flex items-center justify-center">
+                            {weatherState.temperature}°C{" "}
+                            {weatherState.customLocation &&
+                              `(${weatherState.location})`}
                           </span>
-                        )}
-                      </div>
-                    </>
+                          {weatherState.condition && (
+                            <span className="ml-1 text-xs flex items-center justify-center">
+                              {getWeatherIcon(weatherState.condition)}
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {weatherState.isLoading && (
+                    <p className="text-[10px] opacity-50 mt-1">
+                      Loading {weatherState.location} weather...
+                    </p>
                   )}
                 </motion.div>
-              </motion.div>
-            </div>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 2,
-              delay: 0.3,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="space-y-36"
-          >
-            <section className="w-full">
-              <div className="space-y-8">
-                {/* Desktop version - now used for all screen sizes */}
-                <div className="space-y-6">
-                  <p className="text-foreground tracking-tight text-lg">
-                    <span className="text-foreground font-medium">
-                      Product Designer
-                    </span>{" "}
-                    {/* <span className="text-foreground/70">
-                      ≈ founding designer and design engineer;
-                    </span>{" "}
-                    {""} */}
-                    <span className="text-foreground/70">
-                      driven by craft, collaboration, and a relentless pursuit
-                      of{" "}
-                    </span>
-                    <span className="text-foreground font-medium">
-                      excellence
-                    </span>
-                    <span className="text-foreground/70">.</span>
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <div className="w-full">
-              <div className="space-y-8">
-                {/* Desktop Slideshow - now used for all screen sizes */}
-                <div
-                  ref={slideshowRef}
-                  className="w-full mb-0 overflow-hidden relative"
-                  onMouseEnter={() => {
-                    // Don't pause on hover anymore
-                    // setIsSlideshowPaused(true);
-                  }}
-                  onMouseLeave={() => {
-                    // Don't need to unpause since we're not pausing on hover
-                    // setIsSlideshowPaused(false);
-                    // setTransitionProgress(0);
-                  }}
-                  onTouchStart={() => setIsSlideshowPaused(true)}
+                {/* Mobile time and weather display */}
+                <motion.div
+                  variants={slideInFromBottom}
+                  initial="hidden"
+                  animate="visible"
+                  className="text-xs text-foreground/40 font-light md:hidden flex items-center"
                 >
-                  {/* Replace the AnimatePresence with a crossfade effect */}
-                  <div className="relative w-full h-full">
-                    {images.map((src, index) => (
-                      <motion.div
-                        key={src}
-                        className="relative"
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          opacity: index === currentImageIndex ? 1 : 0,
-                          zIndex: index === currentImageIndex ? 2 : 1,
-                          transition:
-                            "opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1)",
-                        }}
-                      >
-                        <motion.div
-                          className={`relative w-full h-full ${
-                            workVideos[src] ? "cursor-pointer group" : ""
-                          }`}
-                          onClick={() => {
-                            if (workVideos[src]) {
-                              handleOpenVideoModal(src);
-                            }
-                          }}
-                        >
-                          <Image
-                            src={src}
-                            alt={`Work preview ${index + 1}`}
-                            width={1200}
-                            height={800}
-                            loader={imageLoader}
-                            className={`w-full bg-transparent max-w-full ${
-                              workVideos[src]
-                                ? "transition-all duration-300 hover:brightness-105"
-                                : ""
-                            }`}
-                            style={{
-                              objectPosition: "center center",
-                              display: "block",
-                              filter: !loadedImages[src] ? "blur(8px)" : "none",
-                              transition:
-                                "filter 1.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
-                            }}
-                            onLoad={() => handleImageLoad(src)}
-                            loading={index < 3 ? "eager" : "lazy"}
-                            priority={index < 3}
-                            quality={index < 3 ? 90 : 75}
-                          />
-                          {workVideos[src] && index === currentImageIndex && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110">
-                                <svg
-                                  width="18"
-                                  height="18"
-                                  viewBox="0 0 24 24"
-                                  fill="white"
-                                  stroke="none"
-                                  className="ml-0.5"
-                                >
-                                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                              </div>
-                            </div>
-                          )}
-                        </motion.div>
-                      </motion.div>
-                    ))}
-
-                    {/* Placeholder for sizing (to maintain layout) */}
-                    <img
-                      src={images[0]}
-                      alt="Layout placeholder"
-                      className="w-full invisible"
-                    />
-                  </div>
-
-                  {/* Progress line */}
-                  <div className="absolute bottom-0 left-0 right-0 h-[3px] z-20 overflow-hidden">
-                    <div
-                      className={`h-full ${
-                        [
-                          "/work/theoriq-prod-hero.png",
-                          "/work/defi.png",
-                          "/work/art-02.png",
-                          "/work/ethos.png",
-                          "/work/atlas-1.png",
-                          "/work/us.png",
-                          "/work/apple.png",
-                        ].includes(images[currentImageIndex])
-                          ? "bg-white/40"
-                          : "bg-foreground/40"
-                      }`}
-                      style={{
-                        width: `${
-                          (currentImageIndex / (images.length - 1)) * 100
-                        }%`,
-                        transition: "all 0.3s ease-out",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <a
-                    href="https://deck.raf.works"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
+                  <motion.div
+                    className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      delay: 0.8, // Reduced from 1.8s to 0.8s for better mobile performance
+                      duration: 0.6, // Reduced from 0.8s to 0.6s for better mobile performance
+                      type: "tween", // Add type for better mobile performance
+                    }}
+                    style={{
+                      WebkitBackfaceVisibility: "hidden", // Add for better mobile performance
+                      WebkitTransform: "translateZ(0)", // Add for better mobile performance
+                    }}
                   >
-                    View all works{" "}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      className="w-3.5 h-3.5 ml-1 relative -top-[0.5px]"
+                    <span className="min-h-[1.25rem] flex items-center">
+                      {mounted ? getTimeDifference(true) : ""}
+                    </span>
+
+                    {weatherState.temperature !== null && (
+                      <>
+                        <span className="opacity-30 flex items-center">•</span>
+                        <div
+                          className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
+                          onClick={toggleWeatherEffect}
+                          title={`${weatherState.location} weather - click to see effect`}
+                        >
+                          <span className="flex items-center justify-center">
+                            {weatherState.temperature}°C{" "}
+                            {weatherState.customLocation &&
+                              `(${weatherState.location})`}
+                          </span>
+                          {weatherState.condition && (
+                            <span className="ml-1 text-xs flex items-center justify-center">
+                              {getWeatherIcon(weatherState.condition)}
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{
+                opacity: criticalContentLoaded ? 1 : 0,
+                y: criticalContentLoaded ? 0 : 20,
+              }}
+              transition={{
+                duration: 1.5,
+                delay: 0.2,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="space-y-36"
+              style={{
+                transform: animationsComplete ? "none" : undefined,
+                willChange: animationsComplete ? "auto" : "transform, opacity",
+              }}
+            >
+              <div className="w-full">
+                <div className="space-y-8">
+                  {/* Desktop Slideshow - now used for all screen sizes */}
+                  <div
+                    ref={slideshowRef}
+                    className="w-full mb-0 overflow-hidden relative"
+                    onMouseEnter={() => {
+                      // Don't pause on hover anymore
+                      // setIsSlideshowPaused(true);
+                    }}
+                    onMouseLeave={() => {
+                      // Don't need to unpause since we're not pausing on hover
+                      // setIsSlideshowPaused(false);
+                      // setTransitionProgress(0);
+                    }}
+                    onTouchStart={() => setIsSlideshowPaused(true)}
+                  >
+                    {/* Line 1 Section */}
+
+                    <section className="w-full">
+                      <div className="space-y-8">
+                        <div className="space-y-6">
+                          {/* 1. Identity line — bold, intentional */}
+                          <motion.p
+                            className="tracking-tight text-lg"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(10px)",
+                              y: 10,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 3.2,
+                              ease: [0.12, 1, 0.28, 1],
+                              delay: 0.4,
+                            }}
+                          >
+                            <motion.span
+                              className="text-foreground font-medium"
+                              initial={{
+                                opacity: 0,
+                                filter: "blur(10px)",
+                                y: 10,
+                              }}
+                              animate={{
+                                opacity: 1,
+                                filter: "blur(0px)",
+                                y: 0,
+                              }}
+                              transition={{
+                                duration: 3.2,
+                                ease: [0.12, 1, 0.28, 1],
+                                delay: 0.5,
+                              }}
+                            >
+                              Product Designer
+                            </motion.span>
+
+                            <motion.span
+                              className="text-foreground/70"
+                              initial={{
+                                opacity: 0,
+                                filter: "blur(10px)",
+                                y: 10,
+                              }}
+                              animate={{
+                                opacity: 1,
+                                filter: "blur(0px)",
+                                y: 0,
+                              }}
+                              transition={{
+                                duration: 3.2,
+                                ease: [0.12, 1, 0.28, 1],
+                                delay: 0.6,
+                              }}
+                            >
+                              : fast with purpose, calm with care, grounded in
+                              trust.
+                            </motion.span>
+                          </motion.p>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Replace the AnimatePresence with a crossfade effect */}
+                    <div className="relative w-full h-full">
+                      {/* Mobile Feed View */}
+                      <div className="block sm:hidden space-y-6">
+                        {images.map((src, index) => (
+                          <motion.div
+                            key={`mobile-${src}`}
+                            className="w-full"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.6,
+                              delay: index * 0.1,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                          >
+                            <motion.div
+                              className={`relative w-full ${
+                                workVideos[src] ? "cursor-pointer group" : ""
+                              }`}
+                              onClick={() => {
+                                if (workVideos[src]) {
+                                  handleOpenVideoModal(src);
+                                }
+                              }}
+                            >
+                              <Image
+                                src={src}
+                                alt={`Work preview ${index + 1}`}
+                                width={1200}
+                                height={800}
+                                loader={imageLoader}
+                                className={`w-full bg-transparent max-w-full ${
+                                  workVideos[src]
+                                    ? "transition-all duration-300 hover:brightness-105"
+                                    : ""
+                                }`}
+                                style={{
+                                  objectPosition: "center center",
+                                  display: "block",
+                                  filter: !loadedImages[src]
+                                    ? "blur(20px)"
+                                    : "none",
+                                  opacity: !loadedImages[src] ? 0.5 : 1,
+                                  transition:
+                                    "filter 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
+                                }}
+                                onLoad={() => handleImageLoad(src)}
+                                loading={index < 3 ? "eager" : "lazy"}
+                                priority={index < 3}
+                                quality={index < 3 ? 90 : 75}
+                              />
+                              {workVideos[src] && (
+                                <div
+                                  className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                                  onClick={() => handleOpenVideoModal(src)}
+                                  style={{
+                                    pointerEvents: "auto",
+                                    zIndex: 3,
+                                  }}
+                                >
+                                  <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110">
+                                    <svg
+                                      width="18"
+                                      height="18"
+                                      viewBox="0 0 24 24"
+                                      fill="white"
+                                      stroke="none"
+                                      className="ml-0.5"
+                                    >
+                                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                    </svg>
+                                  </div>
+                                </div>
+                              )}
+                            </motion.div>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* Desktop Slideshow View */}
+                      <div className="hidden sm:block relative w-full h-full">
+                        {images.map((src, index) => (
+                          <motion.div
+                            key={src}
+                            className="absolute inset-0 w-full h-full"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(10px)",
+                              y: 20,
+                            }}
+                            animate={{
+                              opacity: index === currentImageIndex ? 1 : 0,
+                              filter:
+                                index === currentImageIndex
+                                  ? "blur(0px)"
+                                  : "blur(10px)",
+                              y: index === currentImageIndex ? 0 : 20,
+                            }}
+                            transition={{
+                              duration: 2.4,
+                              ease: [0.12, 1, 0.28, 1],
+                              delay: 1.6,
+                            }}
+                            style={{
+                              zIndex: index === currentImageIndex ? 2 : 1,
+                            }}
+                          >
+                            <motion.div
+                              className={`relative w-full h-full ${
+                                workVideos[src] ? "cursor-pointer group" : ""
+                              }`}
+                              onClick={() => {
+                                if (workVideos[src]) {
+                                  handleOpenVideoModal(src);
+                                }
+                              }}
+                            >
+                              <Image
+                                src={src}
+                                alt={`Work preview ${index + 1}`}
+                                width={1200}
+                                height={800}
+                                loader={imageLoader}
+                                className={`w-full bg-transparent max-w-full ${
+                                  workVideos[src]
+                                    ? "transition-all duration-300 hover:brightness-105"
+                                    : ""
+                                }`}
+                                style={{
+                                  objectPosition: "center center",
+                                  display: "block",
+                                  filter: !loadedImages[src]
+                                    ? "blur(20px)"
+                                    : "none",
+                                  opacity: !loadedImages[src] ? 0.5 : 1,
+                                  transition:
+                                    "filter 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
+                                }}
+                                onLoad={() => handleImageLoad(src)}
+                                loading={index < 3 ? "eager" : "lazy"}
+                                priority={index < 3}
+                                quality={index < 3 ? 90 : 75}
+                              />
+                              {workVideos[src] &&
+                                index === currentImageIndex && (
+                                  <div
+                                    className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                                    onClick={() => handleOpenVideoModal(src)}
+                                    style={{
+                                      pointerEvents: "auto",
+                                      zIndex: 3,
+                                    }}
+                                  >
+                                    <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110">
+                                      <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="white"
+                                        stroke="none"
+                                        className="ml-0.5"
+                                      >
+                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                      </svg>
+                                    </div>
+                                  </div>
+                                )}
+                            </motion.div>
+                          </motion.div>
+                        ))}
+
+                        {/* Placeholder for sizing (to maintain layout) */}
+                        <img
+                          src={images[0]}
+                          alt="Layout placeholder"
+                          className="w-full invisible"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hide "View all works" CTA on mobile */}
+                  {/* <div className="mt-4 hidden sm:block">
+                    <a
+                      href="https://deck.raf.works"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
                     >
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                  </a>
+                      View all works{" "}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        className="w-3.5 h-3.5 ml-1 relative -top-[0.5px]"
+                      >
+                        <rect
+                          x="3"
+                          y="11"
+                          width="18"
+                          height="11"
+                          rx="2"
+                          ry="2"
+                        />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                    </a>
+                  </div> */}
                 </div>
               </div>
-            </div>
-
-            {/* About Section */}
-            <section className="w-full">
-              <div className="space-y-8">
-                <div className="space-y-6">
-                  <p className="text-foreground/70 tracking-tight text-lg">
-                    Raf has designed and built products for{" "}
-                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                      Theoriq
-                    </span>
-                    ,{" "}
-                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                      CurbCutOS
-                    </span>
-                    , various crypto startups and{" "}
-                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                      Zalando
-                    </span>
-                    .<br /> He has also partnered with clients like{" "}
-                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                      w.ai
-                    </span>
-                    ,{" "}
-                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                      US.court
-                    </span>
-                    ,{" "}
-                    <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                      Artscapy
-                    </span>
-                    , and many more.
-                  </p>
-
-                  <p className="tracking-tight text-lg">
-                    <span className="text-foreground/70">
-                      Originally from{" "}
+              {/* 
+              {/* About Section 
+              <section className="w-full">
+                <div className="space-y-8">
+                  <div className="space-y-6">
+                    <p className="text-foreground/70 tracking-tight text-lg">
+                      Raf is a Product Designer. His contributions include{" "}
                       <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                        Italy
+                        Theoriq
                       </span>
-                      , where he studied software and design, and now{" "}
+                      ,{" "}
+                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                        CurbCutOS
+                      </span>
+                      , various crypto startups and{" "}
+                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                        Zalando
+                      </span>
+                      .<br /> He has also partnered with clients like{" "}
+                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                        w.ai
+                      </span>
+                      ,{" "}
+                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                        US.court
+                      </span>
+                      ,{" "}
+                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                        Artscapy
+                      </span>
+                      , and many more.
+                    </p>
+                    <p className="tracking-tight text-lg">
+                      <span className="text-foreground/70">
+                        Originally from{" "}
+                        <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
+                          Italy
+                        </span>
+                        , where he studied software and design, and now{" "}
+                        <span className="text-foreground font-medium">
+                          based in Toronto
+                        </span>
+                        ,<br /> Raf enjoys portraitures, yoga, and inspiring
+                        workspaces.{" "}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </section> */}
+
+              {/* About Section */}
+              <section className="w-full">
+                <div className="space-y-8">
+                  <div className="space-y-6">
+                    {/* 1. Identity line — bold, intentional */}
+
+                    {/* 2. Experience — clean and neutral */}
+                    <p className="text-foreground/70 tracking-tight text-lg">
+                      Raf has contributed to teams at{" "}
+                      <span className="hover:text-foreground transition-colors duration-300">
+                        Theoriq
+                      </span>
+                      ,{" "}
+                      <span className="hover:text-foreground transition-colors duration-300">
+                        CurbCutOS
+                      </span>
+                      ,{" "}
+                      <span className="hover:text-foreground transition-colors duration-300">
+                        Zalando
+                      </span>
+                      ; and partnered with clients including{" "}
+                      <span className="hover:text-foreground transition-colors duration-300">
+                        w.ai
+                      </span>
+                      ,{" "}
+                      <span className="hover:text-foreground transition-colors duration-300">
+                        US.court
+                      </span>
+                      ,{" "}
+                      <span className="hover:text-foreground transition-colors duration-300">
+                        Artscapy
+                      </span>
+                      .
+                    </p>
+
+                    {/* 3. Location + personal depth */}
+                    <p className="tracking-tight text-lg text-foreground/70">
+                      Born and raised on the{" "}
+                      <span className="hover:text-foreground transition-colors duration-300">
+                        Amalfi Coast
+                      </span>
+                      , influenced by Lisbon, and now{" "}
                       <span className="text-foreground font-medium">
                         based in Toronto
                       </span>
-                      ,<br /> Raf enjoys portraitures, yoga, and inspiring
-                      workspaces.{" "}
-                    </span>
-                  </p>
+                      , Raf blends structure and intuition. <br />
+                      Outside of work, he's into portraiture, yoga, and
+                      intentional spaces that feel alive.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            {/* Notes Section */}
-            <section className="w-full">
-              <div className="space-y-6">
-                <div className="flex flex-col divide-y divide-foreground/[0.03]">
-                  {sortedNotes.map((note, index) => (
-                    <motion.div
-                      key={note.id}
-                      id={`note-card-${index}`}
-                      className="py-5 first:pt-0 last:pb-0 cursor-pointer group relative note-card"
-                      initial={fadeInAnimation.initial}
-                      animate={{ opacity: 1 }}
-                      transition={{
-                        duration: 0.5,
-                        delay: index * 0.1,
-                      }}
-                      onClick={(e) => {
-                        // Find the correct index in the original notes array
-                        const originalIndex = notes.findIndex(
-                          (n) => n.id === note.id
-                        );
-                        handleOpenNoteWithAnimation(originalIndex, e);
-                      }}
-                    >
-                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-baseline relative">
-                        <div className="text-xs text-foreground/40 whitespace-nowrap min-w-[90px] font-light tracking-tight group-hover:text-foreground/50 transition-colors note-date">
-                          {new Date(note.date).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </div>
-                        <div className="flex-1 relative">
-                          <motion.div
-                            className={`absolute -left-3 top-1.5 w-1.5 h-1.5 rounded-full ${
-                              getCategoryColor(note.category).split(" ")[1]
-                            } opacity-70 group-hover:opacity-100 transition-opacity`}
-                            transition={{ duration: 0.2 }}
-                          />
-                          <div className="flex flex-col gap-1.5">
-                            <p className="text-base text-foreground group-hover:text-foreground transition-colors font-medium">
-                              {note.title}
-                            </p>
-                            <p className="text-sm text-foreground/60 dark:text-foreground/50 line-clamp-2 leading-relaxed group-hover:text-foreground/70 transition-colors">
-                              {note.excerpt ||
-                                note.content
-                                  .replace(/^#.*$/m, "")
-                                  .trim()
-                                  .split("\n")[0]}
-                            </p>
+              {/* Notes Section */}
+              <section className="w-full">
+                <div className="space-y-6">
+                  <div className="flex flex-col divide-y divide-foreground/[0.03]">
+                    {sortedNotes.map((note, index) => (
+                      <motion.div
+                        key={note.id}
+                        id={`note-card-${index}`}
+                        className="py-5 first:pt-0 last:pb-0 cursor-pointer group relative note-card"
+                        initial={fadeInAnimation.initial}
+                        animate={{ opacity: 1 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: index * 0.1,
+                        }}
+                        onClick={(e) => {
+                          // Find the correct index in the original notes array
+                          const originalIndex = notes.findIndex(
+                            (n) => n.id === note.id
+                          );
+                          handleOpenNoteWithAnimation(originalIndex, e);
+                        }}
+                      >
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-baseline relative">
+                          <div className="text-xs text-foreground/40 whitespace-nowrap min-w-[90px] font-light tracking-tight group-hover:text-foreground/50 transition-colors note-date">
+                            {new Date(note.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </div>
+                          <div className="flex-1 relative">
+                            <div className="flex flex-col gap-1.5">
+                              <p className="text-base text-foreground group-hover:text-foreground transition-colors font-medium">
+                                {note.title}
+                              </p>
+                              <p className="text-sm text-foreground/60 dark:text-foreground/50 line-clamp-2 leading-relaxed group-hover:text-foreground/70 transition-colors">
+                                {note.excerpt ||
+                                  note.content
+                                    .replace(/^#.*$/m, "")
+                                    .trim()
+                                    .split("\n")[0]}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* View all notes button */}
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    onClick={handleOpenAllNotes}
+                    className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
+                  >
+                    View all notes
+                  </motion.button>
                 </div>
+              </section>
 
-                {/* View all notes button */}
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  onClick={handleOpenAllNotes}
-                  className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
-                >
-                  View all notes
-                </motion.button>
-              </div>
-            </section>
+              <section className="w-full">
+                <div className="space-y-8">
+                  <div className="grid grid-cols-3 gap-3">
+                    {photos.slice(0, 3).map((photo, index) => (
+                      <motion.div
+                        key={index}
+                        className="aspect-[3/4] md:aspect-[2/3] cursor-pointer relative"
+                        initial={fadeInAnimation.initial}
+                        animate={{ opacity: loadedImages[photo.src] ? 1 : 0 }}
+                        transition={fadeInAnimation.transition}
+                        onClick={() => {
+                          setCurrentPhotoIndex(index);
+                          setIsPhotosModalOpen(true);
+                        }}
+                      >
+                        <img
+                          src={photo.src}
+                          alt={`Photo of ${photo.name}`}
+                          className="w-full h-full object-cover"
+                          onLoad={() => handleImageLoad(photo.src)}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPhotoIndex(0);
+                      setIsPhotosModalOpen(true);
+                    }}
+                    className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
+                  >
+                    View all photos
+                  </Link>
+                </div>
+              </section>
 
-            <section className="w-full">
-              <div className="space-y-8">
-                <div className="grid grid-cols-3 gap-3">
-                  {photos.slice(0, 3).map((photo, index) => (
-                    <motion.div
-                      key={index}
-                      className="aspect-[3/4] md:aspect-[2/3] cursor-pointer relative"
-                      initial={fadeInAnimation.initial}
-                      animate={{ opacity: loadedImages[photo.src] ? 1 : 0 }}
-                      transition={fadeInAnimation.transition}
-                      onClick={() => {
-                        setCurrentPhotoIndex(index);
-                        setIsPhotosModalOpen(true);
+              {/* Deep Interest Section - RESTORED */}
+              <section className="w-full">
+                <div className="space-y-8">
+                  <div className="space-y-6">
+                    <motion.p
+                      className="text-foreground/80 tracking-tight text-lg"
+                      initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      transition={{
+                        duration: 3.2,
+                        ease: [0.12, 1, 0.28, 1],
+                        delay: 0.7,
                       }}
                     >
-                      <img
-                        src={photo.src}
-                        alt={`Photo of ${photo.name}`}
-                        className="w-full h-full object-cover"
-                        onLoad={() => handleImageLoad(photo.src)}
-                      />
-                    </motion.div>
-                  ))}
+                      <motion.span
+                        initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                        animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        transition={{
+                          duration: 3.2,
+                          ease: [0.12, 1, 0.28, 1],
+                          delay: 0.8,
+                        }}
+                      >
+                        Raf is deeply interested in deepening the space between
+                        design and trust.
+                      </motion.span>
+                      <br />
+                      <motion.span
+                        className="text-foreground/60"
+                        initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                        animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        transition={{
+                          duration: 3.2,
+                          ease: [0.12, 1, 0.28, 1],
+                          delay: 0.9,
+                        }}
+                      >
+                        Outside of design: portraiture, yoga, and inspiring
+                        workspaces.
+                      </motion.span>
+                    </motion.p>
+                  </div>
                 </div>
-                <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentPhotoIndex(0);
-                    setIsPhotosModalOpen(true);
+              </section>
+            </motion.div>
+
+            {/* Weather effect overlay */}
+            <AnimatePresence>
+              {weatherState.showWeatherEffect && weatherState.clickPosition && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{
+                    opacity: scrollY > 80 ? 0 : 1,
+                    y: 0,
+                    translateY:
+                      scrollY > 10 ? `-${Math.min(scrollY / 2, 50)}%` : 0,
                   }}
-                  className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
-                >
-                  View all photos
-                </Link>
-              </div>
-            </section>
-
-            <section className="w-full">
-              <div className="space-y-8 max-w-2xl relative z-20">
-                <div>
-                  <p className="text-sm text-foreground/50 mb-1">Email</p>
-                  <a
-                    href="mailto:raf@raf.works"
-                    className="text-base text-foreground/80 hover:text-foreground transition-colors"
-                  >
-                    raf@raf.works
-                  </a>
-                </div>
-
-                <div>
-                  <p className="text-sm text-foreground/50 mb-1">LinkedIn</p>
-                  <a
-                    href="https://www.linkedin.com/in/raffaelevitaledesign"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-base text-foreground/80 hover:text-foreground transition-colors"
-                  >
-                    raffaelevitaledesign
-                  </a>
-                </div>
-
-                <div>
-                  <p className="text-sm text-foreground/50 mb-1">Twitter/X</p>
-                  <a
-                    href="https://twitter.com/lfgraf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-base text-foreground/80 hover:text-foreground transition-colors"
-                  >
-                    lfgraf
-                  </a>
-                </div>
-              </div>
-            </section>
-          </motion.div>
-
-          {/* Weather effect overlay */}
-          <AnimatePresence>
-            {weatherState.showWeatherEffect && weatherState.clickPosition && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{
-                  opacity: scrollY > 80 ? 0 : 1,
-                  y: 0,
-                  translateY:
-                    scrollY > 10 ? `-${Math.min(scrollY / 2, 50)}%` : 0,
-                }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{
-                  duration: 0.6,
-                  ease: [0.22, 1, 0.36, 1],
-                  opacity: { duration: 0.3 },
-                }}
-                className="fixed inset-x-0 top-0 pointer-events-auto z-50 overflow-hidden"
-                style={{
-                  height: "auto",
-                }}
-              >
-                {/* Weather banner */}
-                <div
-                  className="w-full backdrop-blur-sm relative overflow-hidden"
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{
+                    duration: 0.6,
+                    ease: [0.22, 1, 0.36, 1],
+                    opacity: { duration: 0.3 },
+                  }}
+                  className="fixed inset-x-0 top-0 pointer-events-auto z-50 overflow-hidden"
                   style={{
-                    background: `${getWeatherColor()}`,
-                    boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-                    animation: "weatherBannerGlow 3s infinite ease-in-out",
-                    transition:
-                      "background-color 0.6s ease-in-out, transform 0.6s ease-in-out",
+                    height: "auto",
                   }}
-                  aria-live="polite"
-                  role="status"
                 >
-                  <motion.main className="px-6 sm:px-10 md:px-28 relative overflow-x-hidden">
-                    <div className="w-full max-w-screen-xl mx-auto relative">
-                      <div className="md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20 w-full">
-                        <div className="hidden md:block" />
-                        <div className="flex items-center justify-between py-3 w-full">
-                          <div className="flex items-center space-x-3">
-                            {weatherState.condition && (
+                  {/* Weather banner */}
+                  <div
+                    className="w-full backdrop-blur-sm relative overflow-hidden"
+                    style={{
+                      background: `${getWeatherColor()}`,
+                      boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+                      animation: "weatherBannerGlow 3s infinite ease-in-out",
+                      transition:
+                        "background-color 0.6s ease-in-out, transform 0.6s ease-in-out",
+                    }}
+                    aria-live="polite"
+                    role="status"
+                  >
+                    <motion.main className="px-6 sm:px-10 md:px-28 relative overflow-x-hidden">
+                      <div className="w-full max-w-screen-xl mx-auto relative">
+                        <div className="md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20 w-full">
+                          <div className="hidden md:block" />
+                          <div className="flex items-center justify-between py-3 w-full">
+                            <div className="flex items-center space-x-3">
+                              {weatherState.condition && (
+                                <motion.span
+                                  className="mr-2 text-xs flex items-center justify-center"
+                                  animate={{
+                                    rotate:
+                                      weatherState.condition === "Snow"
+                                        ? [0, 10, -10, 0]
+                                        : 0,
+                                    scale:
+                                      weatherState.condition === "Thunderstorm"
+                                        ? [1, 1.1, 1]
+                                        : 1,
+                                  }}
+                                  transition={{
+                                    duration:
+                                      weatherState.condition === "Snow"
+                                        ? 4
+                                        : 0.3,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                  }}
+                                >
+                                  {getWeatherIcon(weatherState.condition)}
+                                </motion.span>
+                              )}
                               <motion.span
-                                className="mr-2 text-xs flex items-center justify-center"
+                                className="font-light text-xs flex items-center"
                                 animate={{
-                                  rotate:
-                                    weatherState.condition === "Snow"
-                                      ? [0, 10, -10, 0]
-                                      : 0,
-                                  scale:
-                                    weatherState.condition === "Thunderstorm"
-                                      ? [1, 1.1, 1]
-                                      : 1,
+                                  opacity: [0.8, 1, 0.8],
                                 }}
                                 transition={{
-                                  duration:
-                                    weatherState.condition === "Snow" ? 4 : 0.3,
+                                  duration: 3,
                                   repeat: Infinity,
                                   ease: "easeInOut",
                                 }}
                               >
-                                {getWeatherIcon(weatherState.condition)}
+                                Raf is in {weatherState.location} - where it's{" "}
+                                {weatherState.condition?.toLowerCase() ||
+                                  "clear"}{" "}
+                                and {weatherState.temperature}°C
                               </motion.span>
-                            )}
-                            <motion.span
-                              className="font-light text-xs flex items-center"
-                              animate={{
-                                opacity: [0.8, 1, 0.8],
-                              }}
-                              transition={{
-                                duration: 3,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                              }}
+                            </div>
+                            <button
+                              onClick={() =>
+                                setWeatherState((prev) => ({
+                                  ...prev,
+                                  showWeatherEffect: false,
+                                }))
+                              }
+                              className="text-foreground/60 hover:text-foreground/80 transition-colors relative z-10"
+                              aria-label="Close weather banner"
                             >
-                              Raf is in {weatherState.location} - where it's{" "}
-                              {weatherState.condition?.toLowerCase() || "clear"}{" "}
-                              and {weatherState.temperature}°C
-                            </motion.span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                              </svg>
+                            </button>
                           </div>
-                          <button
-                            onClick={() =>
-                              setWeatherState((prev) => ({
-                                ...prev,
-                                showWeatherEffect: false,
-                              }))
-                            }
-                            className="text-foreground/60 hover:text-foreground/80 transition-colors relative z-10"
-                            aria-label="Close weather banner"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <line x1="18" y1="6" x2="6" y2="18"></line>
-                              <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                          </button>
                         </div>
                       </div>
+                    </motion.main>
+                  </div>
+
+                  {/* Background effect */}
+                  <div
+                    className="absolute w-full h-[300px] blur-[100px] -z-10"
+                    style={{
+                      background: getWeatherColor(),
+                      opacity: 0.6,
+                      top: "-150px",
+                    }}
+                  ></div>
+
+                  {/* Weather animation effects based on condition */}
+                  {(weatherState.condition === "Rain" ||
+                    weatherState.condition === "Drizzle") && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                      {[...Array(25)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-[1px] h-[10px] bg-blue-200/50"
+                          style={{
+                            left: `${Math.random() * 100}%`,
+                            top: `-10px`,
+                            animationDuration: `${0.5 + Math.random() * 0.7}s`,
+                            animationDelay: `${Math.random() * 0.5}s`,
+                            animationIterationCount: "infinite",
+                            animationName: "rainDrop",
+                            animationTimingFunction: "ease-in-out",
+                          }}
+                        ></div>
+                      ))}
                     </div>
-                  </motion.main>
-                </div>
+                  )}
 
-                {/* Background effect */}
-                <div
-                  className="absolute w-full h-[300px] blur-[100px] -z-10"
-                  style={{
-                    background: getWeatherColor(),
-                    opacity: 0.6,
-                    top: "-150px",
-                  }}
-                ></div>
+                  {weatherState.condition === "Snow" && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                      {[...Array(30)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute rounded-full bg-white/80"
+                          style={{
+                            width: `${2 + Math.random() * 3}px`,
+                            height: `${2 + Math.random() * 3}px`,
+                            left: `${Math.random() * 100}%`,
+                            top: `-5px`,
+                            animationDuration: `${2 + Math.random() * 3}s`,
+                            animationDelay: `${Math.random() * 1}s`,
+                            animationIterationCount: "infinite",
+                            animationName: "snowfall",
+                            animationTimingFunction: "ease-in-out",
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
 
-                {/* Weather animation effects based on condition */}
-                {(weatherState.condition === "Rain" ||
-                  weatherState.condition === "Drizzle") && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    {[...Array(25)].map((_, i) => (
+                  {weatherState.condition === "Thunderstorm" && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
                       <div
-                        key={i}
-                        className="absolute w-[1px] h-[10px] bg-blue-200/50"
+                        className="absolute inset-0 bg-blue-900/10"
                         style={{
-                          left: `${Math.random() * 100}%`,
-                          top: `-10px`,
-                          animationDuration: `${0.5 + Math.random() * 0.7}s`,
-                          animationDelay: `${Math.random() * 0.5}s`,
+                          animationDuration: "4s",
                           animationIterationCount: "infinite",
-                          animationName: "rainDrop",
-                          animationTimingFunction: "ease-in-out",
+                          animationName: "lightning",
+                          animationTimingFunction: "ease-out",
                         }}
                       ></div>
-                    ))}
-                  </div>
-                )}
+                      {/* Add rain drops for thunderstorm too */}
+                      {[...Array(20)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-[1px] h-[15px] bg-blue-200/40"
+                          style={{
+                            left: `${Math.random() * 100}%`,
+                            top: `-15px`,
+                            animationDuration: `${0.3 + Math.random() * 0.5}s`,
+                            animationDelay: `${Math.random() * 0.5}s`,
+                            animationIterationCount: "infinite",
+                            animationName: "rainDrop",
+                            animationTimingFunction: "linear",
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
 
-                {weatherState.condition === "Snow" && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    {[...Array(30)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute rounded-full bg-white/80"
-                        style={{
-                          width: `${2 + Math.random() * 3}px`,
-                          height: `${2 + Math.random() * 3}px`,
-                          left: `${Math.random() * 100}%`,
-                          top: `-5px`,
-                          animationDuration: `${2 + Math.random() * 3}s`,
-                          animationDelay: `${Math.random() * 1}s`,
-                          animationIterationCount: "infinite",
-                          animationName: "snowfall",
-                          animationTimingFunction: "ease-in-out",
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                )}
+                  {(weatherState.condition === "Fog" ||
+                    weatherState.condition === "Mist" ||
+                    weatherState.condition === "Haze") && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                      {[...Array(6)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute h-[40px] w-full bg-gray-200/15 rounded-full blur-xl"
+                          style={{
+                            top: `${5 + i * 12}px`,
+                            left: `${i % 2 === 0 ? -10 : 10}%`,
+                            animationDuration: `${15 + Math.random() * 10}s`,
+                            animationDelay: `${i * 1.5}s`,
+                            animationIterationCount: "infinite",
+                            animationName: "fogMove",
+                            animationTimingFunction: "ease-in-out",
+                            animationDirection:
+                              i % 2 === 0 ? "normal" : "reverse",
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
 
-                {weatherState.condition === "Thunderstorm" && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div
-                      className="absolute inset-0 bg-blue-900/10"
-                      style={{
-                        animationDuration: "4s",
-                        animationIterationCount: "infinite",
-                        animationName: "lightning",
-                        animationTimingFunction: "ease-out",
-                      }}
-                    ></div>
-                    {/* Add rain drops for thunderstorm too */}
-                    {[...Array(20)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute w-[1px] h-[15px] bg-blue-200/40"
-                        style={{
-                          left: `${Math.random() * 100}%`,
-                          top: `-15px`,
-                          animationDuration: `${0.3 + Math.random() * 0.5}s`,
-                          animationDelay: `${Math.random() * 0.5}s`,
-                          animationIterationCount: "infinite",
-                          animationName: "rainDrop",
-                          animationTimingFunction: "linear",
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                )}
+                  {weatherState.condition === "Clear" && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                      {[...Array(5)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute rounded-full"
+                          style={{
+                            background: "rgba(255, 200, 0, 0.2)",
+                            width: `${30 + i * 10}px`,
+                            height: `${30 + i * 10}px`,
+                            left: `${20 + i * 15}%`,
+                            top: `${10 + i * 5}px`,
+                            filter: "blur(8px)",
+                            opacity: 0.6 - i * 0.1,
+                            transform: `scale(${1 + i * 0.1})`,
+                            animation: `pulse ${
+                              3 + i
+                            }s infinite alternate ease-in-out`,
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
 
-                {(weatherState.condition === "Fog" ||
-                  weatherState.condition === "Mist" ||
-                  weatherState.condition === "Haze") && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    {[...Array(6)].map((_, i) => (
+                  {weatherState.condition === "Partly Cloudy" && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
                       <div
-                        key={i}
-                        className="absolute h-[40px] w-full bg-gray-200/15 rounded-full blur-xl"
-                        style={{
-                          top: `${5 + i * 12}px`,
-                          left: `${i % 2 === 0 ? -10 : 10}%`,
-                          animationDuration: `${15 + Math.random() * 10}s`,
-                          animationDelay: `${i * 1.5}s`,
-                          animationIterationCount: "infinite",
-                          animationName: "fogMove",
-                          animationTimingFunction: "ease-in-out",
-                          animationDirection:
-                            i % 2 === 0 ? "normal" : "reverse",
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                )}
-
-                {weatherState.condition === "Clear" && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
                         className="absolute rounded-full"
                         style={{
                           background: "rgba(255, 200, 0, 0.2)",
-                          width: `${30 + i * 10}px`,
-                          height: `${30 + i * 10}px`,
-                          left: `${20 + i * 15}%`,
-                          top: `${10 + i * 5}px`,
+                          width: "50px",
+                          height: "50px",
+                          left: "30%",
+                          top: "15px",
                           filter: "blur(8px)",
-                          opacity: 0.6 - i * 0.1,
-                          transform: `scale(${1 + i * 0.1})`,
-                          animation: `pulse ${
-                            3 + i
-                          }s infinite alternate ease-in-out`,
+                          opacity: 0.6,
+                          animation: "pulse 4s infinite alternate ease-in-out",
                         }}
                       ></div>
-                    ))}
-                  </div>
-                )}
+                      {[...Array(3)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute rounded-full bg-gray-200/30"
+                          style={{
+                            width: `${40 + i * 15}px`,
+                            height: `${20 + i * 8}px`,
+                            left: `${40 + i * 15}%`,
+                            top: `${15 + i * 5}px`,
+                            filter: "blur(8px)",
+                            opacity: 0.5 - i * 0.1,
+                            animation: `fogMove ${
+                              10 + i * 5
+                            }s infinite alternate ease-in-out`,
+                            animationDelay: `${i * 2}s`,
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                {weatherState.condition === "Partly Cloudy" && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div
-                      className="absolute rounded-full"
-                      style={{
-                        background: "rgba(255, 200, 0, 0.2)",
-                        width: "50px",
-                        height: "50px",
-                        left: "30%",
-                        top: "15px",
-                        filter: "blur(8px)",
-                        opacity: 0.6,
-                        animation: "pulse 4s infinite alternate ease-in-out",
-                      }}
-                    ></div>
-                    {[...Array(3)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute rounded-full bg-gray-200/30"
-                        style={{
-                          width: `${40 + i * 15}px`,
-                          height: `${20 + i * 8}px`,
-                          left: `${40 + i * 15}%`,
-                          top: `${15 + i * 5}px`,
-                          filter: "blur(8px)",
-                          opacity: 0.5 - i * 0.1,
-                          animation: `fogMove ${
-                            10 + i * 5
-                          }s infinite alternate ease-in-out`,
-                          animationDelay: `${i * 2}s`,
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Photos Modal */}
-          <AnimatePresence>
-            {isPhotosModalOpen && (
-              <>
-                {/* Fixed backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                  onClick={() => setIsPhotosModalOpen(false)}
-                />
-
-                {/* Scrollable content */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="fixed inset-0 z-50 overflow-y-auto"
-                  onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                      setIsPhotosModalOpen(false);
-                    }
-                  }}
-                >
-                  {/* Sticky close button */}
-                  <motion.button
+            {/* Photos Modal */}
+            <AnimatePresence>
+              {isPhotosModalOpen && (
+                <>
+                  {/* Fixed backdrop */}
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ delay: 0.2, duration: 0.3 }}
-                    className="sticky top-6 float-right mr-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+                    onClick={() => setIsPhotosModalOpen(false)}
+                  />
+
+                  {/* Scrollable content */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 z-50 overflow-y-auto"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      setIsPhotosModalOpen(false);
+                      if (e.target === e.currentTarget) {
+                        setIsPhotosModalOpen(false);
+                      }
                     }}
                   >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  </motion.button>
-
-                  {/* Content container */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
-                  >
-                    {/* Photos grid */}
-                    <div className="grid grid-cols-1 gap-16 md:gap-24">
-                      {photos.map((photo, index) => (
-                        <motion.div
-                          key={index}
-                          ref={(el) => {
-                            photoRefs.current[index] = el;
-                          }}
-                          className="aspect-[3/4] cursor-pointer relative max-w-2xl mx-auto w-full"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{
-                            opacity: loadedImages[photo.src] ? 1 : 0,
-                            y: loadedImages[photo.src] ? 0 : 10,
-                          }}
-                          transition={{
-                            duration: 0.5,
-                            delay: index * 0.05,
-                          }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <img
-                            src={photo.src}
-                            alt={`Photo of ${photo.name}`}
-                            className="w-full h-full object-cover"
-                            onLoad={() => handleImageLoad(photo.src)}
-                          />
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 flex justify-center items-center">
-                            <span className="text-white text-sm font-light">
-                              {photo.name}
-                            </span>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-
-          {/* Notes Modal */}
-          <AnimatePresence>
-            {isNotesModalOpen && (
-              <>
-                {/* Fixed backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                  onClick={handleCloseNote}
-                />
-
-                {/* Scrollable content */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="fixed inset-0 z-50 flex items-center justify-center"
-                  onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                      handleCloseNote(e);
-                    }
-                  }}
-                  // Add tabIndex to prevent focus issues on mobile
-                  tabIndex={-1}
-                  // Add outline: none to remove focus outline
-                  style={{ outline: "none" }}
-                >
-                  {/* Card stack container - centered in viewport */}
-                  <div className="w-full max-w-3xl mx-auto px-4 relative">
-                    {/* Background cards for stack effect - hide on mobile */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, rotate: -0.5 }}
-                      animate={{ opacity: 1, y: 0, rotate: -0.5 }}
-                      exit={{ opacity: 0, y: -5, rotate: -0.5 }}
-                      transition={{ duration: 0.5, delay: 0.1 }}
-                      className="absolute inset-x-0 top-4 mx-auto w-[98%] h-[calc(100%-16px)] bg-white/80 dark:bg-zinc-900/80 rounded-xl shadow-lg -z-10 hidden sm:block"
-                      style={{
-                        boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.05)",
-                      }}
-                    ></motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, rotate: 0.5 }}
-                      animate={{ opacity: 1, y: 0, rotate: 0.5 }}
-                      exit={{ opacity: 0, y: -5, rotate: 0.5 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                      className="absolute inset-x-0 top-2 mx-auto w-[99%] h-[calc(100%-8px)] bg-white/90 dark:bg-zinc-900/90 rounded-xl shadow-lg -z-20 hidden sm:block"
-                      style={{
-                        boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.08)",
-                      }}
-                    ></motion.div>
-
-                    {/* Main content card with horizontal transition */}
-                    <AnimatePresence
-                      initial={false}
-                      custom={direction}
-                      mode="wait"
-                    >
-                      <motion.div
-                        key={currentNoteIndex}
-                        custom={direction}
-                        variants={cardVariants}
-                        initial={isNotesModalOpen ? "enter" : false}
-                        animate="center"
-                        exit="exit"
-                        className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative sm:rounded-xl sm:w-full shadow-lg"
-                        style={{
-                          backdropFilter: "blur(10px)",
-                          WebkitBackdropFilter: "blur(10px)",
-                        }}
-                        id={`note-card-modal-${currentNoteIndex}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {/* Card inner content with padding */}
-                        <div className="px-8 md:px-16 py-20 pb-32 overflow-y-auto max-h-[85vh]">
-                          {/* Header area with controls */}
-                          <div className="absolute top-0 left-0 right-0 h-28 px-8 md:px-16 flex items-center justify-between bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm z-10 border-b border-foreground/[0.03]">
-                            {/* Left side - Date and Title */}
-                            <div className="flex flex-col">
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.2 }}
-                                className="text-sm text-foreground/40 font-light tracking-wide"
-                              >
-                                {new Date(
-                                  notes[currentNoteIndex].date
-                                ).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })}
-                              </motion.div>
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.2 }}
-                                className="text-xl font-medium text-foreground mt-1.5 tracking-tight"
-                              >
-                                {notes[currentNoteIndex].title}
-                              </motion.div>
-                            </div>
-
-                            {/* Right side - Category and Close button */}
-                            <div className="flex items-center gap-4">
-                              {/* Category badge */}
-                              <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2, duration: 0.4 }}
-                                className={`text-sm px-4 py-1.5 rounded-full font-light tracking-wide ${getCategoryColor(
-                                  notes[currentNoteIndex].category
-                                )}`}
-                              >
-                                {notes[currentNoteIndex].category}
-                              </motion.div>
-
-                              {/* Close button - for all devices */}
-                              <motion.button
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="rounded-full bg-gray-200/20 backdrop-blur-sm p-2.5 hover:bg-gray-200/30 transition-colors"
-                                onClick={handleCloseNote}
-                                aria-label="Close note"
-                              >
-                                <svg
-                                  width="20"
-                                  height="20"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                >
-                                  <path d="M18 6L6 18M6 6l12 12" />
-                                </svg>
-                              </motion.button>
-                            </div>
-                          </div>
-
-                          {/* Content area with enhanced typography */}
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className="prose dark:prose-invert max-w-none mt-16 relative pb-8 sm:pb-0 min-h-[40vh] note-content"
-                          >
-                            <motion.div
-                              key={currentNoteIndex}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              transition={{
-                                duration: 0.4,
-                                ease: [0.22, 1, 0.36, 1],
-                              }}
-                              className="text-foreground/70 leading-relaxed tracking-wide"
-                            >
-                              <ReactMarkdown
-                                components={{
-                                  h1: ({ node, ...props }) => null,
-                                  p: ({ node, children, ...props }) => (
-                                    <p className="leading-relaxed" {...props}>
-                                      {children}
-                                    </p>
-                                  ),
-                                  blockquote: ({
-                                    node,
-                                    children,
-                                    ...props
-                                  }) => (
-                                    <blockquote className="!pl-6" {...props}>
-                                      {children}
-                                    </blockquote>
-                                  ),
-                                }}
-                              >
-                                {notes[currentNoteIndex].content}
-                              </ReactMarkdown>
-                            </motion.div>
-                          </motion.div>
-
-                          {/* Navigation controls with enhanced styling */}
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3, duration: 0.5 }}
-                            className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-8 md:px-16 py-4 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border-t border-foreground/[0.03]"
-                          >
-                            {/* Left side - Previous note */}
-                            <motion.button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handlePrevNoteWithDirection();
-                              }}
-                              className="flex items-center gap-2 text-sm text-foreground/40 hover:text-foreground transition-colors group"
-                              aria-label="Previous note"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                className="transform transition-transform group-hover:-translate-x-0.5"
-                              >
-                                <path d="M19 12H5M12 19l-7-7 7-7" />
-                              </svg>
-                              <span className="hidden sm:inline">Previous</span>
-                            </motion.button>
-
-                            {/* Center - Note selector dots */}
-                            <div className="flex items-center gap-2">
-                              {notes.map((_, index) => (
-                                <motion.button
-                                  key={index}
-                                  whileHover={{ scale: 1.2 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigateWithDirection(
-                                      index > currentNoteIndex ? 1 : -1,
-                                      index
-                                    );
-                                  }}
-                                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                                    currentNoteIndex === index
-                                      ? "bg-foreground w-3"
-                                      : "bg-foreground/30"
-                                  }`}
-                                  aria-label={`Go to note ${index + 1}`}
-                                />
-                              ))}
-                            </div>
-
-                            {/* Right side - Next note */}
-                            <motion.button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleNextNoteWithDirection();
-                              }}
-                              className="flex items-center gap-2 text-sm text-foreground/40 hover:text-foreground transition-colors group"
-                              aria-label="Next note"
-                            >
-                              <span className="hidden sm:inline">Next</span>
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                className="transform transition-transform group-hover:translate-x-0.5"
-                              >
-                                <path d="M5 12h14M12 5l7 7-7 7" />
-                              </svg>
-                            </motion.button>
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-
-          {/* All Notes Modal */}
-          <AnimatePresence>
-            {isAllNotesModalOpen && (
-              <>
-                {/* Fixed backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                  onClick={() => setIsAllNotesModalOpen(false)}
-                />
-
-                {/* Scrollable content */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="fixed inset-0 z-50 overflow-y-auto"
-                  onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                      setIsAllNotesModalOpen(false);
-                    }
-                  }}
-                >
-                  {/* Content container */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* Close button - positioned in top right */}
+                    {/* Sticky close button */}
                     <motion.button
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ delay: 0.2, duration: 0.3 }}
-                      className="absolute top-6 right-6 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                      className="sticky top-6 float-right mr-6 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setIsAllNotesModalOpen(false);
+                        setIsPhotosModalOpen(false);
                       }}
-                      aria-label="Close all notes"
                     >
                       <svg
                         width="24"
@@ -2509,149 +2396,691 @@ export default function Page() {
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
+                        className="transition-transform duration-300 hover:scale-110"
                       >
                         <path d="M18 6L6 18M6 6l12 12" />
                       </svg>
                     </motion.button>
 
-                    <div className="flex flex-col divide-y divide-foreground/10 mt-8">
-                      {notes
-                        .sort(
-                          (a, b) =>
-                            new Date(b.date).getTime() -
-                            new Date(a.date).getTime()
-                        )
-                        .map((note, index) => (
+                    {/* Content container */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
+                    >
+                      {/* Photos grid */}
+                      <div className="grid grid-cols-1 gap-16 md:gap-24">
+                        {photos.map((photo, index) => (
                           <motion.div
-                            key={note.id}
-                            className="py-6 first:pt-0 cursor-pointer"
+                            key={index}
+                            ref={(el) => {
+                              photoRefs.current[index] = el;
+                            }}
+                            className="aspect-[3/4] cursor-pointer relative max-w-2xl mx-auto w-full"
                             initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            animate={{
+                              opacity: loadedImages[photo.src] ? 1 : 0,
+                              y: loadedImages[photo.src] ? 0 : 10,
+                            }}
                             transition={{
-                              duration: 0.3,
+                              duration: 0.5,
                               delay: index * 0.05,
                             }}
-                            whileHover={{ x: 2 }}
-                            onClick={() => {
-                              setCurrentNoteIndex(index);
-                              setIsAllNotesModalOpen(false);
-                              setTimeout(() => setIsNotesModalOpen(true), 100);
-                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
-                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
-                                {new Date(note.date).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  }
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-lg text-foreground hover:text-foreground/90 transition-colors mb-1">
-                                  {note.title}
-                                </p>
-                                <p className="text-base text-foreground/60 line-clamp-2">
-                                  {note.excerpt}
-                                </p>
-                              </div>
+                            <img
+                              src={photo.src}
+                              alt={`Photo of ${photo.name}`}
+                              className="w-full h-full object-cover"
+                              onLoad={() => handleImageLoad(photo.src)}
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 flex justify-center items-center">
+                              <span className="text-white text-sm font-light">
+                                {photo.name}
+                              </span>
                             </div>
                           </motion.div>
                         ))}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+
+            {/* Notes Modal */}
+            <AnimatePresence>
+              {isNotesModalOpen && (
+                <>
+                  {/* Fixed backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+                    onClick={handleCloseNote}
+                  />
+
+                  {/* Scrollable content */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 z-50 flex items-center justify-center"
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
+                        handleCloseNote(e);
+                      }
+                    }}
+                    // Add tabIndex to prevent focus issues on mobile
+                    tabIndex={-1}
+                    // Add outline: none to remove focus outline
+                    style={{ outline: "none" }}
+                  >
+                    {/* Card stack container - centered in viewport */}
+                    <div className="w-full max-w-3xl mx-auto px-4 relative">
+                      {/* Background cards for stack effect - hide on mobile */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, rotate: -0.5 }}
+                        animate={{ opacity: 1, y: 0, rotate: -0.5 }}
+                        exit={{ opacity: 0, y: -5, rotate: -0.5 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="absolute inset-x-0 top-4 mx-auto w-[98%] h-[calc(100%-16px)] bg-white/80 dark:bg-zinc-900/80 rounded-xl shadow-lg -z-10 hidden sm:block"
+                        style={{
+                          boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.05)",
+                        }}
+                      ></motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, rotate: 0.5 }}
+                        animate={{ opacity: 1, y: 0, rotate: 0.5 }}
+                        exit={{ opacity: 0, y: -5, rotate: 0.5 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="absolute inset-x-0 top-2 mx-auto w-[99%] h-[calc(100%-8px)] bg-white/90 dark:bg-zinc-900/90 rounded-xl shadow-lg -z-20 hidden sm:block"
+                        style={{
+                          boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.08)",
+                        }}
+                      ></motion.div>
+
+                      {/* Main content card with horizontal transition */}
+                      <AnimatePresence
+                        initial={false}
+                        custom={direction}
+                        mode="wait"
+                      >
+                        <motion.div
+                          key={currentNoteIndex}
+                          custom={direction}
+                          variants={cardVariants}
+                          initial={isNotesModalOpen ? "enter" : false}
+                          animate="center"
+                          exit="exit"
+                          className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative sm:rounded-xl sm:w-full shadow-lg"
+                          style={{
+                            backdropFilter: "blur(10px)",
+                            WebkitBackdropFilter: "blur(10px)",
+                          }}
+                          id={`note-card-modal-${currentNoteIndex}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* Card inner content with padding */}
+                          <div className="px-8 md:px-16 py-20 pb-32 overflow-y-auto max-h-[85vh]">
+                            {/* Header area with controls */}
+                            <div className="absolute top-0 left-0 right-0 h-28 px-8 md:px-16 flex items-center justify-between bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm z-10 border-b border-foreground/[0.03]">
+                              {/* Left side - Date and Title */}
+                              <div className="flex flex-col">
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="text-sm text-foreground/40 font-light tracking-wide"
+                                >
+                                  {new Date(
+                                    notes[currentNoteIndex].date
+                                  ).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </motion.div>
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="text-xl font-medium text-foreground mt-1.5 tracking-tight"
+                                >
+                                  {notes[currentNoteIndex].title}
+                                </motion.div>
+                              </div>
+
+                              {/* Right side - Close button */}
+                              <div className="flex items-center gap-4">
+                                {/* Close button - for all devices */}
+                                <motion.button
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
+                                  onClick={handleCloseNote}
+                                  aria-label="Close note"
+                                >
+                                  <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    className="transition-transform duration-300 hover:scale-110"
+                                  >
+                                    <path d="M18 6L6 18M6 6l12 12" />
+                                  </svg>
+                                </motion.button>
+                              </div>
+                            </div>
+
+                            {/* Content area with enhanced typography */}
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3, ease: "easeInOut" }}
+                              className="prose dark:prose-invert max-w-none mt-16 relative pb-8 sm:pb-0 min-h-[40vh] note-content"
+                            >
+                              <motion.div
+                                key={currentNoteIndex}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{
+                                  duration: 0.4,
+                                  ease: [0.22, 1, 0.36, 1],
+                                }}
+                                className="text-foreground/70 leading-relaxed tracking-wide"
+                              >
+                                <ReactMarkdown
+                                  components={{
+                                    h1: ({ node, ...props }) => null,
+                                    p: ({ node, children, ...props }) => (
+                                      <p className="leading-relaxed" {...props}>
+                                        {children}
+                                      </p>
+                                    ),
+                                    blockquote: ({
+                                      node,
+                                      children,
+                                      ...props
+                                    }) => (
+                                      <blockquote className="!pl-6" {...props}>
+                                        {children}
+                                      </blockquote>
+                                    ),
+                                  }}
+                                >
+                                  {notes[currentNoteIndex].content}
+                                </ReactMarkdown>
+                              </motion.div>
+                            </motion.div>
+
+                            {/* Navigation controls with enhanced styling */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.3, duration: 0.5 }}
+                              className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-8 md:px-16 py-4 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border-t border-foreground/[0.03]"
+                            >
+                              {/* Left side - Previous note */}
+                              <motion.button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePrevNoteWithDirection();
+                                }}
+                                className="flex items-center gap-2 text-sm text-foreground/40 hover:text-foreground transition-colors group"
+                                aria-label="Previous note"
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  className="transform transition-transform group-hover:-translate-x-0.5"
+                                >
+                                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                                </svg>
+                                <span className="hidden sm:inline">
+                                  Previous
+                                </span>
+                              </motion.button>
+
+                              {/* Center - Note selector dots */}
+                              <div className="flex items-center gap-2">
+                                {notes.map((_, index) => (
+                                  <motion.button
+                                    key={index}
+                                    whileHover={{ scale: 1.2 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigateWithDirection(
+                                        index > currentNoteIndex ? 1 : -1,
+                                        index
+                                      );
+                                    }}
+                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                                      currentNoteIndex === index
+                                        ? "bg-foreground w-3"
+                                        : "bg-foreground/30"
+                                    }`}
+                                    aria-label={`Go to note ${index + 1}`}
+                                  />
+                                ))}
+                              </div>
+
+                              {/* Right side - Next note */}
+                              <motion.button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleNextNoteWithDirection();
+                                }}
+                                className="flex items-center gap-2 text-sm text-foreground/40 hover:text-foreground transition-colors group"
+                                aria-label="Next note"
+                              >
+                                <span className="hidden sm:inline">Next</span>
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  className="transform transition-transform group-hover:translate-x-0.5"
+                                >
+                                  <path d="M5 12h14M12 5l7 7-7 7" />
+                                </svg>
+                              </motion.button>
+                            </motion.div>
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
                   </motion.div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.main>
+                </>
+              )}
+            </AnimatePresence>
 
-      <ImagePreloader />
+            {/* All Notes Modal */}
+            <AnimatePresence>
+              {isAllNotesModalOpen && (
+                <>
+                  {/* Fixed backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+                    onClick={() => setIsAllNotesModalOpen(false)}
+                  />
 
-      {/* Video Modal */}
-      <AnimatePresence>
-        {isVideoModalOpen && currentVideoUrl && (
-          <>
-            {/* Fixed backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-0 backdrop-blur-md bg-black/85 z-50"
-              onClick={handleCloseVideoModal}
-            />
+                  {/* Scrollable content */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 z-50 overflow-y-auto"
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
+                        setIsAllNotesModalOpen(false);
+                      }
+                    }}
+                  >
+                    {/* Content container */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Close button - positioned in top right */}
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ delay: 0.2, duration: 0.3 }}
+                        className="absolute top-6 right-6 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsAllNotesModalOpen(false);
+                        }}
+                        aria-label="Close all notes"
+                      >
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="transition-transform duration-300 hover:scale-110"
+                        >
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </motion.button>
 
-            {/* Scrollable content */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-              onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                  handleCloseVideoModal();
-                }
-              }}
-            >
-              {/* Sticky close button */}
-              <motion.button
+                      <div className="flex flex-col divide-y divide-foreground/10 mt-8">
+                        {notes
+                          .sort(
+                            (a, b) =>
+                              new Date(b.date).getTime() -
+                              new Date(a.date).getTime()
+                          )
+                          .map((note, index) => (
+                            <motion.div
+                              key={note.id}
+                              className="py-6 first:pt-0 cursor-pointer"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{
+                                duration: 0.3,
+                                delay: index * 0.05,
+                              }}
+                              whileHover={{ x: 2 }}
+                              onClick={() => {
+                                setCurrentNoteIndex(index);
+                                setIsAllNotesModalOpen(false);
+                                setTimeout(
+                                  () => setIsNotesModalOpen(true),
+                                  100
+                                );
+                              }}
+                            >
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
+                                <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
+                                  {new Date(note.date).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    }
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-lg text-foreground hover:text-foreground/90 transition-colors mb-1">
+                                    {note.title}
+                                  </p>
+                                  <p className="text-base text-foreground/60 line-clamp-2">
+                                    {note.excerpt}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.main>
+
+        <ImagePreloader />
+
+        {/* Video Modal */}
+        <AnimatePresence>
+          {isVideoModalOpen && currentVideoUrl && (
+            <>
+              {/* Fixed backdrop */}
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
-                className="absolute top-6 right-6 z-10 rounded-full bg-gray-200/20 backdrop-blur-sm p-2 hover:bg-gray-200/30 transition-colors"
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="fixed inset-0 backdrop-blur-md bg-black/85 z-50"
+                onClick={handleCloseVideoModal}
+              />
+
+              {/* Scrollable content */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
                 onClick={(e) => {
-                  e.stopPropagation();
-                  handleCloseVideoModal();
+                  if (e.target === e.currentTarget) {
+                    handleCloseVideoModal();
+                  }
                 }}
               >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                {/* Sticky close button */}
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ delay: 0.2, duration: 0.3 }}
+                  className="absolute top-6 right-6 z-10 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCloseVideoModal();
+                  }}
                 >
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </motion.button>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="transition-transform duration-300 hover:scale-110"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </motion.button>
 
-              {/* Content container */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
-                onClick={(e) => e.stopPropagation()} // Prevent clicks on content from closing modal
-              >
-                {/* Video embed */}
-                <div className="aspect-video w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[80vw] rounded-lg overflow-hidden shadow-2xl">
-                  <iframe
-                    src={currentVideoUrl || ""}
-                    className="w-full h-full"
-                    frameBorder="0"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    title="Project Video"
-                    onEnded={() => handleCloseVideoModal()}
-                    style={{
-                      background: "#000000",
-                      borderRadius: "8px",
-                    }}
-                  ></iframe>
-                </div>
+                {/* Content container */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
+                  onClick={(e) => e.stopPropagation()} // Prevent clicks on content from closing modal
+                >
+                  {/* Video embed */}
+                  <div className="aspect-video w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[80vw] rounded-lg overflow-hidden shadow-2xl">
+                    <iframe
+                      src={currentVideoUrl || ""}
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      title="Project Video"
+                      onEnded={() => handleCloseVideoModal()}
+                      style={{
+                        background: "#000000",
+                        borderRadius: "8px",
+                      }}
+                    ></iframe>
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Footer with video background - harmonious reveal */}
+      <motion.footer
+        className="relative w-full bg-black overflow-hidden min-h-[500px]"
+        initial={{
+          y: 60,
+          opacity: 0,
+        }}
+        whileInView={{
+          y: 0,
+          opacity: 1,
+        }}
+        viewport={{
+          once: true,
+          amount: 0.3,
+        }}
+        transition={{
+          duration: 2.5,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+        style={{
+          marginTop: "144px", // 36 * 4 = 144px
+          boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
+        }}
+      >
+        {/* Video background with gentle fade */}
+        <motion.div
+          className="absolute inset-0 w-full h-full"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{
+            duration: 3,
+            ease: "easeOut",
+          }}
+        >
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{
+              filter: "brightness(0.7)",
+              opacity: videoError ? 0 : 1,
+            }}
+            onLoadStart={() => console.log("Footer video: Load started")}
+            onLoadedMetadata={() => {
+              console.log("Footer video: Metadata loaded");
+              // Force play on metadata load for mobile
+              if (videoRef.current) {
+                videoRef.current.play().catch((error) => {
+                  console.log("Video play failed on metadata load:", error);
+                  setVideoError(true);
+                });
+              }
+            }}
+            onLoadedData={() => console.log("Footer video: Data loaded")}
+            onCanPlay={() => {
+              console.log("Footer video: Can play");
+              // Force play on canplay for mobile
+              if (videoRef.current) {
+                videoRef.current.play().catch((error) => {
+                  console.log("Video play failed on canplay:", error);
+                  setVideoError(true);
+                });
+              }
+            }}
+            onPlay={() => console.log("Footer video: Playing")}
+            onError={(e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+              console.error("Footer video error:", e);
+              setVideoError(true);
+            }}
+          >
+            <source src="/video/footer-video.mp4" type="video/mp4" />
+            {/* Fallback message if video fails to load */}
+            {videoError && (
+              <div className="absolute inset-0 flex items-center justify-center text-white/60">
+                Video unavailable
+              </div>
+            )}
+          </video>
+
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-black/50" />
+        </motion.div>
+
+        {/* Footer content with blur focus animation */}
+        <div className="relative z-10 px-6 sm:px-10 md:px-28 py-36">
+          <div className="w-full max-w-screen-xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              <div className="space-y-8 md:col-span-1">
+                {/* Email */}
+                <motion.div
+                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 2,
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: 0.2,
+                  }}
+                >
+                  <p className="text-sm text-white/60 mb-1">Email</p>
+                  <a
+                    href="mailto:raf@raf.works"
+                    className="text-base text-white hover:text-white/90 transition-colors"
+                  >
+                    raf@raf.works
+                  </a>
+                </motion.div>
+
+                {/* LinkedIn */}
+                <motion.div
+                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 2,
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: 0.4,
+                  }}
+                >
+                  <p className="text-sm text-white/60 mb-1">LinkedIn</p>
+                  <a
+                    href="https://www.linkedin.com/in/raffaelevitaledesign"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-base text-white hover:text-white/90 transition-colors"
+                  >
+                    raffaelevitaledesign
+                  </a>
+                </motion.div>
+
+                {/* Twitter/X */}
+                <motion.div
+                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 2,
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: 0.6,
+                  }}
+                >
+                  <p className="text-sm text-white/60 mb-1">Twitter/X</p>
+                  <a
+                    href="https://twitter.com/lfgraf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-base text-white hover:text-white/90 transition-colors"
+                  >
+                    lfgraf
+                  </a>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.footer>
+    </>
   );
 }
