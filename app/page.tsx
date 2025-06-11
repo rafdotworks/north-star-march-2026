@@ -725,13 +725,10 @@ export default function Page() {
     setCurrentNoteIndex(index);
     setIsNotesModalOpen(true);
 
-    // Prevent background scrolling on mobile
-    if (window.innerWidth < 640) {
-      document.body.style.overflow = "hidden";
-    }
+    // Prevent background scrolling
+    document.body.style.overflow = "hidden";
   };
 
-  // Remove the ref and useEffect for scrolling
   const handleCloseNote = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Re-enable scrolling
@@ -743,7 +740,17 @@ export default function Page() {
 
   const handleOpenAllNotes = () => {
     setIsAllNotesModalOpen(true);
+    // Prevent background scrolling
+    document.body.style.overflow = "hidden";
   };
+
+  // Add cleanup effect for modal state
+  useEffect(() => {
+    return () => {
+      // Ensure scrolling is re-enabled when component unmounts
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   const handleNextNote = () => {
     setCurrentNoteIndex((prev) => (prev + 1) % notes.length);
