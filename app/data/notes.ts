@@ -237,4 +237,30 @@ Then it happened—I slipped on a patch of that hidden ice. One second I was wal
 The pain's still there, nagging me every day since. But here's the thing: it's also made me grateful. Falling like that opened my eyes to something new about winter here. Now I'm more careful, paying attention to each step I take. It could've been so much worse, and I'm thankful it wasn't. This whole thing's been a wake-up call to stay present and watch where I'm going.`,
     date: "2025-02-26",
   },
+  {
+    id: "note-7",
+    title: "Memorable Excellence",
+    excerpt: "",
+    content: `There are people I know
+
+Scott, opening the doors of Shopify Builders every Sunday with dedication.
+Hélder, behind the counter at Manna in Porto, precise in every move.
+
+Then there are people I don't know directly
+
+A nurse I met years ago, adjusting a blanket with care and an unmistakable smile.
+A flight attendant on my last flight back to Toronto, moving through the cabin like choreography — steady, warm, direct.
+
+They're both excellent at what they do.
+So present, so attuned, they become unforgettable.
+
+Meditation helped me notice this more.
+It tuned me into the grace of people simply being great.
+No spotlight. No audience. Just presence. Just noticing it. 
+
+That's the kind of presence I aim for in my work, too.
+
+For all the countless ones who made me feel something. Thank you.`,
+    date: "2025-06-14",
+  },
 ];

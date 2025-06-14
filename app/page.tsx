@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { notes, Note } from "./data/notes";
 import { works } from "./data/works";
 import { Play } from "lucide-react";
+import { LiquidGlass } from "@/components/LiquidGlass";
 
 interface Work {
   title: string;
@@ -176,10 +177,13 @@ export default function Page() {
 
   const photos = [
     { src: "/photos/marianne.jpeg", name: "Marianne" },
+    { src: "/photos/daybreak-3.JPG", name: "Daybreak" },
     { src: "/photos/josh.JPG", name: "Josh" },
+    { src: "/photos/vin-2.JPG", name: "Vin" },
     { src: "/photos/omar.JPG", name: "Omar" },
     { src: "/photos/adrien.JPG", name: "Adrien" },
     { src: "/photos/jordi.JPG", name: "Jordi" },
+    { src: "/photos/daybreak.JPG", name: "Daybreak" },
     { src: "/photos/flo.JPG", name: "Flo" },
     { src: "/photos/kelindi.JPG", name: "Kelindi" },
     { src: "/photos/vin.JPG", name: "Vin" },
@@ -242,7 +246,7 @@ export default function Page() {
   // Update scrollbar color when weather condition changes
   useEffect(() => {
     if (mounted && weatherState.condition) {
-      updateScrollbarColor();
+      // Removed updateScrollbarColor call
     }
   }, [mounted, weatherState.condition]);
 
@@ -734,8 +738,10 @@ export default function Page() {
     // Re-enable scrolling
     document.body.style.overflow = "";
 
-    // Simply close the modal without any additional animations or timeouts
-    setIsNotesModalOpen(false);
+    // Add a small delay before closing to allow for animation
+    setTimeout(() => {
+      setIsNotesModalOpen(false);
+    }, 100);
   };
 
   const handleOpenAllNotes = () => {
@@ -760,21 +766,33 @@ export default function Page() {
     setCurrentNoteIndex((prev) => (prev - 1 + notes.length) % notes.length);
   };
 
-  // Custom variants for card transitions - simplified for elegance
+  // Custom variants for card transitions - enhanced for smoother animations
   const cardVariants = {
     enter: (direction: number) => ({
       opacity: 0,
+      scale: 0.98,
+      y: 10,
     }),
     center: {
       opacity: 1,
+      scale: 1,
+      y: 0,
       transition: {
-        opacity: { duration: 0.2 },
+        opacity: { duration: 0.3 },
+        scale: { duration: 0.3 },
+        y: { duration: 0.3 },
+        ease: [0.22, 1, 0.36, 1],
       },
     },
     exit: (direction: number) => ({
       opacity: 0,
+      scale: 0.98,
+      y: 10,
       transition: {
         opacity: { duration: 0.2 },
+        scale: { duration: 0.2 },
+        y: { duration: 0.2 },
+        ease: [0.22, 1, 0.36, 1],
       },
     }),
   };
@@ -907,78 +925,7 @@ export default function Page() {
 
   // Get scrollbar color based on weather condition
   const updateScrollbarColor = () => {
-    if (!weatherState.condition) return;
-
-    // Define scrollbar colors based on weather conditions
-    const scrollbarColors: {
-      [key: string]: { color: string; hoverColor: string };
-    } = {
-      Clear: {
-        color: "rgba(255, 200, 0, 0.2)",
-        hoverColor: "rgba(255, 200, 0, 0.3)",
-      },
-      "Partly Cloudy": {
-        color: "rgba(180, 180, 180, 0.2)",
-        hoverColor: "rgba(180, 180, 180, 0.3)",
-      },
-      Clouds: {
-        color: "rgba(150, 150, 150, 0.2)",
-        hoverColor: "rgba(150, 150, 150, 0.3)",
-      },
-      Rain: {
-        color: "rgba(0, 125, 255, 0.2)",
-        hoverColor: "rgba(0, 125, 255, 0.3)",
-      },
-      Drizzle: {
-        color: "rgba(100, 150, 255, 0.2)",
-        hoverColor: "rgba(100, 150, 255, 0.3)",
-      },
-      "Freezing Drizzle": {
-        color: "rgba(180, 200, 255, 0.2)",
-        hoverColor: "rgba(180, 200, 255, 0.3)",
-      },
-      "Freezing Rain": {
-        color: "rgba(150, 180, 255, 0.2)",
-        hoverColor: "rgba(150, 180, 255, 0.3)",
-      },
-      Thunderstorm: {
-        color: "rgba(100, 100, 255, 0.25)",
-        hoverColor: "rgba(100, 100, 255, 0.35)",
-      },
-      Snow: {
-        color: "rgba(220, 240, 255, 0.2)",
-        hoverColor: "rgba(220, 240, 255, 0.3)",
-      },
-      Mist: {
-        color: "rgba(200, 200, 220, 0.2)",
-        hoverColor: "rgba(200, 200, 220, 0.3)",
-      },
-      Fog: {
-        color: "rgba(180, 180, 200, 0.2)",
-        hoverColor: "rgba(180, 180, 200, 0.3)",
-      },
-      Haze: {
-        color: "rgba(200, 180, 150, 0.2)",
-        hoverColor: "rgba(200, 180, 150, 0.3)",
-      },
-    };
-
-    const defaultColor = {
-      color: "rgba(125, 125, 125, 0.15)",
-      hoverColor: "rgba(125, 125, 125, 0.25)",
-    };
-
-    const colors = scrollbarColors[weatherState.condition] || defaultColor;
-
-    // Update CSS variables
-    document.documentElement.style.setProperty(
-      "--scrollbar-color",
-      colors.color
-    );
-    document.documentElement.style.setProperty(
-      "--scrollbar-hover-color",
-      colors.hoverColor
-    );
+    // Removed entire function
   };
 
   // Get weather icon based on condition
@@ -1344,6 +1291,31 @@ export default function Page() {
     };
   }, []);
 
+  const [isGlassEnabled, setIsGlassEnabled] = useState(false);
+  const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
+
+  const toggleGlass = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Store click position relative to viewport
+    setClickPosition({
+      x: e.clientX,
+      y: e.clientY,
+    });
+    setIsGlassEnabled((prev) => !prev);
+  };
+
+  // Add a function to handle closing the photo modal
+  const handleClosePhotoModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Re-enable scrolling
+    document.body.style.overflow = "";
+
+    // Add a small delay before closing to allow for animation
+    setTimeout(() => {
+      setIsPhotosModalOpen(false);
+    }, 100);
+  };
+
   if (!mounted || !criticalContentLoaded) {
     // Return a minimal loading state with proper layout to prevent shifts
     return (
@@ -1466,16 +1438,16 @@ export default function Page() {
                 >
                   <motion.div
                     className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     transition={{
-                      delay: 0.8, // Reduced from 1.8s to 0.8s for better mobile performance
-                      duration: 0.6, // Reduced from 0.8s to 0.6s for better mobile performance
-                      type: "tween", // Add type for better mobile performance
+                      delay: 0.4,
+                      duration: 0.4,
+                      type: "tween",
                     }}
                     style={{
-                      WebkitBackfaceVisibility: "hidden", // Add for better mobile performance
-                      WebkitTransform: "translateZ(0)", // Add for better mobile performance
+                      transform: "translateZ(0)",
+                      backfaceVisibility: "hidden",
                     }}
                   >
                     <span className="min-h-[1.25rem] flex items-center">
@@ -1613,16 +1585,15 @@ export default function Page() {
                     <div className="relative w-full h-full">
                       {/* Mobile Feed View */}
                       <div className="block sm:hidden space-y-6">
-                        {images.map((src, index) => (
+                        {images.map((src: string, index: number) => (
                           <motion.div
                             key={`mobile-${src}`}
                             className="w-full"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
                             transition={{
-                              duration: 0.6,
-                              delay: index * 0.1,
-                              ease: [0.22, 1, 0.36, 1],
+                              duration: 0.4,
+                              delay: index * 0.05,
                             }}
                           >
                             <motion.div
@@ -1643,23 +1614,12 @@ export default function Page() {
                                 loader={imageLoader}
                                 className={`w-full bg-transparent max-w-full ${
                                   workVideos[src]
-                                    ? "transition-all duration-300 hover:brightness-105"
+                                    ? "transition-opacity duration-300 hover:opacity-90"
                                     : ""
                                 }`}
-                                style={{
-                                  objectPosition: "center center",
-                                  display: "block",
-                                  filter: !loadedImages[src]
-                                    ? "blur(20px)"
-                                    : "none",
-                                  opacity: !loadedImages[src] ? 0.5 : 1,
-                                  transition:
-                                    "filter 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-                                }}
+                                priority={index < 2}
+                                loading={index < 2 ? "eager" : "lazy"}
                                 onLoad={() => handleImageLoad(src)}
-                                loading={index < 3 ? "eager" : "lazy"}
-                                priority={index < 3}
-                                quality={index < 3 ? 90 : 75}
                               />
                               {workVideos[src] && (
                                 <div
@@ -2368,7 +2328,7 @@ export default function Page() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                     className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                    onClick={() => setIsPhotosModalOpen(false)}
+                    onClick={handleClosePhotoModal}
                   />
 
                   {/* Scrollable content */}
@@ -2380,7 +2340,7 @@ export default function Page() {
                     className="fixed inset-0 z-50 overflow-y-auto"
                     onClick={(e) => {
                       if (e.target === e.currentTarget) {
-                        setIsPhotosModalOpen(false);
+                        handleClosePhotoModal(e);
                       }
                     }}
                   >
@@ -2390,20 +2350,17 @@ export default function Page() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ delay: 0.2, duration: 0.3 }}
-                      className="sticky top-6 float-right mr-6 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsPhotosModalOpen(false);
-                      }}
+                      className="sticky top-6 float-right mr-6 flex items-center justify-center w-6 h-6 rounded-full hover:bg-foreground/5 transition-colors"
+                      onClick={handleClosePhotoModal}
                     >
                       <svg
-                        width="24"
-                        height="24"
+                        width="14"
+                        height="14"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
-                        className="transition-transform duration-300 hover:scale-110"
+                        strokeWidth="1.5"
+                        className="text-foreground/40 hover:text-foreground/60 transition-colors"
                       >
                         <path d="M18 6L6 18M6 6l12 12" />
                       </svg>
@@ -2434,6 +2391,7 @@ export default function Page() {
                             transition={{
                               duration: 0.5,
                               delay: index * 0.05,
+                              ease: [0.22, 1, 0.36, 1],
                             }}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -2572,18 +2530,18 @@ export default function Page() {
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
                                   transition={{ duration: 0.2 }}
-                                  className="rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
                                   onClick={handleCloseNote}
+                                  className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-foreground/5 transition-colors"
                                   aria-label="Close note"
                                 >
                                   <svg
-                                    width="20"
-                                    height="20"
+                                    width="14"
+                                    height="14"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="currentColor"
                                     strokeWidth="1.5"
-                                    className="transition-transform duration-300 hover:scale-110"
+                                    className="text-foreground/40 hover:text-foreground/60 transition-colors"
                                   >
                                     <path d="M18 6L6 18M6 6l12 12" />
                                   </svg>
@@ -2777,7 +2735,7 @@ export default function Page() {
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
-                          className="transition-transform duration-300 hover:scale-110"
+                          className="transition-transform duration-300 hover:scale-110 text-white/70 hover:text-white"
                         >
                           <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
@@ -2857,55 +2815,51 @@ export default function Page() {
                 onClick={handleCloseVideoModal}
               />
 
-              {/* Scrollable content */}
+              {/* Modal container */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) {
-                    handleCloseVideoModal();
-                  }
-                }}
+                onClick={handleCloseVideoModal}
               >
-                {/* Sticky close button */}
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ delay: 0.2, duration: 0.3 }}
-                  className="absolute top-6 right-6 z-10 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCloseVideoModal();
-                  }}
-                >
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="transition-transform duration-300 hover:scale-110"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </motion.button>
-
                 {/* Content container */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
-                  onClick={(e) => e.stopPropagation()} // Prevent clicks on content from closing modal
+                  className="relative w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
+                  onClick={(e) => e.stopPropagation()}
                 >
+                  {/* Sticky close button */}
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ delay: 0.2, duration: 0.3 }}
+                    className="absolute top-6 right-6 z-10 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
+                    onClick={handleCloseVideoModal}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="transition-transform duration-300 hover:scale-110 text-white/70 hover:text-white"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </motion.button>
+
                   {/* Video embed */}
-                  <div className="aspect-video w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[80vw] rounded-lg overflow-hidden shadow-2xl">
+                  <div
+                    className="aspect-video w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[80vw] rounded-lg overflow-hidden shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <iframe
                       src={currentVideoUrl || ""}
                       className="w-full h-full"
@@ -2951,6 +2905,38 @@ export default function Page() {
           boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
         }}
       >
+        {/* Liquid Glass Toggle - top right of footer */}
+        <motion.button
+          onClick={toggleGlass}
+          className="w-8 h-8 rounded-full backdrop-blur-md border border-white/10 hover:border-white/20 transition-all duration-300 group absolute z-30"
+          style={{
+            top: "1.5rem",
+            right: "1.5rem",
+            background: isGlassEnabled
+              ? "rgba(255, 255, 255, 0.1)"
+              : "rgba(0, 0, 0, 0.2)",
+            boxShadow: isGlassEnabled
+              ? "0 4px 8px rgba(0, 0, 0, 0.25), 0 -10px 25px inset rgba(0, 0, 0, 0.15)"
+              : "0 2px 4px rgba(0, 0, 0, 0.1)",
+          }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          aria-label="Toggle liquid glass effect"
+        >
+          <motion.div
+            className="w-full h-full rounded-full"
+            style={{
+              background: isGlassEnabled
+                ? "radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%)"
+                : "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%)",
+            }}
+            animate={{
+              scale: isGlassEnabled ? 1 : 0.8,
+              opacity: isGlassEnabled ? 1 : 0.7,
+            }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          />
+        </motion.button>
         {/* Video background with gentle fade */}
         <motion.div
           className="absolute inset-0 w-full h-full"
@@ -3018,8 +3004,8 @@ export default function Page() {
         {/* Footer content with blur focus animation */}
         <div className="relative z-10 px-6 sm:px-10 md:px-28 py-36">
           <div className="w-full max-w-screen-xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              <div className="space-y-8 md:col-span-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="space-y-8">
                 {/* Email */}
                 <motion.div
                   initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
@@ -3039,7 +3025,6 @@ export default function Page() {
                     raf@raf.works
                   </a>
                 </motion.div>
-
                 {/* LinkedIn */}
                 <motion.div
                   initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
@@ -3053,15 +3038,14 @@ export default function Page() {
                 >
                   <p className="text-sm text-white/60 mb-1">LinkedIn</p>
                   <a
-                    href="https://www.linkedin.com/in/raffaelevitaledesign"
+                    href="https://linkedin.com/in/lfgraf"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-base text-white hover:text-white/90 transition-colors"
                   >
-                    raffaelevitaledesign
+                    lfgraf
                   </a>
                 </motion.div>
-
                 {/* Twitter/X */}
                 <motion.div
                   initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
@@ -3088,6 +3072,53 @@ export default function Page() {
           </div>
         </div>
       </motion.footer>
+
+      {/* Add the LiquidGlass component with animation */}
+      <AnimatePresence>
+        {isGlassEnabled && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              scale: 0.5,
+              x: clickPosition.x - window.innerWidth / 2,
+              y: clickPosition.y - window.innerHeight / 2,
+              filter: "blur(20px)",
+              rotate: -5,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              x: 0,
+              y: 0,
+              filter: "blur(0px)",
+              rotate: 0,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.5,
+              x: clickPosition.x - window.innerWidth / 2,
+              y: clickPosition.y - window.innerHeight / 2,
+              filter: "blur(20px)",
+              rotate: 5,
+            }}
+            transition={{
+              duration: 0.8,
+              ease: [0.22, 1, 0.36, 1],
+              filter: { duration: 0.6 },
+              rotate: { duration: 0.8 },
+            }}
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              transformOrigin: "center center",
+            }}
+          >
+            <LiquidGlass />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
