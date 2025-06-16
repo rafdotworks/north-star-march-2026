@@ -10,6 +10,13 @@ import { works } from "./data/works";
 import { Play } from "lucide-react";
 import { LiquidGlass } from "@/components/LiquidGlass";
 
+/**
+ * Interface representing a work project in the portfolio
+ * @property {string} title - The title of the work project
+ * @property {string} description - A brief description of the project
+ * @property {string} image - Path to the project's main image
+ * @property {string} [video] - Optional path to the project's video content
+ */
 interface Work {
   title: string;
   description: string;
@@ -17,7 +24,10 @@ interface Work {
   video?: string;
 }
 
-// Add image optimization configuration
+/**
+ * Custom image loader for Next.js Image component
+ * Optimizes image loading with width and quality parameters
+ */
 const imageLoader = ({
   src,
   width,
@@ -31,6 +41,7 @@ const imageLoader = ({
 };
 
 export default function Page() {
+  // Core UI state management
   const [mounted, setMounted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
@@ -40,25 +51,61 @@ export default function Page() {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  // Image loading and transition states
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
     {}
   );
-  // Track loading progress for images
   const [imageLoadingProgress, setImageLoadingProgress] = useState<{
     [key: string]: number;
   }>({});
-  // Add progress indicator state
   const [transitionProgress, setTransitionProgress] = useState(0);
-  // Add state to track if slideshow is paused
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
-  // Camera focus effect state
-  const [blurAmount, setBlurAmount] = useState(25); // Increased from 12 to 25 for stronger initial blur
-  // Add state to track scroll position
+  const [blurAmount, setBlurAmount] = useState(25);
+
+  // Scroll and animation states
   const [scrollY, setScrollY] = useState(0);
-  // Add state to track if initial animations have completed
   const [animationsComplete, setAnimationsComplete] = useState(false);
-  // Add state to track if critical content is loaded
   const [criticalContentLoaded, setCriticalContentLoaded] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
+
+  /**
+   * Viewport height management for responsive design
+   * Updates on window resize to ensure proper layout calculations
+   */
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      setViewportHeight(window.innerHeight);
+    };
+
+    updateViewportHeight();
+    window.addEventListener("resize", updateViewportHeight);
+
+    return () => window.removeEventListener("resize", updateViewportHeight);
+  }, []);
+
+  /**
+   * Optimized scroll handling using requestAnimationFrame
+   * Improves performance by reducing scroll event frequency
+   */
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Time-based UI state for dynamic theming
   const [timeState, setTimeState] = useState<{
     hour: number;
     minute: number;
@@ -75,11 +122,11 @@ export default function Page() {
       if (hour >= 17 && hour < 21) return "evening";
       return "night";
     })(),
-    progress: 0.5, // Default to middle of the time period for a balanced look
+    progress: 0.5,
   });
   const [focusAnimationRun, setFocusAnimationRun] = useState(false);
 
-  // Add weather state
+  // Weather state management for dynamic UI effects
   const [weatherState, setWeatherState] = useState<{
     temperature: number | null;
     condition: string | null;
@@ -98,9 +145,10 @@ export default function Page() {
     customLocation: false,
   });
 
-  // Create refs for photos
+  // Refs for photo gallery management
   const photoRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Collection of work project images to be displayed in the gallery
   const images = [
     "/work/theoriq.png",
     "/work/theoriq-prod-hero.png",
@@ -109,7 +157,7 @@ export default function Page() {
     "/work/defi.png",
     "/work/ethos.png",
     "/work/theoriq-mobile-chat.png",
-    "/work/curbcut.png",
+    //"/work/curbcut.png",
     "/work/art-02.png",
     "/work/atlas-1.png",
     "/work/us.png",
@@ -119,7 +167,8 @@ export default function Page() {
     // "/work/apple.png",
   ];
 
-  // Map work images to their corresponding Vimeo video URLs
+  // Mapping of work images to their corresponding Vimeo video URLs
+  // Each video is configured with specific player parameters for optimal viewing experience
   const workVideos: { [key: string]: string } = {
     "/work/theoriq-prod-hero.png":
       "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
@@ -133,14 +182,14 @@ export default function Page() {
       "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
   };
 
-  // Preload component to ensure all images are loaded
+  /**
+   * Image preloading component to ensure smooth gallery transitions
+   * Tracks loading progress of all images and updates state accordingly
+   */
   const ImagePreloader = () => {
-    // Track when all images are loaded
     useEffect(() => {
-      // Check if all images are loaded
       const allImagesLoaded = images.every((src) => loadedImages[src]);
 
-      // If all images are loaded, make sure the slideshow is ready to run
       if (allImagesLoaded && mounted) {
         console.log("All images preloaded successfully");
       }
@@ -160,9 +209,13 @@ export default function Page() {
     );
   };
 
-  // Generate a dominant color placeholder for images
+  /**
+   * Generates a placeholder color for images during loading
+   * Uses a curated set of subtle, design-friendly colors that match the site's aesthetic
+   * @param {number} index - The index of the image in the gallery
+   * @returns {string} RGBA color value for the placeholder
+   */
   const getImagePlaceholder = (index: number) => {
-    // A set of subtle, design-friendly placeholder colors that match your aesthetic
     const placeholderColors = [
       "rgba(245, 245, 245, 0.8)", // Light gray
       "rgba(240, 240, 245, 0.8)", // Light blue-gray
@@ -171,24 +224,13 @@ export default function Page() {
       "rgba(240, 245, 240, 0.8)", // Light mint
     ];
 
-    // Use the image index to select a color, cycling through the options
     return placeholderColors[index % placeholderColors.length];
   };
 
-  const photos = [
-    { src: "/photos/marianne.jpeg", name: "Marianne" },
-    { src: "/photos/daybreak-3.JPG", name: "Daybreak" },
-    { src: "/photos/josh.JPG", name: "Josh" },
-    { src: "/photos/vin-2.JPG", name: "Vin" },
-    { src: "/photos/omar.JPG", name: "Omar" },
-    { src: "/photos/adrien.JPG", name: "Adrien" },
-    { src: "/photos/jordi.JPG", name: "Jordi" },
-    { src: "/photos/daybreak.JPG", name: "Daybreak" },
-    { src: "/photos/flo.JPG", name: "Flo" },
-    { src: "/photos/kelindi.JPG", name: "Kelindi" },
-    { src: "/photos/vin.JPG", name: "Vin" },
-    { src: "/photos/anna.JPG", name: "Anna" },
-  ];
+  /**
+   * Initial component setup and cleanup
+   * Handles weather data fetching, time updates, keyboard events, and critical content loading
+   */
   useEffect(() => {
     setMounted(true);
 
@@ -201,7 +243,10 @@ export default function Page() {
     // Set up keyboard event listener
     window.addEventListener("keydown", handleKeyDown);
 
-    // Check if critical images are loaded
+    /**
+     * Checks if critical images (first three) are loaded
+     * Used to determine when to start the slideshow
+     */
     const checkCriticalContent = () => {
       const firstThreeImages = images.slice(0, 3);
       const allCriticalLoaded = firstThreeImages.every(
@@ -221,7 +266,6 @@ export default function Page() {
         !isSlideshowPaused &&
         criticalContentLoaded
       ) {
-        // Set to the first image and start progress
         setCurrentImageIndex(0);
         setTransitionProgress(0);
       }
@@ -240,7 +284,6 @@ export default function Page() {
       clearTimeout(animationTimer);
       window.removeEventListener("keydown", handleKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update scrollbar color when weather condition changes
@@ -250,48 +293,48 @@ export default function Page() {
     }
   }, [mounted, weatherState.condition]);
 
-  // Camera focus animation effect
+  /**
+   * Camera focus animation effect
+   * Creates a smooth transition from blurred to focused state
+   * Uses cubic easing for natural camera-like movement
+   * @returns {() => void} Cleanup function to reset blur state
+   */
   const focusAnimation = () => {
-    // Start with a blur and gradually reduce it using a more camera-like easing
-    const totalDuration = 2500; // Restored to original 2.5s duration
+    const totalDuration = 2500;
     const startTime = Date.now();
-    const initialBlur = 25; // Keep the stronger initial blur
+    const initialBlur = 25;
 
-    // Set initial blur
     setBlurAmount(initialBlur);
 
     const focusInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(1, elapsed / totalDuration);
 
-      // Use a cubic easing function for more natural camera focus feel
-      // Starts slow, accelerates in the middle, then slows down at the end
       const easedProgress =
         progress < 0.5
           ? 4 * progress * progress * progress
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
       const newBlur = initialBlur * (1 - easedProgress);
-
       setBlurAmount(newBlur);
 
       if (progress >= 1) {
         clearInterval(focusInterval);
-        // Ensure blur is completely removed
         setBlurAmount(0);
       }
-    }, 16); // ~60fps for smooth animation
+    }, 16);
 
     return () => {
       clearInterval(focusInterval);
-      // Ensure blur is completely removed when cleaning up
       setBlurAmount(0);
     };
   };
 
-  // Add a useEffect to handle the focus animation with proper cleanup
+  /**
+   * Handles focus animation on component mount
+   * Ensures animation only runs once and cleans up properly
+   */
   useEffect(() => {
-    // Only run the focus animation once when the component mounts
     if (mounted && !focusAnimationRun) {
       setFocusAnimationRun(true);
       const cleanup = focusAnimation();
@@ -301,14 +344,20 @@ export default function Page() {
     }
   }, [mounted, focusAnimationRun]);
 
-  // Update time state
+  /**
+   * Updates time state based on EST timezone
+   * Handles DST adjustments and calculates time of day periods
+   * @returns {void}
+   */
   const updateTimeState = () => {
-    // Get current time in EST
     const now = new Date();
-    // Convert to EST (UTC-5 or UTC-4 during daylight saving)
-    const estOffset = -5; // EST offset from UTC in hours
+    const estOffset = -5;
+
+    /**
+     * Determines if current time is in Daylight Saving Time
+     * @returns {boolean} True if currently in DST
+     */
     const isDST = () => {
-      // Simple DST check for US Eastern Time
       const jan = new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
       const jul = new Date(now.getFullYear(), 6, 1).getTimezoneOffset();
       return Math.max(jan, jul) !== now.getTimezoneOffset();
@@ -320,7 +369,6 @@ export default function Page() {
     const hour = estTime.getHours();
     const minute = estTime.getMinutes();
 
-    // Calculate time of day
     let timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night";
     if (hour >= 5 && hour < 8) {
       timeOfDay = "dawn";
@@ -334,26 +382,23 @@ export default function Page() {
       timeOfDay = "night";
     }
 
-    // Calculate progress through current time period (0-1)
     let progress = 0;
     if (timeOfDay === "dawn") {
-      progress = ((hour - 5) * 60 + minute) / (3 * 60); // 3 hours
+      progress = ((hour - 5) * 60 + minute) / (3 * 60);
     } else if (timeOfDay === "morning") {
-      progress = ((hour - 8) * 60 + minute) / (4 * 60); // 4 hours
+      progress = ((hour - 8) * 60 + minute) / (4 * 60);
     } else if (timeOfDay === "afternoon") {
-      progress = ((hour - 12) * 60 + minute) / (5 * 60); // 5 hours
+      progress = ((hour - 12) * 60 + minute) / (5 * 60);
     } else if (timeOfDay === "evening") {
-      progress = ((hour - 17) * 60 + minute) / (4 * 60); // 4 hours
+      progress = ((hour - 17) * 60 + minute) / (4 * 60);
     } else {
-      // Night spans from 21 to 5, wrapping around midnight
       if (hour >= 21) {
-        progress = ((hour - 21) * 60 + minute) / (8 * 60); // 8 hours total
+        progress = ((hour - 21) * 60 + minute) / (8 * 60);
       } else {
-        progress = ((hour + 3) * 60 + minute) / (8 * 60); // 8 hours total
+        progress = ((hour + 3) * 60 + minute) / (8 * 60);
       }
     }
 
-    // Clamp progress between 0 and 1
     progress = Math.max(0, Math.min(1, progress));
 
     setTimeState({
@@ -364,10 +409,13 @@ export default function Page() {
     });
   };
 
-  // Fetch weather data for the specified location
+  /**
+   * Fetches weather data for a specified location using OpenMeteo API
+   * Updates weather state with temperature and conditions
+   * @param {string} location - City name to fetch weather for (defaults to Toronto)
+   */
   const fetchWeatherData = async (location: string = "Toronto") => {
     try {
-      // Define coordinates for supported cities
       const cityCoordinates: { [key: string]: { lat: number; lon: number } } = {
         Toronto: { lat: 43.65, lon: -79.38 },
         "New York": { lat: 40.71, lon: -74.01 },
@@ -379,12 +427,9 @@ export default function Page() {
         "San Francisco": { lat: 37.77, lon: -122.42 },
       };
 
-      // Get coordinates for the requested location or default to Toronto
       const coordinates =
         cityCoordinates[location] || cityCoordinates["Toronto"];
 
-      // Use a real weather API to get accurate weather data
-      // Using OpenMeteo API which doesn't require an API key
       const response = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.lat}&longitude=${coordinates.lon}&current=temperature_2m,weather_code&timezone=America%2FNew_York`
       );
@@ -395,37 +440,27 @@ export default function Page() {
 
       const data = await response.json();
 
-      // Map OpenMeteo weather codes to our condition names
-      // https://open-meteo.com/en/docs
+      /**
+       * Maps OpenMeteo weather codes to human-readable conditions
+       * @param {number} code - Weather code from OpenMeteo API
+       * @returns {string} Human-readable weather condition
+       */
       const mapWeatherCode = (code: number): string => {
-        // Clear
         if ([0].includes(code)) return "Clear";
-        // Mainly clear, partly cloudy
         if ([1, 2].includes(code)) return "Partly Cloudy";
-        // Overcast
         if ([3].includes(code)) return "Clouds";
-        // Fog, depositing rime fog
         if ([45, 48].includes(code)) return "Fog";
-        // Drizzle: light, moderate, dense intensity
         if ([51, 53, 55].includes(code)) return "Drizzle";
-        // Freezing Drizzle: light and dense intensity
         if ([56, 57].includes(code)) return "Freezing Drizzle";
-        // Rain: slight, moderate, heavy intensity
         if ([61, 63, 65].includes(code)) return "Rain";
-        // Freezing Rain: light and heavy intensity
         if ([66, 67].includes(code)) return "Freezing Rain";
-        // Snow fall: slight, moderate, heavy intensity
         if ([71, 73, 75].includes(code)) return "Snow";
-        // Snow grains
         if ([77].includes(code)) return "Snow";
-        // Rain showers: slight, moderate, violent
         if ([80, 81, 82].includes(code)) return "Rain";
-        // Snow showers slight and heavy
         if ([85, 86].includes(code)) return "Snow";
-        // Thunderstorm: slight or moderate, with/without hail
         if ([95, 96, 99].includes(code)) return "Thunderstorm";
 
-        return "Clear"; // Default
+        return "Clear";
       };
 
       setWeatherState((prev) => ({
@@ -445,9 +480,13 @@ export default function Page() {
     }
   };
 
-  // Add keyboard navigation for modal
+  /**
+   * Handles keyboard navigation and modal interactions
+   * - Escape key closes any open modal
+   * - Arrow keys navigate through images or notes
+   * @param {KeyboardEvent} e - The keyboard event
+   */
   const handleKeyDown = (e: KeyboardEvent) => {
-    // Handle escape key for modals
     if (e.key === "Escape") {
       if (
         isPhotosModalOpen ||
@@ -455,7 +494,6 @@ export default function Page() {
         isAllNotesModalOpen ||
         isVideoModalOpen
       ) {
-        // Close any open modal
         setIsPhotosModalOpen(false);
         setIsNotesModalOpen(false);
         setIsAllNotesModalOpen(false);
@@ -464,7 +502,6 @@ export default function Page() {
       return;
     }
 
-    // Skip other keys if any modal is open
     if (
       isPhotosModalOpen ||
       isNotesModalOpen ||
@@ -473,9 +510,7 @@ export default function Page() {
     )
       return;
 
-    // Handle arrow keys for navigation
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      // Pause slideshow on user interaction
       setIsSlideshowPaused(true);
 
       if (e.key === "ArrowRight") {
@@ -496,6 +531,10 @@ export default function Page() {
     }
   };
 
+  /**
+   * Sets up keyboard event listener for navigation
+   * Cleans up listener on component unmount
+   */
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       handleKeyDown(e);
@@ -510,8 +549,36 @@ export default function Page() {
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
-    // Remove isZoomed from dependency array
     images.length,
+  ]);
+
+  /**
+   * Initializes slideshow when component is mounted
+   * Starts with first image after a short delay
+   */
+  useEffect(() => {
+    if (
+      mounted &&
+      !isPhotosModalOpen &&
+      !isNotesModalOpen &&
+      !isAllNotesModalOpen &&
+      !isVideoModalOpen &&
+      !isSlideshowPaused
+    ) {
+      const startTimer = setTimeout(() => {
+        setCurrentImageIndex(0);
+        setTransitionProgress(0);
+      }, 800);
+
+      return () => clearTimeout(startTimer);
+    }
+  }, [
+    mounted,
+    isPhotosModalOpen,
+    isNotesModalOpen,
+    isAllNotesModalOpen,
+    isVideoModalOpen,
+    isSlideshowPaused,
   ]);
 
   // Add a separate useEffect to start the slideshow immediately when mounted
@@ -549,7 +616,10 @@ export default function Page() {
   // Add state to track if slideshow is in viewport
   const [isInViewport, setIsInViewport] = useState(false);
 
-  // Use IntersectionObserver to detect when slideshow is visible
+  /**
+   * IntersectionObserver setup for slideshow viewport detection
+   * Triggers when slideshow enters or leaves viewport
+   */
   useEffect(() => {
     if (!mounted) return;
 
@@ -561,7 +631,7 @@ export default function Page() {
         const [entry] = entries;
         setIsInViewport(entry.isIntersecting);
       },
-      { threshold: 0.1 } // Trigger when at least 10% of the element is visible
+      { threshold: 0.1 }
     );
 
     observer.observe(slideshowElement);
@@ -573,7 +643,10 @@ export default function Page() {
     };
   }, [mounted]);
 
-  // Force the slideshow to start when it becomes visible
+  /**
+   * Handles slideshow visibility state
+   * Resets progress when slideshow becomes visible
+   */
   useEffect(() => {
     if (
       isInViewport &&
@@ -582,9 +655,7 @@ export default function Page() {
       !isAllNotesModalOpen &&
       !isVideoModalOpen
     ) {
-      // Reset progress to start the slideshow
       setTransitionProgress(0);
-      console.log("Slideshow visible in viewport, ensuring it is running");
     }
   }, [
     isInViewport,
@@ -594,7 +665,10 @@ export default function Page() {
     isVideoModalOpen,
   ]);
 
-  // Main slideshow interval effect - simplified to use a reliable interval
+  /**
+   * Main slideshow interval effect
+   * Advances to next image every 4.5 seconds when conditions are met
+   */
   useEffect(() => {
     if (
       !mounted ||
@@ -609,7 +683,7 @@ export default function Page() {
 
     const slideshowInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 4500); // Increased from 3500ms to 4500ms to add 1 second display time
+    }, 4500);
 
     return () => clearInterval(slideshowInterval);
   }, [
@@ -623,10 +697,12 @@ export default function Page() {
     images.length,
   ]);
 
-  // Add preloading for critical images
+  /**
+   * Preloads critical images (first 3) on component mount
+   * Ensures smooth initial slideshow experience
+   */
   useEffect(() => {
     if (mounted) {
-      // Preload first 3 images
       images.slice(0, 3).forEach((src) => {
         const img = new window.Image();
         img.src = src;
@@ -635,12 +711,15 @@ export default function Page() {
     }
   }, [mounted]);
 
-  // Update the image loading handler
+  /**
+   * Handles image loading completion
+   * Updates loading state and triggers slideshow when appropriate
+   * @param {string} src - Source path of the loaded image
+   */
   const handleImageLoad = (src: string) => {
     setLoadedImages((prev) => {
       const newState = { ...prev, [src]: true };
 
-      // Check if critical images (first 3) are loaded
       const firstThreeImages = images.slice(0, 3);
       const criticalLoaded = firstThreeImages.every(
         (imgSrc) => newState[imgSrc]
@@ -733,40 +812,59 @@ export default function Page() {
     document.body.style.overflow = "hidden";
   };
 
+  /**
+   * Closes the note modal with animation
+   * Re-enables scrolling and cleans up modal state
+   * @param {React.MouseEvent} e - Mouse event from close action
+   */
   const handleCloseNote = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Re-enable scrolling
     document.body.style.overflow = "";
 
-    // Add a small delay before closing to allow for animation
     setTimeout(() => {
       setIsNotesModalOpen(false);
     }, 100);
   };
 
+  /**
+   * Opens the all notes modal view
+   * Disables background scrolling while modal is open
+   */
   const handleOpenAllNotes = () => {
     setIsAllNotesModalOpen(true);
-    // Prevent background scrolling
     document.body.style.overflow = "hidden";
   };
 
-  // Add cleanup effect for modal state
+  /**
+   * Cleanup effect for modal state
+   * Ensures scrolling is re-enabled when component unmounts
+   */
   useEffect(() => {
     return () => {
-      // Ensure scrolling is re-enabled when component unmounts
       document.body.style.overflow = "";
     };
   }, []);
 
+  /**
+   * Navigates to the next note in the sequence
+   * Wraps around to the beginning when reaching the end
+   */
   const handleNextNote = () => {
     setCurrentNoteIndex((prev) => (prev + 1) % notes.length);
   };
 
+  /**
+   * Navigates to the previous note in the sequence
+   * Wraps around to the end when reaching the beginning
+   */
   const handlePrevNote = () => {
     setCurrentNoteIndex((prev) => (prev - 1 + notes.length) % notes.length);
   };
 
-  // Custom variants for card transitions - enhanced for smoother animations
+  /**
+   * Animation variants for card transitions
+   * Provides smooth enter/exit animations with scaling and opacity
+   */
   const cardVariants = {
     enter: (direction: number) => ({
       opacity: 0,
@@ -797,20 +895,31 @@ export default function Page() {
     }),
   };
 
-  // Track the direction of navigation
+  // State for tracking navigation direction
   const [direction, setDirection] = useState(0);
 
-  // Update direction when navigating
+  /**
+   * Updates navigation direction and note index
+   * @param {number} newDirection - Direction of navigation (1 for next, -1 for previous)
+   * @param {number} newIndex - New note index to navigate to
+   */
   const navigateWithDirection = (newDirection: number, newIndex: number) => {
     setDirection(newDirection);
     setCurrentNoteIndex(newIndex);
   };
 
-  // Modified navigation handlers
+  /**
+   * Navigates to next note with direction tracking
+   * Wraps around to beginning when reaching the end
+   */
   const handleNextNoteWithDirection = () => {
     navigateWithDirection(1, (currentNoteIndex + 1) % notes.length);
   };
 
+  /**
+   * Navigates to previous note with direction tracking
+   * Wraps around to end when reaching the beginning
+   */
   const handlePrevNoteWithDirection = () => {
     navigateWithDirection(
       -1,
@@ -818,7 +927,10 @@ export default function Page() {
     );
   };
 
-  // Effect to scroll to the selected photo when modal opens
+  /**
+   * Scrolls to selected photo when photo modal opens
+   * Uses smooth scrolling with a small delay for modal rendering
+   */
   useEffect(() => {
     if (isPhotosModalOpen && photoRefs.current[currentPhotoIndex]) {
       setTimeout(() => {
@@ -826,30 +938,35 @@ export default function Page() {
           behavior: "smooth",
           block: "center",
         });
-      }, 300); // Small delay to ensure modal is fully rendered
+      }, 300);
     }
   }, [isPhotosModalOpen, currentPhotoIndex]);
 
-  // Format time for display (12-hour format with AM/PM)
+  /**
+   * Formats current time for display in 12-hour format
+   * @returns {string} Formatted time string with AM/PM and timezone
+   */
   const formatTime = () => {
     if (!mounted) return "";
 
     const { hour, minute } = timeState;
     const period = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+    const displayHour = hour % 12 || 12;
     const displayMinute = minute < 10 ? `0${minute}` : minute;
 
     return `${displayHour}:${displayMinute} ${period} EST`;
   };
 
-  // Calculate time difference between user's local time and EST
+  /**
+   * Calculates time difference between user's local time and EST
+   * @param {boolean} isMobile - Whether the calculation is for mobile view
+   * @returns {string} Human-readable time difference message
+   */
   const getTimeDifference = (isMobile = false) => {
     if (!mounted) return "";
 
-    // Get current time in user's local timezone
     const localDate = new Date();
 
-    // Get current time in EST/EDT (US Eastern Time)
     const estOptions = {
       timeZone: "America/New_York",
       hour: "numeric" as const,
@@ -860,23 +977,19 @@ export default function Page() {
       new Intl.DateTimeFormat("en-US", estOptions).format(localDate)
     );
 
-    // Get local hour using the same format for consistency
     const localOptions = { hour: "numeric" as const, hour12: false };
     const localHour = parseInt(
       new Intl.DateTimeFormat("en-US", localOptions).format(localDate)
     );
 
-    // Calculate hour difference
     let hourDifference = localHour - estHour;
 
-    // Adjust for day boundary crossings
     if (hourDifference > 12) {
       hourDifference -= 24;
     } else if (hourDifference < -12) {
       hourDifference += 24;
     }
 
-    // Generate the appropriate message based on the time difference
     if (hourDifference === 0) {
       return "You are in the same timezone as Raf";
     } else if (hourDifference > 0) {
@@ -890,18 +1003,23 @@ export default function Page() {
     }
   };
 
-  // Toggle weather effect display
+  /**
+   * Toggles weather effect display
+   * Centers effect at top of page when enabled
+   * @param {React.MouseEvent} e - Mouse event from toggle action
+   */
   const toggleWeatherEffect = (e: React.MouseEvent) => {
-    // Instead of using click position, we'll display the effect at the top of the page
     setWeatherState((prev) => ({
       ...prev,
       showWeatherEffect: !prev.showWeatherEffect,
-      // Set a fixed position at the top of the page
       clickPosition: { x: window.innerWidth / 2, y: 0 },
     }));
   };
 
-  // Get weather condition color based on condition
+  /**
+   * Returns color value based on current weather condition
+   * @returns {string} RGBA color value for weather effect
+   */
   const getWeatherColor = () => {
     if (!weatherState.condition) return "rgba(125, 125, 125, 0.2)";
 
@@ -1316,6 +1434,25 @@ export default function Page() {
     }, 100);
   };
 
+  /**
+   * Collection of personal photos for the gallery
+   * Each photo includes a source path and display name
+   */
+  const photos = [
+    { src: "/photos/marianne.jpeg", name: "Marianne" },
+    { src: "/photos/daybreak-3.JPG", name: "Daybreak" },
+    { src: "/photos/josh.JPG", name: "Josh" },
+    { src: "/photos/vin-2.JPG", name: "Vin" },
+    { src: "/photos/omar.JPG", name: "Omar" },
+    { src: "/photos/adrien.JPG", name: "Adrien" },
+    { src: "/photos/jordi.JPG", name: "Jordi" },
+    { src: "/photos/daybreak.JPG", name: "Daybreak" },
+    { src: "/photos/flo.JPG", name: "Flo" },
+    { src: "/photos/kelindi.JPG", name: "Kelindi" },
+    { src: "/photos/vin.JPG", name: "Vin" },
+    { src: "/photos/anna.JPG", name: "Anna" },
+  ];
+
   if (!mounted || !criticalContentLoaded) {
     // Return a minimal loading state with proper layout to prevent shifts
     return (
@@ -1495,6 +1632,7 @@ export default function Page() {
               style={{
                 transform: animationsComplete ? "none" : undefined,
                 willChange: animationsComplete ? "auto" : "transform, opacity",
+                minHeight: viewportHeight,
               }}
             >
               <div className="w-full">
@@ -1589,11 +1727,12 @@ export default function Page() {
                           <motion.div
                             key={`mobile-${src}`}
                             className="w-full"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
+                            initial={{ opacity: 0, filter: "blur(20px)" }}
+                            animate={{ opacity: 1, filter: "blur(0px)" }}
                             transition={{
-                              duration: 0.4,
-                              delay: index * 0.05,
+                              duration: 1.2,
+                              delay: 2.2 + index * 0.15,
+                              ease: [0.12, 1, 0.28, 1],
                             }}
                           >
                             <motion.div
@@ -1992,21 +2131,21 @@ export default function Page() {
                   <div className="space-y-6">
                     <motion.p
                       className="text-foreground/80 tracking-tight text-lg"
-                      initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      viewport={{ once: true, margin: "-100px" }}
                       transition={{
-                        duration: 3.2,
+                        duration: 1.2,
                         ease: [0.12, 1, 0.28, 1],
-                        delay: 0.7,
                       }}
                     >
                       <motion.span
-                        initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                        animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
                         transition={{
-                          duration: 3.2,
+                          duration: 1.2,
                           ease: [0.12, 1, 0.28, 1],
-                          delay: 0.8,
                         }}
                       >
                         Raf is deeply interested in deepening the space between
@@ -2015,12 +2154,13 @@ export default function Page() {
                       <br />
                       <motion.span
                         className="text-foreground/60"
-                        initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                        animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
                         transition={{
-                          duration: 3.2,
+                          duration: 1.2,
                           ease: [0.12, 1, 0.28, 1],
-                          delay: 0.9,
+                          delay: 0.2,
                         }}
                       >
                         Outside of design: portraiture, yoga, and inspiring
