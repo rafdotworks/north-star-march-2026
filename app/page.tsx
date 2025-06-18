@@ -1690,7 +1690,7 @@ export default function Page() {
                                 delay: 0.5,
                               }}
                             >
-                              Product Designer
+                              Lead Product Designer
                             </motion.span>
                             <motion.span
                               className="text-foreground/70"
@@ -2019,7 +2019,7 @@ export default function Page() {
 
                     {/* 2. Experience — clean and neutral */}
                     <p className="text-foreground/70 tracking-tight text-lg">
-                      Raf has contributed to teams at{" "}
+                      Raf has contributed as an IC and Lead to{" "}
                       <span className="hover:text-foreground transition-colors duration-300">
                         Theoriq
                       </span>
@@ -2031,7 +2031,7 @@ export default function Page() {
                       <span className="hover:text-foreground transition-colors duration-300">
                         Zalando
                       </span>
-                      ; and partnered with clients including{" "}
+                      ; and partnered with clients like{" "}
                       <span className="hover:text-foreground transition-colors duration-300">
                         w.ai
                       </span>
@@ -2043,7 +2043,6 @@ export default function Page() {
                       <span className="hover:text-foreground transition-colors duration-300">
                         Artscapy
                       </span>
-                      .
                     </p>
 
                     {/* 3. Location + personal depth */}
@@ -2056,9 +2055,9 @@ export default function Page() {
                       <span className="text-foreground font-medium">
                         based in Toronto
                       </span>
-                      , Raf blends structure and intuition. <br />
+                      , Raf blends structure and intuition <br />
                       Outside of work, he's into portraiture, yoga, and
-                      intentional spaces that feel alive.
+                      intentional spaces that feel alive
                     </p>
                   </div>
                 </div>
@@ -2189,7 +2188,7 @@ export default function Page() {
                         }}
                       >
                         Raf is deeply interested in deepening the space between
-                        design and trust.
+                        design and trust
                       </motion.span>
                       <br />
                       <motion.span
@@ -2204,7 +2203,7 @@ export default function Page() {
                         }}
                       >
                         Outside of design: portraiture, yoga, and inspiring
-                        workspaces.
+                        workspaces
                       </motion.span>
                     </motion.p>
                   </div>
