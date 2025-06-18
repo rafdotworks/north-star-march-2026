@@ -1692,9 +1692,29 @@ export default function Page() {
                             >
                               Product Designer
                             </motion.span>
-
                             <motion.span
                               className="text-foreground/70"
+                              initial={{
+                                opacity: 0,
+                                filter: "blur(10px)",
+                                y: 10,
+                              }}
+                              animate={{
+                                opacity: 1,
+                                filter: "blur(0px)",
+                                y: 0,
+                              }}
+                              transition={{
+                                duration: 3.2,
+                                ease: [0.12, 1, 0.28, 1],
+                                delay: 0.55,
+                              }}
+                            >
+                              {" "}
+                              and{" "}
+                            </motion.span>
+                            <motion.span
+                              className="text-foreground font-medium"
                               initial={{
                                 opacity: 0,
                                 filter: "blur(10px)",
@@ -1711,7 +1731,27 @@ export default function Page() {
                                 delay: 0.6,
                               }}
                             >
-                              : fast with purpose, calm with care, grounded in
+                              Design Engineer
+                            </motion.span>
+                            <motion.span
+                              className="text-foreground/70"
+                              initial={{
+                                opacity: 0,
+                                filter: "blur(10px)",
+                                y: 10,
+                              }}
+                              animate={{
+                                opacity: 1,
+                                filter: "blur(0px)",
+                                y: 0,
+                              }}
+                              transition={{
+                                duration: 3.2,
+                                ease: [0.12, 1, 0.28, 1],
+                                delay: 0.65,
+                              }}
+                            >
+                              ; fast with purpose, calm with care, grounded in
                               trust.
                             </motion.span>
                           </motion.p>

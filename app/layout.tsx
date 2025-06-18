@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
+import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
 
 const ronzino = localFont({
   src: "../public/fonts/Ronzino-Regular.otf",
@@ -69,6 +70,7 @@ export default function RootLayout({
       <body className={ronzino.className}>
         {children}
         <Analytics />
+        <ConsoleEasterEgg />
       </body>
     </html>
   );
