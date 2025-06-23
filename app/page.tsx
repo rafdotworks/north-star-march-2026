@@ -3084,38 +3084,6 @@ export default function Page() {
           boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
         }}
       >
-        {/* Liquid Glass Toggle - top right of footer */}
-        <motion.button
-          onClick={toggleGlass}
-          className="w-8 h-8 rounded-full backdrop-blur-md border border-white/10 hover:border-white/20 transition-all duration-300 group absolute z-30"
-          style={{
-            top: "1.5rem",
-            right: "1.5rem",
-            background: isGlassEnabled
-              ? "rgba(255, 255, 255, 0.1)"
-              : "rgba(0, 0, 0, 0.2)",
-            boxShadow: isGlassEnabled
-              ? "0 4px 8px rgba(0, 0, 0, 0.25), 0 -10px 25px inset rgba(0, 0, 0, 0.15)"
-              : "0 2px 4px rgba(0, 0, 0, 0.1)",
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          aria-label="Toggle liquid glass effect"
-        >
-          <motion.div
-            className="w-full h-full rounded-full"
-            style={{
-              background: isGlassEnabled
-                ? "radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%)"
-                : "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%)",
-            }}
-            animate={{
-              scale: isGlassEnabled ? 1 : 0.8,
-              opacity: isGlassEnabled ? 1 : 0.7,
-            }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          />
-        </motion.button>
         {/* Video background with gentle fade */}
         <motion.div
           className="absolute inset-0 w-full h-full"
@@ -3137,43 +3105,9 @@ export default function Page() {
             className="absolute inset-0 w-full h-full object-cover"
             style={{
               filter: "brightness(0.7)",
-              opacity: videoError ? 0 : 1,
-            }}
-            onLoadStart={() => console.log("Footer video: Load started")}
-            onLoadedMetadata={() => {
-              console.log("Footer video: Metadata loaded");
-              // Force play on metadata load for mobile
-              if (videoRef.current) {
-                videoRef.current.play().catch((error) => {
-                  console.log("Video play failed on metadata load:", error);
-                  setVideoError(true);
-                });
-              }
-            }}
-            onLoadedData={() => console.log("Footer video: Data loaded")}
-            onCanPlay={() => {
-              console.log("Footer video: Can play");
-              // Force play on canplay for mobile
-              if (videoRef.current) {
-                videoRef.current.play().catch((error) => {
-                  console.log("Video play failed on canplay:", error);
-                  setVideoError(true);
-                });
-              }
-            }}
-            onPlay={() => console.log("Footer video: Playing")}
-            onError={(e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-              console.error("Footer video error:", e);
-              setVideoError(true);
             }}
           >
             <source src="/video/footer-video.mp4" type="video/mp4" />
-            {/* Fallback message if video fails to load */}
-            {videoError && (
-              <div className="absolute inset-0 flex items-center justify-center text-white/60">
-                Video unavailable
-              </div>
-            )}
           </video>
 
           {/* Dark overlay */}
@@ -3245,6 +3179,38 @@ export default function Page() {
                   >
                     lfgraf
                   </a>
+                </motion.div>
+              </div>
+
+              {/* Right column - Philosophy */}
+              <div className="flex items-end justify-end">
+                <motion.div
+                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 2,
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: 1.0,
+                  }}
+                  className="text-right"
+                >
+                  <motion.button
+                    onClick={toggleGlass}
+                    className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
+                    whileHover={{
+                      scale: 1.01,
+                      filter: "brightness(1.3)",
+                      color: "#fff",
+                    }}
+                    whileTap={{ scale: 0.99 }}
+                    aria-label="Toggle liquid glass effect"
+                    style={{
+                      border: "1px solid rgba(255, 255, 255, 0.05)",
+                    }}
+                  >
+                    Always happy, never satisfied.
+                  </motion.button>
                 </motion.div>
               </div>
             </div>

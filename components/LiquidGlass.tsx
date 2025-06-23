@@ -88,9 +88,9 @@ class Shader {
       height: ${this.height}px;
       overflow: hidden;
       border-radius: 150px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25), 0 -10px 25px inset rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.15), 0 4px 16px rgba(255, 255, 255, 0.1), 0 -4px 16px inset rgba(255, 255, 255, 0.05);
       cursor: grab;
-      backdrop-filter: url(#${this.id}_filter) blur(0.25px) contrast(1.2) brightness(1.05) saturate(1.1);
+      backdrop-filter: url(#${this.id}_filter) blur(0.25px) contrast(1.1) brightness(1.2) saturate(1.2);
       z-index: 9999;
       pointer-events: auto;
     `;
