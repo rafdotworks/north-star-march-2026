@@ -1,14 +1,24 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
+import ProgressiveImage from "./components/ProgressiveImage";
+import AnimatedContent from "./components/AnimatedContent";
+import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
+import { LiquidGlass } from "@/components/LiquidGlass";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { notes, Note } from "./data/notes";
 import { works } from "./data/works";
 import { Play } from "lucide-react";
-import { LiquidGlass } from "@/components/LiquidGlass";
 
 /**
  * Interface representing a work project in the portfolio
@@ -147,6 +157,9 @@ export default function Page() {
 
   // Refs for photo gallery management
   const photoRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Mobile detection
+  const isMobile = useIsMobile();
 
   // Collection of work project images to be displayed in the gallery
   const images = [
@@ -1414,6 +1427,12 @@ export default function Page() {
 
   const toggleGlass = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // Disable liquid glass effect on mobile
+    if (isMobile) {
+      return;
+    }
+
     // Store click position relative to viewport
     setClickPosition({
       x: e.clientX,
@@ -3180,10 +3199,40 @@ export default function Page() {
                     lfgraf
                   </a>
                 </motion.div>
+
+                {/* Philosophy quote - shown at bottom of links on mobile */}
+                <motion.div
+                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 2,
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: 0.8,
+                  }}
+                  className="md:hidden"
+                >
+                  <motion.button
+                    onClick={toggleGlass}
+                    className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
+                    whileHover={{
+                      scale: 1.01,
+                      filter: "brightness(1.3)",
+                      color: "#fff",
+                    }}
+                    whileTap={{ scale: 0.99 }}
+                    aria-label="Toggle liquid glass effect"
+                    style={{
+                      border: "1px solid rgba(255, 255, 255, 0.05)",
+                    }}
+                  >
+                    Always happy, never satisfied.
+                  </motion.button>
+                </motion.div>
               </div>
 
-              {/* Right column - Philosophy */}
-              <div className="flex items-end justify-end">
+              {/* Right column - Philosophy (desktop only) */}
+              <div className="hidden md:flex items-end justify-end">
                 <motion.div
                   initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
                   whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
