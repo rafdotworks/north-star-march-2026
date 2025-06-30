@@ -2074,9 +2074,7 @@ export default function Page() {
                       <span className="text-foreground font-medium">
                         based in Toronto
                       </span>
-                      , Raf blends structure and intuition <br />
-                      Outside of work, he's into portraiture, yoga, and
-                      intentional spaces that feel alive
+                      , Raf blends structure and intuition
                     </p>
                   </div>
                 </div>
