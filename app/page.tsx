@@ -1709,7 +1709,7 @@ export default function Page() {
                                 delay: 0.5,
                               }}
                             >
-                              Lead Product Designer
+                              Product Designer
                             </motion.span>
                             <motion.span
                               className="text-foreground/70"
