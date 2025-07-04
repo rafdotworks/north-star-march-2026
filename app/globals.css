@@ -157,6 +157,7 @@
   :root {
     /* Core colors - Light Mode */
     --background: 40 33% 97%; /* #F8F6F1 - cream */
+    --background-rgb: 248 246 241; /* RGB values for gradients */
     --foreground: 0 35% 23%; /* #5C2E2E - dark brown */
     --card: 40 33% 97%;
     --card-foreground: 0 35% 23%;
@@ -200,6 +201,7 @@
   @media (prefers-color-scheme: dark) {
     :root {
       --background: 0 0% 7%; /* #111111 - deep black */
+      --background-rgb: 17 17 17; /* RGB values for dark mode gradients */
       --foreground: 40 33% 97%; /* #F8F6F1 - cream */
       --card: 0 0% 9%; /* Slightly lighter than background */
       --card-foreground: 40 33% 97%;

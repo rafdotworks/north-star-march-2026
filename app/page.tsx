@@ -57,6 +57,8 @@ export default function Page() {
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
+  const [isAllExperienceModalOpen, setIsAllExperienceModalOpen] =
+    useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
@@ -1428,11 +1430,6 @@ export default function Page() {
   const toggleGlass = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Disable liquid glass effect on mobile
-    if (isMobile) {
-      return;
-    }
-
     // Store click position relative to viewport
     setClickPosition({
       x: e.clientX,
@@ -1501,14 +1498,57 @@ export default function Page() {
           position: "relative",
         }}
       >
-        {/* Bottom gradient for main content - fixed to viewport */}
-        <div className="fixed left-0 right-0 bottom-0 h-[15px] w-screen overflow-hidden z-50 pointer-events-none">
+        {/* Natural progressive bottom blur effect */}
+        <div className="fixed left-0 right-0 bottom-0 h-[120px] w-screen overflow-hidden z-50 pointer-events-none">
+          {/* Base gradient layer - creates the foundation */}
           <motion.div
-            className="absolute inset-x-0 bottom-0 h-full w-full bg-gradient-to-t from-background/60 to-transparent"
+            className="absolute inset-x-0 bottom-0 h-full w-full"
             style={{
-              backdropFilter: `blur(${Math.min(scrollY / 150, 2)}px)`,
-              opacity: Math.min(scrollY / 300, 1),
-              transition: "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+              background: `linear-gradient(to top, 
+                rgba(var(--background-rgb), 0.95) 0%, 
+                rgba(var(--background-rgb), 0.7) 20%, 
+                rgba(var(--background-rgb), 0.3) 50%, 
+                rgba(var(--background-rgb), 0.05) 80%, 
+                transparent 100%)`,
+              opacity: Math.min(scrollY / 500, 0.95),
+              transition: "all 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          />
+
+          {/* Progressive blur layer - responds to scroll with natural easing */}
+          <motion.div
+            className="absolute inset-x-0 bottom-0 h-full w-full"
+            style={{
+              backdropFilter: `blur(${Math.min(scrollY / 250, 2.5)}px)`,
+              opacity: Math.min(scrollY / 800, 0.7),
+              transition: "all 1.5s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          />
+
+          {/* Subtle edge enhancement - for extra smoothness at the very bottom */}
+          <motion.div
+            className="absolute inset-x-0 bottom-0 h-[30px] w-full"
+            style={{
+              background: `linear-gradient(to top, 
+                rgba(var(--background-rgb), 0.98) 0%, 
+                rgba(var(--background-rgb), 0.8) 40%, 
+                rgba(var(--background-rgb), 0.4) 80%, 
+                transparent 100%)`,
+              backdropFilter: `blur(${Math.min(scrollY / 150, 4)}px)`,
+              opacity: Math.min(scrollY / 300, 0.9),
+              transition: "all 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          />
+
+          {/* Ambient glow layer - adds depth and natural feel */}
+          <motion.div
+            className="absolute inset-x-0 bottom-0 h-full w-full"
+            style={{
+              background: `radial-gradient(ellipse at center bottom, 
+                rgba(var(--background-rgb), 0.1) 0%, 
+                transparent 70%)`,
+              opacity: Math.min(scrollY / 1000, 0.4),
+              transition: "all 2s cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           />
         </div>
@@ -1636,6 +1676,118 @@ export default function Page() {
               </div>
             </motion.div>
 
+            {/* Text Animation Section - Independent of criticalContentLoaded */}
+            <div className="w-full mb-36">
+              <div className="space-y-8">
+                {/* Line 1 Section */}
+                <section className="w-full">
+                  <div className="space-y-8">
+                    <div className="space-y-6">
+                      {/* 1. Identity line — bold, intentional */}
+                      <motion.p
+                        className="tracking-tight text-lg"
+                        initial={{
+                          opacity: 0,
+                          filter: "blur(10px)",
+                          y: 10,
+                        }}
+                        animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        transition={{
+                          duration: 3.2,
+                          ease: [0.12, 1, 0.28, 1],
+                          delay: 0.4,
+                        }}
+                      >
+                        <motion.span
+                          className="text-foreground font-medium"
+                          initial={{
+                            opacity: 0,
+                            filter: "blur(10px)",
+                            y: 10,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            filter: "blur(0px)",
+                            y: 0,
+                          }}
+                          transition={{
+                            duration: 3.2,
+                            ease: [0.12, 1, 0.28, 1],
+                            delay: 0.5,
+                          }}
+                        >
+                          Product Designer
+                        </motion.span>
+                        <motion.span
+                          className="text-foreground/70"
+                          initial={{
+                            opacity: 0,
+                            filter: "blur(10px)",
+                            y: 10,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            filter: "blur(0px)",
+                            y: 0,
+                          }}
+                          transition={{
+                            duration: 3.2,
+                            ease: [0.12, 1, 0.28, 1],
+                            delay: 0.55,
+                          }}
+                        >
+                          {" "}
+                          and{" "}
+                        </motion.span>
+                        <motion.span
+                          className="text-foreground font-medium"
+                          initial={{
+                            opacity: 0,
+                            filter: "blur(10px)",
+                            y: 10,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            filter: "blur(0px)",
+                            y: 0,
+                          }}
+                          transition={{
+                            duration: 3.2,
+                            ease: [0.12, 1, 0.28, 1],
+                            delay: 0.6,
+                          }}
+                        >
+                          Design Engineer
+                        </motion.span>
+                        <motion.span
+                          className="text-foreground/70"
+                          initial={{
+                            opacity: 0,
+                            filter: "blur(10px)",
+                            y: 10,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            filter: "blur(0px)",
+                            y: 0,
+                          }}
+                          transition={{
+                            duration: 3.2,
+                            ease: [0.12, 1, 0.28, 1],
+                            delay: 0.65,
+                          }}
+                        >
+                          ; fast with purpose, calm with care, grounded in
+                          trust.
+                        </motion.span>
+                      </motion.p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            {/* Content Section - Controlled by criticalContentLoaded */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{
@@ -1671,113 +1823,6 @@ export default function Page() {
                     }}
                     onTouchStart={() => setIsSlideshowPaused(true)}
                   >
-                    {/* Line 1 Section */}
-
-                    <section className="w-full">
-                      <div className="space-y-8">
-                        <div className="space-y-6">
-                          {/* 1. Identity line — bold, intentional */}
-                          <motion.p
-                            className="tracking-tight text-lg"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(10px)",
-                              y: 10,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 3.2,
-                              ease: [0.12, 1, 0.28, 1],
-                              delay: 0.4,
-                            }}
-                          >
-                            <motion.span
-                              className="text-foreground font-medium"
-                              initial={{
-                                opacity: 0,
-                                filter: "blur(10px)",
-                                y: 10,
-                              }}
-                              animate={{
-                                opacity: 1,
-                                filter: "blur(0px)",
-                                y: 0,
-                              }}
-                              transition={{
-                                duration: 3.2,
-                                ease: [0.12, 1, 0.28, 1],
-                                delay: 0.5,
-                              }}
-                            >
-                              Product Designer
-                            </motion.span>
-                            <motion.span
-                              className="text-foreground/70"
-                              initial={{
-                                opacity: 0,
-                                filter: "blur(10px)",
-                                y: 10,
-                              }}
-                              animate={{
-                                opacity: 1,
-                                filter: "blur(0px)",
-                                y: 0,
-                              }}
-                              transition={{
-                                duration: 3.2,
-                                ease: [0.12, 1, 0.28, 1],
-                                delay: 0.55,
-                              }}
-                            >
-                              {" "}
-                              and{" "}
-                            </motion.span>
-                            <motion.span
-                              className="text-foreground font-medium"
-                              initial={{
-                                opacity: 0,
-                                filter: "blur(10px)",
-                                y: 10,
-                              }}
-                              animate={{
-                                opacity: 1,
-                                filter: "blur(0px)",
-                                y: 0,
-                              }}
-                              transition={{
-                                duration: 3.2,
-                                ease: [0.12, 1, 0.28, 1],
-                                delay: 0.6,
-                              }}
-                            >
-                              Design Engineer
-                            </motion.span>
-                            <motion.span
-                              className="text-foreground/70"
-                              initial={{
-                                opacity: 0,
-                                filter: "blur(10px)",
-                                y: 10,
-                              }}
-                              animate={{
-                                opacity: 1,
-                                filter: "blur(0px)",
-                                y: 0,
-                              }}
-                              transition={{
-                                duration: 3.2,
-                                ease: [0.12, 1, 0.28, 1],
-                                delay: 0.65,
-                              }}
-                            >
-                              ; fast with purpose, calm with care, grounded in
-                              trust.
-                            </motion.span>
-                          </motion.p>
-                        </div>
-                      </div>
-                    </section>
-
                     {/* Replace the AnimatePresence with a crossfade effect */}
                     <div className="relative w-full h-full">
                       {/* Mobile Feed View */}
@@ -2031,64 +2076,125 @@ export default function Page() {
               </section> */}
 
               {/* About Section */}
-              <section className="w-full">
+              <section className="w-full mt-20">
+                <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest mb-6 select-none">
+                  Experience
+                </h2>
                 <div className="space-y-8">
-                  <div className="space-y-6">
-                    {/* 1. Identity line — bold, intentional */}
+                  {(() => {
+                    const experience = [
+                      {
+                        year: "2025",
+                        role: "Senior Product Designer",
+                        company: "Voiceflow",
+                        url: "https://voiceflow.com",
+                      },
+                      {
+                        year: "2024",
+                        role: "Design Lead",
+                        company: "Never Before Seen",
+                        url: "https://neverbeforeseen.co",
+                      },
+                      {
+                        year: "2023–2024",
+                        role: "Founding Product Designer",
+                        company: "Theoriq",
+                        url: "https://theoriq.ai",
+                      },
+                      {
+                        year: "2023",
+                        role: "Product Design Lead",
+                        company: "CurbCutOS",
+                      },
+                      {
+                        year: "2022–2023",
+                        role: "Product Design Lead",
+                        company: "Atlas (Stealth)",
+                      },
+                      {
+                        year: "2021–2022",
+                        role: "Senior Product Designer, Design System",
+                        company: "Zalando",
+                      },
+                      {
+                        year: "2020–2021",
+                        role: "Freelance Designer & Developer",
+                        company: "Independent",
+                      },
+                      {
+                        year: "2019",
+                        role: "Design Intern",
+                        company: "Apple (Developer Academy)",
+                      },
+                      {
+                        year: "2018–2020",
+                        role: "Graphic & Brand Design, cum laude",
+                        company: "Napoli",
+                      },
+                    ];
 
-                    {/* 2. Experience — clean and neutral */}
-                    <p className="text-foreground/70 tracking-tight text-lg">
-                      Raf has contributed as an IC and Lead to{" "}
-                      <span className="hover:text-foreground transition-colors duration-300">
-                        Theoriq
-                      </span>
-                      ,{" "}
-                      <span className="hover:text-foreground transition-colors duration-300">
-                        CurbCutOS
-                      </span>
-                      ,{" "}
-                      <span className="hover:text-foreground transition-colors duration-300">
-                        Zalando
-                      </span>
-                      ; and partnered with clients like{" "}
-                      <span className="hover:text-foreground transition-colors duration-300">
-                        w.ai
-                      </span>
-                      ,{" "}
-                      <span className="hover:text-foreground transition-colors duration-300">
-                        US.court
-                      </span>
-                      ,{" "}
-                      <span className="hover:text-foreground transition-colors duration-300">
-                        Artscapy
-                      </span>
-                    </p>
+                    const recentExperience = experience.slice(0, 3);
 
-                    {/* 3. Location + personal depth */}
-                    <p className="tracking-tight text-lg text-foreground/70">
-                      Born and raised on the{" "}
-                      <span className="hover:text-foreground transition-colors duration-300">
-                        Amalfi Coast
-                      </span>
-                      , influenced by Lisbon, and now{" "}
-                      <span className="text-foreground font-medium">
-                        based in Toronto
-                      </span>
-                      , Raf blends structure and intuition
-                    </p>
-                  </div>
+                    return (
+                      <div className="w-full">
+                        <div className="flex flex-col divide-y divide-foreground/[0.03]">
+                          {recentExperience.map((exp, idx) => (
+                            <div
+                              key={exp.year + exp.role}
+                              className={`flex items-baseline py-4 first:pt-0 last:pb-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg ${
+                                exp.url ? "cursor-pointer" : ""
+                              }`}
+                              onClick={
+                                exp.url
+                                  ? () => window.open(exp.url, "_blank")
+                                  : undefined
+                              }
+                            >
+                              {/* Year */}
+                              <div className="w-28 min-w-[7rem] text-xs text-foreground/40 font-light tracking-tight">
+                                {exp.year}
+                              </div>
+                              {/* Main content */}
+                              <div className="flex-1">
+                                <div className="text-base font-medium text-foreground group-hover:text-foreground/90 transition-colors">
+                                  {exp.role}
+                                </div>
+                                <div className="text-sm text-foreground/60 mt-1">
+                                  {exp.company}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* View all timeline button */}
+                        <motion.button
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5, duration: 0.5 }}
+                          onClick={() => setIsAllExperienceModalOpen(true)}
+                          className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-8"
+                        >
+                          Open Timeline
+                        </motion.button>
+                      </div>
+                    );
+                  })()}
                 </div>
               </section>
 
               {/* Notes Section */}
-              <section className="w-full">
-                <div className="space-y-6">
+              <section className="w-full mt-20">
+                <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest mb-6 select-none">
+                  Notes
+                </h2>
+                <div className="space-y-8">
                   <div className="flex flex-col divide-y divide-foreground/[0.03]">
                     {sortedNotes.map((note, index) => (
                       <motion.div
                         key={note.id}
                         id={`note-card-${index}`}
-                        className="py-5 first:pt-0 last:pb-0 cursor-pointer group relative note-card"
+                        className="py-4 first:pt-0 last:pb-0 cursor-pointer group relative note-card hover:bg-foreground/5 rounded-lg transition-colors duration-200"
                         initial={fadeInAnimation.initial}
                         animate={{ opacity: 1 }}
                         transition={{
@@ -2136,14 +2242,17 @@ export default function Page() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5, duration: 0.5 }}
                     onClick={handleOpenAllNotes}
-                    className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
+                    className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-8"
                   >
-                    View all notes
+                    Open Notes
                   </motion.button>
                 </div>
               </section>
 
-              <section className="w-full">
+              <section className="w-full mt-20">
+                <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest mb-6 select-none">
+                  Photos
+                </h2>
                 <div className="space-y-8">
                   <div className="grid grid-cols-3 gap-3">
                     {photos.slice(0, 3).map((photo, index) => (
@@ -2167,63 +2276,102 @@ export default function Page() {
                       </motion.div>
                     ))}
                   </div>
-                  <Link
-                    href="#"
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
                     onClick={(e) => {
                       e.preventDefault();
                       setCurrentPhotoIndex(0);
                       setIsPhotosModalOpen(true);
                     }}
-                    className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
+                    className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-8"
                   >
-                    View all photos
-                  </Link>
+                    Open Photos
+                  </motion.button>
                 </div>
               </section>
 
               {/* Deep Interest Section - RESTORED */}
-              <section className="w-full">
+              <section className="w-full mt-20">
+                <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest mb-6 select-none">
+                  About
+                </h2>
                 <div className="space-y-8">
-                  <div className="space-y-6">
-                    <motion.p
-                      className="text-foreground/80 tracking-tight text-lg"
+                  <motion.p
+                    className="text-foreground/80 tracking-tight text-lg"
+                    initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{
+                      duration: 1.2,
+                      ease: [0.12, 1, 0.28, 1],
+                    }}
+                  >
+                    <motion.span
                       initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      whileInView={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                      }}
                       viewport={{ once: true, margin: "-100px" }}
                       transition={{
                         duration: 1.2,
                         ease: [0.12, 1, 0.28, 1],
                       }}
                     >
-                      <motion.span
-                        initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        transition={{
-                          duration: 1.2,
-                          ease: [0.12, 1, 0.28, 1],
-                        }}
-                      >
-                        Raf is deeply interested in deepening the space between
-                        design and trust
-                      </motion.span>
-                      <br />
-                      <motion.span
-                        className="text-foreground/60"
-                        initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        transition={{
-                          duration: 1.2,
-                          ease: [0.12, 1, 0.28, 1],
-                          delay: 0.2,
-                        }}
-                      >
-                        Outside of design: portraiture, yoga, and inspiring
-                        workspaces
-                      </motion.span>
-                    </motion.p>
-                  </div>
+                      Raised on the Amalfi Coast, refined in Lisbon, rooted in
+                      Toronto.
+                    </motion.span>
+                  </motion.p>
+                  {/* 3. Location + personal depth */}
+                  <motion.p
+                    className="tracking-tight text-lg text-foreground/70"
+                    initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{
+                      duration: 1.2,
+                      ease: [0.12, 1, 0.28, 1],
+                    }}
+                  >
+                    <motion.span
+                      initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                      whileInView={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                      }}
+                      viewport={{ once: true, margin: "-100px" }}
+                      transition={{
+                        duration: 1.2,
+                        ease: [0.12, 1, 0.28, 1],
+                      }}
+                    >
+                      Outside of design: yoga, portraiture, and thoughtfully
+                      lived spaces
+                    </motion.span>
+                    {/* <br /> */}
+                    <motion.span
+                      className="text-foreground/60"
+                      initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                      whileInView={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                      }}
+                      viewport={{ once: true, margin: "-100px" }}
+                      transition={{
+                        duration: 1.2,
+                        ease: [0.12, 1, 0.28, 1],
+                        delay: 0.2,
+                      }}
+                    >
+                      {/* Raf blends structure and intuition. Outside of design:
+                      portraiture, yoga, and inspiring workspaces */}
+                    </motion.span>
+                  </motion.p>
                 </div>
               </section>
             </motion.div>
@@ -2992,6 +3140,224 @@ export default function Page() {
                 </>
               )}
             </AnimatePresence>
+
+            {/* All Timeline Modal */}
+            <AnimatePresence>
+              {isAllExperienceModalOpen && (
+                <>
+                  {/* Fixed backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+                    onClick={() => setIsAllExperienceModalOpen(false)}
+                  />
+
+                  {/* Scrollable content */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 z-50 overflow-y-auto"
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
+                        setIsAllExperienceModalOpen(false);
+                      }
+                    }}
+                  >
+                    {/* Content container */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Close button - positioned in top right */}
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ delay: 0.2, duration: 0.3 }}
+                        className="absolute top-6 right-6 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsAllExperienceModalOpen(false);
+                        }}
+                        aria-label="Close all timeline"
+                      >
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="transition-transform duration-300 hover:scale-110 text-white/70 hover:text-white"
+                        >
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </motion.button>
+
+                      <div className="flex flex-col divide-y divide-foreground/10 mt-8">
+                        {[
+                          {
+                            year: "2025",
+                            role: "Senior Product Designer",
+                            company: "Voiceflow",
+                            url: "https://voiceflow.com",
+                          },
+                          {
+                            year: "2024",
+                            role: "Design Lead",
+                            company: "Never Before Seen",
+                            url: "https://neverbeforeseen.co",
+                          },
+                          {
+                            year: "2023–2024",
+                            role: "Founding Product Designer",
+                            company: "Theoriq",
+                            url: "https://theoriq.ai",
+                          },
+                          {
+                            year: "2023",
+                            role: "Product Design Lead",
+                            company: "CurbCutOS",
+                            url: "https://curbcutos.com",
+                          },
+                          {
+                            year: "2022–2023",
+                            role: "Product Design Lead",
+                            company: "Atlas (Stealth)",
+                          },
+                          {
+                            year: "2021–2022",
+                            role: "Senior Product Designer, Design System",
+                            company: "Zalando",
+                            url: "https://zalando.com",
+                          },
+                          {
+                            year: "2020–2021",
+                            role: "Freelance Designer & Developer",
+                            company: "Independent",
+                          },
+                          {
+                            year: "2019",
+                            role: "Design Intern",
+                            company: "Apple (Developer Academy)",
+                            url: "https://developer.apple.com/academies/",
+                          },
+                          {
+                            year: "2018–2020",
+                            role: "Graphic & Brand Design, cum laude",
+                            company: "Napoli",
+                            url: "https://win.ilas.com/portfolio/20711100/raffaele-vitale",
+                          },
+                        ].map((exp, index) => (
+                          <motion.div
+                            key={exp.year + exp.role}
+                            className={`py-6 first:pt-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg ${
+                              exp.url ? "cursor-pointer" : ""
+                            }`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.3,
+                              delay: index * 0.05,
+                            }}
+                            onClick={
+                              exp.url
+                                ? () => window.open(exp.url, "_blank")
+                                : undefined
+                            }
+                          >
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
+                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
+                                {exp.year}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-lg text-foreground group-hover:text-foreground/90 transition-colors mb-1">
+                                  {exp.role}
+                                </p>
+                                <p className="text-base text-foreground/60 group-hover:text-foreground/70 transition-colors">
+                                  {exp.company}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+
+                        {/* Divider line */}
+                        <div className="w-full h-px bg-foreground/10 my-12"></div>
+
+                        {/* Additional experience entries */}
+                        {[
+                          {
+                            year: "2018",
+                            role: "Software Engineer (withdrawn)",
+                            company: "Salerno University",
+                          },
+                          {
+                            year: "2018",
+                            role: "Airbnb SuperHost Plus",
+                            company: "Naples",
+                          },
+                        ].map((exp, index) => (
+                          <motion.div
+                            key={exp.year + exp.role}
+                            className="py-6 first:pt-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.3,
+                              delay: (index + 9) * 0.05, // Continue the delay sequence
+                            }}
+                          >
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
+                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
+                                {exp.year}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-lg text-foreground group-hover:text-foreground/90 transition-colors mb-1">
+                                  {exp.role}
+                                </p>
+                                <p className="text-base text-foreground/60 group-hover:text-foreground/70 transition-colors">
+                                  {exp.company}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+
+                        {/* View full CV button */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            duration: 0.3,
+                            delay: 0.6, // Delay after the additional entries
+                          }}
+                          className="pt-8 mt-4"
+                        >
+                          <a
+                            href="https://drive.google.com/file/d/1LSOrihlPoozbIi8TZERfVnG-zdYCqk0Y/view"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors group"
+                          >
+                            View full CV{" "}
+                          </a>
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
         </motion.main>
 
@@ -3214,17 +3580,33 @@ export default function Page() {
                     onClick={toggleGlass}
                     className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
                     whileHover={{
-                      scale: 1.01,
-                      filter: "brightness(1.3)",
+                      scale: 1.02,
+                      filter: "brightness(1.4)",
                       color: "#fff",
                     }}
-                    whileTap={{ scale: 0.99 }}
+                    whileTap={{
+                      scale: 0.97,
+                      filter: "brightness(0.9)",
+                    }}
+                    animate={{
+                      scale: isGlassEnabled ? 1.05 : 1,
+                      filter: isGlassEnabled
+                        ? "brightness(1.5)"
+                        : "brightness(1)",
+                      boxShadow: isGlassEnabled
+                        ? "0 0 20px rgba(255, 255, 255, 0.3)"
+                        : "0 0 0px rgba(255, 255, 255, 0)",
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      ease: [0.12, 1, 0.28, 1],
+                    }}
                     aria-label="Toggle liquid glass effect"
                     style={{
                       border: "1px solid rgba(255, 255, 255, 0.05)",
                     }}
                   >
-                    Always happy, never satisfied.
+                    Always happy, never satisfied
                   </motion.button>
                 </motion.div>
               </div>
@@ -3246,17 +3628,33 @@ export default function Page() {
                     onClick={toggleGlass}
                     className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
                     whileHover={{
-                      scale: 1.01,
-                      filter: "brightness(1.3)",
+                      scale: 1.02,
+                      filter: "brightness(1.4)",
                       color: "#fff",
                     }}
-                    whileTap={{ scale: 0.99 }}
+                    whileTap={{
+                      scale: 0.97,
+                      filter: "brightness(0.9)",
+                    }}
+                    animate={{
+                      scale: isGlassEnabled ? 1.05 : 1,
+                      filter: isGlassEnabled
+                        ? "brightness(1.5)"
+                        : "brightness(1)",
+                      boxShadow: isGlassEnabled
+                        ? "0 0 20px rgba(255, 255, 255, 0.3)"
+                        : "0 0 0px rgba(255, 255, 255, 0)",
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      ease: [0.12, 1, 0.28, 1],
+                    }}
                     aria-label="Toggle liquid glass effect"
                     style={{
                       border: "1px solid rgba(255, 255, 255, 0.05)",
                     }}
                   >
-                    Always happy, never satisfied.
+                    Always happy, never satisfied
                   </motion.button>
                 </motion.div>
               </div>
@@ -3265,39 +3663,40 @@ export default function Page() {
         </div>
       </motion.footer>
 
-      {/* Add the LiquidGlass component with animation */}
+      {/* Add the LiquidGlass component with enhanced animation */}
       <AnimatePresence>
         {isGlassEnabled && (
           <motion.div
             initial={{
               opacity: 0,
-              scale: 0.5,
+              scale: 0.3,
               x: clickPosition.x - window.innerWidth / 2,
               y: clickPosition.y - window.innerHeight / 2,
-              filter: "blur(20px)",
-              rotate: -5,
+              filter: "blur(30px) brightness(0.8)",
+              rotate: -8,
             }}
             animate={{
               opacity: 1,
               scale: 1,
               x: 0,
               y: 0,
-              filter: "blur(0px)",
+              filter: "blur(0px) brightness(1)",
               rotate: 0,
             }}
             exit={{
               opacity: 0,
-              scale: 0.5,
+              scale: 0.4,
               x: clickPosition.x - window.innerWidth / 2,
               y: clickPosition.y - window.innerHeight / 2,
-              filter: "blur(20px)",
-              rotate: 5,
+              filter: "blur(25px) brightness(0.7)",
+              rotate: 8,
             }}
             transition={{
-              duration: 0.8,
-              ease: [0.22, 1, 0.36, 1],
-              filter: { duration: 0.6 },
-              rotate: { duration: 0.8 },
+              duration: 1.2,
+              ease: [0.12, 1, 0.28, 1],
+              filter: { duration: 0.8 },
+              rotate: { duration: 1.2 },
+              scale: { duration: 1.2 },
             }}
             style={{
               position: "fixed",
@@ -3305,6 +3704,7 @@ export default function Page() {
               left: "50%",
               transform: "translate(-50%, -50%)",
               transformOrigin: "center center",
+              zIndex: 9999,
             }}
           >
             <LiquidGlass />

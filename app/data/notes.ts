@@ -29,7 +29,7 @@ Progress, not performance. Care, not noise. That's the direction I want to move 
   {
     id: "note-5",
     title: "'Why are there frequent job changes on your LinkedIn?'",
-    excerpt: " ",
+    excerpt: "On career transitions.",
     content: `# Why are there frequent job changes on your LinkedIn?
 
 ## The Questions That Matter
@@ -241,7 +241,7 @@ The pain's still there, nagging me every day since. But here's the thing: it's a
     id: "note-7",
     title: "Memorable Excellence",
     excerpt: "",
-    content: `There are people I know
+    content: `There are people I know...
 
 Scott, opening the doors of Shopify Builders every Sunday with dedication.
 Hélder, behind the counter at Manna in Porto, precise in every move.
