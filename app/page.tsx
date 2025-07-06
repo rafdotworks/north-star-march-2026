@@ -165,16 +165,18 @@ export default function Page() {
 
   // Collection of work project images to be displayed in the gallery
   const images = [
-    "/work/theoriq.png",
+    "/work/voiceflow-landing.png",
     "/work/theoriq-prod-hero.png",
+    "/work/theoriq.png",
+    // "/work/theoriq-mobile-chat.png",
+    "/work/atlas-1.png",
+    "/work/art-02.png",
     "/work/wai.png",
+    "/work/curbcut.png",
     //"/work/wai-2.png",
     "/work/defi.png",
     "/work/ethos.png",
-    "/work/theoriq-mobile-chat.png",
-    //"/work/curbcut.png",
-    "/work/art-02.png",
-    "/work/atlas-1.png",
+
     "/work/us.png",
     "/work/tela.png",
     "/work/zalando-dodont.png",
@@ -185,6 +187,9 @@ export default function Page() {
   // Mapping of work images to their corresponding Vimeo video URLs
   // Each video is configured with specific player parameters for optimal viewing experience
   const workVideos: { [key: string]: string } = {
+    "/work/voiceflow-landing.png":
+      "https://player.vimeo.com/video/1099175241?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+
     "/work/theoriq-prod-hero.png":
       "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
     "/work/defi.png":
@@ -1499,7 +1504,13 @@ export default function Page() {
         }}
       >
         {/* Natural progressive bottom blur effect */}
-        <div className="fixed left-0 right-0 bottom-0 h-[120px] w-screen overflow-hidden z-50 pointer-events-none">
+        <motion.div
+          className="fixed left-0 right-0 bottom-0 w-screen overflow-hidden z-50 pointer-events-none"
+          style={{
+            height: Math.max(40, Math.min(scrollY / 400, 80)),
+            transition: "height 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+        >
           {/* Base gradient layer - creates the foundation */}
           <motion.div
             className="absolute inset-x-0 bottom-0 h-full w-full"
@@ -1527,7 +1538,7 @@ export default function Page() {
 
           {/* Subtle edge enhancement - for extra smoothness at the very bottom */}
           <motion.div
-            className="absolute inset-x-0 bottom-0 h-[30px] w-full"
+            className="absolute inset-x-0 bottom-0 h-[20px] w-full"
             style={{
               background: `linear-gradient(to top, 
                 rgba(var(--background-rgb), 0.98) 0%, 
@@ -1551,7 +1562,7 @@ export default function Page() {
               transition: "all 2s cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           />
-        </div>
+        </motion.div>
 
         <motion.main
           initial={{ opacity: 0 }}
@@ -2321,7 +2332,7 @@ export default function Page() {
                         ease: [0.12, 1, 0.28, 1],
                       }}
                     >
-                      Raised on the Amalfi Coast, refined in Lisbon, rooted in
+                      Raised on the Amalfi Coast, refined in Lisbon, based in
                       Toronto.
                     </motion.span>
                   </motion.p>
