@@ -1727,7 +1727,7 @@ export default function Page() {
                             delay: 0.5,
                           }}
                         >
-                          Product Designer
+                          Senior Designer
                         </motion.span>
                         <motion.span
                           className="text-foreground/70"
@@ -1768,7 +1768,7 @@ export default function Page() {
                             delay: 0.6,
                           }}
                         >
-                          Design Engineer
+                          Senior Design Engineer
                         </motion.span>
                         <motion.span
                           className="text-foreground/70"
