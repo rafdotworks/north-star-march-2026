@@ -187,8 +187,8 @@ export default function Page() {
   // Mapping of work images to their corresponding Vimeo video URLs
   // Each video is configured with specific player parameters for optimal viewing experience
   const workVideos: { [key: string]: string } = {
-    "/work/voiceflow-landing.png":
-      "https://player.vimeo.com/video/1099175241?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+    // "/work/voiceflow-landing.png":
+    //   "https://player.vimeo.com/video/1099175241?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
 
     "/work/theoriq-prod-hero.png":
       "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
