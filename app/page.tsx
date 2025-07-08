@@ -2099,23 +2099,28 @@ export default function Page() {
                         role: "Senior Product Designer",
                         company: "Voiceflow",
                         url: "https://voiceflow.com",
+                        note: "Product Activation with Braden (CEO)",
                       },
                       {
                         year: "2024",
                         role: "Design Lead",
                         company: "Never Before Seen",
                         url: "https://neverbeforeseen.co",
+                        note: "Design Lead in a zero to one product design studio focused on Web 3.0",
                       },
                       {
                         year: "2023–2024",
                         role: "Founding Product Designer",
                         company: "Theoriq",
                         url: "https://theoriq.ai",
+                        note: "Zero to one. Responsible for Product Design, Marketing and Brand. 140k users in 6 months.",
                       },
                       {
                         year: "2023",
                         role: "Product Design Lead",
                         company: "CurbCutOS",
+                        url: "https://curbcutos.com",
+                        note: "Shaped accessibility SaaS as an IC and Lead.",
                       },
                       {
                         year: "2022–2023",
@@ -2126,21 +2131,27 @@ export default function Page() {
                         year: "2021–2022",
                         role: "Senior Product Designer, Design System",
                         company: "Zalando",
+                        url: "https://zalando.com",
+                        note: "Designed and scaled the B2B Design System used across Zalando's product surfaces. Big focus on documentation.",
                       },
                       {
                         year: "2020–2021",
                         role: "Freelance Designer & Developer",
                         company: "Independent",
+                        note: "Directed brand and product design for startups like Artscapy (£10M+), TravelNest (£2.5M ARR 2020)",
                       },
                       {
                         year: "2019",
                         role: "Design Intern",
                         company: "Apple (Developer Academy)",
+                        url: "https://developer.apple.com/academies/",
+                        note: "Design Intern contributing to a challenge based learning program. WatchOS 6.0.",
                       },
                       {
                         year: "2018–2020",
                         role: "Graphic & Brand Design, cum laude",
                         company: "Napoli",
+                        url: "https://win.ilas.com/portfolio/20711100/raffaele-vitale",
                       },
                     ];
 
@@ -2174,6 +2185,20 @@ export default function Page() {
                                   {exp.company}
                                 </div>
                               </div>
+                              {/* Note on the far right (desktop: hover, mobile: always) */}
+                              {exp.note && (
+                                <div
+                                  className="hidden sm:block ml-4 text-xs font-medium italic text-foreground/60 text-right whitespace-nowrap transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+                                  style={{ minWidth: 120 }}
+                                >
+                                  {exp.note}
+                                </div>
+                              )}
+                              {exp.note && (
+                                <div className="block sm:hidden mt-2 text-xs font-medium italic text-foreground/60">
+                                  {exp.note}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -3185,7 +3210,7 @@ export default function Page() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
                       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
+                      className="w-full max-w-4xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Close button - positioned in top right */}
@@ -3221,24 +3246,28 @@ export default function Page() {
                             role: "Senior Product Designer",
                             company: "Voiceflow",
                             url: "https://voiceflow.com",
+                            note: "Product Activation with Braden (CEO)",
                           },
                           {
                             year: "2024",
                             role: "Design Lead",
                             company: "Never Before Seen",
                             url: "https://neverbeforeseen.co",
+                            note: "Design Lead in a zero to one product design studio focused on Web 3.0",
                           },
                           {
                             year: "2023–2024",
                             role: "Founding Product Designer",
                             company: "Theoriq",
                             url: "https://theoriq.ai",
+                            note: "Zero to one. Responsible for Product Design, Marketing and Brand. 140k users in 6 months.",
                           },
                           {
                             year: "2023",
                             role: "Product Design Lead",
                             company: "CurbCutOS",
                             url: "https://curbcutos.com",
+                            note: "Shaped accessibility SaaS as an IC and Lead.",
                           },
                           {
                             year: "2022–2023",
@@ -3250,17 +3279,20 @@ export default function Page() {
                             role: "Senior Product Designer, Design System",
                             company: "Zalando",
                             url: "https://zalando.com",
+                            note: "Designed and scaled the B2B Design System used across Zalando's product surfaces. Big focus on documentation.",
                           },
                           {
                             year: "2020–2021",
                             role: "Freelance Designer & Developer",
                             company: "Independent",
+                            note: "Directed brand and product design for startups like Artscapy (£10M+), TravelNest (£2.5M ARR 2020)",
                           },
                           {
                             year: "2019",
                             role: "Design Intern",
                             company: "Apple (Developer Academy)",
                             url: "https://developer.apple.com/academies/",
+                            note: "Design Intern contributing to a challenge based learning program. WatchOS 6.0.",
                           },
                           {
                             year: "2018–2020",
@@ -3286,7 +3318,7 @@ export default function Page() {
                                 : undefined
                             }
                           >
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start w-full">
                               <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
                                 {exp.year}
                               </div>
@@ -3294,10 +3326,36 @@ export default function Page() {
                                 <p className="text-lg text-foreground group-hover:text-foreground/90 transition-colors mb-1">
                                   {exp.role}
                                 </p>
-                                <p className="text-base text-foreground/60 group-hover:text-foreground/70 transition-colors">
-                                  {exp.company}
-                                </p>
+                                <div className="text-sm text-foreground/60 mt-1">
+                                  {exp.url ? (
+                                    <a
+                                      href={exp.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:underline hover:text-foreground/80 transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {exp.company}
+                                    </a>
+                                  ) : (
+                                    exp.company
+                                  )}
+                                </div>
                               </div>
+                              {/* Note on the far right (desktop: hover, mobile: always) */}
+                              {exp.note && (
+                                <div
+                                  className="hidden sm:block ml-4 text-xs font-medium italic text-foreground/60 text-right whitespace-pre-line break-words max-w-xs transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+                                  style={{ minWidth: 120 }}
+                                >
+                                  {exp.note}
+                                </div>
+                              )}
+                              {exp.note && (
+                                <div className="block sm:hidden mt-2 text-xs font-medium italic text-foreground/60 whitespace-pre-line break-words">
+                                  {exp.note}
+                                </div>
+                              )}
                             </div>
                           </motion.div>
                         ))}
@@ -3336,9 +3394,9 @@ export default function Page() {
                                 <p className="text-lg text-foreground group-hover:text-foreground/90 transition-colors mb-1">
                                   {exp.role}
                                 </p>
-                                <p className="text-base text-foreground/60 group-hover:text-foreground/70 transition-colors">
+                                <div className="text-base text-foreground/60 group-hover:text-foreground/70 transition-colors">
                                   {exp.company}
-                                </p>
+                                </div>
                               </div>
                             </div>
                           </motion.div>
