@@ -1788,8 +1788,9 @@ export default function Page() {
                             delay: 0.65,
                           }}
                         >
-                          ; fast with purpose, calm with care, grounded in
-                          trust.
+                          .
+                          {/* ; fast with purpose, calm with care, grounded in
+                          trust */}
                         </motion.span>
                       </motion.p>
                     </div>
@@ -2163,14 +2164,7 @@ export default function Page() {
                           {recentExperience.map((exp, idx) => (
                             <div
                               key={exp.year + exp.role}
-                              className={`flex items-baseline py-4 first:pt-0 last:pb-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg ${
-                                exp.url ? "cursor-pointer" : ""
-                              }`}
-                              onClick={
-                                exp.url
-                                  ? () => window.open(exp.url, "_blank")
-                                  : undefined
-                              }
+                              className={`flex items-baseline py-4 first:pt-0 last:pb-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg`}
                             >
                               {/* Year */}
                               <div className="w-28 min-w-[7rem] text-xs text-foreground/40 font-light tracking-tight">
@@ -2182,7 +2176,18 @@ export default function Page() {
                                   {exp.role}
                                 </div>
                                 <div className="text-sm text-foreground/60 mt-1">
-                                  {exp.company}
+                                  {exp.url ? (
+                                    <a
+                                      href={exp.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:text-foreground/80 transition-colors"
+                                    >
+                                      {exp.company}
+                                    </a>
+                                  ) : (
+                                    exp.company
+                                  )}
                                 </div>
                               </div>
                               {/* Note on the far right (desktop: hover, mobile: always) */}
@@ -3303,20 +3308,13 @@ export default function Page() {
                         ].map((exp, index) => (
                           <motion.div
                             key={exp.year + exp.role}
-                            className={`py-6 first:pt-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg ${
-                              exp.url ? "cursor-pointer" : ""
-                            }`}
+                            className={`py-6 first:pt-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg`}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
                               duration: 0.3,
                               delay: index * 0.05,
                             }}
-                            onClick={
-                              exp.url
-                                ? () => window.open(exp.url, "_blank")
-                                : undefined
-                            }
                           >
                             <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start w-full">
                               <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
@@ -3332,8 +3330,7 @@ export default function Page() {
                                       href={exp.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="hover:underline hover:text-foreground/80 transition-colors"
-                                      onClick={(e) => e.stopPropagation()}
+                                      className="hover:text-foreground/80 transition-colors"
                                     >
                                       {exp.company}
                                     </a>
