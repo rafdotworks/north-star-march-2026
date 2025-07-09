@@ -2199,7 +2199,8 @@ export default function Page() {
                                   {exp.note}
                                 </div>
                               )}
-                              {exp.note && (
+                              {/* Hide notes on mobile for first 3 roles to avoid responsiveness issues */}
+                              {exp.note && idx >= 3 && (
                                 <div className="block sm:hidden mt-2 text-xs font-medium italic text-foreground/60">
                                   {exp.note}
                                 </div>
