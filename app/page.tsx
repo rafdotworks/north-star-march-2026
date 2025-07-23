@@ -268,12 +268,19 @@ export default function Page() {
      * Used to determine when to start the slideshow
      */
     const checkCriticalContent = () => {
-      const firstThreeImages = images.slice(0, 3);
-      const allCriticalLoaded = firstThreeImages.every(
-        (src) => loadedImages[src]
-      );
-      if (allCriticalLoaded) {
-        setCriticalContentLoaded(true);
+      if (isMobile) {
+        // On mobile, only gate on the first image
+        if (loadedImages[images[0]]) {
+          setCriticalContentLoaded(true);
+        }
+      } else {
+        const firstThreeImages = images.slice(0, 3);
+        const allCriticalLoaded = firstThreeImages.every(
+          (src) => loadedImages[src]
+        );
+        if (allCriticalLoaded) {
+          setCriticalContentLoaded(true);
+        }
       }
     };
 
@@ -740,19 +747,23 @@ export default function Page() {
     setLoadedImages((prev) => {
       const newState = { ...prev, [src]: true };
 
-      const firstThreeImages = images.slice(0, 3);
-      const criticalLoaded = firstThreeImages.every(
-        (imgSrc) => newState[imgSrc]
-      );
-
-      if (criticalLoaded && !criticalContentLoaded) {
-        setCriticalContentLoaded(true);
+      // Mobile: gate on first image, Desktop: gate on first 3 images
+      if (isMobile) {
+        if (src === images[0] && !criticalContentLoaded) {
+          setCriticalContentLoaded(true);
+        }
+      } else {
+        const firstThreeImages = images.slice(0, 3);
+        const criticalLoaded = firstThreeImages.every(
+          (imgSrc) => newState[imgSrc]
+        );
+        if (criticalLoaded && !criticalContentLoaded) {
+          setCriticalContentLoaded(true);
+        }
       }
 
       // Check if all images are loaded
       const allLoaded = images.every((imgSrc) => newState[imgSrc]);
-
-      // If all images are loaded and we're in a state where slideshow should run
       if (
         allLoaded &&
         mounted &&
@@ -761,7 +772,6 @@ export default function Page() {
         !isAllNotesModalOpen &&
         !isVideoModalOpen
       ) {
-        // Start progress immediately
         setTransitionProgress(0);
       }
 
@@ -1010,16 +1020,28 @@ export default function Page() {
       hourDifference += 24;
     }
 
-    if (hourDifference === 0) {
-      return "You are in the same timezone as Raf";
-    } else if (hourDifference > 0) {
-      return `Raf is ${hourDifference} hour${
-        hourDifference === 1 ? "" : "s"
-      } behind you`;
+    if (isMobile) {
+      // Mobile: always concise, one-line, no wrapping
+      if (hourDifference === 0) {
+        return "Same timezone as Raf";
+      } else if (hourDifference > 0) {
+        return `Raf is ${hourDifference}h behind`;
+      } else {
+        return `Raf is ${Math.abs(hourDifference)}h ahead`;
+      }
     } else {
-      return `Raf is ${Math.abs(hourDifference)} hour${
-        Math.abs(hourDifference) === 1 ? "" : "s"
-      } ahead of you`;
+      // Desktop: keep the original verbose message
+      if (hourDifference === 0) {
+        return "You are in the same timezone as Raf";
+      } else if (hourDifference > 0) {
+        return `Raf is ${hourDifference} hour${
+          hourDifference === 1 ? "" : "s"
+        } behind you`;
+      } else {
+        return `Raf is ${Math.abs(hourDifference)} hour${
+          Math.abs(hourDifference) === 1 ? "" : "s"
+        } ahead of you`;
+      }
     }
   };
 
