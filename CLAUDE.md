@@ -1,193 +1,118 @@
-# RAF.WORKS - Animation & Design Engineering Documentation
+# RAF.WORKS - Design Portfolio & Animation Showcase
 
 ## Project Overview
 
-This portfolio website is a sophisticated Next.js 15.3.0 application that demonstrates advanced animation techniques and design engineering principles. The site combines multiple animation libraries and custom implementations to create immersive user experiences with a focus on performance and visual storytelling.
+This is a sophisticated Next.js 15.3.0 portfolio website for Raf, a Senior Product Designer and Design Engineer based in Toronto. The site showcases advanced animation techniques, interactive design elements, and a curated collection of work, photos, and design notes.
 
 ## Architecture & Technology Stack
 
 ### Core Framework
 - **Next.js 15.3.0** with TypeScript and App Router
-- **React 19** with modern concurrent features
+- **React 18** with modern hooks and state management
 - **Tailwind CSS** with extensive customization and animation utilities
+- **Framer Motion** for React-based animations
+- **GSAP 3.12.7** for high-performance timeline animations
 
-### Animation Libraries
-- **Framer Motion** (latest) - Primary React animation library
-- **GSAP 3.12.7** - High-performance timeline animations
-- **Tailwind CSS Animate** - Utility-based CSS animations
-- **Custom WebGL-style shaders** - Pure JavaScript implementation
+### Key Dependencies
+- **Animation Libraries**: Framer Motion (latest), GSAP 3.12.7, Tailwind CSS Animate
+- **UI Components**: Radix UI component library for accessible UI elements
+- **Styling**: Tailwind CSS with custom extensions, @tailwindcss/typography
+- **Analytics**: Vercel Analytics integration
+- **Fonts**: Custom local fonts (Ronzino, Edu Marist)
 
-## Animation System Architecture
+## Project Structure
+
+### Main Application Files
+- `app/page.tsx` - Main portfolio page with complex state management and animations
+- `app/layout.tsx` - Root layout with font configuration and metadata
+- `app/globals.css` - Global styles and animation keyframes
+- `tailwind.config.js` - Tailwind configuration with custom animations
+
+### Core Components
+- `components/LiquidGlass.tsx` - Interactive liquid glass effect with custom shader implementation
+- `components/Curtain/Curtain.tsx` - Japanese-style curtain loading animation
+- `app/components/ProgressiveImage.tsx` - Progressive image loading with real-time progress tracking
+- `app/components/AnimatedContent.tsx` - Animated content containers
+- `app/components/ConsoleEasterEgg.tsx` - Console-based easter egg feature
+
+### Data Layer
+- `app/data/works.ts` - Work portfolio data structure
+- `app/data/notes.ts` - Design notes and reflections
+- `app/data/photos.ts` - Photo collection data
+
+## Key Features & Animations
 
 ### 1. Japanese Curtain Loading Animation
-**File:** `components/Curtain/Curtain.tsx`
+**Location**: `components/Curtain/Curtain.tsx`
 
-A sophisticated GSAP-powered loading sequence that serves as the site's entrance experience.
+A sophisticated GSAP-powered entrance animation that creates a dramatic reveal effect:
 
-**Key Features:**
-- Time-aware color theming (day/night adjustments)
+**Technical Features**:
+- Time-aware color theming (adjusts based on time of day)
 - 3D perspective transforms with rotationY and rotationX
 - Multi-stage timeline orchestration
-- Hardware-accelerated rendering
+- Hardware-accelerated rendering with transform-gpu
 - Automatic cleanup and memory management
 
-**Code Example:**
-```typescript
-const tl = gsap.timeline({
-  defaults: { ease: "power3.inOut" },
-  onComplete: () => {
-    onAnimationComplete?.();
-    curtain.remove();
-  },
-});
-
-tl.to(".curtain-panel", {
-  duration: 0.6,
-  scale: 1.01,
-  filter: "brightness(1.02)",
-  ease: "power2.inOut",
-})
-.to(".curtain-left", {
-  x: "-105%",
-  rotationY: -6,
-  duration: 1.4,
-  ease: "power2.inOut",
-})
-.to(".curtain-right", {
-  x: "105%",
-  rotationY: 6,
-  duration: 1.4,
-  ease: "power2.inOut",
-}, "<")
-```
-
-**Performance Optimizations:**
-- `transform-gpu` classes for hardware acceleration
-- `perspective: "1800px"` for 3D transforms
-- Proper animation disposal to prevent memory leaks
+**Animation Sequence**:
+1. Initial scale and brightness adjustment
+2. Horizontal panel separation with Y-axis rotation
+3. Vertical movement with X-axis rotation
+4. Subtle wave animation overlay
 
 ### 2. Liquid Glass Interactive Effect
-**File:** `components/LiquidGlass.tsx`
+**Location**: `components/LiquidGlass.tsx`
 
-A custom WebGL-style shader implementation using pure JavaScript and SVG filters.
+A custom WebGL-style shader implementation using pure JavaScript and SVG filters:
 
-**Technical Implementation:**
+**Technical Implementation**:
 - Mathematical SDF (Signed Distance Function) calculations
 - Real-time displacement mapping
 - Interactive mouse tracking with smooth interpolation
 - Canvas-based distortion generation
 - SVG filter integration for visual effects
+- Draggable glass element with position constraints
 
-**Core Shader Class:**
-```typescript
-class Shader {
-  updateShader() {
-    const w = this.width * this.canvasDPI;
-    const h = this.height * this.canvasDPI;
-    const data = new Uint8ClampedArray(w * h * 4);
-
-    for (let i = 0; i < data.length; i += 4) {
-      const x = (i / 4) % w;
-      const y = Math.floor(i / 4 / w);
-      const uv = this.fragment({ x: x / w, y: y / h }, proxy);
-      const dx = uv.x * w - x;
-      const dy = uv.y * h - y;
-      maxScale = Math.max(maxScale, Math.abs(dx), Math.abs(dy));
-    }
-    
-    this.feDisplacementMap.setAttribute("scale", (maxScale / this.canvasDPI).toString());
-  }
-}
-```
+**Core Features**:
+- Rounded rectangle SDF calculations
+- Smooth step interpolation
+- Real-time shader updates
+- Hardware-accelerated backdrop filters
 
 ### 3. Progressive Image Loading System
-**File:** `app/components/ProgressiveImage.tsx`
+**Location**: `app/components/ProgressiveImage.tsx`
 
-Advanced image loading with real-time progress tracking and smooth transitions.
+Advanced image loading with visual feedback and smooth transitions:
 
-**Features:**
+**Features**:
 - XMLHttpRequest-based progress monitoring
 - Shimmer placeholder effects during loading
 - Blur-to-focus transitions using Framer Motion
 - Memory-efficient blob URL handling
 - Graceful error handling and fallbacks
+- Real-time progress indicators
 
-**Shimmer Effect:**
-```typescript
-<motion.div
-  className="absolute inset-0 w-full h-full"
-  style={{
-    background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
-    transform: "skewX(-20deg)",
-  }}
-  animate={{
-    x: ["calc(-100% - 50px)", "calc(100% + 50px)"],
-  }}
-  transition={{
-    duration: 2.5,
-    repeat: Infinity,
-    ease: "linear",
-  }}
-/>
-```
+### 4. Main Page Complex State Management
+**Location**: `app/page.tsx`
 
-### 4. Weather-Based Environmental Animations
-**File:** `app/globals.css`
+The main page demonstrates sophisticated React state management with:
 
-CSS keyframe animations that respond to environmental conditions.
+**State Categories**:
+- **UI State**: Modal visibility, current indices, slideshow controls
+- **Loading State**: Image loading progress, transition states
+- **Animation State**: Scroll tracking, animation completion flags
+- **Interactive State**: Mouse tracking, viewport calculations
 
-**Animation Types:**
-- Rain drops with realistic physics
-- Snowfall with rotation and drift
-- Lightning flashes with timing variations
-- Fog effects with opacity transitions
+**Key Features**:
+- Optimized scroll handling with requestAnimationFrame
+- Image preloading and caching system
+- Responsive slideshow functionality
+- Modal system for photos, notes, and videos
+- Viewport-aware animations
 
-**Example:**
-```css
-@keyframes rainDrop {
-  0% {
-    transform: translateY(0) translateX(0);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateY(50vh) translateX(5px);
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateY(100vh) translateX(0);
-    opacity: 0;
-  }
-}
-```
+## Animation System Architecture
 
-## Design Engineering Patterns
-
-### 1. Consistent Easing System
-All animations use a unified cubic-bezier easing function: `[0.22, 1, 0.36, 1]`
-
-This creates a consistent feel across different animation libraries and ensures smooth, natural motion throughout the site.
-
-### 2. Performance-First Architecture
-- **Hardware Acceleration:** Strategic use of `transform-gpu` and `translateZ(0)`
-- **Animation Cleanup:** Proper disposal in useEffect hooks
-- **Selective Rendering:** Conditional animation execution based on component state
-- **Memory Management:** Careful handling of animation instances and event listeners
-
-### 3. Responsive Animation Timing
-- **Fast interactions:** 0.2-0.3s (button hovers, micro-interactions)
-- **Medium transitions:** 0.5-0.8s (page elements, modal appearances)
-- **Long reveals:** 1.4-2s (major content transitions)
-- **Ambient effects:** 2-8s (breathing animations, environmental effects)
-
-### 4. Progressive Enhancement
-- Fallbacks for users with reduced motion preferences
-- Graceful degradation when animation libraries fail to load
-- Performance scaling based on device capabilities
-
-## Custom Tailwind Animations
-
-**File:** `tailwind.config.js`
-
+### Custom Tailwind Animations
 ```javascript
 keyframes: {
   "slow-pulse": {
@@ -198,103 +123,106 @@ keyframes: {
     "0%, 100%": { opacity: "0.3", transform: "scale(1)" },
     "50%": { opacity: "0.8", transform: "scale(1.2)" },
   },
-},
-animation: {
-  "slow-pulse": "slow-pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-  twinkle: "twinkle 5s ease-in-out infinite",
-},
+}
 ```
 
-## Framer Motion Integration
+### Framer Motion Integration
+- Consistent easing functions across components
+- Staggered animations for content reveal
+- Exit animations for modal transitions
+- Responsive animation scaling
 
-### Staggered Animation Patterns
-```typescript
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.3,
-      delayChildren: 0.2,
-      duration: 1.2,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
-```
+### GSAP Timeline Management
+- Complex multi-stage animations
+- Proper cleanup and memory management
+- 3D transform optimizations
+- Time-based animation adjustments
 
-### Page Transition System
-```typescript
-const cardVariants = {
-  enter: (direction: number) => ({
-    opacity: 0,
-    scale: 0.98,
-    y: 10,
-  }),
-  center: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: {
-      opacity: { duration: 0.3 },
-      scale: { duration: 0.3 },
-      y: { duration: 0.3 },
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-  exit: (direction: number) => ({
-    opacity: 0,
-    scale: 0.98,
-    y: 10,
-  }),
-};
-```
+## Design System
 
-## Animation Library Coordination
+### Typography
+- **Primary Font**: Ronzino (custom local font)
+- **Secondary Font**: Edu Marist (custom local font)
+- **Fallback**: Inter (Google Fonts)
+- **Weight**: Primarily 400 (normal) with 500 for emphasis
 
-### Strategic Library Usage
-- **GSAP:** Complex timeline animations requiring precise control (curtain effect)
-- **Framer Motion:** React component animations and page transitions
-- **CSS Keyframes:** Background effects and environmental animations
-- **Custom JavaScript:** Real-time interactive effects (liquid glass)
+### Color System
+- HSL-based color variables for theme consistency
+- Dark mode support with system preference detection
+- Time-aware color adjustments in animations
+- Muted color palette focusing on content
 
-### Integration Benefits
-1. **Performance Optimization:** Each library used for its strengths
-2. **Consistent Timing:** Unified easing across all implementations
-3. **Maintainable Code:** Clear separation of concerns
-4. **Scalable Architecture:** Easy to extend with new animation types
+### Animation Timing
+- **Micro-interactions**: 0.2-0.3s
+- **Content transitions**: 0.5-0.8s
+- **Major reveals**: 1.4-2s
+- **Ambient effects**: 2-8s
+
+## Performance Optimizations
+
+### Hardware Acceleration
+- Strategic use of `transform-gpu` classes
+- 3D transforms for GPU acceleration
+- Optimized animation sequences
+
+### Memory Management
+- Proper cleanup in useEffect hooks
+- Animation instance disposal
+- Event listener cleanup
+- Blob URL revocation in image loading
+
+### Loading Strategies
+- Progressive image loading with visual feedback
+- Critical content loading flags
+- Preloading strategies for smooth transitions
+
+## Content Management
+
+### Portfolio Structure
+- **Works**: Design projects with images and videos
+- **Photos**: Personal photography collection
+- **Notes**: Design reflections and thoughts
+
+### Data Organization
+- TypeScript interfaces for type safety
+- Centralized data files for easy maintenance
+- Structured content with metadata
+
+## Interactive Features
+
+### Easter Eggs
+- Console-based easter egg system
+- Hidden interactive elements
+- Playful user discoveries
+
+### Modal System
+- Photo gallery with navigation
+- Video playback integration
+- Note reading experience
+- Smooth enter/exit transitions
+
+## Technical Achievements
+
+1. **Hybrid Animation System**: Successfully integrates GSAP, Framer Motion, and CSS animations
+2. **Custom Shader Implementation**: Pure JavaScript WebGL-style effects without WebGL dependency
+3. **Advanced Loading Systems**: Real-time progress tracking with visual feedback
+4. **Responsive Design**: Viewport-aware animations and layouts
+5. **Performance Optimization**: Hardware acceleration and memory management
+6. **Interactive Physics**: Mathematical approach to liquid distortion effects
 
 ## Development Guidelines
 
 ### Adding New Animations
-1. Choose appropriate library based on animation complexity
-2. Use consistent easing: `[0.22, 1, 0.36, 1]`
-3. Implement proper cleanup in useEffect hooks
-4. Add hardware acceleration for transform-heavy animations
-5. Test performance across devices
-6. Consider reduced motion preferences
-
-### Performance Considerations
-- Always clean up animation instances
-- Use `transform-gpu` for hardware acceleration
-- Implement conditional rendering for complex animations
-- Monitor memory usage during development
-- Test on lower-end devices
+1. Choose appropriate library based on complexity
+2. Implement proper cleanup in useEffect hooks
+3. Use hardware acceleration for transform-heavy animations
+4. Test performance across devices
+5. Consider reduced motion preferences
 
 ### Code Organization
 - Keep animation logic close to components
-- Create reusable animation variants
-- Document complex animation sequences
-- Use TypeScript for animation parameters
+- Use TypeScript for type safety
 - Implement proper error boundaries
+- Document complex animation sequences
 
-## Notable Technical Achievements
-
-1. **Hybrid Animation System:** Successfully integrates GSAP, Framer Motion, and custom implementations
-2. **WebGL-Style Shaders:** Pure JavaScript implementation without WebGL dependency
-3. **Real-Time Progress Tracking:** Custom XHR-based image loading with visual feedback
-4. **Time-Aware Theming:** Dynamic animations that respond to time of day
-5. **Interactive Physics:** Mathematical approach to liquid distortion effects
-6. **Performance Optimization:** Strategic use of hardware acceleration and cleanup
-
-This animation system represents advanced design engineering practices with a focus on user experience, performance, and maintainable code architecture.
+This portfolio represents a sophisticated example of modern web animation techniques, combining multiple animation libraries with custom implementations to create a cohesive, performant, and engaging user experience.
