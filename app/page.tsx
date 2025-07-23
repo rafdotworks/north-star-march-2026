@@ -1860,7 +1860,7 @@ export default function Page() {
                     {/* Replace the AnimatePresence with a crossfade effect */}
                     <div className="relative w-full h-full">
                       {/* Mobile Feed View */}
-                      <div className="block sm:hidden space-y-6">
+                      <div className="block sm:hidden space-y-4">
                         {images.map((src: string, index: number) => (
                           <motion.div
                             key={`mobile-${src}`}
