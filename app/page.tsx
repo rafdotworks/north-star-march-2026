@@ -2111,10 +2111,10 @@ export default function Page() {
 
               {/* About Section */}
               <section className="w-full mt-20">
-                <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest mb-6 select-none">
+                <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
                   Experience
                 </h2>
-                <div className="space-y-8">
+                <div>
                   {(() => {
                     const experience = [
                       {
@@ -2182,7 +2182,7 @@ export default function Page() {
 
                     return (
                       <div className="w-full">
-                        <div className="flex flex-col divide-y divide-foreground/[0.03]">
+                        <div className="flex flex-col divide-y divide-foreground/[0.03] mb-12">
                           {recentExperience.map((exp, idx) => (
                             <div
                               key={exp.year + exp.role}
@@ -2249,11 +2249,11 @@ export default function Page() {
 
               {/* Notes Section */}
               <section className="w-full mt-20">
-                <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest mb-6 select-none">
+                <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
                   Notes
                 </h2>
-                <div className="space-y-8">
-                  <div className="flex flex-col divide-y divide-foreground/[0.03]">
+                <div>
+                  <div className="flex flex-col divide-y divide-foreground/[0.03] mb-12">
                     {sortedNotes.map((note, index) => (
                       <motion.div
                         key={note.id}
@@ -2314,11 +2314,11 @@ export default function Page() {
               </section>
 
               <section className="w-full mt-20">
-                <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest mb-6 select-none">
+                <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
                   Photos
                 </h2>
-                <div className="space-y-8">
-                  <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <div className="grid grid-cols-3 gap-3 mb-12">
                     {photos.slice(0, 3).map((photo, index) => (
                       <motion.div
                         key={index}
@@ -2358,10 +2358,10 @@ export default function Page() {
 
               {/* Deep Interest Section - RESTORED */}
               <section className="w-full mt-20">
-                <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest mb-6 select-none">
+                <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
                   About
                 </h2>
-                <div className="space-y-8">
+                <div className="mb-12">
                   <motion.p
                     className="text-foreground/80 tracking-tight text-lg"
                     initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
@@ -3602,7 +3602,9 @@ export default function Page() {
                     delay: 0.2,
                   }}
                 >
-                  <p className="text-sm text-white/60 mb-1">Email</p>
+                  <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                    Email
+                  </p>
                   <a
                     href="mailto:raf@raf.works"
                     className="text-base text-white hover:text-white/90 transition-colors"
@@ -3621,7 +3623,9 @@ export default function Page() {
                     delay: 0.4,
                   }}
                 >
-                  <p className="text-sm text-white/60 mb-1">LinkedIn</p>
+                  <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                    LinkedIn
+                  </p>
                   <a
                     href="https://linkedin.com/in/lfgraf"
                     target="_blank"
@@ -3642,7 +3646,9 @@ export default function Page() {
                     delay: 0.6,
                   }}
                 >
-                  <p className="text-sm text-white/60 mb-1">Twitter/X</p>
+                  <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                    Twitter/X
+                  </p>
                   <a
                     href="https://twitter.com/lfgraf"
                     target="_blank"
