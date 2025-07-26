@@ -1732,6 +1732,26 @@ export default function Page() {
                         }}
                       >
                         <motion.span
+                          className="text-foreground/70"
+                          initial={{
+                            opacity: 0,
+                            filter: "blur(10px)",
+                            y: 10,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            filter: "blur(0px)",
+                            y: 0,
+                          }}
+                          transition={{
+                            duration: 3.2,
+                            ease: [0.12, 1, 0.28, 1],
+                            delay: 0.45,
+                          }}
+                        >
+                          Raf leads as a{" "}
+                        </motion.span>
+                        <motion.span
                           className="text-foreground font-medium"
                           initial={{
                             opacity: 0,
@@ -1830,7 +1850,7 @@ export default function Page() {
               }}
               transition={{
                 duration: 1.5,
-                delay: 0.2,
+                delay: 0.4,
                 ease: [0.22, 1, 0.36, 1],
               }}
               className="space-y-36"
@@ -1869,7 +1889,7 @@ export default function Page() {
                             animate={{ opacity: 1, filter: "blur(0px)" }}
                             transition={{
                               duration: 1.2,
-                              delay: 2.2 + index * 0.15,
+                              delay: 3.2 + index * 0.15,
                               ease: [0.12, 1, 0.28, 1],
                             }}
                           >
@@ -1948,7 +1968,7 @@ export default function Page() {
                             transition={{
                               duration: 2.4,
                               ease: [0.12, 1, 0.28, 1],
-                              delay: 1.6,
+                              delay: 2,
                             }}
                             style={{
                               zIndex: index === currentImageIndex ? 2 : 1,
@@ -2027,6 +2047,31 @@ export default function Page() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Subtle auto-scroll indicator */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{
+                      duration: 1.5,
+                      delay: 3.5,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="flex items-center justify-center mt-12"
+                  >
+                    <motion.div
+                      className="w-12 h-0.5 bg-gradient-to-r from-transparent via-foreground/40 to-transparent rounded-full"
+                      animate={{
+                        scaleX: [0.4, 1, 0.4],
+                        opacity: [0.3, 0.6, 0.3],
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  </motion.div>
 
                   {/* Hide "View all works" CTA on mobile */}
                   {/* <div className="mt-4 hidden sm:block">
@@ -2182,7 +2227,7 @@ export default function Page() {
 
                     return (
                       <div className="w-full">
-                        <div className="flex flex-col divide-y divide-foreground/[0.03] mb-12">
+                        <div className="flex flex-col divide-y divide-foreground/[0.03] mb-8">
                           {recentExperience.map((exp, idx) => (
                             <div
                               key={exp.year + exp.role}
@@ -2253,7 +2298,7 @@ export default function Page() {
                   Notes
                 </h2>
                 <div>
-                  <div className="flex flex-col divide-y divide-foreground/[0.03] mb-12">
+                  <div className="flex flex-col divide-y divide-foreground/[0.03] mb-8">
                     {sortedNotes.map((note, index) => (
                       <motion.div
                         key={note.id}
@@ -2318,7 +2363,7 @@ export default function Page() {
                   Photos
                 </h2>
                 <div>
-                  <div className="grid grid-cols-3 gap-3 mb-12">
+                  <div className="grid grid-cols-3 gap-3 mb-8">
                     {photos.slice(0, 3).map((photo, index) => (
                       <motion.div
                         key={index}
@@ -2361,7 +2406,7 @@ export default function Page() {
                 <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
                   About
                 </h2>
-                <div className="mb-12">
+                <div className="mb-8">
                   <motion.p
                     className="text-foreground/80 tracking-tight text-lg"
                     initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
