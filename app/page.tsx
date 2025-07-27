@@ -54,7 +54,7 @@ export default function Page() {
   // Core UI state management
   const [mounted, setMounted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
+  // const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
   const [isAllExperienceModalOpen, setIsAllExperienceModalOpen] =
@@ -287,7 +287,7 @@ export default function Page() {
     // Start the slideshow after a short delay to ensure images are loaded
     const slideshowTimer = setTimeout(() => {
       if (
-        !isPhotosModalOpen &&
+        // !isPhotosModalOpen &&
         !isNotesModalOpen &&
         !isAllNotesModalOpen &&
         !isSlideshowPaused &&
@@ -516,12 +516,12 @@ export default function Page() {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       if (
-        isPhotosModalOpen ||
+        // isPhotosModalOpen ||
         isNotesModalOpen ||
         isAllNotesModalOpen ||
         isVideoModalOpen
       ) {
-        setIsPhotosModalOpen(false);
+        // setIsPhotosModalOpen(false);
         setIsNotesModalOpen(false);
         setIsAllNotesModalOpen(false);
         setIsVideoModalOpen(false);
@@ -530,7 +530,7 @@ export default function Page() {
     }
 
     if (
-      isPhotosModalOpen ||
+      // isPhotosModalOpen ||
       isNotesModalOpen ||
       isAllNotesModalOpen ||
       isVideoModalOpen
@@ -572,7 +572,7 @@ export default function Page() {
       window.removeEventListener("keydown", handleKeyPress);
     };
   }, [
-    isPhotosModalOpen,
+    // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -586,7 +586,7 @@ export default function Page() {
   useEffect(() => {
     if (
       mounted &&
-      !isPhotosModalOpen &&
+      // !isPhotosModalOpen &&
       !isNotesModalOpen &&
       !isAllNotesModalOpen &&
       !isVideoModalOpen &&
@@ -601,7 +601,7 @@ export default function Page() {
     }
   }, [
     mounted,
-    isPhotosModalOpen,
+    // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -612,7 +612,7 @@ export default function Page() {
   useEffect(() => {
     if (
       mounted &&
-      !isPhotosModalOpen &&
+      // !isPhotosModalOpen &&
       !isNotesModalOpen &&
       !isAllNotesModalOpen &&
       !isVideoModalOpen &&
@@ -630,7 +630,7 @@ export default function Page() {
     }
   }, [
     mounted,
-    isPhotosModalOpen,
+    // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -677,7 +677,7 @@ export default function Page() {
   useEffect(() => {
     if (
       isInViewport &&
-      !isPhotosModalOpen &&
+      // !isPhotosModalOpen &&
       !isNotesModalOpen &&
       !isAllNotesModalOpen &&
       !isVideoModalOpen
@@ -686,7 +686,7 @@ export default function Page() {
     }
   }, [
     isInViewport,
-    isPhotosModalOpen,
+    // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -700,7 +700,7 @@ export default function Page() {
     if (
       !mounted ||
       !criticalContentLoaded ||
-      isPhotosModalOpen ||
+      // isPhotosModalOpen ||
       isNotesModalOpen ||
       isAllNotesModalOpen ||
       isVideoModalOpen ||
@@ -716,7 +716,7 @@ export default function Page() {
   }, [
     mounted,
     criticalContentLoaded,
-    isPhotosModalOpen,
+    // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -767,7 +767,7 @@ export default function Page() {
       if (
         allLoaded &&
         mounted &&
-        !isPhotosModalOpen &&
+        // !isPhotosModalOpen &&
         !isNotesModalOpen &&
         !isAllNotesModalOpen &&
         !isVideoModalOpen
@@ -961,16 +961,16 @@ export default function Page() {
    * Scrolls to selected photo when photo modal opens
    * Uses smooth scrolling with a small delay for modal rendering
    */
-  useEffect(() => {
-    if (isPhotosModalOpen && photoRefs.current[currentPhotoIndex]) {
-      setTimeout(() => {
-        photoRefs.current[currentPhotoIndex]?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }, 300);
-    }
-  }, [isPhotosModalOpen, currentPhotoIndex]);
+  // useEffect(() => {
+  //   if (isPhotosModalOpen && photoRefs.current[currentPhotoIndex]) {
+  //     setTimeout(() => {
+  //       photoRefs.current[currentPhotoIndex]?.scrollIntoView({
+  //         behavior: "smooth",
+  //         block: "center",
+  //       });
+  //     }, 300);
+  //   }
+  // }, [isPhotosModalOpen, currentPhotoIndex]);
 
   /**
    * Formats current time for display in 12-hour format
@@ -1030,17 +1030,13 @@ export default function Page() {
         return `Raf is ${Math.abs(hourDifference)}h ahead`;
       }
     } else {
-      // Desktop: keep the original verbose message
+      // Desktop: use concise format to prevent wrapping
       if (hourDifference === 0) {
-        return "You are in the same timezone as Raf";
+        return "Same timezone as Raf";
       } else if (hourDifference > 0) {
-        return `Raf is ${hourDifference} hour${
-          hourDifference === 1 ? "" : "s"
-        } behind you`;
+        return `Raf is ${hourDifference}h behind`;
       } else {
-        return `Raf is ${Math.abs(hourDifference)} hour${
-          Math.abs(hourDifference) === 1 ? "" : "s"
-        } ahead of you`;
+        return `Raf is ${Math.abs(hourDifference)}h ahead`;
       }
     }
   };
@@ -1326,7 +1322,7 @@ export default function Page() {
   useEffect(() => {
     // Skip only if a modal is open
     if (
-      isPhotosModalOpen ||
+      // isPhotosModalOpen ||
       isNotesModalOpen ||
       isAllNotesModalOpen ||
       isVideoModalOpen ||
@@ -1352,7 +1348,7 @@ export default function Page() {
 
     return () => clearInterval(checkInterval);
   }, [
-    isPhotosModalOpen,
+    // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -1466,21 +1462,23 @@ export default function Page() {
   };
 
   // Add a function to handle closing the photo modal
-  const handleClosePhotoModal = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Re-enable scrolling
-    document.body.style.overflow = "";
+  // const handleClosePhotoModal = (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   // Re-enable scrolling
+  //   document.body.style.overflow = "";
 
-    // Add a small delay before closing to allow for animation
-    setTimeout(() => {
-      setIsPhotosModalOpen(false);
-    }, 100);
-  };
+  //   // Add a small delay before closing to allow for animation
+  //   setTimeout(() => {
+  //     setIsPhotosModalOpen(false);
+  //   }, 100);
+  // };
 
   /**
    * Collection of personal photos for the gallery
    * Each photo includes a source path and display name
    */
+  // TEMPORARILY HIDDEN - Photos section
+  /*
   const photos = [
     { src: "/photos/marianne.jpeg", name: "Marianne" },
     { src: "/photos/daybreak-3.JPG", name: "Daybreak" },
@@ -1495,6 +1493,7 @@ export default function Page() {
     { src: "/photos/vin.JPG", name: "Vin" },
     { src: "/photos/anna.JPG", name: "Anna" },
   ];
+  */
 
   if (!mounted || !criticalContentLoaded) {
     // Return a minimal loading state with proper layout to prevent shifts
@@ -1623,7 +1622,7 @@ export default function Page() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: mounted ? 0.6 : 0 }}
                   transition={{ delay: 1, duration: 1.5 }}
-                  className="text-xs text-foreground/40 font-light max-w-[280px] text-right hidden md:block"
+                  className="text-sm text-foreground/60 font-light max-w-[320px] text-right hidden md:block"
                 >
                   <div className="flex items-center justify-end space-x-2">
                     <span className="min-h-[1.5rem] flex items-center">
@@ -1663,7 +1662,7 @@ export default function Page() {
                   variants={slideInFromBottom}
                   initial="hidden"
                   animate="visible"
-                  className="text-xs text-foreground/40 font-light md:hidden flex items-center"
+                  className="text-sm text-foreground/60 font-light md:hidden flex items-center"
                 >
                   <motion.div
                     className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
@@ -1849,8 +1848,8 @@ export default function Page() {
                 y: criticalContentLoaded ? 0 : 20,
               }}
               transition={{
-                duration: 1.5,
-                delay: 0.4,
+                duration: 1.2,
+                delay: 0.2,
                 ease: [0.22, 1, 0.36, 1],
               }}
               className="space-y-36"
@@ -1889,7 +1888,7 @@ export default function Page() {
                             animate={{ opacity: 1, filter: "blur(0px)" }}
                             transition={{
                               duration: 1.2,
-                              delay: 3.2 + index * 0.15,
+                              delay: 1.2 + index * 0.08,
                               ease: [0.12, 1, 0.28, 1],
                             }}
                           >
@@ -1966,9 +1965,9 @@ export default function Page() {
                               y: index === currentImageIndex ? 0 : 20,
                             }}
                             transition={{
-                              duration: 2.4,
+                              duration: 1.8,
                               ease: [0.12, 1, 0.28, 1],
-                              delay: 2,
+                              delay: 0.8,
                             }}
                             style={{
                               zIndex: index === currentImageIndex ? 2 : 1,
@@ -2053,8 +2052,8 @@ export default function Page() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{
-                      duration: 1.5,
-                      delay: 3.5,
+                      duration: 1.2,
+                      delay: 1.5,
                       ease: [0.22, 1, 0.36, 1],
                     }}
                     className="flex items-center justify-center mt-12"
@@ -2358,48 +2357,7 @@ export default function Page() {
                 </div>
               </section>
 
-              <section className="w-full mt-20">
-                <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
-                  Photos
-                </h2>
-                <div>
-                  <div className="grid grid-cols-3 gap-3 mb-8">
-                    {photos.slice(0, 3).map((photo, index) => (
-                      <motion.div
-                        key={index}
-                        className="aspect-[3/4] md:aspect-[2/3] cursor-pointer relative"
-                        initial={fadeInAnimation.initial}
-                        animate={{ opacity: loadedImages[photo.src] ? 1 : 0 }}
-                        transition={fadeInAnimation.transition}
-                        onClick={() => {
-                          setCurrentPhotoIndex(index);
-                          setIsPhotosModalOpen(true);
-                        }}
-                      >
-                        <img
-                          src={photo.src}
-                          alt={`Photo of ${photo.name}`}
-                          className="w-full h-full object-cover"
-                          onLoad={() => handleImageLoad(photo.src)}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setCurrentPhotoIndex(0);
-                      setIsPhotosModalOpen(true);
-                    }}
-                    className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-8"
-                  >
-                    Open Photos
-                  </motion.button>
-                </div>
-              </section>
+              {/* TEMPORARILY HIDDEN - Photos section */}
 
               {/* Deep Interest Section - RESTORED */}
               <section className="w-full mt-20">
@@ -2770,104 +2728,7 @@ export default function Page() {
               )}
             </AnimatePresence>
 
-            {/* Photos Modal */}
-            <AnimatePresence>
-              {isPhotosModalOpen && (
-                <>
-                  {/* Fixed backdrop */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                    onClick={handleClosePhotoModal}
-                  />
-
-                  {/* Scrollable content */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="fixed inset-0 z-50 overflow-y-auto"
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) {
-                        handleClosePhotoModal(e);
-                      }
-                    }}
-                  >
-                    {/* Sticky close button */}
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ delay: 0.2, duration: 0.3 }}
-                      className="sticky top-6 float-right mr-6 flex items-center justify-center w-6 h-6 rounded-full hover:bg-foreground/5 transition-colors"
-                      onClick={handleClosePhotoModal}
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className="text-foreground/40 hover:text-foreground/60 transition-colors"
-                      >
-                        <path d="M18 6L6 18M6 6l12 12" />
-                      </svg>
-                    </motion.button>
-
-                    {/* Content container */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="w-full max-w-3xl mx-auto px-6 md:px-8 py-20 space-y-32"
-                    >
-                      {/* Photos grid */}
-                      <div className="grid grid-cols-1 gap-16 md:gap-24">
-                        {photos.map((photo, index) => (
-                          <motion.div
-                            key={index}
-                            ref={(el) => {
-                              photoRefs.current[index] = el;
-                            }}
-                            className="aspect-[3/4] cursor-pointer relative max-w-2xl mx-auto w-full"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{
-                              opacity: loadedImages[photo.src] ? 1 : 0,
-                              y: loadedImages[photo.src] ? 0 : 10,
-                            }}
-                            transition={{
-                              duration: 0.5,
-                              delay: index * 0.05,
-                              ease: [0.22, 1, 0.36, 1],
-                            }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <img
-                              src={photo.src}
-                              alt={`Photo of ${photo.name}`}
-                              className="w-full h-full object-cover"
-                              onLoad={() => handleImageLoad(photo.src)}
-                            />
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 flex justify-center items-center">
-                              <span className="text-white text-sm font-light">
-                                {photo.name}
-                              </span>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
+            {/* TEMPORARILY HIDDEN - Photos Modal */}
 
             {/* Notes Modal */}
             <AnimatePresence>
@@ -3597,7 +3458,7 @@ export default function Page() {
           ease: [0.22, 1, 0.36, 1],
         }}
         style={{
-          marginTop: "144px", // 36 * 4 = 144px
+          marginTop: "80px", // Reduced from 144px to match other sections (mt-20 = 80px)
           boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
         }}
       >
