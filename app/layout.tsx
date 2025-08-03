@@ -17,12 +17,12 @@ const eduMarist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Raf | Product Designer",
-  description: "Senior Designer and Senior Design Engineer based in Toronto.",
+  title: "Senior Designer, Design Engineer",
+  description: "Senior Designer and Design Engineer based in Toronto.",
   metadataBase: new URL("https://raf.works"),
   openGraph: {
-    title: "Raf | Senior Designer",
-    description: "Senior Designer and Senior Design Engineer based in Toronto.",
+    title: "Senior Designer, Design Engineer",
+    description: "Senior Designer and Design Engineer based in Toronto.",
     url: "https://raf.works",
     siteName: "Raf",
     images: [
@@ -37,8 +37,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Raf | Senior Designer",
-    description: "Senior Designer and Senior Design Engineer based in Toronto.",
+    title: "Senior Designer, Design Engineer",
+    description: "Senior Designer and Design Engineer based in Toronto.",
     creator: "@lfgraf",
     images: ["/og-image.png"],
   },

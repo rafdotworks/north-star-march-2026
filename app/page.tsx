@@ -160,8 +160,29 @@ export default function Page() {
   // Refs for photo gallery management
   const photoRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Mobile detection
+  // Mobile detection with fallback
   const isMobile = useIsMobile();
+  const [isMobileReady, setIsMobileReady] = useState(false);
+  const [isSlowConnection, setIsSlowConnection] = useState(false);
+
+  // Ensure mobile detection is ready before making loading decisions
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMobileReady(true);
+
+      // Detect slow connections
+      if ("connection" in navigator) {
+        const connection = (navigator as any).connection;
+        if (
+          connection.effectiveType === "slow-2g" ||
+          connection.effectiveType === "2g"
+        ) {
+          setIsSlowConnection(true);
+          console.log("Slow connection detected, optimizing loading");
+        }
+      }
+    }
+  }, []);
 
   // Collection of work project images to be displayed in the gallery
   const images = [
@@ -254,8 +275,18 @@ export default function Page() {
   useEffect(() => {
     setMounted(true);
 
-    // Fetch weather data
-    fetchWeatherData();
+    // Fetch weather data (non-blocking with timeout)
+    const weatherPromise = fetchWeatherData().catch((error) => {
+      console.warn(
+        "Weather API failed, continuing without weather data:",
+        error
+      );
+    });
+
+    // Add timeout for weather API
+    const weatherTimeout = setTimeout(() => {
+      console.warn("Weather API timeout, continuing without weather data");
+    }, 5000);
 
     // Set up interval to update time
     const timeInterval = setInterval(updateTimeState, 1000);
@@ -268,6 +299,9 @@ export default function Page() {
      * Used to determine when to start the slideshow
      */
     const checkCriticalContent = () => {
+      // Only check if mobile detection is ready
+      if (!isMobileReady) return;
+
       if (isMobile) {
         // On mobile, only gate on the first image
         if (loadedImages[images[0]]) {
@@ -303,12 +337,38 @@ export default function Page() {
       setAnimationsComplete(true);
     }, 3500);
 
-    checkCriticalContent();
+    // Add fallback timer for poor network conditions
+    const fallbackDelay = isSlowConnection ? 5000 : 8000; // Faster fallback for slow connections
+    const fallbackTimer = setTimeout(() => {
+      if (!criticalContentLoaded) {
+        console.log(
+          "Fallback: Critical content loading timeout, proceeding anyway"
+        );
+        setCriticalContentLoaded(true);
+      }
+    }, fallbackDelay);
+
+    // Add immediate fallback for when mobile detection fails
+    const immediateFallbackDelay = isSlowConnection ? 1500 : 3000; // Faster fallback for slow connections
+    const immediateFallback = setTimeout(() => {
+      if (!criticalContentLoaded && isMobileReady) {
+        console.log(
+          "Immediate fallback: Mobile detection ready but no images loaded"
+        );
+        setCriticalContentLoaded(true);
+      }
+    }, immediateFallbackDelay);
+
+    // Don't call checkCriticalContent immediately - it will be called when images load
+    // checkCriticalContent();
 
     return () => {
       clearInterval(timeInterval);
       clearTimeout(slideshowTimer);
       clearTimeout(animationTimer);
+      clearTimeout(fallbackTimer);
+      clearTimeout(immediateFallback);
+      clearTimeout(weatherTimeout);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
@@ -734,6 +794,11 @@ export default function Page() {
         const img = new window.Image();
         img.src = src;
         img.onload = () => handleImageLoad(src);
+        img.onerror = () => {
+          console.warn(`Failed to load image: ${src}`);
+          // Mark as loaded anyway to prevent blocking
+          handleImageLoad(src);
+        };
       });
     }
   }, [mounted]);
@@ -748,16 +813,26 @@ export default function Page() {
       const newState = { ...prev, [src]: true };
 
       // Mobile: gate on first image, Desktop: gate on first 3 images
-      if (isMobile) {
+      if (isMobileReady && isMobile) {
         if (src === images[0] && !criticalContentLoaded) {
+          console.log("Mobile: First image loaded, setting critical content");
           setCriticalContentLoaded(true);
         }
-      } else {
+      } else if (isMobileReady && !isMobile) {
         const firstThreeImages = images.slice(0, 3);
         const criticalLoaded = firstThreeImages.every(
           (imgSrc) => newState[imgSrc]
         );
         if (criticalLoaded && !criticalContentLoaded) {
+          console.log(
+            "Desktop: First 3 images loaded, setting critical content"
+          );
+          setCriticalContentLoaded(true);
+        }
+      } else {
+        // Fallback: if mobile detection isn't ready, use first image as critical
+        if (src === images[0] && !criticalContentLoaded) {
+          console.log("Fallback: First image loaded, setting critical content");
           setCriticalContentLoaded(true);
         }
       }
@@ -1509,6 +1584,12 @@ export default function Page() {
             <div className="space-y-36 opacity-0">
               <div className="w-full h-[600px] bg-foreground/5 rounded animate-pulse" />
             </div>
+            {/* Loading indicator for poor connections */}
+            {mounted && !criticalContentLoaded && (
+              <div className="fixed bottom-8 right-8 bg-foreground/10 backdrop-blur-sm rounded-full px-4 py-2 text-xs text-foreground/60">
+                Loading...
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -2163,10 +2244,10 @@ export default function Page() {
                     const experience = [
                       {
                         year: "2025",
-                        role: "Senior Product Designer",
-                        company: "Voiceflow",
+                        role: "Senior Designer",
+                        company: "Voiceflow, Coinbase, TBD",
                         url: "https://voiceflow.com",
-                        note: "Product Activation with Braden (CEO)",
+                        note: "Product Design User Activation with Braden (Voiceflow CEO). Coinbase: Wallet and Dev tools. In progress",
                       },
                       {
                         year: "2024",
@@ -2237,31 +2318,17 @@ export default function Page() {
                                 {exp.year}
                               </div>
                               {/* Main content */}
-                              <div className="flex-1">
+                              <div className="flex-1 sm:pr-12 md:pr-16 lg:pr-20">
                                 <div className="text-base font-medium text-foreground group-hover:text-foreground/90 transition-colors">
                                   {exp.role}
                                 </div>
-                                <div className="text-sm text-foreground/60 mt-1">
-                                  {exp.url ? (
-                                    <a
-                                      href={exp.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="hover:text-foreground/80 transition-colors"
-                                    >
-                                      {exp.company}
-                                    </a>
-                                  ) : (
-                                    exp.company
-                                  )}
+                                <div className="text-sm text-foreground/60 dark:text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors mt-1">
+                                  {exp.company}
                                 </div>
                               </div>
                               {/* Note on the far right (desktop: hover, mobile: always) */}
                               {exp.note && (
-                                <div
-                                  className="hidden sm:block ml-4 text-xs font-medium italic text-foreground/60 text-right whitespace-nowrap transition-opacity duration-300 opacity-0 group-hover:opacity-100"
-                                  style={{ minWidth: 120 }}
-                                >
+                                <div className="hidden sm:block ml-4 text-xs font-medium italic text-foreground/60 text-right transition-opacity duration-300 opacity-0 group-hover:opacity-100 max-w-[200px] break-words">
                                   {exp.note}
                                 </div>
                               )}
@@ -2281,7 +2348,7 @@ export default function Page() {
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.5, duration: 0.5 }}
                           onClick={() => setIsAllExperienceModalOpen(true)}
-                          className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-8"
+                          className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
                         >
                           Open Timeline
                         </motion.button>
@@ -2350,7 +2417,7 @@ export default function Page() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5, duration: 0.5 }}
                     onClick={handleOpenAllNotes}
-                    className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-8"
+                    className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
                   >
                     Open Notes
                   </motion.button>
@@ -3177,10 +3244,10 @@ export default function Page() {
                         {[
                           {
                             year: "2025",
-                            role: "Senior Product Designer",
-                            company: "Voiceflow",
+                            role: "Senior Designer",
+                            company: "Voiceflow, Coinbase, TBD",
                             url: "https://voiceflow.com",
-                            note: "Product Activation with Braden (CEO)",
+                            note: "Product Design User Activation with Braden (Voiceflow CEO). Coinbase: Wallet and Dev tools. In progress",
                           },
                           {
                             year: "2024",
@@ -3245,35 +3312,21 @@ export default function Page() {
                               delay: index * 0.05,
                             }}
                           >
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start w-full">
-                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-12 md:gap-16 items-baseline w-full">
+                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px] sm:min-w-[100px]">
                                 {exp.year}
                               </div>
-                              <div className="flex-1">
+                              <div className="flex-1 sm:pr-12 md:pr-16 lg:pr-20">
                                 <p className="text-lg text-foreground group-hover:text-foreground/90 transition-colors mb-1">
                                   {exp.role}
                                 </p>
-                                <div className="text-sm text-foreground/60 mt-1">
-                                  {exp.url ? (
-                                    <a
-                                      href={exp.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="hover:text-foreground/80 transition-colors"
-                                    >
-                                      {exp.company}
-                                    </a>
-                                  ) : (
-                                    exp.company
-                                  )}
+                                <div className="text-sm text-foreground/60 dark:text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors mt-1">
+                                  {exp.company}
                                 </div>
                               </div>
                               {/* Note on the far right (desktop: hover, mobile: always) */}
                               {exp.note && (
-                                <div
-                                  className="hidden sm:block ml-4 text-xs font-medium italic text-foreground/60 text-right whitespace-pre-line break-words max-w-xs transition-opacity duration-300 opacity-0 group-hover:opacity-100"
-                                  style={{ minWidth: 120 }}
-                                >
+                                <div className="hidden sm:block ml-4 text-xs font-medium italic text-foreground/60 text-right whitespace-pre-line break-words max-w-[200px] transition-opacity duration-300 opacity-0 group-hover:opacity-100">
                                   {exp.note}
                                 </div>
                               )}
@@ -3312,15 +3365,15 @@ export default function Page() {
                               delay: (index + 9) * 0.05, // Continue the delay sequence
                             }}
                           >
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
-                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-12 md:gap-16 items-baseline">
+                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px] sm:min-w-[100px]">
                                 {exp.year}
                               </div>
-                              <div className="flex-1">
+                              <div className="flex-1 sm:pr-12 md:pr-16 lg:pr-20">
                                 <p className="text-lg text-foreground group-hover:text-foreground/90 transition-colors mb-1">
                                   {exp.role}
                                 </p>
-                                <div className="text-base text-foreground/60 group-hover:text-foreground/70 transition-colors">
+                                <div className="text-sm text-foreground/60 dark:text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors mt-1">
                                   {exp.company}
                                 </div>
                               </div>
@@ -3607,7 +3660,7 @@ export default function Page() {
                       border: "1px solid rgba(255, 255, 255, 0.05)",
                     }}
                   >
-                    Always happy, never satisfied
+                    More demos, less memos
                   </motion.button>
                 </motion.div>
               </div>
