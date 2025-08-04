@@ -1890,7 +1890,7 @@ export default function Page() {
                             delay: 0.6,
                           }}
                         >
-                          Senior Design Engineer
+                          Design Engineer
                         </motion.span>
                         <motion.span
                           className="text-foreground/70"
@@ -2153,35 +2153,16 @@ export default function Page() {
                     />
                   </motion.div>
 
-                  {/* Hide "View all works" CTA on mobile */}
-                  {/* <div className="mt-4 hidden sm:block">
-                    <a
-                      href="https://deck.raf.works"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors"
-                    >
-                      View all works{" "}
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className="w-3.5 h-3.5 ml-1 relative -top-[0.5px]"
-                      >
-                        <rect
-                          x="3"
-                          y="11"
-                          width="18"
-                          height="11"
-                          rx="2"
-                          ry="2"
-                        />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                      </svg>
-                    </a>
-                  </div> */}
+                  {/* Open works button */}
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    onClick={() => (window.location.href = "/works")}
+                    className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
+                  >
+                    Open Works
+                  </motion.button>
                 </div>
               </div>
               {/* 
@@ -3538,7 +3519,7 @@ export default function Page() {
               filter: "brightness(0.7)",
             }}
           >
-            <source src="/video/footer-video.mp4" type="video/mp4" />
+            <source src="/video/footer-video-2.mp4" type="video/mp4" />
           </video>
 
           {/* Dark overlay */}
