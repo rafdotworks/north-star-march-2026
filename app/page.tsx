@@ -15,6 +15,7 @@ import ProgressiveImage from "./components/ProgressiveImage";
 import AnimatedContent from "./components/AnimatedContent";
 import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
 import { LiquidGlass } from "@/components/LiquidGlass";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { notes, Note } from "./data/notes";
 import { works } from "./data/works";
@@ -183,6 +184,9 @@ export default function Page() {
       }
     }
   }, []);
+
+  // Prevent multiple re-renders by batching state updates
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Collection of work project images to be displayed in the gallery
   const images = [
@@ -517,9 +521,16 @@ export default function Page() {
       const coordinates =
         cityCoordinates[location] || cityCoordinates["Toronto"];
 
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.lat}&longitude=${coordinates.lon}&current=temperature_2m,weather_code&timezone=America%2FNew_York`
+        `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.lat}&longitude=${coordinates.lon}&current=temperature_2m,weather_code&timezone=America%2FNew_York`,
+        { signal: controller.signal }
       );
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error("Weather data fetch failed");
@@ -646,55 +657,27 @@ export default function Page() {
   useEffect(() => {
     if (
       mounted &&
-      // !isPhotosModalOpen &&
       !isNotesModalOpen &&
       !isAllNotesModalOpen &&
       !isVideoModalOpen &&
-      !isSlideshowPaused
+      !isSlideshowPaused &&
+      !initialLoadComplete
     ) {
       const startTimer = setTimeout(() => {
         setCurrentImageIndex(0);
         setTransitionProgress(0);
+        setInitialLoadComplete(true);
       }, 800);
 
       return () => clearTimeout(startTimer);
     }
   }, [
     mounted,
-    // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
     isSlideshowPaused,
-  ]);
-
-  // Add a separate useEffect to start the slideshow immediately when mounted
-  useEffect(() => {
-    if (
-      mounted &&
-      // !isPhotosModalOpen &&
-      !isNotesModalOpen &&
-      !isAllNotesModalOpen &&
-      !isVideoModalOpen &&
-      !isSlideshowPaused
-    ) {
-      // Force the first image transition after a short delay
-      const startTimer = setTimeout(() => {
-        // Start with the first image
-        setCurrentImageIndex(0);
-        // Reset progress
-        setTransitionProgress(0);
-      }, 800);
-
-      return () => clearTimeout(startTimer);
-    }
-  }, [
-    mounted,
-    // isPhotosModalOpen,
-    isNotesModalOpen,
-    isAllNotesModalOpen,
-    isVideoModalOpen,
-    isSlideshowPaused,
+    initialLoadComplete,
   ]);
 
   // Add a ref for the slideshow container
@@ -812,26 +795,31 @@ export default function Page() {
     setLoadedImages((prev) => {
       const newState = { ...prev, [src]: true };
 
+      // Prevent multiple critical content triggers
+      if (criticalContentLoaded) {
+        return newState;
+      }
+
       // Mobile: gate on first image, Desktop: gate on first 3 images
-      if (isMobileReady && isMobile) {
-        if (src === images[0] && !criticalContentLoaded) {
+      if (isMobileReady && isMobile !== null) {
+        if (isMobile && src === images[0]) {
           console.log("Mobile: First image loaded, setting critical content");
           setCriticalContentLoaded(true);
-        }
-      } else if (isMobileReady && !isMobile) {
-        const firstThreeImages = images.slice(0, 3);
-        const criticalLoaded = firstThreeImages.every(
-          (imgSrc) => newState[imgSrc]
-        );
-        if (criticalLoaded && !criticalContentLoaded) {
-          console.log(
-            "Desktop: First 3 images loaded, setting critical content"
+        } else if (!isMobile) {
+          const firstThreeImages = images.slice(0, 3);
+          const criticalLoaded = firstThreeImages.every(
+            (imgSrc) => newState[imgSrc]
           );
-          setCriticalContentLoaded(true);
+          if (criticalLoaded) {
+            console.log(
+              "Desktop: First 3 images loaded, setting critical content"
+            );
+            setCriticalContentLoaded(true);
+          }
         }
       } else {
         // Fallback: if mobile detection isn't ready, use first image as critical
-        if (src === images[0] && !criticalContentLoaded) {
+        if (src === images[0]) {
           console.log("Fallback: First image loaded, setting critical content");
           setCriticalContentLoaded(true);
         }
@@ -842,7 +830,6 @@ export default function Page() {
       if (
         allLoaded &&
         mounted &&
-        // !isPhotosModalOpen &&
         !isNotesModalOpen &&
         !isAllNotesModalOpen &&
         !isVideoModalOpen
@@ -1573,31 +1560,33 @@ export default function Page() {
   if (!mounted || !criticalContentLoaded) {
     // Return a minimal loading state with proper layout to prevent shifts
     return (
-      <div className="min-h-screen bg-background">
-        <div className="px-6 sm:px-10 py-16 md:px-28">
-          <div className="w-full max-w-screen-xl mx-auto">
-            {/* Placeholder for header */}
-            <div className="flex items-center mb-40 opacity-0">
-              <h1 className="text-2xl font-normal">Raf</h1>
-            </div>
-            {/* Placeholder for content */}
-            <div className="space-y-36 opacity-0">
-              <div className="w-full h-[600px] bg-foreground/5 rounded animate-pulse" />
-            </div>
-            {/* Loading indicator for poor connections */}
-            {mounted && !criticalContentLoaded && (
-              <div className="fixed bottom-8 right-8 bg-foreground/10 backdrop-blur-sm rounded-full px-4 py-2 text-xs text-foreground/60">
-                Loading...
+      <ErrorBoundary>
+        <div className="min-h-screen bg-background">
+          <div className="px-6 sm:px-10 py-16 md:px-28">
+            <div className="w-full max-w-screen-xl mx-auto">
+              {/* Placeholder for header */}
+              <div className="flex items-center mb-40 opacity-0">
+                <h1 className="text-2xl font-normal">Raf</h1>
               </div>
-            )}
+              {/* Placeholder for content */}
+              <div className="space-y-36 opacity-0">
+                <div className="w-full h-[600px] bg-foreground/5 rounded animate-pulse" />
+              </div>
+              {/* Loading indicator for poor connections */}
+              {mounted && !criticalContentLoaded && (
+                <div className="fixed bottom-8 right-8 bg-foreground/10 backdrop-blur-sm rounded-full px-4 py-2 text-xs text-foreground/60">
+                  Loading...
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <div
         style={{
           filter: blurAmount > 0 ? `blur(${blurAmount}px)` : "none",
@@ -3470,282 +3459,282 @@ export default function Page() {
             </>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* Footer with video background - harmonious reveal */}
-      <motion.footer
-        className="relative w-full bg-black overflow-hidden min-h-[500px]"
-        initial={{
-          y: 60,
-          opacity: 0,
-        }}
-        whileInView={{
-          y: 0,
-          opacity: 1,
-        }}
-        viewport={{
-          once: true,
-          amount: 0.3,
-        }}
-        transition={{
-          duration: 2.5,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-        style={{
-          marginTop: "80px", // Reduced from 144px to match other sections (mt-20 = 80px)
-          boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
-        }}
-      >
-        {/* Video background with gentle fade */}
-        <motion.div
-          className="absolute inset-0 w-full h-full"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+        {/* Footer with video background - harmonious reveal */}
+        <motion.footer
+          className="relative w-full bg-black overflow-hidden min-h-[500px]"
+          initial={{
+            y: 60,
+            opacity: 0,
+          }}
+          whileInView={{
+            y: 0,
+            opacity: 1,
+          }}
+          viewport={{
+            once: true,
+            amount: 0.3,
+          }}
           transition={{
-            duration: 3,
-            ease: "easeOut",
+            duration: 2.5,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          style={{
+            marginTop: "80px", // Reduced from 144px to match other sections (mt-20 = 80px)
+            boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
           }}
         >
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              filter: "brightness(0.7)",
+          {/* Video background with gentle fade */}
+          <motion.div
+            className="absolute inset-0 w-full h-full"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{
+              duration: 3,
+              ease: "easeOut",
             }}
           >
-            <source src="/video/footer-video-2.mp4" type="video/mp4" />
-          </video>
+            <video
+              ref={videoRef}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                filter: "brightness(0.7)",
+              }}
+            >
+              <source src="/video/footer-video-2.mp4" type="video/mp4" />
+            </video>
 
-          {/* Dark overlay */}
-          <div className="absolute inset-0 bg-black/50" />
-        </motion.div>
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-black/50" />
+          </motion.div>
 
-        {/* Footer content with blur focus animation */}
-        <div className="relative z-10 px-6 sm:px-10 md:px-28 py-36">
-          <div className="w-full max-w-screen-xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-8">
-                {/* Email */}
-                <motion.div
-                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    duration: 2,
-                    ease: [0.22, 1, 0.36, 1],
-                    delay: 0.2,
-                  }}
-                >
-                  <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                    Email
-                  </p>
-                  <a
-                    href="mailto:raf@raf.works"
-                    className="text-base text-white hover:text-white/90 transition-colors"
-                  >
-                    raf@raf.works
-                  </a>
-                </motion.div>
-                {/* LinkedIn */}
-                <motion.div
-                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    duration: 2,
-                    ease: [0.22, 1, 0.36, 1],
-                    delay: 0.4,
-                  }}
-                >
-                  <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                    LinkedIn
-                  </p>
-                  <a
-                    href="https://linkedin.com/in/lfgraf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-base text-white hover:text-white/90 transition-colors"
-                  >
-                    lfgraf
-                  </a>
-                </motion.div>
-                {/* Twitter/X */}
-                <motion.div
-                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    duration: 2,
-                    ease: [0.22, 1, 0.36, 1],
-                    delay: 0.6,
-                  }}
-                >
-                  <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                    Twitter/X
-                  </p>
-                  <a
-                    href="https://twitter.com/lfgraf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-base text-white hover:text-white/90 transition-colors"
-                  >
-                    lfgraf
-                  </a>
-                </motion.div>
-
-                {/* Philosophy quote - shown at bottom of links on mobile */}
-                <motion.div
-                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    duration: 2,
-                    ease: [0.22, 1, 0.36, 1],
-                    delay: 0.8,
-                  }}
-                  className="md:hidden"
-                >
-                  <motion.button
-                    onClick={toggleGlass}
-                    className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
-                    whileHover={{
-                      scale: 1.02,
-                      filter: "brightness(1.4)",
-                      color: "#fff",
-                    }}
-                    whileTap={{
-                      scale: 0.97,
-                      filter: "brightness(0.9)",
-                    }}
-                    animate={{
-                      scale: isGlassEnabled ? 1.05 : 1,
-                      filter: isGlassEnabled
-                        ? "brightness(1.5)"
-                        : "brightness(1)",
-                      boxShadow: isGlassEnabled
-                        ? "0 0 20px rgba(255, 255, 255, 0.3)"
-                        : "0 0 0px rgba(255, 255, 255, 0)",
-                    }}
+          {/* Footer content with blur focus animation */}
+          <div className="relative z-10 px-6 sm:px-10 md:px-28 py-36">
+            <div className="w-full max-w-screen-xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-8">
+                  {/* Email */}
+                  <motion.div
+                    initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    viewport={{ once: true }}
                     transition={{
-                      duration: 0.6,
-                      ease: [0.12, 1, 0.28, 1],
-                    }}
-                    aria-label="Toggle liquid glass effect"
-                    style={{
-                      border: "1px solid rgba(255, 255, 255, 0.05)",
+                      duration: 2,
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: 0.2,
                     }}
                   >
-                    More demos, less memos
-                  </motion.button>
-                </motion.div>
-              </div>
-
-              {/* Right column - Philosophy (desktop only) */}
-              <div className="hidden md:flex items-end justify-end">
-                <motion.div
-                  initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                  whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    duration: 2,
-                    ease: [0.22, 1, 0.36, 1],
-                    delay: 1.0,
-                  }}
-                  className="text-right"
-                >
-                  <motion.button
-                    onClick={toggleGlass}
-                    className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
-                    whileHover={{
-                      scale: 1.02,
-                      filter: "brightness(1.4)",
-                      color: "#fff",
-                    }}
-                    whileTap={{
-                      scale: 0.97,
-                      filter: "brightness(0.9)",
-                    }}
-                    animate={{
-                      scale: isGlassEnabled ? 1.05 : 1,
-                      filter: isGlassEnabled
-                        ? "brightness(1.5)"
-                        : "brightness(1)",
-                      boxShadow: isGlassEnabled
-                        ? "0 0 20px rgba(255, 255, 255, 0.3)"
-                        : "0 0 0px rgba(255, 255, 255, 0)",
-                    }}
+                    <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                      Email
+                    </p>
+                    <a
+                      href="mailto:raf@raf.works"
+                      className="text-base text-white hover:text-white/90 transition-colors"
+                    >
+                      raf@raf.works
+                    </a>
+                  </motion.div>
+                  {/* LinkedIn */}
+                  <motion.div
+                    initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    viewport={{ once: true }}
                     transition={{
-                      duration: 0.6,
-                      ease: [0.12, 1, 0.28, 1],
-                    }}
-                    aria-label="Toggle liquid glass effect"
-                    style={{
-                      border: "1px solid rgba(255, 255, 255, 0.05)",
+                      duration: 2,
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: 0.4,
                     }}
                   >
-                    Always happy, never satisfied
-                  </motion.button>
-                </motion.div>
+                    <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                      LinkedIn
+                    </p>
+                    <a
+                      href="https://linkedin.com/in/lfgraf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-base text-white hover:text-white/90 transition-colors"
+                    >
+                      lfgraf
+                    </a>
+                  </motion.div>
+                  {/* Twitter/X */}
+                  <motion.div
+                    initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{
+                      duration: 2,
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: 0.6,
+                    }}
+                  >
+                    <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                      Twitter/X
+                    </p>
+                    <a
+                      href="https://twitter.com/lfgraf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-base text-white hover:text-white/90 transition-colors"
+                    >
+                      lfgraf
+                    </a>
+                  </motion.div>
+
+                  {/* Philosophy quote - shown at bottom of links on mobile */}
+                  <motion.div
+                    initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{
+                      duration: 2,
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: 0.8,
+                    }}
+                    className="md:hidden"
+                  >
+                    <motion.button
+                      onClick={toggleGlass}
+                      className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
+                      whileHover={{
+                        scale: 1.02,
+                        filter: "brightness(1.4)",
+                        color: "#fff",
+                      }}
+                      whileTap={{
+                        scale: 0.97,
+                        filter: "brightness(0.9)",
+                      }}
+                      animate={{
+                        scale: isGlassEnabled ? 1.05 : 1,
+                        filter: isGlassEnabled
+                          ? "brightness(1.5)"
+                          : "brightness(1)",
+                        boxShadow: isGlassEnabled
+                          ? "0 0 20px rgba(255, 255, 255, 0.3)"
+                          : "0 0 0px rgba(255, 255, 255, 0)",
+                      }}
+                      transition={{
+                        duration: 0.6,
+                        ease: [0.12, 1, 0.28, 1],
+                      }}
+                      aria-label="Toggle liquid glass effect"
+                      style={{
+                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                      }}
+                    >
+                      More demos, less memos
+                    </motion.button>
+                  </motion.div>
+                </div>
+
+                {/* Right column - Philosophy (desktop only) */}
+                <div className="hidden md:flex items-end justify-end">
+                  <motion.div
+                    initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{
+                      duration: 2,
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: 1.0,
+                    }}
+                    className="text-right"
+                  >
+                    <motion.button
+                      onClick={toggleGlass}
+                      className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
+                      whileHover={{
+                        scale: 1.02,
+                        filter: "brightness(1.4)",
+                        color: "#fff",
+                      }}
+                      whileTap={{
+                        scale: 0.97,
+                        filter: "brightness(0.9)",
+                      }}
+                      animate={{
+                        scale: isGlassEnabled ? 1.05 : 1,
+                        filter: isGlassEnabled
+                          ? "brightness(1.5)"
+                          : "brightness(1)",
+                        boxShadow: isGlassEnabled
+                          ? "0 0 20px rgba(255, 255, 255, 0.3)"
+                          : "0 0 0px rgba(255, 255, 255, 0)",
+                      }}
+                      transition={{
+                        duration: 0.6,
+                        ease: [0.12, 1, 0.28, 1],
+                      }}
+                      aria-label="Toggle liquid glass effect"
+                      style={{
+                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                      }}
+                    >
+                      Always happy, never satisfied
+                    </motion.button>
+                  </motion.div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </motion.footer>
+        </motion.footer>
 
-      {/* Add the LiquidGlass component with enhanced animation */}
-      <AnimatePresence>
-        {isGlassEnabled && (
-          <motion.div
-            initial={{
-              opacity: 0,
-              scale: 0.3,
-              x: clickPosition.x - window.innerWidth / 2,
-              y: clickPosition.y - window.innerHeight / 2,
-              filter: "blur(30px) brightness(0.8)",
-              rotate: -8,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              x: 0,
-              y: 0,
-              filter: "blur(0px) brightness(1)",
-              rotate: 0,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.4,
-              x: clickPosition.x - window.innerWidth / 2,
-              y: clickPosition.y - window.innerHeight / 2,
-              filter: "blur(25px) brightness(0.7)",
-              rotate: 8,
-            }}
-            transition={{
-              duration: 1.2,
-              ease: [0.12, 1, 0.28, 1],
-              filter: { duration: 0.8 },
-              rotate: { duration: 1.2 },
-              scale: { duration: 1.2 },
-            }}
-            style={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              transformOrigin: "center center",
-              zIndex: 9999,
-            }}
-          >
-            <LiquidGlass />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+        {/* Add the LiquidGlass component with enhanced animation */}
+        <AnimatePresence>
+          {isGlassEnabled && (
+            <motion.div
+              initial={{
+                opacity: 0,
+                scale: 0.3,
+                x: clickPosition.x - window.innerWidth / 2,
+                y: clickPosition.y - window.innerHeight / 2,
+                filter: "blur(30px) brightness(0.8)",
+                rotate: -8,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                x: 0,
+                y: 0,
+                filter: "blur(0px) brightness(1)",
+                rotate: 0,
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.4,
+                x: clickPosition.x - window.innerWidth / 2,
+                y: clickPosition.y - window.innerHeight / 2,
+                filter: "blur(25px) brightness(0.7)",
+                rotate: 8,
+              }}
+              transition={{
+                duration: 1.2,
+                ease: [0.12, 1, 0.28, 1],
+                filter: { duration: 0.8 },
+                rotate: { duration: 1.2 },
+                scale: { duration: 1.2 },
+              }}
+              style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                transformOrigin: "center center",
+                zIndex: 9999,
+              }}
+            >
+              <LiquidGlass />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </ErrorBoundary>
   );
 }
