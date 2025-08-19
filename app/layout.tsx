@@ -17,11 +17,11 @@ const eduMarist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Raf V - Personal Website",
+  title: "Raf",
   description: "Senior Designer and Design Engineer based in Toronto.",
   metadataBase: new URL("https://raf.works"),
   openGraph: {
-    title: "Raf V - Personal Website",
+    title: "Raf",
     description: "Senior Designer and Design Engineer based in Toronto.",
     url: "https://raf.works",
     siteName: "Raf",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Raf V - Personal Website",
+    title: "Raf",
     description: "Senior Designer and Design Engineer based in Toronto.",
     creator: "@lfgraf",
     images: ["/og-image.png"],
