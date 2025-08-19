@@ -17,11 +17,11 @@ const eduMarist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Senior Designer, Design Engineer",
+  title: "Raf V - Personal Website",
   description: "Senior Designer and Design Engineer based in Toronto.",
   metadataBase: new URL("https://raf.works"),
   openGraph: {
-    title: "Senior Designer, Design Engineer",
+    title: "Raf V - Personal Website",
     description: "Senior Designer and Design Engineer based in Toronto.",
     url: "https://raf.works",
     siteName: "Raf",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Senior Designer, Design Engineer",
+    title: "Raf V - Personal Website",
     description: "Senior Designer and Design Engineer based in Toronto.",
     creator: "@lfgraf",
     images: ["/og-image.png"],
@@ -63,6 +63,11 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+        {/* Preload critical images for faster loading */}
+        <link rel="preload" as="image" href="/work/cb-d.png" />
+        <link rel="preload" as="image" href="/work/voiceflow-landing.png" />
+        <link rel="preload" as="image" href="/work/theoriq-prod-hero.png" />
       </head>
       <body className={ronzino.className}>
         {children}

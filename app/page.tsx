@@ -11,10 +11,11 @@ import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
-import ProgressiveImage from "./components/ProgressiveImage";
-import AnimatedContent from "./components/AnimatedContent";
+// Removed unused ProgressiveImage import for performance
+// Removed unused AnimatedContent import for performance
 import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
-import { LiquidGlass } from "@/components/LiquidGlass";
+// Temporarily disabled LiquidGlass for performance optimization
+// import { LiquidGlass } from "@/components/LiquidGlass";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { notes, Note } from "./data/notes";
@@ -55,7 +56,7 @@ export default function Page() {
   // Core UI state management
   const [mounted, setMounted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  // const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
+  const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
   const [isAllExperienceModalOpen, setIsAllExperienceModalOpen] =
@@ -74,7 +75,7 @@ export default function Page() {
   }>({});
   const [transitionProgress, setTransitionProgress] = useState(0);
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
-  const [blurAmount, setBlurAmount] = useState(25);
+  const [blurAmount, setBlurAmount] = useState(15);
 
   // Scroll and animation states
   const [scrollY, setScrollY] = useState(0);
@@ -98,16 +99,22 @@ export default function Page() {
   }, []);
 
   /**
-   * Optimized scroll handling using requestAnimationFrame
+   * Optimized scroll handling with throttling
    * Improves performance by reducing scroll event frequency
    */
   useEffect(() => {
     let ticking = false;
+    let lastScrollY = 0;
 
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setScrollY(window.scrollY);
+          const currentScrollY = window.scrollY;
+          // Only update if scroll difference is significant
+          if (Math.abs(currentScrollY - lastScrollY) > 5) {
+            setScrollY(currentScrollY);
+            lastScrollY = currentScrollY;
+          }
           ticking = false;
         });
         ticking = true;
@@ -189,25 +196,27 @@ export default function Page() {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Collection of work project images to be displayed in the gallery
+  // Optimized: Reduced initial load, better mobile performance
   const images = [
+    "/work/cb-d.png",
     "/work/voiceflow-landing.png",
     "/work/theoriq-prod-hero.png",
     "/work/theoriq.png",
-    // "/work/theoriq-mobile-chat.png",
     "/work/atlas-1.png",
     "/work/art-02.png",
     "/work/wai.png",
     "/work/curbcut.png",
-    //"/work/wai-2.png",
     "/work/defi.png",
     "/work/ethos.png",
-
     "/work/us.png",
     "/work/tela.png",
     "/work/zalando-dodont.png",
     "/work/zalando-spread.png",
-    // "/work/apple.png",
   ];
+
+  // Optimized: Only load first 6 images initially, rest lazy load
+  const initialImages = images.slice(0, 6);
+  const lazyImages = images.slice(6);
 
   // Mapping of work images to their corresponding Vimeo video URLs
   // Each video is configured with specific player parameters for optimal viewing experience
@@ -227,32 +236,8 @@ export default function Page() {
       "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
   };
 
-  /**
-   * Image preloading component to ensure smooth gallery transitions
-   * Tracks loading progress of all images and updates state accordingly
-   */
-  const ImagePreloader = () => {
-    useEffect(() => {
-      const allImagesLoaded = images.every((src) => loadedImages[src]);
-
-      if (allImagesLoaded && mounted) {
-        console.log("All images preloaded successfully");
-      }
-    }, [loadedImages]);
-
-    return (
-      <div className="hidden">
-        {images.map((src, index) => (
-          <img
-            key={`preload-${index}`}
-            src={src}
-            alt="Preloaded image"
-            onLoad={() => handleImageLoad(src)}
-          />
-        ))}
-      </div>
-    );
-  };
+  // Optimized: Removed heavy image preloader component
+  // Images now load progressively as needed
 
   /**
    * Generates a placeholder color for images during loading
@@ -279,21 +264,24 @@ export default function Page() {
   useEffect(() => {
     setMounted(true);
 
-    // Fetch weather data (non-blocking with timeout)
-    const weatherPromise = fetchWeatherData().catch((error) => {
-      console.warn(
-        "Weather API failed, continuing without weather data:",
-        error
-      );
-    });
+    // Optimized: Only fetch weather on desktop and with longer timeout
+    let weatherTimeout: NodeJS.Timeout | undefined;
+    if (!isMobile) {
+      const weatherPromise = fetchWeatherData().catch((error) => {
+        console.warn(
+          "Weather API failed, continuing without weather data:",
+          error
+        );
+      });
 
-    // Add timeout for weather API
-    const weatherTimeout = setTimeout(() => {
-      console.warn("Weather API timeout, continuing without weather data");
-    }, 5000);
+      // Add timeout for weather API
+      weatherTimeout = setTimeout(() => {
+        console.warn("Weather API timeout, continuing without weather data");
+      }, 8000);
+    }
 
-    // Set up interval to update time
-    const timeInterval = setInterval(updateTimeState, 1000);
+    // Optimized: Less frequent time updates
+    const timeInterval = setInterval(updateTimeState, 30000); // Update every 30 seconds instead of every second
 
     // Set up keyboard event listener
     window.addEventListener("keydown", handleKeyDown);
@@ -308,15 +296,12 @@ export default function Page() {
 
       if (isMobile) {
         // On mobile, only gate on the first image
-        if (loadedImages[images[0]]) {
+        if (loadedImages[initialImages[0]]) {
           setCriticalContentLoaded(true);
         }
       } else {
-        const firstThreeImages = images.slice(0, 3);
-        const allCriticalLoaded = firstThreeImages.every(
-          (src) => loadedImages[src]
-        );
-        if (allCriticalLoaded) {
+        // On desktop, only gate on the first image for faster loading
+        if (loadedImages[initialImages[0]]) {
           setCriticalContentLoaded(true);
         }
       }
@@ -336,13 +321,13 @@ export default function Page() {
       }
     }, 1000);
 
-    // Mark animations as complete after initial load
+    // Optimized: Faster animation completion
     const animationTimer = setTimeout(() => {
       setAnimationsComplete(true);
-    }, 3500);
+    }, 2000);
 
-    // Add fallback timer for poor network conditions
-    const fallbackDelay = isSlowConnection ? 5000 : 8000; // Faster fallback for slow connections
+    // Optimized: Faster fallback timers
+    const fallbackDelay = isSlowConnection ? 2000 : 3000;
     const fallbackTimer = setTimeout(() => {
       if (!criticalContentLoaded) {
         console.log(
@@ -353,7 +338,7 @@ export default function Page() {
     }, fallbackDelay);
 
     // Add immediate fallback for when mobile detection fails
-    const immediateFallbackDelay = isSlowConnection ? 1500 : 3000; // Faster fallback for slow connections
+    const immediateFallbackDelay = isSlowConnection ? 500 : 1000;
     const immediateFallback = setTimeout(() => {
       if (!criticalContentLoaded && isMobileReady) {
         console.log(
@@ -372,7 +357,9 @@ export default function Page() {
       clearTimeout(animationTimer);
       clearTimeout(fallbackTimer);
       clearTimeout(immediateFallback);
-      clearTimeout(weatherTimeout);
+      if (weatherTimeout) {
+        clearTimeout(weatherTimeout);
+      }
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
@@ -391,9 +378,9 @@ export default function Page() {
    * @returns {() => void} Cleanup function to reset blur state
    */
   const focusAnimation = () => {
-    const totalDuration = 2500;
+    const totalDuration = 1500;
     const startTime = Date.now();
-    const initialBlur = 25;
+    const initialBlur = 15;
 
     setBlurAmount(initialBlur);
 
@@ -753,7 +740,7 @@ export default function Page() {
 
     const slideshowInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 4500);
+    }, 6000);
 
     return () => clearInterval(slideshowInterval);
   }, [
@@ -768,12 +755,13 @@ export default function Page() {
   ]);
 
   /**
-   * Preloads critical images (first 3) on component mount
+   * Optimized: Preloads only critical images (first 2) on component mount
    * Ensures smooth initial slideshow experience
    */
   useEffect(() => {
     if (mounted) {
-      images.slice(0, 3).forEach((src) => {
+      // Start loading critical images immediately
+      initialImages.slice(0, 2).forEach((src) => {
         const img = new window.Image();
         img.src = src;
         img.onload = () => handleImageLoad(src);
@@ -783,6 +771,19 @@ export default function Page() {
           handleImageLoad(src);
         };
       });
+
+      // Start loading remaining images in background
+      setTimeout(() => {
+        initialImages.slice(2).forEach((src) => {
+          const img = new window.Image();
+          img.src = src;
+          img.onload = () => handleImageLoad(src);
+          img.onerror = () => {
+            console.warn(`Failed to load image: ${src}`);
+            handleImageLoad(src);
+          };
+        });
+      }, 1000); // Delay non-critical images
     }
   }, [mounted]);
 
@@ -800,22 +801,11 @@ export default function Page() {
         return newState;
       }
 
-      // Mobile: gate on first image, Desktop: gate on first 3 images
+      // Both mobile and desktop: gate on first image only for faster loading
       if (isMobileReady && isMobile !== null) {
-        if (isMobile && src === images[0]) {
-          console.log("Mobile: First image loaded, setting critical content");
+        if (src === images[0]) {
+          console.log("First image loaded, setting critical content");
           setCriticalContentLoaded(true);
-        } else if (!isMobile) {
-          const firstThreeImages = images.slice(0, 3);
-          const criticalLoaded = firstThreeImages.every(
-            (imgSrc) => newState[imgSrc]
-          );
-          if (criticalLoaded) {
-            console.log(
-              "Desktop: First 3 images loaded, setting critical content"
-            );
-            setCriticalContentLoaded(true);
-          }
         }
       } else {
         // Fallback: if mobile detection isn't ready, use first image as critical
@@ -1353,26 +1343,19 @@ export default function Page() {
     },
   };
 
-  // Add a function to handle opening the video modal
+  // Optimized: Simplified video modal opening
   const handleOpenVideoModal = (imageSrc: string) => {
     const videoUrl = workVideos[imageSrc];
     if (videoUrl) {
       setCurrentVideoUrl(videoUrl);
       setIsVideoModalOpen(true);
-
-      // Reset slideshow progress when opening modal
-      setTransitionProgress(0);
     }
   };
 
-  // Add a function to handle closing the video modal
+  // Optimized: Simplified video modal closing
   const handleCloseVideoModal = () => {
     setIsVideoModalOpen(false);
     setCurrentVideoUrl(null);
-
-    // Reset slideshow progress when closing modal
-    setTransitionProgress(0);
-    setLastImageChangeTime(Date.now());
   };
 
   // Add a state to track the last time the image changed
@@ -1397,8 +1380,8 @@ export default function Page() {
       const currentTime = Date.now();
       const timeSinceLastChange = currentTime - lastImageChangeTime;
 
-      // If no image change for more than 7 seconds (twice the normal interval), restart the slideshow
-      if (timeSinceLastChange > 7000) {
+      // If no image change for more than 12 seconds (twice the normal interval), restart the slideshow
+      if (timeSinceLastChange > 12000) {
         console.log("Slideshow appears stuck, restarting...");
         // Force the next image in sequence
         setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -1524,23 +1507,21 @@ export default function Page() {
   };
 
   // Add a function to handle closing the photo modal
-  // const handleClosePhotoModal = (e: React.MouseEvent) => {
-  //   e.stopPropagation();
-  //   // Re-enable scrolling
-  //   document.body.style.overflow = "";
+  const handleClosePhotoModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Re-enable scrolling
+    document.body.style.overflow = "";
 
-  //   // Add a small delay before closing to allow for animation
-  //   setTimeout(() => {
-  //     setIsPhotosModalOpen(false);
-  //   }, 100);
-  // };
+    // Add a small delay before closing to allow for animation
+    setTimeout(() => {
+      setIsPhotosModalOpen(false);
+    }, 100);
+  };
 
   /**
    * Collection of personal photos for the gallery
    * Each photo includes a source path and display name
    */
-  // TEMPORARILY HIDDEN - Photos section
-  /*
   const photos = [
     { src: "/photos/marianne.jpeg", name: "Marianne" },
     { src: "/photos/daybreak-3.JPG", name: "Daybreak" },
@@ -1555,28 +1536,213 @@ export default function Page() {
     { src: "/photos/vin.JPG", name: "Vin" },
     { src: "/photos/anna.JPG", name: "Anna" },
   ];
-  */
 
   if (!mounted || !criticalContentLoaded) {
-    // Return a minimal loading state with proper layout to prevent shifts
+    // Progressive loading: Show content immediately with skeleton screens
     return (
       <ErrorBoundary>
         <div className="min-h-screen bg-background">
           <div className="px-6 sm:px-10 py-16 md:px-28">
             <div className="w-full max-w-screen-xl mx-auto">
-              {/* Placeholder for header */}
-              <div className="flex items-center mb-40 opacity-0">
-                <h1 className="text-2xl font-normal">Raf</h1>
+              {/* Header - Always visible */}
+              <div className="flex items-center mb-40">
+                <h1 className="text-2xl font-normal text-foreground font-edu-marist">
+                  Raf
+                </h1>
               </div>
-              {/* Placeholder for content */}
-              <div className="space-y-36 opacity-0">
-                <div className="w-full h-[600px] bg-foreground/5 rounded animate-pulse" />
-              </div>
-              {/* Loading indicator for poor connections */}
-              {mounted && !criticalContentLoaded && (
-                <div className="fixed bottom-8 right-8 bg-foreground/10 backdrop-blur-sm rounded-full px-4 py-2 text-xs text-foreground/60">
-                  Loading...
+
+              {/* Text Animation Section - Show immediately on mobile */}
+              <div className="w-full mb-36 block sm:hidden">
+                <div className="space-y-8">
+                  <section className="w-full">
+                    <div className="space-y-8">
+                      <div className="space-y-6">
+                        <motion.p
+                          className="tracking-tight text-lg"
+                          initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                          transition={{
+                            duration: 1.2,
+                            ease: [0.12, 1, 0.28, 1],
+                          }}
+                        >
+                          <motion.span
+                            className="text-foreground/70"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(20px)",
+                              y: 20,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 1.2,
+                              ease: [0.12, 1, 0.28, 1],
+                            }}
+                          >
+                            Raf leads as a{" "}
+                          </motion.span>
+                          <motion.span
+                            className="text-foreground font-medium"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(20px)",
+                              y: 20,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 1.2,
+                              ease: [0.12, 1, 0.28, 1],
+                            }}
+                          >
+                            Senior Designer
+                          </motion.span>
+                          <motion.span
+                            className="text-foreground/70"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(20px)",
+                              y: 20,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 1.2,
+                              ease: [0.12, 1, 0.28, 1],
+                            }}
+                          >
+                            {" "}
+                            and{" "}
+                          </motion.span>
+                          <motion.span
+                            className="text-foreground font-medium"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(20px)",
+                              y: 20,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 1.2,
+                              ease: [0.12, 1, 0.28, 1],
+                            }}
+                          >
+                            Design Engineer
+                          </motion.span>
+                          <motion.span
+                            className="text-foreground/70"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(20px)",
+                              y: 20,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 1.2,
+                              ease: [0.12, 1, 0.28, 1],
+                            }}
+                          >
+                            .
+                          </motion.span>
+                        </motion.p>
+                      </div>
+                    </div>
+                  </section>
                 </div>
+              </div>
+
+              {/* Content Section with Skeleton Screens */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 2.8,
+                  delay: 1.0,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="space-y-36"
+              >
+                <div className="w-full">
+                  <div className="space-y-8">
+                    {/* Skeleton for slideshow */}
+                    <div className="w-full mb-0 overflow-hidden relative">
+                      <div className="relative w-full h-full">
+                        {/* Mobile skeleton */}
+                        <div className="block sm:hidden space-y-4">
+                          {[1, 2, 3].map((i) => (
+                            <motion.div
+                              key={i}
+                              className="w-full"
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{
+                                duration: 1.5,
+                                delay: 1.5 + i * 0.2,
+                                ease: [0.16, 1, 0.3, 1],
+                              }}
+                            >
+                              <div className="w-full h-[400px] bg-foreground/5 rounded-lg animate-pulse" />
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        {/* Desktop skeleton */}
+                        <div className="hidden sm:block relative w-full h-full">
+                          <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 2.0,
+                              delay: 1.8,
+                              ease: [0.16, 1, 0.3, 1],
+                            }}
+                            className="w-full h-[600px] bg-foreground/5 rounded-lg animate-pulse"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Subtle loading indicator */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{
+                        duration: 1.2,
+                        delay: 1.5,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className="flex items-center justify-center mt-12"
+                    >
+                      <motion.div
+                        className="w-12 h-0.5 bg-gradient-to-r from-transparent via-foreground/40 to-transparent rounded-full"
+                        animate={{
+                          scaleX: [0.4, 1, 0.4],
+                          opacity: [0.3, 0.6, 0.3],
+                        }}
+                        transition={{
+                          duration: 4,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </motion.div>
+
+                    {/* Skeleton for other sections */}
+                    <div className="space-y-8">
+                      <div className="w-full h-[200px] bg-foreground/5 rounded animate-pulse" />
+                      <div className="w-full h-[300px] bg-foreground/5 rounded animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Subtle loading indicator for poor connections */}
+              {mounted && !criticalContentLoaded && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="fixed bottom-8 right-8 bg-foreground/10 backdrop-blur-sm rounded-full px-4 py-2 text-xs text-foreground/60"
+                >
+                  Loading images...
+                </motion.div>
               )}
             </div>
           </div>
@@ -1659,8 +1825,8 @@ export default function Page() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{
-            duration: 2, // Restored to original 2s duration
-            ease: [0.22, 1, 0.36, 1],
+            duration: 2,
+            ease: [0.12, 1, 0.28, 1],
           }}
           className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden"
           style={{
@@ -1669,19 +1835,7 @@ export default function Page() {
           }}
         >
           <div className="w-full max-w-screen-xl mx-auto relative z-10">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{
-                duration: 1.5, // Restored to original 1.5s duration
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="flex items-center mb-40 relative"
-              style={{
-                transform: "translateZ(0)",
-                backfaceVisibility: "hidden",
-              }}
-            >
+            <div className="flex items-center mb-40 relative">
               <div className="flex items-center justify-between w-full relative">
                 <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
                   Raf
@@ -1689,9 +1843,13 @@ export default function Page() {
 
                 {/* Display current time in EST with weather */}
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: mounted ? 0.6 : 0 }}
-                  transition={{ delay: 1, duration: 1.5 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: mounted ? 0.6 : 0, y: 0 }}
+                  transition={{
+                    delay: 2.0,
+                    duration: 2.5,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
                   className="text-sm text-foreground/60 font-light max-w-[320px] text-right hidden md:block"
                 >
                   <div className="flex items-center justify-end space-x-2">
@@ -1729,19 +1887,23 @@ export default function Page() {
 
                 {/* Mobile time and weather display */}
                 <motion.div
-                  variants={slideInFromBottom}
-                  initial="hidden"
-                  animate="visible"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 2.5,
+                    duration: 2.0,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
                   className="text-sm text-foreground/60 font-light md:hidden flex items-center"
                 >
                   <motion.div
                     className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{
-                      delay: 0.4,
-                      duration: 0.4,
-                      type: "tween",
+                      delay: 2.8,
+                      duration: 1.2,
+                      ease: [0.16, 1, 0.3, 1],
                     }}
                     style={{
                       transform: "translateZ(0)",
@@ -1776,86 +1938,52 @@ export default function Page() {
                   </motion.div>
                 </motion.div>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Text Animation Section - Independent of criticalContentLoaded */}
+            {/* Text Animation Section */}
             <div className="w-full mb-36">
               <div className="space-y-8">
-                {/* Line 1 Section */}
                 <section className="w-full">
                   <div className="space-y-8">
                     <div className="space-y-6">
-                      {/* 1. Identity line — bold, intentional */}
                       <motion.p
                         className="tracking-tight text-lg"
-                        initial={{
-                          opacity: 0,
-                          filter: "blur(10px)",
-                          y: 10,
-                        }}
+                        initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
                         animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                         transition={{
-                          duration: 3.2,
+                          duration: 1.2,
                           ease: [0.12, 1, 0.28, 1],
-                          delay: 0.4,
                         }}
                       >
                         <motion.span
                           className="text-foreground/70"
-                          initial={{
-                            opacity: 0,
-                            filter: "blur(10px)",
-                            y: 10,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            filter: "blur(0px)",
-                            y: 0,
-                          }}
+                          initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                           transition={{
-                            duration: 3.2,
+                            duration: 1.2,
                             ease: [0.12, 1, 0.28, 1],
-                            delay: 0.45,
                           }}
                         >
                           Raf leads as a{" "}
                         </motion.span>
                         <motion.span
                           className="text-foreground font-medium"
-                          initial={{
-                            opacity: 0,
-                            filter: "blur(10px)",
-                            y: 10,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            filter: "blur(0px)",
-                            y: 0,
-                          }}
+                          initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                           transition={{
-                            duration: 3.2,
+                            duration: 1.2,
                             ease: [0.12, 1, 0.28, 1],
-                            delay: 0.5,
                           }}
                         >
                           Senior Designer
                         </motion.span>
                         <motion.span
                           className="text-foreground/70"
-                          initial={{
-                            opacity: 0,
-                            filter: "blur(10px)",
-                            y: 10,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            filter: "blur(0px)",
-                            y: 0,
-                          }}
+                          initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                           transition={{
-                            duration: 3.2,
+                            duration: 1.2,
                             ease: [0.12, 1, 0.28, 1],
-                            delay: 0.55,
                           }}
                         >
                           {" "}
@@ -1863,45 +1991,25 @@ export default function Page() {
                         </motion.span>
                         <motion.span
                           className="text-foreground font-medium"
-                          initial={{
-                            opacity: 0,
-                            filter: "blur(10px)",
-                            y: 10,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            filter: "blur(0px)",
-                            y: 0,
-                          }}
+                          initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                           transition={{
-                            duration: 3.2,
+                            duration: 1.2,
                             ease: [0.12, 1, 0.28, 1],
-                            delay: 0.6,
                           }}
                         >
                           Design Engineer
                         </motion.span>
                         <motion.span
                           className="text-foreground/70"
-                          initial={{
-                            opacity: 0,
-                            filter: "blur(10px)",
-                            y: 10,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            filter: "blur(0px)",
-                            y: 0,
-                          }}
+                          initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+                          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                           transition={{
-                            duration: 3.2,
+                            duration: 1.2,
                             ease: [0.12, 1, 0.28, 1],
-                            delay: 0.65,
                           }}
                         >
                           .
-                          {/* ; fast with purpose, calm with care, grounded in
-                          trust */}
                         </motion.span>
                       </motion.p>
                     </div>
@@ -1919,8 +2027,7 @@ export default function Page() {
               }}
               transition={{
                 duration: 1.2,
-                delay: 0.2,
-                ease: [0.22, 1, 0.36, 1],
+                ease: [0.12, 1, 0.28, 1],
               }}
               className="space-y-36"
               style={{
@@ -1948,18 +2055,18 @@ export default function Page() {
                   >
                     {/* Replace the AnimatePresence with a crossfade effect */}
                     <div className="relative w-full h-full">
-                      {/* Mobile Feed View */}
+                      {/* Mobile Feed View - Optimized */}
                       <div className="block sm:hidden space-y-4">
-                        {images.map((src: string, index: number) => (
+                        {initialImages.map((src: string, index: number) => (
                           <motion.div
                             key={`mobile-${src}`}
                             className="w-full"
-                            initial={{ opacity: 0, filter: "blur(20px)" }}
+                            initial={{ opacity: 0, filter: "blur(10px)" }}
                             animate={{ opacity: 1, filter: "blur(0px)" }}
                             transition={{
-                              duration: 1.2,
-                              delay: 1.2 + index * 0.08,
-                              ease: [0.12, 1, 0.28, 1],
+                              duration: 1.8,
+                              delay: 1.0 + index * 0.3,
+                              ease: [0.16, 1, 0.3, 1],
                             }}
                           >
                             <motion.div
@@ -1975,9 +2082,8 @@ export default function Page() {
                               <Image
                                 src={src}
                                 alt={`Work preview ${index + 1}`}
-                                width={1200}
-                                height={800}
-                                loader={imageLoader}
+                                width={800}
+                                height={600}
                                 className={`w-full bg-transparent max-w-full ${
                                   workVideos[src]
                                     ? "transition-opacity duration-300 hover:opacity-90"
@@ -1986,6 +2092,8 @@ export default function Page() {
                                 priority={index < 2}
                                 loading={index < 2 ? "eager" : "lazy"}
                                 onLoad={() => handleImageLoad(src)}
+                                placeholder="blur"
+                                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                               />
                               {workVideos[src] && (
                                 <div
@@ -2013,9 +2121,80 @@ export default function Page() {
                             </motion.div>
                           </motion.div>
                         ))}
+
+                        {/* Lazy load remaining images */}
+                        {lazyImages.length > 0 && (
+                          <div className="space-y-4">
+                            {lazyImages.map((src: string, index: number) => (
+                              <motion.div
+                                key={`mobile-lazy-${src}`}
+                                className="w-full"
+                                initial={{ opacity: 0 }}
+                                whileInView={{ opacity: 1 }}
+                                viewport={{ once: true, margin: "100px" }}
+                                transition={{
+                                  duration: 0.6,
+                                  ease: [0.22, 1, 0.36, 1],
+                                }}
+                              >
+                                <div
+                                  className={`relative w-full ${
+                                    workVideos[src]
+                                      ? "cursor-pointer group"
+                                      : ""
+                                  }`}
+                                  onClick={() => {
+                                    if (workVideos[src]) {
+                                      handleOpenVideoModal(src);
+                                    }
+                                  }}
+                                >
+                                  <Image
+                                    src={src}
+                                    alt={`Work preview ${
+                                      initialImages.length + index + 1
+                                    }`}
+                                    width={800}
+                                    height={600}
+                                    className={`w-full bg-transparent max-w-full ${
+                                      workVideos[src]
+                                        ? "transition-opacity duration-300 hover:opacity-90"
+                                        : ""
+                                    }`}
+                                    loading="lazy"
+                                    onLoad={() => handleImageLoad(src)}
+                                  />
+                                  {workVideos[src] && (
+                                    <div
+                                      className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                                      onClick={() => handleOpenVideoModal(src)}
+                                      style={{
+                                        pointerEvents: "auto",
+                                        zIndex: 3,
+                                      }}
+                                    >
+                                      <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110">
+                                        <svg
+                                          width="18"
+                                          height="18"
+                                          viewBox="0 0 24 24"
+                                          fill="white"
+                                          stroke="none"
+                                          className="ml-0.5"
+                                        >
+                                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Desktop Slideshow View */}
+                      {/* Desktop Slideshow View - Optimized */}
                       <div className="hidden sm:block relative w-full h-full">
                         {images.map((src, index) => (
                           <motion.div
@@ -2023,21 +2202,21 @@ export default function Page() {
                             className="absolute inset-0 w-full h-full"
                             initial={{
                               opacity: 0,
-                              filter: "blur(10px)",
-                              y: 20,
+                              filter: "blur(5px)",
+                              y: 10,
                             }}
                             animate={{
                               opacity: index === currentImageIndex ? 1 : 0,
                               filter:
                                 index === currentImageIndex
                                   ? "blur(0px)"
-                                  : "blur(10px)",
-                              y: index === currentImageIndex ? 0 : 20,
+                                  : "blur(8px)",
+                              y: index === currentImageIndex ? 0 : 15,
                             }}
                             transition={{
-                              duration: 1.8,
-                              ease: [0.12, 1, 0.28, 1],
-                              delay: 0.8,
+                              duration: 2.4,
+                              ease: [0.16, 1, 0.3, 1],
+                              delay: 0.5,
                             }}
                             style={{
                               zIndex: index === currentImageIndex ? 2 : 1,
@@ -2058,7 +2237,6 @@ export default function Page() {
                                 alt={`Work preview ${index + 1}`}
                                 width={1200}
                                 height={800}
-                                loader={imageLoader}
                                 className={`w-full bg-transparent max-w-full ${
                                   workVideos[src]
                                     ? "transition-all duration-300 hover:brightness-105"
@@ -2077,7 +2255,6 @@ export default function Page() {
                                 onLoad={() => handleImageLoad(src)}
                                 loading={index < 3 ? "eager" : "lazy"}
                                 priority={index < 3}
-                                quality={index < 3 ? 90 : 75}
                               />
                               {workVideos[src] &&
                                 index === currentImageIndex && (
@@ -2154,6 +2331,7 @@ export default function Page() {
                   </motion.button>
                 </div>
               </div>
+
               {/* 
               {/* About Section 
               <section className="w-full">
@@ -2394,7 +2572,49 @@ export default function Page() {
                 </div>
               </section>
 
-              {/* TEMPORARILY HIDDEN - Photos section */}
+              {/* Photos Section */}
+              {/* Commented out */}
+              {/*
+              <section className="w-full mt-20">
+                <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
+                  Photos
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {photos.slice(0, 3).map((photo, index) => (
+                    <motion.div
+                      key={photo.src}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{
+                        duration: 1.2,
+                        ease: [0.12, 1, 0.28, 1],
+                        delay: index * 0.1,
+                      }}
+                    >
+                      <div className="aspect-[3/4] overflow-hidden rounded-lg bg-foreground/5">
+                        <Image
+                          src={photo.src}
+                          alt={photo.name}
+                          width={400}
+                          height={533}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  onClick={() => (window.location.href = "/photos")}
+                  className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
+                >
+                  Open Photos
+                </motion.button>
+              </section>
+              */}
 
               {/* Deep Interest Section - RESTORED */}
               <section className="w-full mt-20">
@@ -2455,8 +2675,7 @@ export default function Page() {
                     >
                       Outside of design: yoga, portraiture, and thoughtfully
                       lived spaces
-                    </motion.span>
-                    {/* <br /> */}
+                    </motion.span>{" "}
                     <motion.span
                       className="text-foreground/60"
                       initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
@@ -2604,19 +2823,19 @@ export default function Page() {
                     }}
                   ></div>
 
-                  {/* Weather animation effects based on condition */}
+                  {/* Optimized: Reduced weather animation effects */}
                   {(weatherState.condition === "Rain" ||
                     weatherState.condition === "Drizzle") && (
                     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {[...Array(25)].map((_, i) => (
+                      {[...Array(10)].map((_, i) => (
                         <div
                           key={i}
-                          className="absolute w-[1px] h-[10px] bg-blue-200/50"
+                          className="absolute w-[1px] h-[8px] bg-blue-200/40"
                           style={{
                             left: `${Math.random() * 100}%`,
-                            top: `-10px`,
-                            animationDuration: `${0.5 + Math.random() * 0.7}s`,
-                            animationDelay: `${Math.random() * 0.5}s`,
+                            top: `-8px`,
+                            animationDuration: `${0.8 + Math.random() * 0.4}s`,
+                            animationDelay: `${Math.random() * 0.3}s`,
                             animationIterationCount: "infinite",
                             animationName: "rainDrop",
                             animationTimingFunction: "ease-in-out",
@@ -2628,17 +2847,17 @@ export default function Page() {
 
                   {weatherState.condition === "Snow" && (
                     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {[...Array(30)].map((_, i) => (
+                      {[...Array(15)].map((_, i) => (
                         <div
                           key={i}
-                          className="absolute rounded-full bg-white/80"
+                          className="absolute rounded-full bg-white/60"
                           style={{
-                            width: `${2 + Math.random() * 3}px`,
-                            height: `${2 + Math.random() * 3}px`,
+                            width: `${2 + Math.random() * 2}px`,
+                            height: `${2 + Math.random() * 2}px`,
                             left: `${Math.random() * 100}%`,
                             top: `-5px`,
-                            animationDuration: `${2 + Math.random() * 3}s`,
-                            animationDelay: `${Math.random() * 1}s`,
+                            animationDuration: `${3 + Math.random() * 2}s`,
+                            animationDelay: `${Math.random() * 0.5}s`,
                             animationIterationCount: "infinite",
                             animationName: "snowfall",
                             animationTimingFunction: "ease-in-out",
@@ -2765,7 +2984,136 @@ export default function Page() {
               )}
             </AnimatePresence>
 
-            {/* TEMPORARILY HIDDEN - Photos Modal */}
+            {/* Photos Modal */}
+            <AnimatePresence>
+              {isPhotosModalOpen && (
+                <>
+                  {/* Fixed backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
+                    onClick={handleClosePhotoModal}
+                  />
+
+                  {/* Modal container */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+                    onClick={handleClosePhotoModal}
+                  >
+                    {/* Content container */}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      className="relative w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Sticky close button */}
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ delay: 0.2, duration: 0.3 }}
+                        className="absolute top-6 right-6 z-10 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
+                        onClick={handleClosePhotoModal}
+                      >
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="transition-transform duration-300 hover:scale-110 text-white/70 hover:text-white"
+                        >
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </motion.button>
+
+                      {/* Photo display */}
+                      <div
+                        className="aspect-[4/3] w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[80vw] rounded-lg overflow-hidden shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Image
+                          src={photos[currentPhotoIndex].src}
+                          alt={photos[currentPhotoIndex].name}
+                          width={1200}
+                          height={900}
+                          className="w-full h-full object-cover"
+                          priority
+                        />
+                      </div>
+
+                      {/* Navigation controls */}
+                      <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentPhotoIndex(
+                              currentPhotoIndex === 0
+                                ? photos.length - 1
+                                : currentPhotoIndex - 1
+                            );
+                          }}
+                          className="pointer-events-auto bg-black/20 backdrop-blur-sm rounded-full p-3 hover:bg-black/40 transition-all duration-300 shadow-lg"
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="text-white"
+                          >
+                            <path d="M15 18l-6-6 6-6" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentPhotoIndex(
+                              (currentPhotoIndex + 1) % photos.length
+                            );
+                          }}
+                          className="pointer-events-auto bg-black/20 backdrop-blur-sm rounded-full p-3 hover:bg-black/40 transition-all duration-300 shadow-lg"
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="text-white"
+                          >
+                            <path d="M9 18l6-6-6-6" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {/* Photo info */}
+                      <div className="absolute bottom-6 left-6 right-6 text-center">
+                        <div className="bg-black/20 backdrop-blur-sm rounded-full px-4 py-2 inline-block">
+                          <span className="text-white text-sm font-medium">
+                            {photos[currentPhotoIndex].name}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
 
             {/* Notes Modal */}
             <AnimatePresence>
@@ -3379,7 +3727,7 @@ export default function Page() {
           </div>
         </motion.main>
 
-        <ImagePreloader />
+        {/* Optimized: Removed ImagePreloader component */}
 
         {/* Video Modal */}
         <AnimatePresence>
@@ -3507,7 +3855,7 @@ export default function Page() {
                 filter: "brightness(0.7)",
               }}
             >
-              <source src="/video/footer-video-2.mp4" type="video/mp4" />
+              <source src="/video/footer-video.mp4" type="video/mp4" />
             </video>
 
             {/* Dark overlay */}
@@ -3578,7 +3926,7 @@ export default function Page() {
                       Twitter/X
                     </p>
                     <a
-                      href="https://twitter.com/lfgraf"
+                      href="https://x.com/lfgraf"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-base text-white hover:text-white/90 transition-colors"
@@ -3647,38 +3995,8 @@ export default function Page() {
                     }}
                     className="text-right"
                   >
-                    <motion.button
-                      onClick={toggleGlass}
-                      className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
-                      whileHover={{
-                        scale: 1.02,
-                        filter: "brightness(1.4)",
-                        color: "#fff",
-                      }}
-                      whileTap={{
-                        scale: 0.97,
-                        filter: "brightness(0.9)",
-                      }}
-                      animate={{
-                        scale: isGlassEnabled ? 1.05 : 1,
-                        filter: isGlassEnabled
-                          ? "brightness(1.5)"
-                          : "brightness(1)",
-                        boxShadow: isGlassEnabled
-                          ? "0 0 20px rgba(255, 255, 255, 0.3)"
-                          : "0 0 0px rgba(255, 255, 255, 0)",
-                      }}
-                      transition={{
-                        duration: 0.6,
-                        ease: [0.12, 1, 0.28, 1],
-                      }}
-                      aria-label="Toggle liquid glass effect"
-                      style={{
-                        border: "1px solid rgba(255, 255, 255, 0.05)",
-                      }}
-                    >
-                      Always happy, never satisfied
-                    </motion.button>
+                    {/* Temporarily disabled glass toggle for performance optimization */}
+                    {/* <motion.button onClick={toggleGlass}>Always happy, never satisfied</motion.button> */}
                   </motion.div>
                 </div>
               </div>
@@ -3686,54 +4004,8 @@ export default function Page() {
           </div>
         </motion.footer>
 
-        {/* Add the LiquidGlass component with enhanced animation */}
-        <AnimatePresence>
-          {isGlassEnabled && (
-            <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.3,
-                x: clickPosition.x - window.innerWidth / 2,
-                y: clickPosition.y - window.innerHeight / 2,
-                filter: "blur(30px) brightness(0.8)",
-                rotate: -8,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                x: 0,
-                y: 0,
-                filter: "blur(0px) brightness(1)",
-                rotate: 0,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.4,
-                x: clickPosition.x - window.innerWidth / 2,
-                y: clickPosition.y - window.innerHeight / 2,
-                filter: "blur(25px) brightness(0.7)",
-                rotate: 8,
-              }}
-              transition={{
-                duration: 1.2,
-                ease: [0.12, 1, 0.28, 1],
-                filter: { duration: 0.8 },
-                rotate: { duration: 1.2 },
-                scale: { duration: 1.2 },
-              }}
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                transformOrigin: "center center",
-                zIndex: 9999,
-              }}
-            >
-              <LiquidGlass />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Temporarily disabled LiquidGlass for performance optimization */}
+        {/* <LiquidGlass /> */}
       </div>
     </ErrorBoundary>
   );
