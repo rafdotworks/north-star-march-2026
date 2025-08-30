@@ -740,7 +740,7 @@ export default function Page() {
 
     const slideshowInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 6000);
+    }, 3000);
 
     return () => clearInterval(slideshowInterval);
   }, [
@@ -2646,7 +2646,7 @@ export default function Page() {
                       }}
                     >
                       Raised on the Amalfi Coast, refined in Lisbon, based in
-                      Toronto.
+                      Toronto + Remote.
                     </motion.span>
                   </motion.p>
                   {/* 3. Location + personal depth */}
@@ -3710,7 +3710,7 @@ export default function Page() {
                           className="pt-8 mt-4"
                         >
                           <a
-                            href="https://drive.google.com/file/d/1LSOrihlPoozbIi8TZERfVnG-zdYCqk0Y/view"
+                            href="https://drive.google.com/file/d/1-QUjgNJvQOCA2OafEuiGDjvQmFm8D6xv/view?usp=sharing"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors group"
