@@ -1,8 +1,19 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # RAF.WORKS - Design Portfolio & Animation Showcase
 
 ## Project Overview
 
 This is a sophisticated Next.js 15.3.0 portfolio website for Raf, a Senior Product Designer and Design Engineer based in Toronto. The site showcases advanced animation techniques, interactive design elements, and a curated collection of work, photos, and design notes.
+
+## Development Commands
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm start` - Start production server  
+- `npm run lint` - Run Next.js ESLint checks
 
 ## Architecture & Technology Stack
 
@@ -15,7 +26,7 @@ This is a sophisticated Next.js 15.3.0 portfolio website for Raf, a Senior Produ
 
 ### Key Dependencies
 - **Animation Libraries**: Framer Motion (latest), GSAP 3.12.7, Tailwind CSS Animate
-- **UI Components**: Radix UI component library for accessible UI elements
+- **UI Components**: Radix UI component library (shadcn/ui) for accessible UI elements
 - **Styling**: Tailwind CSS with custom extensions, @tailwindcss/typography
 - **Analytics**: Vercel Analytics integration
 - **Fonts**: Custom local fonts (Ronzino, Edu Marist)
@@ -39,6 +50,13 @@ This is a sophisticated Next.js 15.3.0 portfolio website for Raf, a Senior Produ
 - `app/data/works.ts` - Work portfolio data structure
 - `app/data/notes.ts` - Design notes and reflections
 - `app/data/photos.ts` - Photo collection data
+
+### UI Components (shadcn/ui)
+- Uses shadcn/ui component system with Radix UI primitives
+- Components located in `components/ui/` 
+- Configuration in `components.json`
+- Path aliases: `@/components`, `@/lib/utils`, `@/ui`
+- Tailwind CSS with CSS variables for theming
 
 ## Key Features & Animations
 
@@ -224,5 +242,21 @@ keyframes: {
 - Use TypeScript for type safety
 - Implement proper error boundaries
 - Document complex animation sequences
+
+## Important Technical Notes
+
+### Building for Production
+- Uses `NODE_OPTIONS='--no-deprecation'` to suppress warnings during build
+- Images are unoptimized (`unoptimized: true` in next.config.js)
+- Custom redirect from `/deck` to Figma presentation
+
+### Font System
+- Custom fonts loaded via `localFont` from `/public/fonts/`
+- CSS variables: `--font-ronzino`, `--font-edu-marist`
+- Typography plugin configured for consistent styling
+
+### No Test Framework
+- Project does not include testing setup
+- No test runner, testing library, or test scripts configured
 
 This portfolio represents a sophisticated example of modern web animation techniques, combining multiple animation libraries with custom implementations to create a cohesive, performant, and engaging user experience.

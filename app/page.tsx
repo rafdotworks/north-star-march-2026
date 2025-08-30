@@ -11,8 +11,6 @@ import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
-// Removed unused ProgressiveImage import for performance
-// Removed unused AnimatedContent import for performance
 import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
 // Temporarily disabled LiquidGlass for performance optimization
 // import { LiquidGlass } from "@/components/LiquidGlass";
