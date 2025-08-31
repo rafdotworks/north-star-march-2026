@@ -5,6 +5,12 @@ import { motion } from "framer-motion";
 import {
   StaggeredTextContainer,
   StaggeredTextItem,
+  CharacterReveal,
+  WordReveal,
+  PhraseReveal,
+  EnhancedStaggeredTextContainer,
+  EnhancedStaggeredTextItem,
+  EASING,
 } from "@/components/animations/LoadingAnimations";
 
 interface TextAnimationProps {
@@ -16,34 +22,12 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
   textLoaded,
   isMobile = false,
 }) => {
-  const textContent = (
-    <p className="tracking-tight text-lg">
-      <span className="text-foreground/70">Raf leads as a </span>
-      <span className="text-foreground font-medium">Senior Designer</span>
-      <span className="text-foreground/70"> and </span>
-      <span className="text-foreground font-medium">Design Engineer</span>
-      <span className="text-foreground/70">.</span>
-      <div className="h-4"></div>
-      <span className="text-foreground/70">
-        Now building within Berachain in Toronto in person
-      </span>
-      <br />
-      <span className="text-foreground/70">
-        Past at Coinbase, VoiceFlow, Theoriq & more
-      </span>
-      <div className="h-4"></div>
-      <span className="text-foreground/70">
-        <a
-          href="https://www.linkedin.com/in/raffaelevitaledesign"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-foreground transition-colors"
-        >
-          Text anytime
-        </a>
-      </span>
-    </p>
-  );
+  const phrases = [
+    "Raf leads as a Senior Designer and Design Engineer",
+    "Now in stealth in Toronto",
+    "Past at Coinbase, VoiceFlow, Theoriq & more",
+    "raf@raf.works",
+  ];
 
   if (isMobile) {
     return (
@@ -53,30 +37,79 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
             <div className="space-y-8">
               <div className="space-y-6">
                 {textLoaded ? (
-                  <StaggeredTextContainer>
-                    <StaggeredTextItem>{textContent}</StaggeredTextItem>
-                  </StaggeredTextContainer>
+                  <EnhancedStaggeredTextContainer staggerDelay={0.15}>
+                    <EnhancedStaggeredTextItem>
+                      <div className="tracking-tight text-lg md:whitespace-nowrap">
+                        <WordReveal
+                          text="Raf leads as a Senior Designer and Design Engineer."
+                          className="text-foreground/70"
+                        />
+                      </div>
+                    </EnhancedStaggeredTextItem>
+
+                    <EnhancedStaggeredTextItem>
+                      <div className="h-4"></div>
+                    </EnhancedStaggeredTextItem>
+
+                    <EnhancedStaggeredTextItem>
+                      <WordReveal
+                        text="Now building in stealth Toronto. Past at Coinbase, VoiceFlow, Theoriq & more"
+                        className="text-foreground/70 tracking-tight text-lg md:whitespace-nowrap"
+                      />
+                    </EnhancedStaggeredTextItem>
+
+                    <EnhancedStaggeredTextItem>
+                      <div className="h-4"></div>
+                    </EnhancedStaggeredTextItem>
+
+                    <EnhancedStaggeredTextItem>
+                      <a
+                        href="mailto:raf@raf.works"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-foreground/70 hover:text-foreground transition-colors tracking-tight text-lg"
+                      >
+                        <WordReveal text="raf@raf.works" />
+                      </a>
+                    </EnhancedStaggeredTextItem>
+                  </EnhancedStaggeredTextContainer>
                 ) : (
                   <motion.p
                     className="tracking-tight text-lg"
-                    initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                    animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    initial={{
+                      opacity: 0,
+                      filter: "blur(25px)",
+                      y: 30,
+                      scale: 0.98,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      filter: "blur(0px)",
+                      y: 0,
+                      scale: 1,
+                    }}
                     transition={{
-                      duration: 1.2,
-                      ease: [0.12, 1, 0.28, 1],
+                      duration: 1.8,
+                      ease: EASING.textReveal,
                     }}
                   >
                     <motion.span
                       className="text-foreground/70"
                       initial={{
                         opacity: 0,
-                        filter: "blur(20px)",
-                        y: 20,
+                        filter: "blur(25px)",
+                        y: 25,
+                        scale: 0.98,
                       }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                        scale: 1,
+                      }}
                       transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 1.6,
+                        ease: EASING.textReveal,
                       }}
                     >
                       Raf leads as a{" "}
@@ -85,13 +118,19 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                       className="text-foreground font-medium"
                       initial={{
                         opacity: 0,
-                        filter: "blur(20px)",
-                        y: 20,
+                        filter: "blur(25px)",
+                        y: 25,
+                        scale: 0.98,
                       }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                        scale: 1,
+                      }}
                       transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 1.6,
+                        ease: EASING.textReveal,
                       }}
                     >
                       Senior Designer
@@ -100,13 +139,19 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                       className="text-foreground/70"
                       initial={{
                         opacity: 0,
-                        filter: "blur(20px)",
-                        y: 20,
+                        filter: "blur(25px)",
+                        y: 25,
+                        scale: 0.98,
                       }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                        scale: 1,
+                      }}
                       transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 1.6,
+                        ease: EASING.textReveal,
                       }}
                     >
                       {" "}
@@ -116,13 +161,19 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                       className="text-foreground font-medium"
                       initial={{
                         opacity: 0,
-                        filter: "blur(20px)",
-                        y: 20,
+                        filter: "blur(25px)",
+                        y: 25,
+                        scale: 0.98,
                       }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                        scale: 1,
+                      }}
                       transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 1.6,
+                        ease: EASING.textReveal,
                       }}
                     >
                       Design Engineer
@@ -131,13 +182,19 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                       className="text-foreground/70"
                       initial={{
                         opacity: 0,
-                        filter: "blur(20px)",
-                        y: 20,
+                        filter: "blur(25px)",
+                        y: 25,
+                        scale: 0.98,
                       }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                        scale: 1,
+                      }}
                       transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 1.6,
+                        ease: EASING.textReveal,
                       }}
                     >
                       .
@@ -147,13 +204,19 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                       className="text-foreground/70"
                       initial={{
                         opacity: 0,
-                        filter: "blur(20px)",
-                        y: 20,
+                        filter: "blur(25px)",
+                        y: 25,
+                        scale: 0.98,
                       }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                        scale: 1,
+                      }}
                       transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 1.6,
+                        ease: EASING.textReveal,
                       }}
                     >
                       Now building in stealth in Toronto.
@@ -163,13 +226,19 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                       className="text-foreground/70"
                       initial={{
                         opacity: 0,
-                        filter: "blur(20px)",
-                        y: 20,
+                        filter: "blur(25px)",
+                        y: 25,
+                        scale: 0.98,
                       }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                        scale: 1,
+                      }}
                       transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 1.6,
+                        ease: EASING.textReveal,
                       }}
                     >
                       Past at Coinbase, VoiceFlow, Theoriq & more
@@ -179,13 +248,19 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                       className="text-foreground/70"
                       initial={{
                         opacity: 0,
-                        filter: "blur(20px)",
-                        y: 20,
+                        filter: "blur(25px)",
+                        y: 25,
+                        scale: 0.98,
                       }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        y: 0,
+                        scale: 1,
+                      }}
                       transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 1.6,
+                        ease: EASING.textReveal,
                       }}
                     >
                       <a
@@ -214,9 +289,42 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
           <div className="space-y-8">
             <div className="space-y-6">
               {textLoaded && (
-                <StaggeredTextContainer>
-                  <StaggeredTextItem>{textContent}</StaggeredTextItem>
-                </StaggeredTextContainer>
+                <EnhancedStaggeredTextContainer staggerDelay={0.12}>
+                  <EnhancedStaggeredTextItem>
+                    <div className="tracking-tight text-lg md:whitespace-nowrap">
+                      <WordReveal
+                        text="Raf leads as a Senior Designer and Design Engineer."
+                        className="text-foreground/70"
+                      />
+                    </div>
+                  </EnhancedStaggeredTextItem>
+
+                  <EnhancedStaggeredTextItem>
+                    <div className="h-4"></div>
+                  </EnhancedStaggeredTextItem>
+
+                  <EnhancedStaggeredTextItem>
+                    <WordReveal
+                      text="Now building in stealth Toronto. Past at Coinbase, VoiceFlow, Theoriq & more"
+                      className="text-foreground/70 tracking-tight text-lg md:whitespace-nowrap"
+                    />
+                  </EnhancedStaggeredTextItem>
+
+                  <EnhancedStaggeredTextItem>
+                    <div className="h-4"></div>
+                  </EnhancedStaggeredTextItem>
+
+                  <EnhancedStaggeredTextItem>
+                    <a
+                      href="https://www.linkedin.com/in/raffaelevitaledesign"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground/70 hover:text-foreground transition-colors tracking-tight text-lg"
+                    >
+                      <WordReveal text="Text anytime" />
+                    </a>
+                  </EnhancedStaggeredTextItem>
+                </EnhancedStaggeredTextContainer>
               )}
             </div>
           </div>

@@ -33,6 +33,10 @@ import {
   SlideUp,
   LOADING_SEQUENCE,
   EASING,
+  EnhancedStaggeredTextContainer,
+  EnhancedStaggeredTextItem,
+  WordReveal,
+  CharacterReveal,
 } from "@/components/animations/LoadingAnimations";
 import {
   useLoadingSequence,
@@ -91,6 +95,8 @@ export default function Page() {
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
     {}
   );
+  const [carouselAnimationComplete, setCarouselAnimationComplete] =
+    useState(false);
   const [imageLoadingProgress, setImageLoadingProgress] = useState<{
     [key: string]: number;
   }>({});
@@ -745,12 +751,14 @@ export default function Page() {
 
   /**
    * Main slideshow interval effect
-   * Advances to next image every 4.5 seconds when conditions are met
+   * Advances to next image every 4 seconds when conditions are met
+   * Waits for carousel animation to complete before starting
    */
   useEffect(() => {
     if (
       !mounted ||
       !criticalContentLoaded ||
+      !carouselAnimationComplete ||
       // isPhotosModalOpen ||
       isNotesModalOpen ||
       isAllNotesModalOpen ||
@@ -761,12 +769,13 @@ export default function Page() {
 
     const slideshowInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(slideshowInterval);
   }, [
     mounted,
     criticalContentLoaded,
+    carouselAnimationComplete,
     // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
@@ -1793,23 +1802,16 @@ export default function Page() {
                 >
                   <div className="text-left mb-8">
                     {loadingSequence.textLoaded && (
-                      <StaggeredTextContainer>
-                        <StaggeredTextItem>
-                          <p className="tracking-tight text-xl">
-                            <span className="text-foreground/70">
-                              Raf leads as a{" "}
-                            </span>
-                            <span className="text-foreground font-medium">
-                              Senior Designer
-                            </span>
-                            <span className="text-foreground/70"> and </span>
-                            <span className="text-foreground font-medium">
-                              Design Engineer
-                            </span>
-                            <span className="text-foreground/70">.</span>
+                      <EnhancedStaggeredTextContainer staggerDelay={0.12}>
+                        <EnhancedStaggeredTextItem>
+                          <p className="tracking-tight text-xl md:whitespace-nowrap">
+                            <WordReveal
+                              text="Raf leads as a Senior Designer and Design Engineer."
+                              className="text-foreground/70"
+                            />
                           </p>
-                        </StaggeredTextItem>
-                      </StaggeredTextContainer>
+                        </EnhancedStaggeredTextItem>
+                      </EnhancedStaggeredTextContainer>
                     )}
                   </div>
                 </motion.div>
@@ -1827,23 +1829,16 @@ export default function Page() {
                 >
                   <div className="text-left mb-8">
                     {loadingSequence.textLoaded && (
-                      <StaggeredTextContainer>
-                        <StaggeredTextItem>
-                          <p className="tracking-tight text-lg">
-                            <span className="text-foreground/70">
-                              Raf leads as a{" "}
-                            </span>
-                            <span className="text-foreground font-medium">
-                              Senior Designer
-                            </span>
-                            <span className="text-foreground/70"> and </span>
-                            <span className="text-foreground font-medium">
-                              Design Engineer
-                            </span>
-                            <span className="text-foreground/70">.</span>
+                      <EnhancedStaggeredTextContainer staggerDelay={0.15}>
+                        <EnhancedStaggeredTextItem>
+                          <p className="tracking-tight text-lg md:whitespace-nowrap">
+                            <WordReveal
+                              text="Raf leads as a Senior Designer and Design Engineer."
+                              className="text-foreground/70"
+                            />
                           </p>
-                        </StaggeredTextItem>
-                      </StaggeredTextContainer>
+                        </EnhancedStaggeredTextItem>
+                      </EnhancedStaggeredTextContainer>
                     )}
                   </div>
                 </motion.div>
@@ -1854,8 +1849,14 @@ export default function Page() {
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   transition={{
                     duration: 1.5,
-                    delay: 1.2,
+                    delay: 3.0,
                     ease: [0.22, 1, 0.36, 1],
+                  }}
+                  onAnimationComplete={() => {
+                    // Wait an additional 1 second after animation completes before starting carousel
+                    setTimeout(() => {
+                      setCarouselAnimationComplete(true);
+                    }, 1000);
                   }}
                 >
                   <div className="space-y-8">
@@ -2145,33 +2146,30 @@ export default function Page() {
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   transition={{
                     duration: 1.2,
-                    delay: 2.0,
+                    delay: 5.0,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                 >
                   <div className="text-left mt-8">
                     {loadingSequence.textLoaded && (
-                      <StaggeredTextContainer>
-                        <StaggeredTextItem>
-                          <p className="tracking-tight text-lg">
-                            <span className="text-foreground/70">
-                              Now building in stealth in Toronto. Past at
-                              Coinbase, VoiceFlow, Theoriq & more
-                            </span>
-                            <br />
-                            <span className="text-foreground/70">
-                              <a
-                                href="https://www.linkedin.com/in/raffaelevitaledesign"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
-                              >
-                                Text anytime
-                              </a>
-                            </span>
-                          </p>
-                        </StaggeredTextItem>
-                      </StaggeredTextContainer>
+                      <EnhancedStaggeredTextContainer staggerDelay={0.15}>
+                        <EnhancedStaggeredTextItem>
+                          <WordReveal
+                            text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
+                            className="text-foreground/70 tracking-tight text-lg md:whitespace-nowrap"
+                          />
+                        </EnhancedStaggeredTextItem>
+                        <EnhancedStaggeredTextItem>
+                          <a
+                            href="mailto:raf@raf.works"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
+                          >
+                            <WordReveal text="raf@raf,works" />
+                          </a>
+                        </EnhancedStaggeredTextItem>
+                      </EnhancedStaggeredTextContainer>
                     )}
                   </div>
                 </motion.div>
@@ -2183,33 +2181,30 @@ export default function Page() {
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   transition={{
                     duration: 1.2,
-                    delay: 2.0,
+                    delay: 5.0,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                 >
                   <div className="text-left mt-8">
                     {loadingSequence.textLoaded && (
-                      <StaggeredTextContainer>
-                        <StaggeredTextItem>
-                          <p className="tracking-tight text-lg">
-                            <span className="text-foreground/70">
-                              Now building in stealth in Toronto. Past at
-                              Coinbase, VoiceFlow, Theoriq & more
-                            </span>
-                            <br />
-                            <span className="text-foreground/70">
-                              <a
-                                href="https://www.linkedin.com/in/raffaelevitaledesign"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
-                              >
-                                Text anytime
-                              </a>
-                            </span>
-                          </p>
-                        </StaggeredTextItem>
-                      </StaggeredTextContainer>
+                      <EnhancedStaggeredTextContainer staggerDelay={0.12}>
+                        <EnhancedStaggeredTextItem>
+                          <WordReveal
+                            text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
+                            className="text-foreground/70 tracking-tight text-lg md:whitespace-nowrap"
+                          />
+                        </EnhancedStaggeredTextItem>
+                        <EnhancedStaggeredTextItem>
+                          <a
+                            href="https://www.linkedin.com/in/raffaelevitaledesign"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
+                          >
+                            <WordReveal text="Text anytime" />
+                          </a>
+                        </EnhancedStaggeredTextItem>
+                      </EnhancedStaggeredTextContainer>
                     )}
                   </div>
                 </motion.div>

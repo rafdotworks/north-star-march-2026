@@ -1995,8 +1995,7 @@ export default function Page() {
                                 <span className="text-foreground/70">.</span>
                                 <div className="h-8"></div>
                                 <span className="text-foreground/70">
-                                  Now building in stealth within Berachain in
-                                  Toronto in person
+                                  Now building in stealth in Toronto.
                                 </span>
                                 <br />
                                 <span className="text-foreground/70">
@@ -2010,7 +2009,7 @@ export default function Page() {
                                     rel="noopener noreferrer"
                                     className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
                                   >
-                                    Text anytime
+                                    raf@raf.works
                                   </a>
                                 </span>
                               </p>
