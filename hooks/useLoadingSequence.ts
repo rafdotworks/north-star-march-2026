@@ -17,15 +17,15 @@ export function useLoadingSequence() {
   });
 
   useEffect(() => {
-    // Text loads first
-    const textTimer = setTimeout(() => {
-      setLoadingState((prev) => ({ ...prev, textLoaded: true }));
-    }, LOADING_SEQUENCE.TEXT_DELAY * 1000);
-
-    // Images load after text
+    // Images load first (work carousel priority)
     const imagesTimer = setTimeout(() => {
       setLoadingState((prev) => ({ ...prev, imagesLoaded: true }));
     }, LOADING_SEQUENCE.IMAGES_DELAY * 1000);
+
+    // Text loads after images
+    const textTimer = setTimeout(() => {
+      setLoadingState((prev) => ({ ...prev, textLoaded: true }));
+    }, LOADING_SEQUENCE.TEXT_DELAY * 1000);
 
     // Navigation loads last
     const navTimer = setTimeout(() => {
@@ -38,8 +38,8 @@ export function useLoadingSequence() {
     }, (LOADING_SEQUENCE.NAV_DELAY + 0.5) * 1000);
 
     return () => {
-      clearTimeout(textTimer);
       clearTimeout(imagesTimer);
+      clearTimeout(textTimer);
       clearTimeout(navTimer);
       clearTimeout(allLoadedTimer);
     };

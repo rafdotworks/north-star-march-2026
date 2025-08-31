@@ -1663,6 +1663,62 @@ export default function Page() {
                           >
                             .
                           </motion.span>
+                          <div className="h-4"></div>
+                          <motion.span
+                            className="text-foreground/70"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(20px)",
+                              y: 20,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 1.2,
+                              ease: [0.12, 1, 0.28, 1],
+                            }}
+                          >
+                            Now building in stealth with Berachain in Toronto in
+                            person
+                          </motion.span>
+                          <br />
+                          <motion.span
+                            className="text-foreground/70"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(20px)",
+                              y: 20,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 1.2,
+                              ease: [0.12, 1, 0.28, 1],
+                            }}
+                          >
+                            Past at Coinbase, VoiceFlow, Theoriq & more
+                          </motion.span>
+                          <div className="h-4"></div>
+                          <motion.span
+                            className="text-foreground/70"
+                            initial={{
+                              opacity: 0,
+                              filter: "blur(20px)",
+                              y: 20,
+                            }}
+                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{
+                              duration: 1.2,
+                              ease: [0.12, 1, 0.28, 1],
+                            }}
+                          >
+                            <a
+                              href="https://www.linkedin.com/in/raffaelevitaledesign"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-foreground transition-colors"
+                            >
+                              Text anytime
+                            </a>
+                          </motion.span>
                         </motion.p>
                       </div>
                     </div>
@@ -1956,37 +2012,6 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Enhanced Text Animation Section */}
-            <div className="w-full mb-36">
-              <div className="space-y-8">
-                <section className="w-full">
-                  <div className="space-y-8">
-                    <div className="space-y-6">
-                      {loadingSequence.textLoaded && (
-                        <StaggeredTextContainer>
-                          <StaggeredTextItem>
-                            <p className="tracking-tight text-lg">
-                              <span className="text-foreground/70">
-                                Raf leads as a{" "}
-                              </span>
-                              <span className="text-foreground font-medium">
-                                Senior Designer
-                              </span>
-                              <span className="text-foreground/70"> and </span>
-                              <span className="text-foreground font-medium">
-                                Design Engineer
-                              </span>
-                              <span className="text-foreground/70">.</span>
-                            </p>
-                          </StaggeredTextItem>
-                        </StaggeredTextContainer>
-                      )}
-                    </div>
-                  </div>
-                </section>
-              </div>
-            </div>
-
             {/* Enhanced Content Section - Controlled by loading sequence */}
             {loadingSequence.imagesLoaded && (
               <motion.div
@@ -2008,6 +2033,60 @@ export default function Page() {
                   minHeight: viewportHeight,
                 }}
               >
+                {/* Enhanced Text Animation Section - Moved above works for mobile */}
+                <div className="w-full block sm:hidden">
+                  <div className="space-y-8">
+                    <section className="w-full">
+                      <div className="space-y-8">
+                        <div className="space-y-6">
+                          {loadingSequence.textLoaded && (
+                            <StaggeredTextContainer>
+                              <StaggeredTextItem>
+                                <p className="tracking-tight text-lg">
+                                  <span className="text-foreground/70">
+                                    Raf leads as a{" "}
+                                  </span>
+                                  <span className="text-foreground font-medium">
+                                    Senior Designer
+                                  </span>
+                                  <span className="text-foreground/70">
+                                    {" "}
+                                    and{" "}
+                                  </span>
+                                  <span className="text-foreground font-medium">
+                                    Design Engineer
+                                  </span>
+                                  <span className="text-foreground/70">.</span>
+                                  <div className="h-4"></div>
+                                  <span className="text-foreground/70">
+                                    Now building in stealth with Berachain in
+                                    Toronto in person.
+                                  </span>
+                                  <br />
+                                  <span className="text-foreground/70">
+                                    Past at Coinbase, VoiceFlow, Theoriq & more
+                                  </span>
+                                  <div className="h-4"></div>
+                                  <span className="text-foreground/70">
+                                    <a
+                                      href="https://www.linkedin.com/in/raffaelevitaledesign"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:text-foreground transition-colors"
+                                    >
+                                      Text anytime
+                                    </a>
+                                  </span>
+                                </p>
+                              </StaggeredTextItem>
+                            </StaggeredTextContainer>
+                          )}
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
                 <div className="w-full">
                   <div className="space-y-8">
                     {/* Desktop Slideshow - now used for all screen sizes */}
@@ -2300,6 +2379,60 @@ export default function Page() {
                   </div>
                 </div>
 
+                {/* Enhanced Text Animation Section - Desktop version */}
+                <div className="w-full hidden sm:block">
+                  <div className="space-y-8">
+                    <section className="w-full">
+                      <div className="space-y-8">
+                        <div className="space-y-6">
+                          {loadingSequence.textLoaded && (
+                            <StaggeredTextContainer>
+                              <StaggeredTextItem>
+                                <p className="tracking-tight text-lg">
+                                  <span className="text-foreground/70">
+                                    Raf leads as a{" "}
+                                  </span>
+                                  <span className="text-foreground font-medium">
+                                    Senior Designer
+                                  </span>
+                                  <span className="text-foreground/70">
+                                    {" "}
+                                    and{" "}
+                                  </span>
+                                  <span className="text-foreground font-medium">
+                                    Design Engineer
+                                  </span>
+                                  <span className="text-foreground/70">.</span>
+                                  <div className="h-4"></div>
+                                  <span className="text-foreground/70">
+                                    Now building in stealth with Berachain in
+                                    Toronto in person.
+                                  </span>
+                                  <br />
+                                  <span className="text-foreground/70">
+                                    Past at Coinbase, VoiceFlow, Theoriq & more
+                                  </span>
+                                  <div className="h-4"></div>
+                                  <span className="text-foreground/70">
+                                    <a
+                                      href="https://www.linkedin.com/in/raffaelevitaledesign"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:text-foreground transition-colors"
+                                    >
+                                      Text anytime
+                                    </a>
+                                  </span>
+                                </p>
+                              </StaggeredTextItem>
+                            </StaggeredTextContainer>
+                          )}
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
                 {/* 
               {/* About Section 
               <section className="w-full">
@@ -2350,321 +2483,7 @@ export default function Page() {
                 </div>
               </section> */}
 
-                {/* About Section */}
-                <section className="w-full mt-20">
-                  <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
-                    Experience
-                  </h2>
-                  <div>
-                    {(() => {
-                      const experience = [
-                        {
-                          year: "2025",
-                          role: "Senior Designer",
-                          company: "Voiceflow, Coinbase, TBD",
-                          url: "https://voiceflow.com",
-                          note: "Product Design User Activation with Braden (Voiceflow CEO). Coinbase: Wallet and Dev tools. In progress",
-                        },
-                        {
-                          year: "2024",
-                          role: "Design Lead",
-                          company: "Never Before Seen",
-                          url: "https://neverbeforeseen.co",
-                          note: "Design Lead in a zero to one product design studio focused on Web 3.0",
-                        },
-                        {
-                          year: "2023–2024",
-                          role: "Founding Product Designer",
-                          company: "Theoriq",
-                          url: "https://theoriq.ai",
-                          note: "Zero to one. Responsible for Product Design, Marketing and Brand. 140k users in 6 months.",
-                        },
-                        {
-                          year: "2023",
-                          role: "Product Design Lead",
-                          company: "CurbCutOS",
-                          url: "https://curbcutos.com",
-                          note: "Shaped accessibility SaaS as an IC and Lead.",
-                        },
-                        {
-                          year: "2022–2023",
-                          role: "Product Design Lead",
-                          company: "Atlas (Stealth)",
-                        },
-                        {
-                          year: "2021–2022",
-                          role: "Senior Product Designer, Design System",
-                          company: "Zalando",
-                          url: "https://zalando.com",
-                          note: "Designed and scaled the B2B Design System used across Zalando's product surfaces. Big focus on documentation.",
-                        },
-                        {
-                          year: "2020–2021",
-                          role: "Freelance Designer & Developer",
-                          company: "Independent",
-                          note: "Directed brand and product design for startups like Artscapy (£10M+), TravelNest (£2.5M ARR 2020)",
-                        },
-                        {
-                          year: "2019",
-                          role: "Design Intern",
-                          company: "Apple (Developer Academy)",
-                          url: "https://developer.apple.com/academies/",
-                          note: "Design Intern contributing to a challenge based learning program. WatchOS 6.0.",
-                        },
-                        {
-                          year: "2018–2020",
-                          role: "Graphic & Brand Design, cum laude",
-                          company: "Napoli",
-                          url: "https://win.ilas.com/portfolio/20711100/raffaele-vitale",
-                        },
-                      ];
-
-                      const recentExperience = experience.slice(0, 3);
-
-                      return (
-                        <div className="w-full">
-                          <div className="flex flex-col divide-y divide-foreground/[0.03] mb-8">
-                            {recentExperience.map((exp, idx) => (
-                              <div
-                                key={exp.year + exp.role}
-                                className={`flex items-baseline py-4 first:pt-0 last:pb-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg`}
-                              >
-                                {/* Year */}
-                                <div className="w-28 min-w-[7rem] text-xs text-foreground/40 font-light tracking-tight">
-                                  {exp.year}
-                                </div>
-                                {/* Main content */}
-                                <div className="flex-1 sm:pr-12 md:pr-16 lg:pr-20">
-                                  <div className="text-base font-medium text-foreground group-hover:text-foreground/90 transition-colors">
-                                    {exp.role}
-                                  </div>
-                                  <div className="text-sm text-foreground/60 dark:text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors mt-1">
-                                    {exp.company}
-                                  </div>
-                                </div>
-                                {/* Note on the far right (desktop: hover, mobile: always) */}
-                                {exp.note && (
-                                  <div className="hidden sm:block ml-4 text-xs font-medium italic text-foreground/60 text-right transition-opacity duration-300 opacity-0 group-hover:opacity-100 max-w-[200px] break-words">
-                                    {exp.note}
-                                  </div>
-                                )}
-                                {/* Hide notes on mobile for first 3 roles to avoid responsiveness issues */}
-                                {exp.note && idx >= 3 && (
-                                  <div className="block sm:hidden mt-2 text-xs font-medium italic text-foreground/60">
-                                    {exp.note}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* View all timeline button */}
-                          <motion.button
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5, duration: 0.5 }}
-                            onClick={() => setIsAllExperienceModalOpen(true)}
-                            className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
-                          >
-                            Open Timeline
-                          </motion.button>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </section>
-
-                {/* Notes Section */}
-                <section className="w-full mt-20">
-                  <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
-                    Notes
-                  </h2>
-                  <div>
-                    <div className="flex flex-col divide-y divide-foreground/[0.03] mb-8">
-                      {sortedNotes.map((note, index) => (
-                        <motion.div
-                          key={note.id}
-                          id={`note-card-${index}`}
-                          className="py-4 first:pt-0 last:pb-0 cursor-pointer group relative note-card hover:bg-foreground/5 rounded-lg transition-colors duration-200"
-                          initial={fadeInAnimation.initial}
-                          animate={{ opacity: 1 }}
-                          transition={{
-                            duration: 0.5,
-                            delay: index * 0.1,
-                          }}
-                          onClick={(e) => {
-                            // Find the correct index in the original notes array
-                            const originalIndex = notes.findIndex(
-                              (n) => n.id === note.id
-                            );
-                            handleOpenNoteWithAnimation(originalIndex, e);
-                          }}
-                        >
-                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-10 items-baseline relative">
-                            <div className="text-xs text-foreground/40 whitespace-nowrap min-w-[90px] font-light tracking-tight group-hover:text-foreground/50 transition-colors note-date">
-                              {new Date(note.date).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
-                            </div>
-                            <div className="flex-1 relative">
-                              <div className="flex flex-col gap-1.5">
-                                <p className="text-base text-foreground group-hover:text-foreground transition-colors font-medium">
-                                  {note.title}
-                                </p>
-                                <p className="text-sm text-foreground/60 dark:text-foreground/50 line-clamp-2 leading-relaxed group-hover:text-foreground/70 transition-colors">
-                                  {note.excerpt ||
-                                    note.content
-                                      .replace(/^#.*$/m, "")
-                                      .trim()
-                                      .split("\n")[0]}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* View all notes button */}
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5, duration: 0.5 }}
-                      onClick={handleOpenAllNotes}
-                      className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
-                    >
-                      Open Notes
-                    </motion.button>
-                  </div>
-                </section>
-
-                {/* Photos Section */}
-                {/* Commented out */}
-                {/*
-              <section className="w-full mt-20">
-                <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
-                  Photos
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  {photos.slice(0, 3).map((photo, index) => (
-                    <motion.div
-                      key={photo.src}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: "-50px" }}
-                      transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
-                        delay: index * 0.1,
-                      }}
-                    >
-                      <div className="aspect-[3/4] overflow-hidden rounded-lg bg-foreground/5">
-                        <Image
-                          src={photo.src}
-                          alt={photo.name}
-                          width={400}
-                          height={533}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  onClick={() => (window.location.href = "/photos")}
-                  className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
-                >
-                  Open Photos
-                </motion.button>
-              </section>
-              */}
-
-                {/* Deep Interest Section - RESTORED */}
-                <section className="w-full mt-20">
-                  <h2 className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-6">
-                    About
-                  </h2>
-                  <div className="mb-8">
-                    <motion.p
-                      className="text-foreground/80 tracking-tight text-lg"
-                      initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                      viewport={{ once: true, margin: "-100px" }}
-                      transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
-                      }}
-                    >
-                      <motion.span
-                        initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                        whileInView={{
-                          opacity: 1,
-                          filter: "blur(0px)",
-                          y: 0,
-                        }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        transition={{
-                          duration: 1.2,
-                          ease: [0.12, 1, 0.28, 1],
-                        }}
-                      >
-                        Raised on the Amalfi Coast, refined in Lisbon, based in
-                        Toronto + Remote.
-                      </motion.span>
-                    </motion.p>
-                    {/* 3. Location + personal depth */}
-                    <motion.p
-                      className="tracking-tight text-lg text-foreground/70"
-                      initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                      viewport={{ once: true, margin: "-100px" }}
-                      transition={{
-                        duration: 1.2,
-                        ease: [0.12, 1, 0.28, 1],
-                      }}
-                    >
-                      <motion.span
-                        initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                        whileInView={{
-                          opacity: 1,
-                          filter: "blur(0px)",
-                          y: 0,
-                        }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        transition={{
-                          duration: 1.2,
-                          ease: [0.12, 1, 0.28, 1],
-                        }}
-                      >
-                        Outside of design: yoga, portraiture, and thoughtfully
-                        lived spaces
-                      </motion.span>{" "}
-                      <motion.span
-                        className="text-foreground/60"
-                        initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                        whileInView={{
-                          opacity: 1,
-                          filter: "blur(0px)",
-                          y: 0,
-                        }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        transition={{
-                          duration: 1.2,
-                          ease: [0.12, 1, 0.28, 1],
-                          delay: 0.2,
-                        }}
-                      >
-                        {/* Raf blends structure and intuition. Outside of design:
-                      portraiture, yoga, and inspiring workspaces */}
-                      </motion.span>
-                    </motion.p>
-                  </div>
-                </section>
+                {/* Experience, Notes, and About sections are currently disabled */}
               </motion.div>
             )}
 
@@ -3777,103 +3596,128 @@ export default function Page() {
           )}
         </AnimatePresence>
 
-        {/* Enhanced Footer with video background */}
-        <motion.footer
-          className="relative w-full bg-black overflow-hidden min-h-[500px]"
-          initial={{
-            y: 60,
-            opacity: 0,
-          }}
-          whileInView={{
-            y: 0,
-            opacity: 1,
-          }}
-          viewport={{
-            once: true,
-            amount: 0.3,
-          }}
-          transition={{
-            duration: 2.5,
-            ease: EASING.tertiary,
-          }}
-          style={{
-            marginTop: "80px", // Reduced from 144px to match other sections (mt-20 = 80px)
-            boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
-          }}
-        >
-          {/* Video background with gentle fade */}
-          <motion.div
-            className="absolute inset-0 w-full h-full"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+        {/* Enhanced Footer with video background - DISABLED */}
+        {false && (
+          <motion.footer
+            className="relative w-full bg-black overflow-hidden min-h-[500px]"
+            initial={{
+              y: 60,
+              opacity: 0,
+            }}
+            whileInView={{
+              y: 0,
+              opacity: 1,
+            }}
+            viewport={{
+              once: true,
+              amount: 0.3,
+            }}
             transition={{
-              duration: 3,
-              ease: "easeOut",
+              duration: 2.5,
+              ease: EASING.tertiary,
+            }}
+            style={{
+              marginTop: "80px", // Reduced from 144px to match other sections (mt-20 = 80px)
+              boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
             }}
           >
-            <video
-              ref={videoRef}
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{
-                filter: "brightness(0.7)",
+            {/* Video background with gentle fade */}
+            <motion.div
+              className="absolute inset-0 w-full h-full"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 3,
+                ease: "easeOut",
               }}
             >
-              <source src="/video/footer-video.mp4" type="video/mp4" />
-            </video>
+              <video
+                ref={videoRef}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{
+                  filter: "brightness(0.7)",
+                }}
+              >
+                <source src="/video/footer-video.mp4" type="video/mp4" />
+              </video>
 
-            {/* Dark overlay */}
-            <div className="absolute inset-0 bg-black/50" />
-          </motion.div>
+              {/* Dark overlay */}
+              <div className="absolute inset-0 bg-black/50" />
+            </motion.div>
 
-          {/* Footer content with blur focus animation */}
-          <div className="relative z-10 px-6 sm:px-10 md:px-28 py-36">
-            <div className="w-full max-w-screen-xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div className="space-y-8">
-                  {/* Enhanced Email */}
-                  <FadeIn delay={0.2}>
-                    <motion.div
-                      initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 2,
-                        ease: EASING.tertiary,
-                      }}
-                    >
-                      <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                        Email
-                      </p>
-                      <a
-                        href="mailto:raf@raf.works"
-                        className="text-base text-white hover:text-white/90 transition-colors"
+            {/* Footer content with blur focus animation */}
+            <div className="relative z-10 px-6 sm:px-10 md:px-28 py-36">
+              <div className="w-full max-w-screen-xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="space-y-8">
+                    {/* Enhanced Email */}
+                    <FadeIn delay={0.2}>
+                      <motion.div
+                        initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 2,
+                          ease: EASING.tertiary,
+                        }}
                       >
-                        raf@raf.works
-                      </a>
-                    </motion.div>
-                  </FadeIn>
-                  {/* Enhanced LinkedIn */}
-                  <FadeIn delay={0.4}>
+                        <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                          Email
+                        </p>
+                        <a
+                          href="mailto:raf@raf.works"
+                          className="text-base text-white hover:text-white/90 transition-colors"
+                        >
+                          raf@raf.works
+                        </a>
+                      </motion.div>
+                    </FadeIn>
+                    {/* Enhanced LinkedIn */}
+                    <FadeIn delay={0.4}>
+                      <motion.div
+                        initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 2,
+                          ease: EASING.tertiary,
+                        }}
+                      >
+                        <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
+                          LinkedIn
+                        </p>
+                        <a
+                          href="https://linkedin.com/in/lfgraf"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-base text-white hover:text-white/90 transition-colors"
+                        >
+                          lfgraf
+                        </a>
+                      </motion.div>
+                    </FadeIn>
+                    {/* Enhanced Twitter/X */}
                     <motion.div
                       initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
                       whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                       viewport={{ once: true }}
                       transition={{
                         duration: 2,
-                        ease: EASING.tertiary,
+                        ease: [0.22, 1, 0.36, 1],
+                        delay: 0.6,
                       }}
                     >
                       <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                        LinkedIn
+                        Twitter/X
                       </p>
                       <a
-                        href="https://linkedin.com/in/lfgraf"
+                        href="https://x.com/lfgraf"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-base text-white hover:text-white/90 transition-colors"
@@ -3881,99 +3725,76 @@ export default function Page() {
                         lfgraf
                       </a>
                     </motion.div>
-                  </FadeIn>
-                  {/* Enhanced Twitter/X */}
-                  <motion.div
-                    initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{
-                      duration: 2,
-                      ease: [0.22, 1, 0.36, 1],
-                      delay: 0.6,
-                    }}
-                  >
-                    <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                      Twitter/X
-                    </p>
-                    <a
-                      href="https://x.com/lfgraf"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-base text-white hover:text-white/90 transition-colors"
-                    >
-                      lfgraf
-                    </a>
-                  </motion.div>
 
-                  {/* Philosophy quote - shown at bottom of links on mobile */}
-                  <motion.div
-                    initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{
-                      duration: 2,
-                      ease: [0.22, 1, 0.36, 1],
-                      delay: 0.8,
-                    }}
-                    className="md:hidden"
-                  >
-                    <motion.button
-                      onClick={toggleGlass}
-                      className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
-                      whileHover={{
-                        scale: 1.02,
-                        filter: "brightness(1.4)",
-                        color: "#fff",
-                      }}
-                      whileTap={{
-                        scale: 0.97,
-                        filter: "brightness(0.9)",
-                      }}
-                      animate={{
-                        scale: isGlassEnabled ? 1.05 : 1,
-                        filter: isGlassEnabled
-                          ? "brightness(1.5)"
-                          : "brightness(1)",
-                        boxShadow: isGlassEnabled
-                          ? "0 0 20px rgba(255, 255, 255, 0.3)"
-                          : "0 0 0px rgba(255, 255, 255, 0)",
-                      }}
+                    {/* Philosophy quote - shown at bottom of links on mobile */}
+                    <motion.div
+                      initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      viewport={{ once: true }}
                       transition={{
-                        duration: 0.6,
-                        ease: [0.12, 1, 0.28, 1],
+                        duration: 2,
+                        ease: [0.22, 1, 0.36, 1],
+                        delay: 0.8,
                       }}
-                      aria-label="Toggle liquid glass effect"
-                      style={{
-                        border: "1px solid rgba(255, 255, 255, 0.05)",
-                      }}
+                      className="md:hidden"
                     >
-                      More demos, less memos
-                    </motion.button>
-                  </motion.div>
-                </div>
+                      <motion.button
+                        onClick={toggleGlass}
+                        className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
+                        whileHover={{
+                          scale: 1.02,
+                          filter: "brightness(1.4)",
+                          color: "#fff",
+                        }}
+                        whileTap={{
+                          scale: 0.97,
+                          filter: "brightness(0.9)",
+                        }}
+                        animate={{
+                          scale: isGlassEnabled ? 1.05 : 1,
+                          filter: isGlassEnabled
+                            ? "brightness(1.5)"
+                            : "brightness(1)",
+                          boxShadow: isGlassEnabled
+                            ? "0 0 20px rgba(255, 255, 255, 0.3)"
+                            : "0 0 0px rgba(255, 255, 255, 0)",
+                        }}
+                        transition={{
+                          duration: 0.6,
+                          ease: [0.12, 1, 0.28, 1],
+                        }}
+                        aria-label="Toggle liquid glass effect"
+                        style={{
+                          border: "1px solid rgba(255, 255, 255, 0.05)",
+                        }}
+                      >
+                        More demos, less memos
+                      </motion.button>
+                    </motion.div>
+                  </div>
 
-                {/* Right column - Philosophy (desktop only) */}
-                <div className="hidden md:flex items-end justify-end">
-                  <motion.div
-                    initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{
-                      duration: 2,
-                      ease: [0.22, 1, 0.36, 1],
-                      delay: 1.0,
-                    }}
-                    className="text-right"
-                  >
-                    {/* Temporarily disabled glass toggle for performance optimization */}
-                    {/* <motion.button onClick={toggleGlass}>Always happy, never satisfied</motion.button> */}
-                  </motion.div>
+                  {/* Right column - Philosophy (desktop only) */}
+                  <div className="hidden md:flex items-end justify-end">
+                    <motion.div
+                      initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 2,
+                        ease: [0.22, 1, 0.36, 1],
+                        delay: 1.0,
+                      }}
+                      className="text-right"
+                    >
+                      {/* Temporarily disabled glass toggle for performance optimization */}
+                      {/* <motion.button onClick={toggleGlass}>Always happy, never satisfied</motion.button> */}
+                    </motion.div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </motion.footer>
+          </motion.footer>
+        )}
 
         {/* Temporarily disabled LiquidGlass for performance optimization */}
         {/* <LiquidGlass /> */}
