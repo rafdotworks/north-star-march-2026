@@ -11,13 +11,13 @@ import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
-import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
+import { ConsoleEasterEgg } from "../components/ConsoleEasterEgg";
 // Temporarily disabled LiquidGlass for performance optimization
 // import { LiquidGlass } from "@/components/LiquidGlass";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { notes, Note } from "./data/notes";
-import { works } from "./data/works";
+import { notes, Note } from "../data/notes";
+import { works } from "../data/works";
 import { Play } from "lucide-react";
 
 // Enhanced animation components
@@ -1814,8 +1814,7 @@ export default function Page() {
                             <StaggeredTextItem>
                               <p className="tracking-tight text-lg">
                                 <span className="text-foreground/70">
-                                  Now building in stealth within Berachain in
-                                  Toronto in person
+                                  Now building in stealth in Toronto.
                                 </span>
                                 <br />
                                 <span className="text-foreground/70">
@@ -1968,7 +1967,6 @@ export default function Page() {
                         </div>
                       )}
                     </div>
-
                   </div>
                 </div>
 

@@ -1565,166 +1565,9 @@ export default function Page() {
         <div className="min-h-screen bg-background">
           <div className="px-6 sm:px-10 py-16 md:px-28">
             <div className="w-full max-w-screen-xl mx-auto">
-              {/* Header - Always visible */}
-              <div className="flex items-center mb-40">
-                <h1 className="text-2xl font-normal text-foreground font-edu-marist">
-                  Raf
-                </h1>
-              </div>
+              {/* Header - Clean, no Raf */}
 
-              {/* Text Animation Section - Show immediately on mobile */}
-              <div className="w-full mb-36 block sm:hidden">
-                <div className="space-y-8">
-                  <section className="w-full">
-                    <div className="space-y-8">
-                      <div className="space-y-6">
-                        <motion.p
-                          className="tracking-tight text-lg"
-                          initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
-                          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                          transition={{
-                            duration: 1.2,
-                            ease: [0.12, 1, 0.28, 1],
-                          }}
-                        >
-                          <motion.span
-                            className="text-foreground/70"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(20px)",
-                              y: 20,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.12, 1, 0.28, 1],
-                            }}
-                          >
-                            Raf leads as a{" "}
-                          </motion.span>
-                          <motion.span
-                            className="text-foreground font-medium"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(20px)",
-                              y: 20,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.12, 1, 0.28, 1],
-                            }}
-                          >
-                            Senior Designer
-                          </motion.span>
-                          <motion.span
-                            className="text-foreground/70"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(20px)",
-                              y: 20,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.12, 1, 0.28, 1],
-                            }}
-                          >
-                            {" "}
-                            and{" "}
-                          </motion.span>
-                          <motion.span
-                            className="text-foreground font-medium"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(20px)",
-                              y: 20,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.12, 1, 0.28, 1],
-                            }}
-                          >
-                            Design Engineer
-                          </motion.span>
-                          <motion.span
-                            className="text-foreground/70"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(20px)",
-                              y: 20,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.12, 1, 0.28, 1],
-                            }}
-                          >
-                            .
-                          </motion.span>
-                          <div className="h-4"></div>
-                          <motion.span
-                            className="text-foreground/70"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(20px)",
-                              y: 20,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.12, 1, 0.28, 1],
-                            }}
-                          >
-                            Now building in stealth with Berachain in Toronto in
-                            person
-                          </motion.span>
-                          <br />
-                          <motion.span
-                            className="text-foreground/70"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(20px)",
-                              y: 20,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.12, 1, 0.28, 1],
-                            }}
-                          >
-                            Past at Coinbase, VoiceFlow, Theoriq & more
-                          </motion.span>
-                          <div className="h-4"></div>
-                          <motion.span
-                            className="text-foreground/70"
-                            initial={{
-                              opacity: 0,
-                              filter: "blur(20px)",
-                              y: 20,
-                            }}
-                            animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.12, 1, 0.28, 1],
-                            }}
-                          >
-                            <a
-                              href="https://www.linkedin.com/in/raffaelevitaledesign"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:text-foreground transition-colors"
-                            >
-                              Text anytime
-                            </a>
-                          </motion.span>
-                        </motion.p>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </div>
+              {/* Loading state - Clean, no duplicate text */}
 
               {/* Enhanced Loading Skeleton Section */}
               {!loadingSequence.imagesLoaded && (
@@ -1907,110 +1750,14 @@ export default function Page() {
             duration: 2,
             ease: EASING.primary,
           }}
-          className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden"
+          className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden md:overflow-hidden md:h-screen"
           style={{
             minHeight: "100vh",
             willChange: "auto",
           }}
         >
           <div className="w-full max-w-screen-xl mx-auto relative z-10">
-            <div className="flex items-center mb-40 relative">
-              <div className="flex items-center justify-between w-full relative">
-                <h1 className="text-2xl font-normal text-foreground relative z-10 font-edu-marist">
-                  Raf
-                </h1>
-
-                {/* Enhanced Navigation with Weather */}
-                {loadingSequence.navigationLoaded && (
-                  <NavigationReveal className="text-sm text-foreground/60 font-light max-w-[320px] text-right hidden md:block">
-                    <div className="flex items-center justify-end space-x-2">
-                      <span className="min-h-[1.5rem] flex items-center">
-                        {mounted ? getTimeDifference(false) : ""}
-                      </span>
-                      {weatherState.temperature !== null && (
-                        <>
-                          <span className="opacity-30 flex items-center">
-                            |
-                          </span>
-                          <div
-                            className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                            onClick={toggleWeatherEffect}
-                            title={`${weatherState.location} weather - click to see effect`}
-                          >
-                            <span className="flex items-center justify-center">
-                              {weatherState.temperature}°C{" "}
-                              {weatherState.customLocation &&
-                                `(${weatherState.location})`}
-                            </span>
-                            {weatherState.condition && (
-                              <span className="ml-1 text-xs flex items-center justify-center">
-                                {getWeatherIcon(weatherState.condition)}
-                              </span>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    {weatherState.isLoading && (
-                      <p className="text-[10px] opacity-50 mt-1">
-                        Loading {weatherState.location} weather...
-                      </p>
-                    )}
-                  </NavigationReveal>
-                )}
-
-                {/* Enhanced Mobile Navigation */}
-                {loadingSequence.navigationLoaded && (
-                  <NavigationReveal
-                    delay={0.2}
-                    className="text-sm text-foreground/60 font-light md:hidden flex items-center"
-                  >
-                    <motion.div
-                      className="backdrop-blur-sm bg-background/5 px-3 py-1.5 rounded-full border border-foreground/5 flex items-center space-x-2"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{
-                        delay: 2.8,
-                        duration: 1.2,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                      style={{
-                        transform: "translateZ(0)",
-                        backfaceVisibility: "hidden",
-                      }}
-                    >
-                      <span className="min-h-[1.25rem] flex items-center">
-                        {mounted ? getTimeDifference(true) : ""}
-                      </span>
-
-                      {weatherState.temperature !== null && (
-                        <>
-                          <span className="opacity-30 flex items-center">
-                            •
-                          </span>
-                          <div
-                            className="cursor-pointer transition-all duration-300 hover:opacity-80 flex items-center"
-                            onClick={toggleWeatherEffect}
-                            title={`${weatherState.location} weather - click to see effect`}
-                          >
-                            <span className="flex items-center justify-center">
-                              {weatherState.temperature}°C{" "}
-                              {weatherState.customLocation &&
-                                `(${weatherState.location})`}
-                            </span>
-                            {weatherState.condition && (
-                              <span className="ml-1 text-xs flex items-center justify-center">
-                                {getWeatherIcon(weatherState.condition)}
-                              </span>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </motion.div>
-                  </NavigationReveal>
-                )}
-              </div>
-            </div>
+            {/* Navigation completely removed - Clean interface */}
 
             {/* Enhanced Content Section - Controlled by loading sequence */}
             {loadingSequence.imagesLoaded && (
@@ -2024,7 +1771,7 @@ export default function Page() {
                   duration: 1.2,
                   ease: EASING.primary,
                 }}
-                className="space-y-36"
+                className="space-y-8 md:space-y-4 md:flex md:flex-col md:justify-center md:min-h-screen"
                 style={{
                   transform: animationsComplete ? "none" : undefined,
                   willChange: animationsComplete
@@ -2033,74 +1780,95 @@ export default function Page() {
                   minHeight: viewportHeight,
                 }}
               >
-                {/* Enhanced Text Animation Section - Moved above works for mobile */}
-                <div className="w-full block sm:hidden">
-                  <div className="space-y-8">
-                    <section className="w-full">
-                      <div className="space-y-8">
-                        <div className="space-y-6">
-                          {loadingSequence.textLoaded && (
-                            <StaggeredTextContainer>
-                              <StaggeredTextItem>
-                                <p className="tracking-tight text-lg">
-                                  <span className="text-foreground/70">
-                                    Raf leads as a{" "}
-                                  </span>
-                                  <span className="text-foreground font-medium">
-                                    Senior Designer
-                                  </span>
-                                  <span className="text-foreground/70">
-                                    {" "}
-                                    and{" "}
-                                  </span>
-                                  <span className="text-foreground font-medium">
-                                    Design Engineer
-                                  </span>
-                                  <span className="text-foreground/70">.</span>
-                                  <div className="h-4"></div>
-                                  <span className="text-foreground/70">
-                                    Now building in stealth with Berachain in
-                                    Toronto in person
-                                  </span>
-                                  <br />
-                                  <span className="text-foreground/70">
-                                    Past at Coinbase, VoiceFlow, Theoriq & more
-                                  </span>
-                                  <div className="h-4"></div>
-                                  <span className="text-foreground/70">
-                                    <a
-                                      href="https://www.linkedin.com/in/raffaelevitaledesign"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="hover:text-foreground transition-colors"
-                                    >
-                                      Text anytime
-                                    </a>
-                                  </span>
-                                </p>
-                              </StaggeredTextItem>
-                            </StaggeredTextContainer>
-                          )}
-                        </div>
-                      </div>
-                    </section>
+                {/* Desktop Layout - Text First */}
+                <motion.div
+                  className="w-full hidden md:block"
+                  initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{
+                    duration: 1.2,
+                    delay: 0.5,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
+                  <div className="text-left mb-8">
+                    {loadingSequence.textLoaded && (
+                      <StaggeredTextContainer>
+                        <StaggeredTextItem>
+                          <p className="tracking-tight text-xl">
+                            <span className="text-foreground/70">
+                              Raf leads as a{" "}
+                            </span>
+                            <span className="text-foreground font-medium">
+                              Senior Designer
+                            </span>
+                            <span className="text-foreground/70"> and </span>
+                            <span className="text-foreground font-medium">
+                              Design Engineer
+                            </span>
+                            <span className="text-foreground/70">.</span>
+                          </p>
+                        </StaggeredTextItem>
+                      </StaggeredTextContainer>
+                    )}
                   </div>
-                </div>
+                </motion.div>
 
-                <div className="w-full">
+                {/* Mobile Layout - Text First */}
+                <motion.div
+                  className="w-full block md:hidden"
+                  initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{
+                    duration: 1.2,
+                    delay: 0.5,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
+                  <div className="text-left mb-8">
+                    {loadingSequence.textLoaded && (
+                      <StaggeredTextContainer>
+                        <StaggeredTextItem>
+                          <p className="tracking-tight text-lg">
+                            <span className="text-foreground/70">
+                              Raf leads as a{" "}
+                            </span>
+                            <span className="text-foreground font-medium">
+                              Senior Designer
+                            </span>
+                            <span className="text-foreground/70"> and </span>
+                            <span className="text-foreground font-medium">
+                              Design Engineer
+                            </span>
+                            <span className="text-foreground/70">.</span>
+                          </p>
+                        </StaggeredTextItem>
+                      </StaggeredTextContainer>
+                    )}
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  className="w-full"
+                  initial={{ opacity: 0, y: 40, filter: "blur(15px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{
+                    duration: 1.5,
+                    delay: 1.2,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
                   <div className="space-y-8">
                     {/* Desktop Slideshow - now used for all screen sizes */}
                     <div
                       ref={slideshowRef}
                       className="w-full mb-0 overflow-hidden relative"
                       onMouseEnter={() => {
-                        // Don't pause on hover anymore
-                        // setIsSlideshowPaused(true);
+                        setIsSlideshowPaused(true);
                       }}
                       onMouseLeave={() => {
-                        // Don't need to unpause since we're not pausing on hover
-                        // setIsSlideshowPaused(false);
-                        // setTransitionProgress(0);
+                        setIsSlideshowPaused(false);
+                        setTransitionProgress(0);
                       }}
                       onTouchStart={() => setIsSlideshowPaused(true)}
                     >
@@ -2366,72 +2134,85 @@ export default function Page() {
                       />
                     </motion.div>
 
-                    {/* Open works button */}
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5, duration: 0.5 }}
-                      onClick={() => (window.location.href = "/works")}
-                      className="text-sm text-foreground/50 hover:text-foreground transition-colors mt-4"
-                    >
-                      Open Works
-                    </motion.button>
+                    {/* Open works button removed */}
                   </div>
-                </div>
+                </motion.div>
 
-                {/* Enhanced Text Animation Section - Desktop version */}
-                <div className="w-full hidden sm:block">
-                  <div className="space-y-8">
-                    <section className="w-full">
-                      <div className="space-y-8">
-                        <div className="space-y-6">
-                          {loadingSequence.textLoaded && (
-                            <StaggeredTextContainer>
-                              <StaggeredTextItem>
-                                <p className="tracking-tight text-lg">
-                                  <span className="text-foreground/70">
-                                    Raf leads as a{" "}
-                                  </span>
-                                  <span className="text-foreground font-medium">
-                                    Senior Designer
-                                  </span>
-                                  <span className="text-foreground/70">
-                                    {" "}
-                                    and{" "}
-                                  </span>
-                                  <span className="text-foreground font-medium">
-                                    Design Engineer
-                                  </span>
-                                  <span className="text-foreground/70"></span>
-                                  <div className="h-4"></div>
-                                  <span className="text-foreground/70">
-                                    Now building in stealth with Berachain in
-                                    Toronto in person
-                                  </span>
-                                  <br />
-                                  <span className="text-foreground/70">
-                                    Past at Coinbase, VoiceFlow, Theoriq & more
-                                  </span>
-                                  <div className="h-4"></div>
-                                  <span className="text-foreground/70">
-                                    <a
-                                      href="https://www.linkedin.com/in/raffaelevitaledesign"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="hover:text-foreground transition-colors"
-                                    >
-                                      Text anytime
-                                    </a>
-                                  </span>
-                                </p>
-                              </StaggeredTextItem>
-                            </StaggeredTextContainer>
-                          )}
-                        </div>
-                      </div>
-                    </section>
+                {/* Mobile Layout - Other Text After Carousel */}
+                <motion.div
+                  className="w-full block md:hidden"
+                  initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{
+                    duration: 1.2,
+                    delay: 2.0,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
+                  <div className="text-left mt-8">
+                    {loadingSequence.textLoaded && (
+                      <StaggeredTextContainer>
+                        <StaggeredTextItem>
+                          <p className="tracking-tight text-lg">
+                            <span className="text-foreground/70">
+                              Now building in stealth in Toronto. Past at
+                              Coinbase, VoiceFlow, Theoriq & more
+                            </span>
+                            <br />
+                            <span className="text-foreground/70">
+                              <a
+                                href="https://www.linkedin.com/in/raffaelevitaledesign"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
+                              >
+                                Text anytime
+                              </a>
+                            </span>
+                          </p>
+                        </StaggeredTextItem>
+                      </StaggeredTextContainer>
+                    )}
                   </div>
-                </div>
+                </motion.div>
+
+                {/* Desktop Layout - Other Text After Carousel */}
+                <motion.div
+                  className="w-full hidden md:block"
+                  initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{
+                    duration: 1.2,
+                    delay: 2.0,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
+                  <div className="text-left mt-8">
+                    {loadingSequence.textLoaded && (
+                      <StaggeredTextContainer>
+                        <StaggeredTextItem>
+                          <p className="tracking-tight text-lg">
+                            <span className="text-foreground/70">
+                              Now building in stealth in Toronto. Past at
+                              Coinbase, VoiceFlow, Theoriq & more
+                            </span>
+                            <br />
+                            <span className="text-foreground/70">
+                              <a
+                                href="https://www.linkedin.com/in/raffaelevitaledesign"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
+                              >
+                                Text anytime
+                              </a>
+                            </span>
+                          </p>
+                        </StaggeredTextItem>
+                      </StaggeredTextContainer>
+                    )}
+                  </div>
+                </motion.div>
 
                 {/* 
               {/* About Section 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
+import { ConsoleEasterEgg } from "../components/ConsoleEasterEgg";
 
 // Custom hooks
 import { useSlideshow } from "@/hooks/useSlideshow";
@@ -37,8 +37,8 @@ import {
 } from "@/components/animations/LoadingAnimations";
 
 // Data
-import { notes, Note } from "./data/notes";
-import { works } from "./data/works";
+import { notes, Note } from "../data/notes";
+import { works } from "../data/works";
 
 // Utils
 import { getWeatherColor } from "@/utils/weatherUtils";

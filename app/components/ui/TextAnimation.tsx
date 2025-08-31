@@ -25,7 +25,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
       <span className="text-foreground/70">.</span>
       <div className="h-4"></div>
       <span className="text-foreground/70">
-        Now building in stealth with Berachain in Toronto in person
+        Now building within Berachain in Toronto in person
       </span>
       <br />
       <span className="text-foreground/70">
@@ -156,8 +156,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                         ease: [0.12, 1, 0.28, 1],
                       }}
                     >
-                      Now building in stealth with Berachain in Toronto in
-                      person
+                      Now building in stealth in Toronto.
                     </motion.span>
                     <br />
                     <motion.span

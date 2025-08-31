@@ -56,7 +56,8 @@ export function HeroSection({
                     >
                       <span className="flex items-center justify-center">
                         {weatherState.temperature}°C{" "}
-                        {weatherState.customLocation && `(${weatherState.location})`}
+                        {weatherState.customLocation &&
+                          `(${weatherState.location})`}
                       </span>
                       {weatherState.condition && (
                         <span className="ml-1 text-xs flex items-center justify-center">
@@ -109,7 +110,8 @@ export function HeroSection({
                     >
                       <span className="flex items-center justify-center">
                         {weatherState.temperature}°C{" "}
-                        {weatherState.customLocation && `(${weatherState.location})`}
+                        {weatherState.customLocation &&
+                          `(${weatherState.location})`}
                       </span>
                       {weatherState.condition && (
                         <span className="ml-1 text-xs flex items-center justify-center">
@@ -230,7 +232,7 @@ export function HeroSection({
                       ease: [0.12, 1, 0.28, 1],
                     }}
                   >
-                    Now building in stealth with Berachain in Toronto in person
+                    Now building in stealth in Toronto
                   </motion.span>
                   <br />
                   <motion.span
