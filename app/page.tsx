@@ -2060,7 +2060,7 @@ export default function Page() {
                                   <div className="h-4"></div>
                                   <span className="text-foreground/70">
                                     Now building in stealth with Berachain in
-                                    Toronto in person.
+                                    Toronto in person
                                   </span>
                                   <br />
                                   <span className="text-foreground/70">
@@ -2402,11 +2402,11 @@ export default function Page() {
                                   <span className="text-foreground font-medium">
                                     Design Engineer
                                   </span>
-                                  <span className="text-foreground/70">.</span>
+                                  <span className="text-foreground/70"></span>
                                   <div className="h-4"></div>
                                   <span className="text-foreground/70">
                                     Now building in stealth with Berachain in
-                                    Toronto in person.
+                                    Toronto in person
                                   </span>
                                   <br />
                                   <span className="text-foreground/70">
