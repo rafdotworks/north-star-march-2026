@@ -2162,11 +2162,9 @@ export default function Page() {
                         <EnhancedStaggeredTextItem>
                           <a
                             href="mailto:raf@raf.works"
-                            target="_blank"
-                            rel="noopener noreferrer"
                             className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
                           >
-                            <WordReveal text="raf@raf,works" />
+                            <WordReveal text="raf@raf.works" />
                           </a>
                         </EnhancedStaggeredTextItem>
                       </EnhancedStaggeredTextContainer>
@@ -2196,12 +2194,10 @@ export default function Page() {
                         </EnhancedStaggeredTextItem>
                         <EnhancedStaggeredTextItem>
                           <a
-                            href="https://www.linkedin.com/in/raffaelevitaledesign"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            href="mailto:raf@raf.works"
                             className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
                           >
-                            <WordReveal text="Text anytime" />
+                            <WordReveal text="raf@raf.works" />
                           </a>
                         </EnhancedStaggeredTextItem>
                       </EnhancedStaggeredTextContainer>
