@@ -1105,20 +1105,46 @@ export default function Page() {
     if (isMobile) {
       // Mobile: always concise, one-line, no wrapping
       if (hourDifference === 0) {
-        return "Same timezone as Raf";
+        return (
+          <>
+            Same timezone as <span className="font-raf">Raf</span>
+          </>
+        );
       } else if (hourDifference > 0) {
-        return `Raf is ${hourDifference}h behind`;
+        return (
+          <>
+            <span className="font-raf">Raf</span> is {hourDifference}h behind
+          </>
+        );
       } else {
-        return `Raf is ${Math.abs(hourDifference)}h ahead`;
+        return (
+          <>
+            <span className="font-raf">Raf</span> is {Math.abs(hourDifference)}h
+            ahead
+          </>
+        );
       }
     } else {
       // Desktop: use concise format to prevent wrapping
       if (hourDifference === 0) {
-        return "Same timezone as Raf";
+        return (
+          <>
+            Same timezone as <span className="font-raf">Raf</span>
+          </>
+        );
       } else if (hourDifference > 0) {
-        return `Raf is ${hourDifference}h behind`;
+        return (
+          <>
+            <span className="font-raf">Raf</span> is {hourDifference}h behind
+          </>
+        );
       } else {
-        return `Raf is ${Math.abs(hourDifference)}h ahead`;
+        return (
+          <>
+            <span className="font-raf">Raf</span> is {Math.abs(hourDifference)}h
+            ahead
+          </>
+        );
       }
     }
   };
@@ -2336,7 +2362,8 @@ export default function Page() {
                                   ease: "easeInOut",
                                 }}
                               >
-                                Raf is in {weatherState.location} - where it's{" "}
+                                <span className="font-raf">Raf</span> is in{" "}
+                                {weatherState.location} - where it's{" "}
                                 {weatherState.condition?.toLowerCase() ||
                                   "clear"}{" "}
                                 and {weatherState.temperature}°C

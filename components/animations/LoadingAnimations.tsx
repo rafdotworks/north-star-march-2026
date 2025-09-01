@@ -401,7 +401,7 @@ export function WordReveal({
         <motion.span
           key={index}
           variants={wordRevealAnimation.word}
-          className="inline-block mr-1"
+          className={`inline-block mr-1 ${word === "Raf" ? "font-raf" : ""}`}
         >
           {word}
         </motion.span>

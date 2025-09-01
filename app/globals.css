@@ -11,6 +11,13 @@
   letter-spacing: -0.02em;
 }
 
+/* Raf-specific font styling */
+.font-raf {
+  font-family: var(--font-edu-marist);
+  font-weight: normal;
+  letter-spacing: -0.02em;
+}
+
 /* Noise animation keyframes */
 @keyframes noise {
   0% {
