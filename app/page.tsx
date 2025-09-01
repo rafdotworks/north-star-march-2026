@@ -97,6 +97,7 @@ export default function Page() {
   );
   const [carouselAnimationComplete, setCarouselAnimationComplete] =
     useState(false);
+  const [firstLineComplete, setFirstLineComplete] = useState(false);
   const [imageLoadingProgress, setImageLoadingProgress] = useState<{
     [key: string]: number;
   }>({});
@@ -1818,24 +1819,37 @@ export default function Page() {
                 {/* Desktop Layout - Text First */}
                 <motion.div
                   className="w-full hidden md:block"
-                  initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{
-                    duration: 1.2,
-                    delay: 0.5,
-                    ease: [0.22, 1, 0.36, 1],
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.12,
+                        delayChildren: 0.3,
+                        duration: 0.8,
+                        ease: EASING.staggeredText,
+                      },
+                    },
+                  }}
+                  initial="hidden"
+                  animate="visible"
+                  onAnimationComplete={() => {
+                    // First line complete - trigger carousel
+                    setTimeout(() => {
+                      setFirstLineComplete(true);
+                    }, 500);
                   }}
                 >
                   <div className="text-left mb-8">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
-                          <p className="tracking-tight text-xl md:whitespace-nowrap">
+                          <div className="tracking-tight text-xl md:whitespace-nowrap">
                             <WordReveal
                               text="Raf leads as a Senior Designer and Design Engineer"
                               className="text-foreground/70"
                             />
-                          </p>
+                          </div>
                         </EnhancedStaggeredTextItem>
                       </EnhancedStaggeredTextContainer>
                     )}
@@ -1845,24 +1859,37 @@ export default function Page() {
                 {/* Mobile Layout - Text First */}
                 <motion.div
                   className="w-full block md:hidden"
-                  initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{
-                    duration: 1.2,
-                    delay: 0.5,
-                    ease: [0.22, 1, 0.36, 1],
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.15,
+                        delayChildren: 0.3,
+                        duration: 0.8,
+                        ease: EASING.staggeredText,
+                      },
+                    },
+                  }}
+                  initial="hidden"
+                  animate="visible"
+                  onAnimationComplete={() => {
+                    // First line complete - trigger carousel
+                    setTimeout(() => {
+                      setFirstLineComplete(true);
+                    }, 500);
                   }}
                 >
                   <div className="text-left mb-8">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.15}>
                         <EnhancedStaggeredTextItem>
-                          <p className="tracking-tight text-lg md:whitespace-nowrap">
+                          <div className="tracking-tight text-lg md:whitespace-nowrap">
                             <WordReveal
                               text="Raf leads as a Senior Designer and Design Engineer."
                               className="text-foreground/70"
                             />
-                          </p>
+                          </div>
                         </EnhancedStaggeredTextItem>
                       </EnhancedStaggeredTextContainer>
                     )}
@@ -1871,15 +1898,28 @@ export default function Page() {
 
                 <motion.div
                   className="w-full"
-                  initial={{ opacity: 0, y: 40, filter: "blur(15px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{
-                    duration: 1.5,
-                    delay: 3.0,
-                    ease: [0.22, 1, 0.36, 1],
+                  variants={{
+                    hidden: {
+                      opacity: 0,
+                      filter: "blur(15px)",
+                      y: 40,
+                      scale: 0.98,
+                    },
+                    visible: {
+                      opacity: 1,
+                      filter: "blur(0px)",
+                      y: 0,
+                      scale: 1,
+                      transition: {
+                        duration: 1.8,
+                        ease: EASING.textReveal,
+                      },
+                    },
                   }}
+                  initial="hidden"
+                  animate={firstLineComplete ? "visible" : "hidden"}
                   onAnimationComplete={() => {
-                    // Wait an additional 1 second after animation completes before starting carousel
+                    // Carousel complete - trigger final text
                     setTimeout(() => {
                       setCarouselAnimationComplete(true);
                     }, 1000);
@@ -2168,13 +2208,20 @@ export default function Page() {
                 {/* Mobile Layout - Other Text After Carousel */}
                 <motion.div
                   className="w-full block md:hidden"
-                  initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{
-                    duration: 1.2,
-                    delay: 5.0,
-                    ease: [0.22, 1, 0.36, 1],
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.15,
+                        delayChildren: 0.3,
+                        duration: 0.8,
+                        ease: EASING.staggeredText,
+                      },
+                    },
                   }}
+                  initial="hidden"
+                  animate={carouselAnimationComplete ? "visible" : "hidden"}
                 >
                   <div className="text-left mt-8">
                     {loadingSequence.textLoaded && (
@@ -2201,13 +2248,20 @@ export default function Page() {
                 {/* Desktop Layout - Other Text After Carousel */}
                 <motion.div
                   className="w-full hidden md:block"
-                  initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{
-                    duration: 1.2,
-                    delay: 5.0,
-                    ease: [0.22, 1, 0.36, 1],
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.12,
+                        delayChildren: 0.3,
+                        duration: 0.8,
+                        ease: EASING.staggeredText,
+                      },
+                    },
                   }}
+                  initial="hidden"
+                  animate={carouselAnimationComplete ? "visible" : "hidden"}
                 >
                   <div className="text-left mt-8">
                     {loadingSequence.textLoaded && (
