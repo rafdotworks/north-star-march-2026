@@ -1832,7 +1832,7 @@ export default function Page() {
                         <EnhancedStaggeredTextItem>
                           <p className="tracking-tight text-xl md:whitespace-nowrap">
                             <WordReveal
-                              text="Raf leads as a Senior Designer and Design Engineer."
+                              text="Raf leads as a Senior Designer and Design Engineer"
                               className="text-foreground/70"
                             />
                           </p>

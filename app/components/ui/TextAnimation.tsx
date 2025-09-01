@@ -41,7 +41,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                     <EnhancedStaggeredTextItem>
                       <div className="tracking-tight text-lg md:whitespace-nowrap">
                         <WordReveal
-                          text="Raf leads as a Senior Designer and Design Engineer."
+                          text="Raf leads as a Senior Designer and Design Engineer"
                           className="text-foreground/70"
                         />
                       </div>
