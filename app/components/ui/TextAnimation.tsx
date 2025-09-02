@@ -31,11 +31,11 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
 
   if (isMobile) {
     return (
-      <div className="w-full mb-36 block sm:hidden">
-        <div className="space-y-8">
+      <div className="w-full mb-20 md:mb-20 block sm:hidden">
+        <div className="space-y-6 md:space-y-8">
           <section className="w-full">
-            <div className="space-y-8">
-              <div className="space-y-6">
+            <div className="space-y-6 md:space-y-8">
+              <div className="space-y-6 md:space-y-8">
                 {textLoaded ? (
                   <EnhancedStaggeredTextContainer staggerDelay={0.15}>
                     <EnhancedStaggeredTextItem>
@@ -48,7 +48,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                     </EnhancedStaggeredTextItem>
 
                     <EnhancedStaggeredTextItem>
-                      <div className="h-4"></div>
+                      <div className="h-4 md:h-6"></div>
                     </EnhancedStaggeredTextItem>
 
                     <EnhancedStaggeredTextItem>
@@ -59,7 +59,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                     </EnhancedStaggeredTextItem>
 
                     <EnhancedStaggeredTextItem>
-                      <div className="h-4"></div>
+                      <div className="h-4 md:h-6"></div>
                     </EnhancedStaggeredTextItem>
 
                     <EnhancedStaggeredTextItem>
@@ -284,10 +284,10 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
 
   return (
     <div className="w-full hidden sm:block">
-      <div className="space-y-8">
+      <div className="space-y-6 md:space-y-8">
         <section className="w-full">
-          <div className="space-y-8">
-            <div className="space-y-6">
+          <div className="space-y-6 md:space-y-8">
+            <div className="space-y-6 md:space-y-8">
               {textLoaded && (
                 <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                   <EnhancedStaggeredTextItem>
@@ -300,7 +300,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                   </EnhancedStaggeredTextItem>
 
                   <EnhancedStaggeredTextItem>
-                    <div className="h-4"></div>
+                    <div className="h-4 md:h-6"></div>
                   </EnhancedStaggeredTextItem>
 
                   <EnhancedStaggeredTextItem>
@@ -311,7 +311,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                   </EnhancedStaggeredTextItem>
 
                   <EnhancedStaggeredTextItem>
-                    <div className="h-4"></div>
+                    <div className="h-4 md:h-6"></div>
                   </EnhancedStaggeredTextItem>
 
                   <EnhancedStaggeredTextItem>

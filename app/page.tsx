@@ -667,7 +667,7 @@ export default function Page() {
 
   /**
    * Initializes slideshow when component is mounted
-   * Starts with first image after a short delay
+   * Starts with first image immediately
    */
   useEffect(() => {
     if (
@@ -678,13 +678,10 @@ export default function Page() {
       !isSlideshowPaused &&
       !initialLoadComplete
     ) {
-      const startTimer = setTimeout(() => {
-        setCurrentImageIndex(0);
-        setTransitionProgress(0);
-        setInitialLoadComplete(true);
-      }, 800);
-
-      return () => clearTimeout(startTimer);
+      // Start immediately without delay
+      setCurrentImageIndex(0);
+      setTransitionProgress(0);
+      setInitialLoadComplete(true);
     }
   }, [
     mounted,
@@ -752,7 +749,7 @@ export default function Page() {
 
   /**
    * Main slideshow interval effect
-   * Advances to next image every 4 seconds when conditions are met
+   * Advances to next image every 3 seconds when conditions are met
    * Waits for carousel animation to complete before starting
    */
   useEffect(() => {
@@ -770,7 +767,7 @@ export default function Page() {
 
     const slideshowInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 4000);
+    }, 3000);
 
     return () => clearInterval(slideshowInterval);
   }, [
@@ -1594,12 +1591,17 @@ export default function Page() {
     { src: "/photos/anna.JPG", name: "Anna" },
   ];
 
-  if (!mounted || !criticalContentLoaded) {
+  if (!mounted) {
+    // Show nothing until mounted
+    return null;
+  }
+
+  if (!criticalContentLoaded) {
     // Progressive loading: Show content immediately with skeleton screens
     return (
       <ErrorBoundary>
         <div className="min-h-screen bg-background">
-          <div className="px-6 sm:px-10 py-16 md:px-28">
+          <div className="px-6 sm:px-10 py-16 pb-32 md:px-28">
             <div className="w-full max-w-screen-xl mx-auto">
               {/* Header - Clean, no Raf */}
 
@@ -1615,7 +1617,7 @@ export default function Page() {
                     delay: 1.0,
                     ease: EASING.secondary,
                   }}
-                  className="space-y-36"
+                  className="space-y-20 md:space-y-12"
                 >
                   <div className="w-full">
                     <div className="space-y-8">
@@ -1636,7 +1638,7 @@ export default function Page() {
                                   ease: [0.16, 1, 0.3, 1],
                                 }}
                               >
-                                <div className="w-full h-[400px] bg-foreground/5 rounded-lg animate-pulse" />
+                                <div className="w-full h-[350px] md:h-[300px] bg-foreground/5 rounded-lg animate-pulse" />
                               </motion.div>
                             ))}
                           </div>
@@ -1651,7 +1653,7 @@ export default function Page() {
                                 delay: 1.8,
                                 ease: [0.16, 1, 0.3, 1],
                               }}
-                              className="w-full h-[600px] bg-foreground/5 rounded-lg animate-pulse"
+                              className="w-full h-[600px] md:h-[400px] bg-foreground/5 rounded-lg animate-pulse"
                             />
                           </div>
                         </div>
@@ -1683,23 +1685,12 @@ export default function Page() {
                       </motion.div>
 
                       {/* Skeleton for other sections */}
-                      <div className="space-y-8">
-                        <div className="w-full h-[200px] bg-foreground/5 rounded animate-pulse" />
-                        <div className="w-full h-[300px] bg-foreground/5 rounded animate-pulse" />
+                      <div className="space-y-4 md:space-y-3">
+                        <div className="w-full h-[120px] md:h-[100px] bg-foreground/5 rounded animate-pulse" />
+                        <div className="w-full h-[150px] md:h-[120px] bg-foreground/5 rounded animate-pulse" />
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              )}
-
-              {/* Subtle loading indicator for poor connections */}
-              {mounted && !criticalContentLoaded && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="fixed bottom-8 right-8 bg-foreground/10 backdrop-blur-sm rounded-full px-4 py-2 text-xs text-foreground/60"
-                >
-                  Loading images...
                 </motion.div>
               )}
             </div>
@@ -1718,9 +1709,9 @@ export default function Page() {
           position: "relative",
         }}
       >
-        {/* Natural progressive bottom blur effect */}
+        {/* Natural progressive bottom blur effect - disabled on desktop */}
         <motion.div
-          className="fixed left-0 right-0 bottom-0 w-screen overflow-hidden z-50 pointer-events-none"
+          className="fixed left-0 right-0 bottom-0 w-screen overflow-hidden z-50 pointer-events-none hidden md:block"
           style={{
             height: Math.max(40, Math.min(scrollY / 400, 80)),
             transition: "height 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -1786,7 +1777,7 @@ export default function Page() {
             duration: 2,
             ease: EASING.primary,
           }}
-          className="px-6 sm:px-10 py-16 md:px-28 bg-background relative overflow-x-hidden md:overflow-hidden md:h-screen"
+          className="px-6 sm:px-10 py-8 md:py-16 pb-48 md:px-28 bg-background relative overflow-x-hidden md:overflow-hidden md:h-screen"
           style={{
             minHeight: "100vh",
             willChange: "auto",
@@ -1795,8 +1786,8 @@ export default function Page() {
           <div className="w-full max-w-screen-xl mx-auto relative z-10">
             {/* Navigation completely removed - Clean interface */}
 
-            {/* Enhanced Content Section - Controlled by loading sequence */}
-            {loadingSequence.imagesLoaded && (
+            {/* Enhanced Content Section - Only show when fully loaded */}
+            {criticalContentLoaded && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{
@@ -1807,13 +1798,13 @@ export default function Page() {
                   duration: 1.2,
                   ease: EASING.primary,
                 }}
-                className="space-y-8 md:space-y-4 md:flex md:flex-col md:justify-center md:min-h-screen"
+                className="space-y-6 md:space-y-4 md:flex md:flex-col md:justify-center md:items-center md:h-screen md:py-0"
                 style={{
                   transform: animationsComplete ? "none" : undefined,
                   willChange: animationsComplete
                     ? "auto"
                     : "transform, opacity",
-                  minHeight: viewportHeight,
+                  height: viewportHeight,
                 }}
               >
                 {/* Desktop Layout - Text First */}
@@ -1840,7 +1831,7 @@ export default function Page() {
                     }, 500);
                   }}
                 >
-                  <div className="text-left mb-8">
+                  <div className="text-left mb-4 md:mb-6 md:text-center">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
@@ -1880,7 +1871,7 @@ export default function Page() {
                     }, 500);
                   }}
                 >
-                  <div className="text-left mb-8">
+                  <div className="text-left mb-2 md:mb-6">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.15}>
                         <EnhancedStaggeredTextItem>
@@ -1925,7 +1916,7 @@ export default function Page() {
                     }, 1000);
                   }}
                 >
-                  <div className="space-y-8">
+                  <div className="space-y-4 md:space-y-6 md:max-w-4xl md:mx-auto">
                     {/* Desktop Slideshow - now used for all screen sizes */}
                     <div
                       ref={slideshowRef}
@@ -1942,7 +1933,7 @@ export default function Page() {
                       {/* Replace the AnimatePresence with a crossfade effect */}
                       <div className="relative w-full h-full">
                         {/* Enhanced Mobile Feed View */}
-                        <div className="block sm:hidden space-y-4">
+                        <div className="block sm:hidden space-y-3">
                           {initialImages.map((src: string, index: number) => (
                             <ImageCarouselItem
                               key={`mobile-${src}`}
@@ -1962,9 +1953,9 @@ export default function Page() {
                                 <Image
                                   src={src}
                                   alt={`Work preview ${index + 1}`}
-                                  width={800}
-                                  height={600}
-                                  className={`w-full bg-transparent max-w-full ${
+                                  width={900}
+                                  height={700}
+                                  className={`w-full h-full object-contain bg-transparent max-w-full ${
                                     workVideos[src]
                                       ? "transition-opacity duration-300 hover:opacity-90"
                                       : ""
@@ -2004,7 +1995,7 @@ export default function Page() {
 
                           {/* Lazy load remaining images */}
                           {lazyImages.length > 0 && (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                               {lazyImages.map((src: string, index: number) => (
                                 <motion.div
                                   key={`mobile-lazy-${src}`}
@@ -2034,9 +2025,9 @@ export default function Page() {
                                       alt={`Work preview ${
                                         initialImages.length + index + 1
                                       }`}
-                                      width={800}
-                                      height={600}
-                                      className={`w-full bg-transparent max-w-full ${
+                                      width={900}
+                                      height={700}
+                                      className={`w-full h-full object-contain bg-transparent max-w-full ${
                                         workVideos[src]
                                           ? "transition-opacity duration-300 hover:opacity-90"
                                           : ""
@@ -2077,7 +2068,7 @@ export default function Page() {
                         </div>
 
                         {/* Enhanced Desktop Slideshow View */}
-                        <div className="hidden sm:block relative w-full h-full">
+                        <div className="hidden sm:block relative w-full h-full min-h-[400px]">
                           {images.map((src, index) => (
                             <motion.div
                               key={src}
@@ -2117,9 +2108,9 @@ export default function Page() {
                                 <Image
                                   src={src}
                                   alt={`Work preview ${index + 1}`}
-                                  width={1200}
-                                  height={800}
-                                  className={`w-full bg-transparent max-w-full ${
+                                  width={1400}
+                                  height={900}
+                                  className={`w-full h-full object-contain bg-transparent max-w-full ${
                                     workVideos[src]
                                       ? "transition-all duration-300 hover:brightness-105"
                                       : ""
@@ -2176,31 +2167,6 @@ export default function Page() {
                       </div>
                     </div>
 
-                    {/* Subtle auto-scroll indicator */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{
-                        duration: 1.2,
-                        delay: 1.5,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                      className="flex items-center justify-center mt-12"
-                    >
-                      <motion.div
-                        className="w-12 h-0.5 bg-gradient-to-r from-transparent via-foreground/40 to-transparent rounded-full"
-                        animate={{
-                          scaleX: [0.4, 1, 0.4],
-                          opacity: [0.3, 0.6, 0.3],
-                        }}
-                        transition={{
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      />
-                    </motion.div>
-
                     {/* Open works button removed */}
                   </div>
                 </motion.div>
@@ -2209,13 +2175,14 @@ export default function Page() {
                 <motion.div
                   className="w-full block md:hidden"
                   variants={{
-                    hidden: { opacity: 0 },
+                    hidden: { opacity: 0, y: 10 },
                     visible: {
                       opacity: 1,
+                      y: 0,
                       transition: {
                         staggerChildren: 0.15,
-                        delayChildren: 0.3,
-                        duration: 0.8,
+                        delayChildren: 0.8,
+                        duration: 1.2,
                         ease: EASING.staggeredText,
                       },
                     },
@@ -2223,19 +2190,19 @@ export default function Page() {
                   initial="hidden"
                   animate={carouselAnimationComplete ? "visible" : "hidden"}
                 >
-                  <div className="text-left mt-8">
+                  <div className="text-left mt-6 md:mt-6 mb-24">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.15}>
                         <EnhancedStaggeredTextItem>
                           <WordReveal
                             text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
-                            className="text-foreground/70 tracking-tight text-lg md:whitespace-nowrap"
+                            className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap"
                           />
                         </EnhancedStaggeredTextItem>
                         <EnhancedStaggeredTextItem>
                           <a
                             href="mailto:raf@raf.works"
-                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
+                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-6 inline-block"
                           >
                             <WordReveal text="raf@raf.works" />
                           </a>
@@ -2249,13 +2216,14 @@ export default function Page() {
                 <motion.div
                   className="w-full hidden md:block"
                   variants={{
-                    hidden: { opacity: 0 },
+                    hidden: { opacity: 0, y: 10 },
                     visible: {
                       opacity: 1,
+                      y: 0,
                       transition: {
                         staggerChildren: 0.12,
-                        delayChildren: 0.3,
-                        duration: 0.8,
+                        delayChildren: 0.8,
+                        duration: 1.2,
                         ease: EASING.staggeredText,
                       },
                     },
@@ -2263,13 +2231,13 @@ export default function Page() {
                   initial="hidden"
                   animate={carouselAnimationComplete ? "visible" : "hidden"}
                 >
-                  <div className="text-left mt-8">
+                  <div className="text-left mt-4 md:mt-6 md:text-center">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
                           <WordReveal
                             text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
-                            className="text-foreground/70 tracking-tight text-lg md:whitespace-nowrap"
+                            className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap"
                           />
                         </EnhancedStaggeredTextItem>
                         <EnhancedStaggeredTextItem>
