@@ -1777,7 +1777,7 @@ export default function Page() {
             duration: 2,
             ease: EASING.primary,
           }}
-          className="px-6 sm:px-10 py-8 md:py-16 pb-48 md:px-28 bg-background relative overflow-x-hidden md:overflow-hidden md:h-screen"
+          className="px-6 sm:px-10 py-8 md:py-16 pb-8 md:pb-48 md:px-28 bg-background relative overflow-x-hidden md:overflow-hidden md:h-screen"
           style={{
             minHeight: "100vh",
             willChange: "auto",
@@ -2190,7 +2190,7 @@ export default function Page() {
                   initial="hidden"
                   animate={carouselAnimationComplete ? "visible" : "hidden"}
                 >
-                  <div className="text-left mt-6 md:mt-6 mb-24">
+                  <div className="text-left mt-6 md:mt-6 mb-8">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.15}>
                         <EnhancedStaggeredTextItem>
