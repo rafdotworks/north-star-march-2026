@@ -1804,7 +1804,7 @@ export default function Page() {
                   willChange: animationsComplete
                     ? "auto"
                     : "transform, opacity",
-                  height: viewportHeight,
+                  height: isMobile ? "auto" : viewportHeight,
                 }}
               >
                 {/* Desktop Layout - Text First */}
@@ -1955,7 +1955,7 @@ export default function Page() {
                                   alt={`Work preview ${index + 1}`}
                                   width={900}
                                   height={700}
-                                  className={`w-full h-full object-contain bg-transparent max-w-full ${
+                                  className={`w-full object-contain bg-transparent max-w-full ${
                                     workVideos[src]
                                       ? "transition-opacity duration-300 hover:opacity-90"
                                       : ""
@@ -2027,7 +2027,7 @@ export default function Page() {
                                       }`}
                                       width={900}
                                       height={700}
-                                      className={`w-full h-full object-contain bg-transparent max-w-full ${
+                                      className={`w-full object-contain bg-transparent max-w-full ${
                                         workVideos[src]
                                           ? "transition-opacity duration-300 hover:opacity-90"
                                           : ""
