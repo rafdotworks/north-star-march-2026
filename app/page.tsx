@@ -1798,7 +1798,7 @@ export default function Page() {
                   duration: 1.2,
                   ease: EASING.primary,
                 }}
-                className="space-y-4 md:space-y-[2vh] md:flex md:flex-col md:justify-center md:items-center md:py-0 md:h-full"
+                className="space-y-4 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:py-0 md:h-screen md:min-h-screen"
                 style={{
                   transform: animationsComplete ? "none" : undefined,
                   willChange: animationsComplete
@@ -1809,7 +1809,7 @@ export default function Page() {
               >
                 {/* Desktop Layout - Text First */}
                 <motion.div
-                  className="w-full hidden md:block"
+                  className="w-full hidden md:block md:flex-shrink-0"
                   variants={{
                     hidden: { opacity: 0 },
                     visible: {
@@ -1831,7 +1831,7 @@ export default function Page() {
                     }, 500);
                   }}
                 >
-                  <div className="text-left mb-3 md:mb-[1.5vh] md:text-center">
+                  <div className="text-left mb-3 md:mb-[3vh] md:text-center">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
@@ -1916,11 +1916,11 @@ export default function Page() {
                     }, 1000);
                   }}
                 >
-                  <div className="space-y-3 md:space-y-[2.5vh] md:max-w-4xl md:mx-auto">
+                  <div className="space-y-3 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto">
                     {/* Desktop Slideshow - now used for all screen sizes */}
                     <div
                       ref={slideshowRef}
-                      className="w-full mb-0 overflow-hidden relative"
+                      className="w-full mb-0 overflow-hidden relative md:flex-1 md:flex md:items-center md:justify-center"
                       onMouseEnter={() => {
                         setIsSlideshowPaused(true);
                       }}
@@ -2068,7 +2068,7 @@ export default function Page() {
                         </div>
 
                         {/* Enhanced Desktop Slideshow View */}
-                        <div className="hidden sm:block relative w-full h-full min-h-[400px]">
+                        <div className="hidden sm:flex relative w-full h-full min-h-[50vh] max-h-[70vh] items-center justify-center">
                           {images.map((src, index) => (
                             <motion.div
                               key={src}
@@ -2214,7 +2214,7 @@ export default function Page() {
 
                 {/* Desktop Layout - Other Text After Carousel */}
                 <motion.div
-                  className="w-full hidden md:block"
+                  className="w-full hidden md:block md:flex-shrink-0"
                   variants={{
                     hidden: { opacity: 0, y: 10 },
                     visible: {
@@ -2231,7 +2231,7 @@ export default function Page() {
                   initial="hidden"
                   animate={carouselAnimationComplete ? "visible" : "hidden"}
                 >
-                  <div className="text-left mt-3 md:mt-[1vh] md:text-center">
+                  <div className="text-left mt-3 md:mt-[3vh] md:text-center">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
