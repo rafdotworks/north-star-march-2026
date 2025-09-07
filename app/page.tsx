@@ -1,92 +1,39 @@
 "use client";
 
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
-import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
-import Link from "next/link";
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
-// Temporarily disabled LiquidGlass for performance optimization
-// import { LiquidGlass } from "@/components/LiquidGlass";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { notes, Note } from "./data/notes";
-import { works } from "./data/works";
-import { Play } from "lucide-react";
+import { notes } from "./data/notes";
 
 // Enhanced animation components
 import {
-  TextReveal,
-  StaggeredTextContainer,
-  StaggeredTextItem,
   ImageCarouselItem,
-  NavigationReveal,
-  LoadingSkeleton,
-  MicroInteraction,
-  FadeIn,
-  SlideUp,
-  LOADING_SEQUENCE,
   EASING,
   EnhancedStaggeredTextContainer,
   EnhancedStaggeredTextItem,
   WordReveal,
-  CharacterReveal,
+  FadeIn,
 } from "@/components/animations/LoadingAnimations";
-import {
-  useLoadingSequence,
-  useElementLoading,
-  useStaggeredLoading,
-} from "@/hooks/useLoadingSequence";
-
-/**
- * Interface representing a work project in the portfolio
- * @property {string} title - The title of the work project
- * @property {string} description - A brief description of the project
- * @property {string} image - Path to the project's main image
- * @property {string} [video] - Optional path to the project's video content
- */
-interface Work {
-  title: string;
-  description: string;
-  image: string;
-  video?: string;
-}
-
-/**
- * Custom image loader for Next.js Image component
- * Optimizes image loading with width and quality parameters
- */
-const imageLoader = ({
-  src,
-  width,
-  quality,
-}: {
-  src: string;
-  width: number;
-  quality?: number;
-}) => {
-  return `${src}?w=${width}&q=${quality || 75}`;
-};
+import { useLoadingSequence } from "@/hooks/useLoadingSequence";
 
 export default function Page() {
+  // Slideshow timing configuration
+  const SLIDESHOW_INTERVAL = 3000; // 3 seconds between images
+  const SLIDESHOW_STUCK_THRESHOLD = SLIDESHOW_INTERVAL * 4; // 12 seconds - 4x the normal interval
+  const SLIDESHOW_CHECK_INTERVAL = 2000; // Check every 2 seconds if slideshow is stuck
+
   // Core UI state management
   const [mounted, setMounted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
-  const [isAllExperienceModalOpen, setIsAllExperienceModalOpen] =
-    useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   // Enhanced loading sequence management
   const loadingSequence = useLoadingSequence();
@@ -98,9 +45,8 @@ export default function Page() {
   const [carouselAnimationComplete, setCarouselAnimationComplete] =
     useState(false);
   const [firstLineComplete, setFirstLineComplete] = useState(false);
-  const [imageLoadingProgress, setImageLoadingProgress] = useState<{
-    [key: string]: number;
-  }>({});
+  const [finalTextAnimationComplete, setFinalTextAnimationComplete] =
+    useState(false);
   const [transitionProgress, setTransitionProgress] = useState(0);
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
   const [blurAmount, setBlurAmount] = useState(15);
@@ -192,9 +138,6 @@ export default function Page() {
     location: "Toronto",
     customLocation: false,
   });
-
-  // Refs for photo gallery management
-  const photoRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Mobile detection with fallback
   const isMobile = useIsMobile();
@@ -338,7 +281,6 @@ export default function Page() {
     // Start the slideshow after a short delay to ensure images are loaded
     const slideshowTimer = setTimeout(() => {
       if (
-        // !isPhotosModalOpen &&
         !isNotesModalOpen &&
         !isAllNotesModalOpen &&
         !isSlideshowPaused &&
@@ -601,12 +543,7 @@ export default function Page() {
    */
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
-      if (
-        // isPhotosModalOpen ||
-        isNotesModalOpen ||
-        isAllNotesModalOpen ||
-        isVideoModalOpen
-      ) {
+      if (isNotesModalOpen || isAllNotesModalOpen || isVideoModalOpen) {
         // setIsPhotosModalOpen(false);
         setIsNotesModalOpen(false);
         setIsAllNotesModalOpen(false);
@@ -615,13 +552,7 @@ export default function Page() {
       return;
     }
 
-    if (
-      // isPhotosModalOpen ||
-      isNotesModalOpen ||
-      isAllNotesModalOpen ||
-      isVideoModalOpen
-    )
-      return;
+    if (isNotesModalOpen || isAllNotesModalOpen || isVideoModalOpen) return;
 
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
       setIsSlideshowPaused(true);
@@ -657,13 +588,7 @@ export default function Page() {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [
-    // isPhotosModalOpen,
-    isNotesModalOpen,
-    isAllNotesModalOpen,
-    isVideoModalOpen,
-    images.length,
-  ]);
+  }, [isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen, images.length]);
 
   /**
    * Initializes slideshow when component is mounted
@@ -732,32 +657,24 @@ export default function Page() {
   useEffect(() => {
     if (
       isInViewport &&
-      // !isPhotosModalOpen &&
       !isNotesModalOpen &&
       !isAllNotesModalOpen &&
       !isVideoModalOpen
     ) {
       setTransitionProgress(0);
     }
-  }, [
-    isInViewport,
-    // isPhotosModalOpen,
-    isNotesModalOpen,
-    isAllNotesModalOpen,
-    isVideoModalOpen,
-  ]);
+  }, [isInViewport, isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen]);
 
   /**
    * Main slideshow interval effect
-   * Advances to next image every 3 seconds when conditions are met
-   * Waits for carousel animation to complete before starting
+   * Advances to next image every SLIDESHOW_INTERVAL seconds when conditions are met
+   * Waits for final text animation to complete before starting
    */
   useEffect(() => {
     if (
       !mounted ||
       !criticalContentLoaded ||
-      !carouselAnimationComplete ||
-      // isPhotosModalOpen ||
+      !finalTextAnimationComplete ||
       isNotesModalOpen ||
       isAllNotesModalOpen ||
       isVideoModalOpen ||
@@ -767,14 +684,13 @@ export default function Page() {
 
     const slideshowInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 3000);
+    }, SLIDESHOW_INTERVAL);
 
     return () => clearInterval(slideshowInterval);
   }, [
     mounted,
     criticalContentLoaded,
-    carouselAnimationComplete,
-    // isPhotosModalOpen,
+    finalTextAnimationComplete,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -859,14 +775,6 @@ export default function Page() {
     });
   };
 
-  // Track progressive loading of images
-  const handleImageProgress = (src: string, event: ProgressEvent) => {
-    if (event.lengthComputable) {
-      const progress = Math.round((event.loaded / event.total) * 100);
-      setImageLoadingProgress((prev) => ({ ...prev, [src]: progress }));
-    }
-  };
-
   const fadeInAnimation = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
@@ -889,39 +797,6 @@ export default function Page() {
     },
   };
 
-  const handleOpenNote = (index: number) => {
-    setCurrentNoteIndex(index);
-    setIsNotesModalOpen(true);
-  };
-
-  // Track the clicked note position for animation
-  const [clickedNotePosition, setClickedNotePosition] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    height: 0,
-  });
-
-  // Enhanced note opening with position tracking for animation
-  const handleOpenNoteWithAnimation = (index: number, e: React.MouseEvent) => {
-    // Get the clicked element's position
-    const element = e.currentTarget as HTMLElement;
-    const rect = element.getBoundingClientRect();
-
-    setClickedNotePosition({
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
-    });
-
-    setCurrentNoteIndex(index);
-    setIsNotesModalOpen(true);
-
-    // Prevent background scrolling
-    document.body.style.overflow = "hidden";
-  };
-
   /**
    * Closes the note modal with animation
    * Re-enables scrolling and cleans up modal state
@@ -934,15 +809,6 @@ export default function Page() {
     setTimeout(() => {
       setIsNotesModalOpen(false);
     }, 100);
-  };
-
-  /**
-   * Opens the all notes modal view
-   * Disables background scrolling while modal is open
-   */
-  const handleOpenAllNotes = () => {
-    setIsAllNotesModalOpen(true);
-    document.body.style.overflow = "hidden";
   };
 
   /**
@@ -1036,21 +902,6 @@ export default function Page() {
       (currentNoteIndex - 1 + notes.length) % notes.length
     );
   };
-
-  /**
-   * Scrolls to selected photo when photo modal opens
-   * Uses smooth scrolling with a small delay for modal rendering
-   */
-  // useEffect(() => {
-  //   if (isPhotosModalOpen && photoRefs.current[currentPhotoIndex]) {
-  //     setTimeout(() => {
-  //       photoRefs.current[currentPhotoIndex]?.scrollIntoView({
-  //         behavior: "smooth",
-  //         block: "center",
-  //       });
-  //     }, 300);
-  //   }
-  // }, [isPhotosModalOpen, currentPhotoIndex]);
 
   /**
    * Formats current time for display in 12-hour format
@@ -1420,22 +1271,16 @@ export default function Page() {
   // Add a fallback mechanism to restart the slideshow if it gets stuck
   useEffect(() => {
     // Skip only if a modal is open
-    if (
-      // isPhotosModalOpen ||
-      isNotesModalOpen ||
-      isAllNotesModalOpen ||
-      isVideoModalOpen ||
-      !mounted
-    )
+    if (isNotesModalOpen || isAllNotesModalOpen || isVideoModalOpen || !mounted)
       return;
 
-    // Check if the slideshow is stuck (no image change for more than 7 seconds)
+    // Check if the slideshow is stuck (no image change for more than the threshold)
     const checkInterval = setInterval(() => {
       const currentTime = Date.now();
       const timeSinceLastChange = currentTime - lastImageChangeTime;
 
-      // If no image change for more than 12 seconds (twice the normal interval), restart the slideshow
-      if (timeSinceLastChange > 12000) {
+      // If no image change for more than the stuck threshold, restart the slideshow
+      if (timeSinceLastChange > SLIDESHOW_STUCK_THRESHOLD) {
         console.log("Slideshow appears stuck, restarting...");
         // Force the next image in sequence
         setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -1443,11 +1288,10 @@ export default function Page() {
         setTransitionProgress(0);
         setLastImageChangeTime(currentTime);
       }
-    }, 2000); // Check every 2 seconds
+    }, SLIDESHOW_CHECK_INTERVAL);
 
     return () => clearInterval(checkInterval);
   }, [
-    // isPhotosModalOpen,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -1460,6 +1304,16 @@ export default function Page() {
   useEffect(() => {
     setLastImageChangeTime(Date.now());
   }, [currentImageIndex]);
+
+  // Set finalTextAnimationComplete when carousel animation is complete
+  useEffect(() => {
+    if (carouselAnimationComplete && !finalTextAnimationComplete) {
+      const timer = setTimeout(() => {
+        setFinalTextAnimationComplete(true);
+      }, 1000); // Allow time for WordReveal animations to complete
+      return () => clearTimeout(timer);
+    }
+  }, [carouselAnimationComplete, finalTextAnimationComplete]);
 
   // Add an effect to ensure the slideshow starts immediately when the page loads
   useEffect(() => {
@@ -1501,95 +1355,6 @@ export default function Page() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 3);
   }, []);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isVideoVisible, setIsVideoVisible] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVideoVisible(true);
-            if (videoRef.current) {
-              // Add a small delay for mobile devices
-              setTimeout(() => {
-                videoRef.current?.play().catch((error) => {
-                  console.log("Video autoplay failed:", error);
-                  setVideoError(true);
-                });
-              }, 100);
-            }
-          } else {
-            setIsVideoVisible(false);
-            if (videoRef.current) {
-              videoRef.current.pause();
-            }
-          }
-        });
-      },
-      {
-        threshold: 0.1, // Reduced threshold for better mobile detection
-        rootMargin: "50px", // Added margin to start loading earlier
-      }
-    );
-
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
-    }
-
-    return () => {
-      if (videoRef.current) {
-        observer.unobserve(videoRef.current);
-      }
-    };
-  }, []);
-
-  const [isGlassEnabled, setIsGlassEnabled] = useState(false);
-  const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
-
-  const toggleGlass = (e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    // Store click position relative to viewport
-    setClickPosition({
-      x: e.clientX,
-      y: e.clientY,
-    });
-    setIsGlassEnabled((prev) => !prev);
-  };
-
-  // Add a function to handle closing the photo modal
-  const handleClosePhotoModal = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Re-enable scrolling
-    document.body.style.overflow = "";
-
-    // Add a small delay before closing to allow for animation
-    setTimeout(() => {
-      setIsPhotosModalOpen(false);
-    }, 100);
-  };
-
-  /**
-   * Collection of personal photos for the gallery
-   * Each photo includes a source path and display name
-   */
-  const photos = [
-    { src: "/photos/marianne.jpeg", name: "Marianne" },
-    { src: "/photos/daybreak-3.JPG", name: "Daybreak" },
-    { src: "/photos/josh.JPG", name: "Josh" },
-    { src: "/photos/vin-2.JPG", name: "Vin" },
-    { src: "/photos/omar.JPG", name: "Omar" },
-    { src: "/photos/adrien.JPG", name: "Adrien" },
-    { src: "/photos/jordi.JPG", name: "Jordi" },
-    { src: "/photos/daybreak.JPG", name: "Daybreak" },
-    { src: "/photos/flo.JPG", name: "Flo" },
-    { src: "/photos/kelindi.JPG", name: "Kelindi" },
-    { src: "/photos/vin.JPG", name: "Vin" },
-    { src: "/photos/anna.JPG", name: "Anna" },
-  ];
 
   if (!mounted) {
     // Show nothing until mounted
@@ -1804,7 +1569,7 @@ export default function Page() {
                   willChange: animationsComplete
                     ? "auto"
                     : "transform, opacity",
-                  gap: isMobile ? undefined : "clamp(1vh, 2vh, 3vh)",
+                  gap: isMobile ? undefined : "clamp(2vh, 3vh, 4vh)",
                 }}
               >
                 {/* Desktop Layout - Text First */}
@@ -1831,7 +1596,7 @@ export default function Page() {
                     }, 500);
                   }}
                 >
-                  <div className="text-left mb-3 md:mb-[3vh] md:text-center">
+                  <div className="text-left mb-4 md:mb-[4vh] md:text-center">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
@@ -1871,7 +1636,7 @@ export default function Page() {
                     }, 500);
                   }}
                 >
-                  <div className="text-left mb-3 md:mb-[1.5vh]">
+                  <div className="text-left mb-4 md:mb-[2vh]">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.15}>
                         <EnhancedStaggeredTextItem>
@@ -2172,86 +1937,96 @@ export default function Page() {
                 </motion.div>
 
                 {/* Mobile Layout - Other Text After Carousel */}
-                <motion.div
-                  className="w-full block md:hidden"
-                  variants={{
-                    hidden: { opacity: 0, y: 10 },
-                    visible: {
-                      opacity: 1,
-                      y: 0,
-                      transition: {
-                        staggerChildren: 0.15,
-                        delayChildren: 0.8,
-                        duration: 1.2,
-                        ease: EASING.staggeredText,
-                      },
-                    },
-                  }}
-                  initial="hidden"
-                  animate={carouselAnimationComplete ? "visible" : "hidden"}
-                >
-                  <div className="text-left mt-4 md:mt-[1.5vh] mb-4">
-                    {loadingSequence.textLoaded && (
-                      <EnhancedStaggeredTextContainer staggerDelay={0.15}>
-                        <EnhancedStaggeredTextItem>
-                          <WordReveal
-                            text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
-                            className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap"
-                          />
-                        </EnhancedStaggeredTextItem>
-                        <EnhancedStaggeredTextItem>
-                          <a
-                            href="mailto:raf@raf.works"
-                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-3 md:mt-[1vh] inline-block"
-                          >
-                            <WordReveal text="raf@raf.works" />
-                          </a>
-                        </EnhancedStaggeredTextItem>
-                      </EnhancedStaggeredTextContainer>
-                    )}
+                <div className="w-full block md:hidden">
+                  <div className="text-left mt-6 mb-4">
+                    <div className="space-y-4">
+                      <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
+                        {loadingSequence.textLoaded &&
+                          carouselAnimationComplete && (
+                            <motion.div
+                              initial={{ opacity: 0, filter: "blur(20px)" }}
+                              animate={{ opacity: 1, filter: "blur(0px)" }}
+                              transition={{
+                                duration: 1.4,
+                                delay: 0.2,
+                                ease: [0.25, 0.46, 0.45, 0.94],
+                              }}
+                            >
+                              Now building in Toronto in person. Past at
+                              Coinbase, VoiceFlow, Theoriq & more
+                            </motion.div>
+                          )}
+                      </div>
+                      <div className="mt-4 min-h-[1.25em]">
+                        <a
+                          href="mailto:raf@raf.works"
+                          className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
+                        >
+                          {loadingSequence.textLoaded &&
+                            carouselAnimationComplete && (
+                              <motion.div
+                                initial={{ opacity: 0, filter: "blur(20px)" }}
+                                animate={{ opacity: 1, filter: "blur(0px)" }}
+                                transition={{
+                                  duration: 1.4,
+                                  delay: 0.6,
+                                  ease: [0.25, 0.46, 0.45, 0.94],
+                                }}
+                              >
+                                raf@raf.works
+                              </motion.div>
+                            )}
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Desktop Layout - Other Text After Carousel */}
-                <motion.div
-                  className="w-full hidden md:block md:flex-shrink-0"
-                  variants={{
-                    hidden: { opacity: 0, y: 10 },
-                    visible: {
-                      opacity: 1,
-                      y: 0,
-                      transition: {
-                        staggerChildren: 0.12,
-                        delayChildren: 0.8,
-                        duration: 1.2,
-                        ease: EASING.staggeredText,
-                      },
-                    },
-                  }}
-                  initial="hidden"
-                  animate={carouselAnimationComplete ? "visible" : "hidden"}
-                >
-                  <div className="text-left mt-3 md:mt-[3vh] md:text-center">
-                    {loadingSequence.textLoaded && (
-                      <EnhancedStaggeredTextContainer staggerDelay={0.12}>
-                        <EnhancedStaggeredTextItem>
-                          <WordReveal
-                            text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
-                            className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap"
-                          />
-                        </EnhancedStaggeredTextItem>
-                        <EnhancedStaggeredTextItem>
-                          <a
-                            href="mailto:raf@raf.works"
-                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-2 md:mt-[0.8vh] inline-block"
-                          >
-                            <WordReveal text="raf@raf.works" />
-                          </a>
-                        </EnhancedStaggeredTextItem>
-                      </EnhancedStaggeredTextContainer>
-                    )}
+                <div className="w-full hidden md:block md:flex-shrink-0">
+                  <div className="text-left mt-6 md:mt-[4vh] md:text-center">
+                    <div className="space-y-3">
+                      <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
+                        {loadingSequence.textLoaded &&
+                          carouselAnimationComplete && (
+                            <motion.div
+                              initial={{ opacity: 0, filter: "blur(20px)" }}
+                              animate={{ opacity: 1, filter: "blur(0px)" }}
+                              transition={{
+                                duration: 1.4,
+                                delay: 0.2,
+                                ease: [0.25, 0.46, 0.45, 0.94],
+                              }}
+                            >
+                              Now building in Toronto in person. Past at
+                              Coinbase, Voiceflow, Theoriq & more
+                            </motion.div>
+                          )}
+                      </div>
+                      <div className="mt-4 min-h-[1.25em]">
+                        <a
+                          href="mailto:raf@raf.works"
+                          className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
+                        >
+                          {loadingSequence.textLoaded &&
+                            carouselAnimationComplete && (
+                              <motion.div
+                                initial={{ opacity: 0, filter: "blur(20px)" }}
+                                animate={{ opacity: 1, filter: "blur(0px)" }}
+                                transition={{
+                                  duration: 1.4,
+                                  delay: 0.6,
+                                  ease: [0.25, 0.46, 0.45, 0.94],
+                                }}
+                              >
+                                raf@raf.works
+                              </motion.div>
+                            )}
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                </motion.div>
+                </div>
 
                 {/* 
               {/* About Section 
@@ -2590,137 +2365,6 @@ export default function Page() {
                     </div>
                   )}
                 </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Photos Modal */}
-            <AnimatePresence>
-              {isPhotosModalOpen && (
-                <>
-                  {/* Fixed backdrop */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                    onClick={handleClosePhotoModal}
-                  />
-
-                  {/* Modal container */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-                    onClick={handleClosePhotoModal}
-                  >
-                    {/* Content container */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="relative w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Sticky close button */}
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ delay: 0.2, duration: 0.3 }}
-                        className="absolute top-6 right-6 z-10 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
-                        onClick={handleClosePhotoModal}
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="transition-transform duration-300 hover:scale-110 text-white/70 hover:text-white"
-                        >
-                          <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                      </motion.button>
-
-                      {/* Photo display */}
-                      <div
-                        className="aspect-[4/3] w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[80vw] rounded-lg overflow-hidden shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Image
-                          src={photos[currentPhotoIndex].src}
-                          alt={photos[currentPhotoIndex].name}
-                          width={1200}
-                          height={900}
-                          className="w-full h-full object-cover"
-                          priority
-                        />
-                      </div>
-
-                      {/* Navigation controls */}
-                      <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentPhotoIndex(
-                              currentPhotoIndex === 0
-                                ? photos.length - 1
-                                : currentPhotoIndex - 1
-                            );
-                          }}
-                          className="pointer-events-auto bg-black/20 backdrop-blur-sm rounded-full p-3 hover:bg-black/40 transition-all duration-300 shadow-lg"
-                        >
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="text-white"
-                          >
-                            <path d="M15 18l-6-6 6-6" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentPhotoIndex(
-                              (currentPhotoIndex + 1) % photos.length
-                            );
-                          }}
-                          className="pointer-events-auto bg-black/20 backdrop-blur-sm rounded-full p-3 hover:bg-black/40 transition-all duration-300 shadow-lg"
-                        >
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="text-white"
-                          >
-                            <path d="M9 18l6-6-6-6" />
-                          </svg>
-                        </button>
-                      </div>
-
-                      {/* Photo info */}
-                      <div className="absolute bottom-6 left-6 right-6 text-center">
-                        <div className="bg-black/20 backdrop-blur-sm rounded-full px-4 py-2 inline-block">
-                          <span className="text-white text-sm font-medium">
-                            {photos[currentPhotoIndex].name}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                </>
               )}
             </AnimatePresence>
 
@@ -3104,235 +2748,6 @@ export default function Page() {
                 </>
               )}
             </AnimatePresence>
-
-            {/* All Timeline Modal */}
-            <AnimatePresence>
-              {isAllExperienceModalOpen && (
-                <>
-                  {/* Fixed backdrop */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                    onClick={() => setIsAllExperienceModalOpen(false)}
-                  />
-
-                  {/* Scrollable content */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="fixed inset-0 z-50 overflow-y-auto"
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) {
-                        setIsAllExperienceModalOpen(false);
-                      }
-                    }}
-                  >
-                    {/* Content container */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="w-full max-w-4xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Close button - positioned in top right */}
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ delay: 0.2, duration: 0.3 }}
-                        className="absolute top-6 right-6 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsAllExperienceModalOpen(false);
-                        }}
-                        aria-label="Close all timeline"
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="transition-transform duration-300 hover:scale-110 text-white/70 hover:text-white"
-                        >
-                          <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                      </motion.button>
-
-                      <div className="flex flex-col divide-y divide-foreground/10 mt-8">
-                        {[
-                          {
-                            year: "2025",
-                            role: "Senior Designer",
-                            company: "Voiceflow, Coinbase, TBD",
-                            url: "https://voiceflow.com",
-                            note: "Product Design User Activation with Braden (Voiceflow CEO). Coinbase: Wallet and Dev tools. In progress",
-                          },
-                          {
-                            year: "2024",
-                            role: "Design Lead",
-                            company: "Never Before Seen",
-                            url: "https://neverbeforeseen.co",
-                            note: "Design Lead in a zero to one product design studio focused on Web 3.0",
-                          },
-                          {
-                            year: "2023–2024",
-                            role: "Founding Product Designer",
-                            company: "Theoriq",
-                            url: "https://theoriq.ai",
-                            note: "Zero to one. Responsible for Product Design, Marketing and Brand. 140k users in 6 months.",
-                          },
-                          {
-                            year: "2023",
-                            role: "Product Design Lead",
-                            company: "CurbCutOS",
-                            url: "https://curbcutos.com",
-                            note: "Shaped accessibility SaaS as an IC and Lead.",
-                          },
-                          {
-                            year: "2022–2023",
-                            role: "Product Design Lead",
-                            company: "Atlas (Stealth)",
-                          },
-                          {
-                            year: "2021–2022",
-                            role: "Senior Product Designer, Design System",
-                            company: "Zalando",
-                            url: "https://zalando.com",
-                            note: "Designed and scaled the B2B Design System used across Zalando's product surfaces. Big focus on documentation.",
-                          },
-                          {
-                            year: "2020–2021",
-                            role: "Freelance Designer & Developer",
-                            company: "Independent",
-                            note: "Directed brand and product design for startups like Artscapy (£10M+), TravelNest (£2.5M ARR 2020)",
-                          },
-                          {
-                            year: "2019",
-                            role: "Design Intern",
-                            company: "Apple (Developer Academy)",
-                            url: "https://developer.apple.com/academies/",
-                            note: "Design Intern contributing to a challenge based learning program. WatchOS 6.0.",
-                          },
-                          {
-                            year: "2018–2020",
-                            role: "Graphic & Brand Design, cum laude",
-                            company: "Napoli",
-                            url: "https://win.ilas.com/portfolio/20711100/raffaele-vitale",
-                          },
-                        ].map((exp, index) => (
-                          <motion.div
-                            key={exp.year + exp.role}
-                            className={`py-6 first:pt-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg`}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              duration: 0.3,
-                              delay: index * 0.05,
-                            }}
-                          >
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-12 md:gap-16 items-baseline w-full">
-                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px] sm:min-w-[100px]">
-                                {exp.year}
-                              </div>
-                              <div className="flex-1 sm:pr-12 md:pr-16 lg:pr-20">
-                                <p className="text-lg text-foreground group-hover:text-foreground/90 transition-colors mb-1">
-                                  {exp.role}
-                                </p>
-                                <div className="text-sm text-foreground/60 dark:text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors mt-1">
-                                  {exp.company}
-                                </div>
-                              </div>
-                              {/* Note on the far right (desktop: hover, mobile: always) */}
-                              {exp.note && (
-                                <div className="hidden sm:block ml-4 text-xs font-medium italic text-foreground/60 text-right whitespace-pre-line break-words max-w-[200px] transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-                                  {exp.note}
-                                </div>
-                              )}
-                              {exp.note && (
-                                <div className="block sm:hidden mt-2 text-xs font-medium italic text-foreground/60 whitespace-pre-line break-words">
-                                  {exp.note}
-                                </div>
-                              )}
-                            </div>
-                          </motion.div>
-                        ))}
-
-                        {/* Divider line */}
-                        <div className="w-full h-px bg-foreground/10 my-12"></div>
-
-                        {/* Additional experience entries */}
-                        {[
-                          {
-                            year: "2018",
-                            role: "Software Engineer (withdrawn)",
-                            company: "Salerno University",
-                          },
-                          {
-                            year: "2018",
-                            role: "Airbnb SuperHost Plus",
-                            company: "Naples",
-                          },
-                        ].map((exp, index) => (
-                          <motion.div
-                            key={exp.year + exp.role}
-                            className="py-6 first:pt-0 group transition-colors duration-200 hover:bg-foreground/5 rounded-lg"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              duration: 0.3,
-                              delay: (index + 9) * 0.05, // Continue the delay sequence
-                            }}
-                          >
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-12 md:gap-16 items-baseline">
-                              <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px] sm:min-w-[100px]">
-                                {exp.year}
-                              </div>
-                              <div className="flex-1 sm:pr-12 md:pr-16 lg:pr-20">
-                                <p className="text-lg text-foreground group-hover:text-foreground/90 transition-colors mb-1">
-                                  {exp.role}
-                                </p>
-                                <div className="text-sm text-foreground/60 dark:text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors mt-1">
-                                  {exp.company}
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-
-                        {/* View full CV button */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: 0.3,
-                            delay: 0.6, // Delay after the additional entries
-                          }}
-                          className="pt-8 mt-4"
-                        >
-                          <a
-                            href="https://drive.google.com/file/d/1-QUjgNJvQOCA2OafEuiGDjvQmFm8D6xv/view?usp=sharing"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-sm text-foreground/50 hover:text-foreground transition-colors group"
-                          >
-                            View full CV{" "}
-                          </a>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
           </div>
         </motion.main>
 
@@ -3416,209 +2831,6 @@ export default function Page() {
             </>
           )}
         </AnimatePresence>
-
-        {/* Enhanced Footer with video background - DISABLED */}
-        {false && (
-          <motion.footer
-            className="relative w-full bg-black overflow-hidden min-h-[500px]"
-            initial={{
-              y: 60,
-              opacity: 0,
-            }}
-            whileInView={{
-              y: 0,
-              opacity: 1,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.3,
-            }}
-            transition={{
-              duration: 2.5,
-              ease: EASING.tertiary,
-            }}
-            style={{
-              marginTop: "80px", // Reduced from 144px to match other sections (mt-20 = 80px)
-              boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.08)",
-            }}
-          >
-            {/* Video background with gentle fade */}
-            <motion.div
-              className="absolute inset-0 w-full h-full"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 3,
-                ease: "easeOut",
-              }}
-            >
-              <video
-                ref={videoRef}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{
-                  filter: "brightness(0.7)",
-                }}
-              >
-                <source src="/video/footer-video.mp4" type="video/mp4" />
-              </video>
-
-              {/* Dark overlay */}
-              <div className="absolute inset-0 bg-black/50" />
-            </motion.div>
-
-            {/* Footer content with blur focus animation */}
-            <div className="relative z-10 px-6 sm:px-10 md:px-28 py-36">
-              <div className="w-full max-w-screen-xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <div className="space-y-8">
-                    {/* Enhanced Email */}
-                    <FadeIn delay={0.2}>
-                      <motion.div
-                        initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 2,
-                          ease: EASING.tertiary,
-                        }}
-                      >
-                        <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                          Email
-                        </p>
-                        <a
-                          href="mailto:raf@raf.works"
-                          className="text-base text-white hover:text-white/90 transition-colors"
-                        >
-                          raf@raf.works
-                        </a>
-                      </motion.div>
-                    </FadeIn>
-                    {/* Enhanced LinkedIn */}
-                    <FadeIn delay={0.4}>
-                      <motion.div
-                        initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 2,
-                          ease: EASING.tertiary,
-                        }}
-                      >
-                        <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                          LinkedIn
-                        </p>
-                        <a
-                          href="https://linkedin.com/in/lfgraf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-base text-white hover:text-white/90 transition-colors"
-                        >
-                          lfgraf
-                        </a>
-                      </motion.div>
-                    </FadeIn>
-                    {/* Enhanced Twitter/X */}
-                    <motion.div
-                      initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 2,
-                        ease: [0.22, 1, 0.36, 1],
-                        delay: 0.6,
-                      }}
-                    >
-                      <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">
-                        Twitter/X
-                      </p>
-                      <a
-                        href="https://x.com/lfgraf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-base text-white hover:text-white/90 transition-colors"
-                      >
-                        lfgraf
-                      </a>
-                    </motion.div>
-
-                    {/* Philosophy quote - shown at bottom of links on mobile */}
-                    <motion.div
-                      initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 2,
-                        ease: [0.22, 1, 0.36, 1],
-                        delay: 0.8,
-                      }}
-                      className="md:hidden"
-                    >
-                      <motion.button
-                        onClick={toggleGlass}
-                        className="text-xs text-white font-light tracking-wide italic backdrop-blur-sm bg-black/10 px-2.5 py-1 rounded-full cursor-pointer transition-all duration-500 hover:bg-white/10 hover:backdrop-blur-md group"
-                        whileHover={{
-                          scale: 1.02,
-                          filter: "brightness(1.4)",
-                          color: "#fff",
-                        }}
-                        whileTap={{
-                          scale: 0.97,
-                          filter: "brightness(0.9)",
-                        }}
-                        animate={{
-                          scale: isGlassEnabled ? 1.05 : 1,
-                          filter: isGlassEnabled
-                            ? "brightness(1.5)"
-                            : "brightness(1)",
-                          boxShadow: isGlassEnabled
-                            ? "0 0 20px rgba(255, 255, 255, 0.3)"
-                            : "0 0 0px rgba(255, 255, 255, 0)",
-                        }}
-                        transition={{
-                          duration: 0.6,
-                          ease: [0.12, 1, 0.28, 1],
-                        }}
-                        aria-label="Toggle liquid glass effect"
-                        style={{
-                          border: "1px solid rgba(255, 255, 255, 0.05)",
-                        }}
-                      >
-                        More demos, less memos
-                      </motion.button>
-                    </motion.div>
-                  </div>
-
-                  {/* Right column - Philosophy (desktop only) */}
-                  <div className="hidden md:flex items-end justify-end">
-                    <motion.div
-                      initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                      whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 2,
-                        ease: [0.22, 1, 0.36, 1],
-                        delay: 1.0,
-                      }}
-                      className="text-right"
-                    >
-                      {/* Temporarily disabled glass toggle for performance optimization */}
-                      {/* <motion.button onClick={toggleGlass}>Always happy, never satisfied</motion.button> */}
-                    </motion.div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.footer>
-        )}
-
-        {/* Temporarily disabled LiquidGlass for performance optimization */}
-        {/* <LiquidGlass /> */}
       </div>
     </ErrorBoundary>
   );
