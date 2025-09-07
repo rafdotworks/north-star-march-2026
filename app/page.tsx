@@ -1777,7 +1777,7 @@ export default function Page() {
             duration: 2,
             ease: EASING.primary,
           }}
-          className="px-6 sm:px-10 py-8 md:py-16 pb-8 md:pb-48 md:px-28 bg-background relative overflow-x-hidden md:overflow-hidden md:h-screen"
+          className="px-6 sm:px-10 py-4 md:py-6 pb-4 md:pb-6 md:px-28 bg-background relative overflow-x-hidden md:h-screen"
           style={{
             minHeight: "100vh",
             willChange: "auto",
@@ -1798,13 +1798,13 @@ export default function Page() {
                   duration: 1.2,
                   ease: EASING.primary,
                 }}
-                className="space-y-6 md:space-y-4 md:flex md:flex-col md:justify-center md:items-center md:h-screen md:py-0"
+                className="space-y-4 md:space-y-[2vh] md:flex md:flex-col md:justify-center md:items-center md:py-0 md:h-full"
                 style={{
                   transform: animationsComplete ? "none" : undefined,
                   willChange: animationsComplete
                     ? "auto"
                     : "transform, opacity",
-                  height: isMobile ? "auto" : viewportHeight,
+                  gap: isMobile ? undefined : "clamp(1vh, 2vh, 3vh)",
                 }}
               >
                 {/* Desktop Layout - Text First */}
@@ -1831,7 +1831,7 @@ export default function Page() {
                     }, 500);
                   }}
                 >
-                  <div className="text-left mb-4 md:mb-6 md:text-center">
+                  <div className="text-left mb-3 md:mb-[1.5vh] md:text-center">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
@@ -1871,7 +1871,7 @@ export default function Page() {
                     }, 500);
                   }}
                 >
-                  <div className="text-left mb-2 md:mb-6">
+                  <div className="text-left mb-3 md:mb-[1.5vh]">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.15}>
                         <EnhancedStaggeredTextItem>
@@ -1916,7 +1916,7 @@ export default function Page() {
                     }, 1000);
                   }}
                 >
-                  <div className="space-y-4 md:space-y-6 md:max-w-4xl md:mx-auto">
+                  <div className="space-y-3 md:space-y-[2.5vh] md:max-w-4xl md:mx-auto">
                     {/* Desktop Slideshow - now used for all screen sizes */}
                     <div
                       ref={slideshowRef}
@@ -2190,7 +2190,7 @@ export default function Page() {
                   initial="hidden"
                   animate={carouselAnimationComplete ? "visible" : "hidden"}
                 >
-                  <div className="text-left mt-6 md:mt-6 mb-8">
+                  <div className="text-left mt-4 md:mt-[1.5vh] mb-4">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.15}>
                         <EnhancedStaggeredTextItem>
@@ -2202,7 +2202,7 @@ export default function Page() {
                         <EnhancedStaggeredTextItem>
                           <a
                             href="mailto:raf@raf.works"
-                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-6 inline-block"
+                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-3 md:mt-[1vh] inline-block"
                           >
                             <WordReveal text="raf@raf.works" />
                           </a>
@@ -2231,19 +2231,19 @@ export default function Page() {
                   initial="hidden"
                   animate={carouselAnimationComplete ? "visible" : "hidden"}
                 >
-                  <div className="text-left mt-4 md:mt-6 md:text-center">
+                  <div className="text-left mt-3 md:mt-[1vh] md:text-center">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
                           <WordReveal
-                            text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
+                            text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
                             className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap"
                           />
                         </EnhancedStaggeredTextItem>
                         <EnhancedStaggeredTextItem>
                           <a
                             href="mailto:raf@raf.works"
-                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-4 inline-block"
+                            className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-2 md:mt-[0.8vh] inline-block"
                           >
                             <WordReveal text="raf@raf.works" />
                           </a>
