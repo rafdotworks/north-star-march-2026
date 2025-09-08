@@ -1569,7 +1569,7 @@ export default function Page() {
                   willChange: animationsComplete
                     ? "auto"
                     : "transform, opacity",
-                  gap: isMobile ? undefined : "clamp(2vh, 3vh, 4vh)",
+                  gap: isMobile ? undefined : "clamp(3vh, 4vh, 5vh)",
                 }}
               >
                 {/* Desktop Layout - Text First */}
@@ -1596,7 +1596,7 @@ export default function Page() {
                     }, 500);
                   }}
                 >
-                  <div className="text-left mb-4 md:mb-[4vh] md:text-center">
+                  <div className="text-left mb-4 md:mb-0 md:text-center">
                     {loadingSequence.textLoaded && (
                       <EnhancedStaggeredTextContainer staggerDelay={0.12}>
                         <EnhancedStaggeredTextItem>
@@ -1984,7 +1984,7 @@ export default function Page() {
 
                 {/* Desktop Layout - Other Text After Carousel */}
                 <div className="w-full hidden md:block md:flex-shrink-0">
-                  <div className="text-left mt-6 md:mt-[4vh] md:text-center">
+                  <div className="text-left mt-6 md:mt-0 md:text-center">
                     <div className="space-y-3">
                       <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
                         {loadingSequence.textLoaded &&
