@@ -143,31 +143,66 @@ export default function Page() {
   const isMobile = useIsMobile();
   const [isMobileReady, setIsMobileReady] = useState(false);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
+  const [connectionType, setConnectionType] = useState<string>("unknown");
+  const [imageLoadingStrategy, setImageLoadingStrategy] = useState<
+    "aggressive" | "conservative" | "minimal"
+  >("conservative");
 
-  // Ensure mobile detection is ready before making loading decisions
+  // Enhanced connection detection and loading strategy
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsMobileReady(true);
 
-      // Detect slow connections
+      // Enhanced connection detection
       if ("connection" in navigator) {
         const connection = (navigator as any).connection;
+        const effectiveType = connection.effectiveType || "unknown";
+        const downlink = connection.downlink || 0;
+        const saveData = connection.saveData || false;
+
+        setConnectionType(effectiveType);
+
+        // Determine loading strategy based on connection
         if (
-          connection.effectiveType === "slow-2g" ||
-          connection.effectiveType === "2g"
+          effectiveType === "slow-2g" ||
+          effectiveType === "2g" ||
+          downlink < 0.5 ||
+          saveData
         ) {
           setIsSlowConnection(true);
-          console.log("Slow connection detected, optimizing loading");
+          setImageLoadingStrategy("minimal");
+          console.log(
+            "Very slow connection detected, using minimal loading strategy"
+          );
+        } else if (effectiveType === "3g" || downlink < 1.5) {
+          setIsSlowConnection(true);
+          setImageLoadingStrategy("conservative");
+          console.log(
+            "Slow connection detected, using conservative loading strategy"
+          );
+        } else {
+          setImageLoadingStrategy("aggressive");
+          console.log(
+            "Good connection detected, using aggressive loading strategy"
+          );
+        }
+      } else {
+        // Fallback: assume conservative loading on mobile
+        if (isMobile) {
+          setImageLoadingStrategy("conservative");
+          setIsSlowConnection(true);
+        } else {
+          setImageLoadingStrategy("aggressive");
         }
       }
     }
-  }, []);
+  }, [isMobile]);
 
   // Prevent multiple re-renders by batching state updates
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Collection of work project images to be displayed in the gallery
-  // Optimized: Reduced initial load, better mobile performance
+  // Enhanced with multiple quality levels and formats
   const images = [
     "/work/cb-d.png",
     "/work/voiceflow-landing.png",
@@ -185,9 +220,86 @@ export default function Page() {
     "/work/zalando-spread.png",
   ];
 
-  // Optimized: Only load first 6 images initially, rest lazy load
-  const initialImages = images.slice(0, 6);
-  const lazyImages = images.slice(6);
+  // Generate low-quality placeholder URLs (base64 encoded 1x1 pixel)
+  const generatePlaceholder = (width: number = 400, height: number = 300) => {
+    return `data:image/svg+xml;base64,${btoa(`
+      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#f3f4f6"/>
+        <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="system-ui" font-size="14" fill="#9ca3af">Loading...</text>
+      </svg>
+    `)}`;
+  };
+
+  // WebP support detection and format optimization
+  const [supportsWebP, setSupportsWebP] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Check WebP support
+      const webpTest = new window.Image();
+      webpTest.onload = webpTest.onerror = () => {
+        setSupportsWebP(webpTest.height === 2);
+      };
+      webpTest.src =
+        "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA";
+    }
+  }, []);
+
+  // Get optimized image source with format support
+  const getOptimizedImageSrc = (src: string): string => {
+    if (supportsWebP === null) return src; // Return original while detecting
+
+    // For now, return original src since we don't have WebP versions
+    // In a real implementation, you would have WebP versions of images
+    // and return the appropriate format based on support
+    return src;
+  };
+
+  // Connection-aware image loading configuration
+  const getImageLoadingConfig = () => {
+    switch (imageLoadingStrategy) {
+      case "minimal":
+        return {
+          initialCount: 1,
+          preloadCount: 2,
+          lazyLoadThreshold: 0,
+          retryAttempts: 1,
+          timeout: 5000,
+        };
+      case "conservative":
+        return {
+          initialCount: 2,
+          preloadCount: 3,
+          lazyLoadThreshold: 100,
+          retryAttempts: 2,
+          timeout: 8000,
+        };
+      case "aggressive":
+        return {
+          initialCount: 4,
+          preloadCount: 6,
+          lazyLoadThreshold: 200,
+          retryAttempts: 3,
+          timeout: 10000,
+        };
+      default:
+        return {
+          initialCount: 2,
+          preloadCount: 3,
+          lazyLoadThreshold: 100,
+          retryAttempts: 2,
+          timeout: 8000,
+        };
+    }
+  };
+
+  const loadingConfig = getImageLoadingConfig();
+  const initialImages = images.slice(0, loadingConfig.initialCount);
+  const preloadImages = images.slice(
+    loadingConfig.initialCount,
+    loadingConfig.preloadCount
+  );
+  const lazyImages = images.slice(loadingConfig.preloadCount);
 
   // Mapping of work images to their corresponding Vimeo video URLs
   // Each video is configured with specific player parameters for optimal viewing experience
@@ -698,38 +810,147 @@ export default function Page() {
     images.length,
   ]);
 
+  // Enhanced image loading with retry logic and connection awareness
+  const [imageRetryCount, setImageRetryCount] = useState<{
+    [key: string]: number;
+  }>({});
+  const [imageLoadTimeouts, setImageLoadTimeouts] = useState<{
+    [key: string]: NodeJS.Timeout;
+  }>({});
+  const [viewportImages, setViewportImages] = useState<Set<string>>(new Set());
+
   /**
-   * Optimized: Preloads only critical images (first 2) on component mount
-   * Ensures smooth initial slideshow experience
+   * Enhanced image preloader with retry logic and connection awareness
+   * Implements progressive loading based on connection quality
    */
-  useEffect(() => {
-    if (mounted) {
-      // Start loading critical images immediately
-      initialImages.slice(0, 2).forEach((src) => {
-        const img = new window.Image();
-        img.src = src;
-        img.onload = () => handleImageLoad(src);
-        img.onerror = () => {
-          console.warn(`Failed to load image: ${src}`);
+  const preloadImage = (src: string, retryCount: number = 0): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      const timeoutId = setTimeout(() => {
+        console.warn(`Image load timeout: ${src}`);
+        reject(new Error(`Timeout loading ${src}`));
+      }, loadingConfig.timeout);
+
+      img.onload = () => {
+        clearTimeout(timeoutId);
+        handleImageLoad(src);
+        resolve();
+      };
+
+      img.onerror = () => {
+        clearTimeout(timeoutId);
+        console.warn(
+          `Failed to load image: ${src} (attempt ${retryCount + 1})`
+        );
+
+        if (retryCount < loadingConfig.retryAttempts) {
+          // Exponential backoff for retries
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+          setTimeout(() => {
+            setImageRetryCount((prev) => ({ ...prev, [src]: retryCount + 1 }));
+            preloadImage(src, retryCount + 1)
+              .then(resolve)
+              .catch(reject);
+          }, delay);
+        } else {
           // Mark as loaded anyway to prevent blocking
           handleImageLoad(src);
-        };
-      });
+          reject(
+            new Error(
+              `Failed to load ${src} after ${loadingConfig.retryAttempts} attempts`
+            )
+          );
+        }
+      };
 
-      // Start loading remaining images in background
-      setTimeout(() => {
-        initialImages.slice(2).forEach((src) => {
-          const img = new window.Image();
-          img.src = src;
-          img.onload = () => handleImageLoad(src);
-          img.onerror = () => {
-            console.warn(`Failed to load image: ${src}`);
-            handleImageLoad(src);
-          };
-        });
-      }, 1000); // Delay non-critical images
+      // Add connection-aware loading hints
+      if (connectionType === "slow-2g" || connectionType === "2g") {
+        // For very slow connections, add loading priority hints
+        img.loading = "lazy";
+      }
+
+      img.src = getOptimizedImageSrc(src);
+    });
+  };
+
+  /**
+   * Intelligent viewport-based preloading
+   * Preloads images that are likely to be viewed soon
+   */
+  const preloadViewportImages = () => {
+    if (imageLoadingStrategy === "minimal") return;
+
+    // Preload next few images in slideshow sequence
+    const nextImages = [];
+    for (let i = 1; i <= 3; i++) {
+      const nextIndex = (currentImageIndex + i) % images.length;
+      if (
+        !loadedImages[images[nextIndex]] &&
+        !viewportImages.has(images[nextIndex])
+      ) {
+        nextImages.push(images[nextIndex]);
+      }
     }
-  }, [mounted]);
+
+    nextImages.forEach((src) => {
+      setViewportImages((prev) => new Set([...prev, src]));
+      preloadImage(src).catch(() => {
+        // Silently handle preload failures
+      });
+    });
+  };
+
+  /**
+   * Connection-aware image preloading strategy
+   * Loads images progressively based on connection quality
+   */
+  useEffect(() => {
+    if (mounted && isMobileReady) {
+      console.log(
+        `Starting image preload with ${imageLoadingStrategy} strategy`
+      );
+
+      // Phase 1: Load critical images immediately
+      const criticalPromises = initialImages.map((src) => preloadImage(src));
+
+      Promise.allSettled(criticalPromises).then(() => {
+        console.log("Critical images loaded");
+
+        // Phase 2: Load preload images after a delay
+        setTimeout(
+          () => {
+            const preloadPromises = preloadImages.map((src) =>
+              preloadImage(src)
+            );
+            Promise.allSettled(preloadPromises).then(() => {
+              console.log("Preload images loaded");
+            });
+          },
+          imageLoadingStrategy === "minimal" ? 2000 : 1000
+        );
+      });
+    }
+  }, [mounted, isMobileReady, imageLoadingStrategy]);
+
+  /**
+   * Preload images when slideshow advances
+   */
+  useEffect(() => {
+    if (mounted && criticalContentLoaded) {
+      preloadViewportImages();
+    }
+  }, [currentImageIndex, criticalContentLoaded, mounted]);
+
+  /**
+   * Cleanup timeouts on unmount
+   */
+  useEffect(() => {
+    return () => {
+      Object.values(imageLoadTimeouts).forEach((timeout) => {
+        if (timeout) clearTimeout(timeout);
+      });
+    };
+  }, [imageLoadTimeouts]);
 
   /**
    * Handles image loading completion
@@ -1716,7 +1937,7 @@ export default function Page() {
                                 }}
                               >
                                 <Image
-                                  src={src}
+                                  src={getOptimizedImageSrc(src)}
                                   alt={`Work preview ${index + 1}`}
                                   width={900}
                                   height={700}
@@ -1725,11 +1946,23 @@ export default function Page() {
                                       ? "transition-opacity duration-300 hover:opacity-90"
                                       : ""
                                   }`}
-                                  priority={index < 2}
-                                  loading={index < 2 ? "eager" : "lazy"}
+                                  priority={index < loadingConfig.initialCount}
+                                  loading={
+                                    index < loadingConfig.initialCount
+                                      ? "eager"
+                                      : "lazy"
+                                  }
                                   onLoad={() => handleImageLoad(src)}
                                   placeholder="blur"
-                                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                                  blurDataURL={generatePlaceholder(900, 700)}
+                                  sizes={isMobile ? "100vw" : "50vw"}
+                                  quality={
+                                    imageLoadingStrategy === "minimal"
+                                      ? 60
+                                      : imageLoadingStrategy === "conservative"
+                                      ? 75
+                                      : 85
+                                  }
                                 />
                                 {workVideos[src] && (
                                   <div
@@ -1786,7 +2019,7 @@ export default function Page() {
                                     }}
                                   >
                                     <Image
-                                      src={src}
+                                      src={getOptimizedImageSrc(src)}
                                       alt={`Work preview ${
                                         initialImages.length + index + 1
                                       }`}
@@ -1799,6 +2032,20 @@ export default function Page() {
                                       }`}
                                       loading="lazy"
                                       onLoad={() => handleImageLoad(src)}
+                                      placeholder="blur"
+                                      blurDataURL={generatePlaceholder(
+                                        900,
+                                        700
+                                      )}
+                                      sizes={isMobile ? "100vw" : "50vw"}
+                                      quality={
+                                        imageLoadingStrategy === "minimal"
+                                          ? 60
+                                          : imageLoadingStrategy ===
+                                            "conservative"
+                                          ? 75
+                                          : 85
+                                      }
                                     />
                                     {workVideos[src] && (
                                       <div
@@ -1871,7 +2118,7 @@ export default function Page() {
                                 }}
                               >
                                 <Image
-                                  src={src}
+                                  src={getOptimizedImageSrc(src)}
                                   alt={`Work preview ${index + 1}`}
                                   width={1400}
                                   height={900}
@@ -1891,8 +2138,22 @@ export default function Page() {
                                       "filter 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
                                   }}
                                   onLoad={() => handleImageLoad(src)}
-                                  loading={index < 3 ? "eager" : "lazy"}
-                                  priority={index < 3}
+                                  loading={
+                                    index < loadingConfig.initialCount
+                                      ? "eager"
+                                      : "lazy"
+                                  }
+                                  priority={index < loadingConfig.initialCount}
+                                  placeholder="blur"
+                                  blurDataURL={generatePlaceholder(1400, 900)}
+                                  sizes="100vw"
+                                  quality={
+                                    imageLoadingStrategy === "minimal"
+                                      ? 60
+                                      : imageLoadingStrategy === "conservative"
+                                      ? 75
+                                      : 85
+                                  }
                                 />
                                 {workVideos[src] &&
                                   index === currentImageIndex && (
