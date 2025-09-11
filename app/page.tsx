@@ -2099,9 +2099,9 @@ export default function Page() {
                                 y: index === currentImageIndex ? 0 : 15,
                               }}
                               transition={{
-                                duration: 2.4,
-                                ease: EASING.secondary,
-                                delay: 0.5,
+                                duration: 2.2,
+                                ease: [0.22, 1, 0.36, 1],
+                                delay: 0,
                               }}
                               style={{
                                 zIndex: index === currentImageIndex ? 2 : 1,
