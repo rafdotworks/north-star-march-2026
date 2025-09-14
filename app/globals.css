@@ -162,71 +162,92 @@
 
 @layer base {
   :root {
-    /* Core colors - Light Mode */
-    --background: 40 33% 97%; /* #F8F6F1 - cream */
-    --background-rgb: 248 246 241; /* RGB values for gradients */
-    --foreground: 0 35% 23%; /* #5C2E2E - dark brown */
-    --card: 40 33% 97%;
-    --card-foreground: 0 35% 23%;
-    --popover: 40 33% 97%;
-    --popover-foreground: 0 35% 23%;
-    --primary: 0 35% 23%; /* #5C2E2E - dark brown */
-    --primary-foreground: 40 33% 97%;
-    --secondary: 25 35% 45%; /* #8E5E3F - medium brown */
-    --secondary-foreground: 40 33% 97%;
-    --muted: 25 35% 45%;
-    --muted-foreground: 25 35% 45%;
-    --accent: 32 99% 50%; /* #FE8C01 - bright orange */
-    --accent-foreground: 0 35% 23%;
+    /* Brown Theme - Light Mode */
+    --bg-primary: #f9f6f2; /* Warm cream background */
+    --bg-secondary: #ede7e0; /* Light taupe sidebar */
+    --text-primary: #2c1810; /* Dark espresso text */
+    --text-secondary: #5d4037; /* Medium brown secondary */
+    --accent-primary: #d4a574; /* Caramel links/buttons */
+    --accent-hover: #8d5524; /* Chocolate hover */
+    --border: #c8b299; /* Light brown borders */
+
+    /* Core colors - Light Mode (HSL format for Tailwind) */
+    --background: 40 20% 97%; /* #f9f6f2 - warm cream */
+    --background-rgb: 249 246 242; /* RGB values for gradients */
+    --foreground: 20 60% 10%; /* #2c1810 - dark espresso */
+    --card: 40 20% 97%; /* #f9f6f2 - warm cream */
+    --card-foreground: 20 60% 10%; /* #2c1810 - dark espresso */
+    --popover: 40 20% 97%; /* #f9f6f2 - warm cream */
+    --popover-foreground: 20 60% 10%; /* #2c1810 - dark espresso */
+    --primary: 20 60% 10%; /* #2c1810 - dark espresso */
+    --primary-foreground: 40 20% 97%; /* #f9f6f2 - warm cream */
+    --secondary: 30 25% 85%; /* #ede7e0 - light taupe */
+    --secondary-foreground: 20 60% 10%; /* #2c1810 - dark espresso */
+    --muted: 20 30% 35%; /* #5d4037 - medium brown */
+    --muted-foreground: 20 30% 35%; /* #5d4037 - medium brown */
+    --accent: 35 50% 65%; /* #d4a574 - caramel */
+    --accent-foreground: 20 60% 10%; /* #2c1810 - dark espresso */
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 40 33% 97%;
-    --border: 25 35% 45%;
-    --input: 25 35% 45%;
-    --ring: 32 99% 50%;
+    --destructive-foreground: 40 20% 97%;
+    --border: 30 20% 75%; /* #c8b299 - light brown */
+    --input: 30 20% 75%; /* #c8b299 - light brown */
+    --ring: 35 50% 65%; /* #d4a574 - caramel */
     --radius: 0.5rem;
     --font-sans: var(--font-ronzino);
 
-    /* Additional brown shades */
-    --brown-subtle: 40 33% 97%;
-    --brown-hover: 25 35% 90%;
-    --brown-muted: 25 35% 45%;
-    --brown-border: 25 35% 45%;
-
-    /* Grays */
-    --gray-subtle: 0 0% 96%; /* For subtle backgrounds */
-    --gray-hover: 0 0% 90%; /* For hover states */
-    --gray-muted: 0 0% 45%; /* For secondary text */
-
-    /* Border */
-    --border: 240 5.9% 90%; /* Consistent with hover state */
+    /* Navigation Colors */
+    --nav-work: #d4a574; /* Caramel */
+    --nav-about: #a67c52; /* Cinnamon */
+    --nav-projects: #8d5524; /* Chocolate */
+    --nav-contact: #b8956f; /* Toffee */
 
     /* Weather-based scrollbar colors - will be set via JS */
-    --scrollbar-color: rgba(125, 125, 125, 0.15);
-    --scrollbar-hover-color: rgba(125, 125, 125, 0.25);
+    --scrollbar-color: rgba(200, 178, 153, 0.15);
+    --scrollbar-hover-color: rgba(200, 178, 153, 0.25);
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --background: 0 0% 7%; /* #111111 - deep black */
-      --background-rgb: 17 17 17; /* RGB values for dark mode gradients */
-      --foreground: 40 33% 97%; /* #F8F6F1 - cream */
-      --card: 0 0% 9%; /* Slightly lighter than background */
-      --card-foreground: 40 33% 97%;
-      --popover: 0 0% 7%;
-      --popover-foreground: 40 33% 97%;
-      --primary: 40 33% 97%;
-      --primary-foreground: 0 0% 7%;
-      --secondary: 0 0% 15%; /* #262626 - lighter black */
-      --secondary-foreground: 40 33% 97%;
-      --muted: 0 0% 15%;
-      --muted-foreground: 0 0% 15%;
-      --accent: 32 99% 50%; /* #FE8C01 - bright orange */
-      --accent-foreground: 0 0% 7%;
+      /* Brown Theme - Dark Mode */
+      --bg-primary: #1a1410; /* Deep espresso background */
+      --bg-secondary: #2d2520; /* Dark chocolate sidebar */
+      --text-primary: #f2e6d9; /* Warm cream text */
+      --text-secondary: #d4c4b0; /* Light taupe secondary */
+      --accent-primary: #e6b887; /* Golden caramel */
+      --accent-hover: #cc9966; /* Amber hover */
+      --border: #3d2f24; /* Coffee borders */
+
+      /* Core colors - Dark Mode (HSL format for Tailwind) */
+      --background: 20 25% 8%; /* #1a1410 - deep espresso */
+      --background-rgb: 26 20 16; /* RGB values for dark mode gradients */
+      --foreground: 35 35% 90%; /* #f2e6d9 - warm cream */
+      --card: 20 20% 12%; /* #2d2520 - dark chocolate */
+      --card-foreground: 35 35% 90%; /* #f2e6d9 - warm cream */
+      --popover: 20 25% 8%; /* #1a1410 - deep espresso */
+      --popover-foreground: 35 35% 90%; /* #f2e6d9 - warm cream */
+      --primary: 35 35% 90%; /* #f2e6d9 - warm cream */
+      --primary-foreground: 20 25% 8%; /* #1a1410 - deep espresso */
+      --secondary: 20 20% 12%; /* #2d2520 - dark chocolate */
+      --secondary-foreground: 35 35% 90%; /* #f2e6d9 - warm cream */
+      --muted: 30 20% 75%; /* #d4c4b0 - light taupe */
+      --muted-foreground: 30 20% 75%; /* #d4c4b0 - light taupe */
+      --accent: 35 60% 70%; /* #e6b887 - golden caramel */
+      --accent-foreground: 20 25% 8%; /* #1a1410 - deep espresso */
       --destructive: 0 62.8% 30.6%;
-      --destructive-foreground: 40 33% 97%;
-      --border: 0 0% 15%;
-      --input: 0 0% 15%;
-      --ring: 32 99% 50%;
+      --destructive-foreground: 35 35% 90%;
+      --border: 20 25% 20%; /* #3d2f24 - coffee borders */
+      --input: 20 25% 20%; /* #3d2f24 - coffee borders */
+      --ring: 35 60% 70%; /* #e6b887 - golden caramel */
+
+      /* Navigation Colors - Dark Mode */
+      --nav-work: #e6b887; /* Golden caramel */
+      --nav-about: #d4a574; /* Caramel */
+      --nav-projects: #cc9966; /* Amber */
+      --nav-contact: #b8956f; /* Toffee */
+
+      /* Weather-based scrollbar colors - dark mode */
+      --scrollbar-color: rgba(61, 47, 36, 0.15);
+      --scrollbar-hover-color: rgba(61, 47, 36, 0.25);
     }
   }
 }
@@ -261,13 +282,30 @@ body {
     text-wrap: balance;
   }
 
-  /* Utility classes for active links */
+  /* Brown theme utility classes for active links */
   .active-link {
-    color: #fe8c01;
+    color: var(--accent-primary);
   }
 
   .hover-accent:hover {
-    color: #fe8c01;
+    color: var(--accent-hover);
+  }
+
+  /* Navigation color utilities */
+  .nav-work {
+    color: var(--nav-work);
+  }
+
+  .nav-about {
+    color: var(--nav-about);
+  }
+
+  .nav-projects {
+    color: var(--nav-projects);
+  }
+
+  .nav-contact {
+    color: var(--nav-contact);
   }
 }
 
@@ -364,7 +402,7 @@ body {
   }
 }
 
-/* Typography scale adjustments */
+/* Typography scale adjustments - Brown Theme */
 h1,
 h2,
 h3,
@@ -373,20 +411,33 @@ h5,
 h6 {
   @apply tracking-tight;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
 h1 {
-  @apply text-2xl font-normal;
+  @apply text-4xl font-semibold; /* 2.5rem, 600 weight */
+  color: var(--text-primary);
 }
 
 h2 {
-  @apply text-base font-normal;
+  @apply text-2xl font-medium; /* 1.5rem, 500 weight */
+  color: var(--text-secondary);
 }
 
 p,
-li,
+li {
+  @apply text-base leading-relaxed; /* 1.6 line-height */
+  color: var(--text-primary);
+}
+
 a {
   @apply text-base;
+  color: var(--accent-primary);
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-hover);
 }
 
 /* Increased spacing */
@@ -424,10 +475,30 @@ section {
   @apply mb-1 text-base;
 }
 
-/* Minimal UI elements */
-button,
-a {
+/* Brown Theme UI Elements */
+button {
   @apply transition-colors duration-200;
+  background-color: var(--accent-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+button:hover {
+  background-color: var(--accent-hover);
+  color: var(--text-primary);
+}
+
+/* Cards with brown theme */
+.card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+/* Sidebar with brown theme */
+.sidebar {
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border);
 }
 
 /* Link hover and active states */
@@ -437,7 +508,7 @@ a:focus,
 button:hover,
 button:active,
 button:focus:not(:disabled) {
-  @apply text-foreground/80;
+  color: var(--accent-hover);
 }
 
 /* Buttons with bg need special handling */
@@ -445,8 +516,8 @@ button.bg-primary:hover,
 button.bg-secondary:hover,
 button.bg-accent:hover,
 button[class*="bg-"]:hover {
-  color: inherit;
-  filter: brightness(1.1);
+  background-color: var(--accent-hover);
+  color: var(--text-primary);
 }
 
 .rounded-lg {
@@ -531,15 +602,15 @@ html {
   }
 }
 
-/* Text selection styling */
+/* Text selection styling - Brown Theme */
 ::selection {
-  background-color: rgba(254, 140, 1, 0.2); /* #FE8C01 with opacity */
+  background-color: rgba(212, 165, 116, 0.2); /* #d4a574 with opacity */
   color: currentColor;
 }
 
 /* Firefox specific selection styling */
 ::-moz-selection {
-  background-color: rgba(254, 140, 1, 0.2); /* #FE8C01 with opacity */
+  background-color: rgba(212, 165, 116, 0.2); /* #d4a574 with opacity */
   color: currentColor;
 }
 

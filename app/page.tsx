@@ -2033,19 +2033,18 @@ export default function Page() {
                                 }}
                                 animate={{
                                   boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-                                  borderColor: "rgba(0, 0, 0, 0.05)",
                                 }}
                                 whileHover={{
                                   scale: 1.02,
-                                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15)",
-                                  borderColor: "rgba(0, 0, 0, 0.12)",
+                                  borderRadius: "8px",
+                                  boxShadow:
+                                    "0 8px 32px rgba(0, 0, 0, 0.15), 0 0 20px rgba(255, 255, 255, 0.1)",
                                   transition: {
                                     duration: 0.4,
                                     ease: [0.22, 1, 0.36, 1],
                                   },
                                 }}
                                 style={{
-                                  border: "1px solid",
                                   transition:
                                     "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
                                 }}
@@ -2132,20 +2131,18 @@ export default function Page() {
                                     animate={{
                                       boxShadow:
                                         "0 4px 20px rgba(0, 0, 0, 0.08)",
-                                      borderColor: "rgba(0, 0, 0, 0.05)",
                                     }}
                                     whileHover={{
                                       scale: 1.02,
+                                      borderRadius: "8px",
                                       boxShadow:
-                                        "0 8px 32px rgba(0, 0, 0, 0.15)",
-                                      borderColor: "rgba(0, 0, 0, 0.12)",
+                                        "0 8px 32px rgba(0, 0, 0, 0.15), 0 0 20px rgba(255, 255, 255, 0.1)",
                                       transition: {
                                         duration: 0.4,
                                         ease: [0.22, 1, 0.36, 1],
                                       },
                                     }}
                                     style={{
-                                      border: "1px solid",
                                       transition:
                                         "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
                                     }}
@@ -2250,19 +2247,18 @@ export default function Page() {
                                 }}
                                 animate={{
                                   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                                  borderColor: "rgba(0, 0, 0, 0.08)",
                                 }}
                                 whileHover={{
                                   scale: 1.01,
-                                  boxShadow: "0 12px 48px rgba(0, 0, 0, 0.18)",
-                                  borderColor: "rgba(0, 0, 0, 0.15)",
+                                  borderRadius: "12px",
+                                  boxShadow:
+                                    "0 12px 48px rgba(0, 0, 0, 0.18), 0 0 30px rgba(255, 255, 255, 0.08)",
                                   transition: {
                                     duration: 0.5,
                                     ease: [0.22, 1, 0.36, 1],
                                   },
                                 }}
                                 style={{
-                                  border: "1px solid",
                                   transition:
                                     "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
                                 }}
