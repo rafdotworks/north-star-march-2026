@@ -1695,9 +1695,9 @@ export default function Page() {
           position: "relative",
         }}
       >
-        {/* Natural progressive bottom blur effect - disabled on desktop */}
+        {/* Natural progressive bottom blur effect - disabled on desktop since page is non-scrollable */}
         <motion.div
-          className="fixed left-0 right-0 bottom-0 w-screen overflow-hidden z-50 pointer-events-none hidden md:block"
+          className="fixed left-0 right-0 bottom-0 w-screen overflow-hidden z-50 pointer-events-none hidden"
           style={{
             height: Math.max(40, Math.min(scrollY / 400, 80)),
             transition: "height 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -1763,7 +1763,7 @@ export default function Page() {
             duration: 2,
             ease: EASING.primary,
           }}
-          className="px-6 sm:px-10 py-4 md:py-6 pb-4 md:pb-6 md:px-28 bg-background relative overflow-x-hidden md:h-screen"
+          className="px-6 sm:px-10 py-4 md:py-6 pb-4 md:pb-6 md:px-28 bg-background relative overflow-x-hidden md:h-screen md:overflow-hidden"
           style={{
             minHeight: "100vh",
             willChange: "auto",
@@ -1784,7 +1784,7 @@ export default function Page() {
                   duration: 1.2,
                   ease: EASING.primary,
                 }}
-                className="space-y-4 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:py-0 md:h-screen md:min-h-screen"
+                className="space-y-3 md:space-y-0 md:flex md:flex-col md:justify-start md:items-center md:py-0 md:h-full md:pt-16"
                 style={{
                   transform: animationsComplete ? "none" : undefined,
                   willChange: animationsComplete
@@ -1800,7 +1800,7 @@ export default function Page() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
-                  <div className="text-center mb-6">
+                  <div className="text-center mb-4">
                     {loadingSequence.textLoaded && (
                       <motion.div
                         initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
@@ -1828,8 +1828,8 @@ export default function Page() {
                   </div>
 
                   {/* Secondary text for desktop */}
-                  <div className="text-center mb-8">
-                    <div className="space-y-3">
+                  <div className="text-center mb-4">
+                    <div className="space-y-2">
                       <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
                         {loadingSequence.textLoaded && firstLineComplete && (
                           <motion.div
@@ -1885,7 +1885,7 @@ export default function Page() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
-                  <div className="text-left mb-4">
+                  <div className="text-left mb-3">
                     {loadingSequence.textLoaded && (
                       <motion.div
                         initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
@@ -1913,8 +1913,8 @@ export default function Page() {
                   </div>
 
                   {/* Secondary text for mobile */}
-                  <div className="text-left mb-6">
-                    <div className="space-y-4">
+                  <div className="text-left mb-4">
+                    <div className="space-y-3">
                       <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
                         {loadingSequence.textLoaded && firstLineComplete && (
                           <motion.div
@@ -1931,7 +1931,7 @@ export default function Page() {
                           </motion.div>
                         )}
                       </div>
-                      <div className="mt-4 min-h-[1.25em]">
+                      <div className="mt-3 min-h-[1.25em]">
                         <a
                           href="mailto:raf@raf.works"
                           className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
@@ -1998,7 +1998,7 @@ export default function Page() {
                     }, 1000);
                   }}
                 >
-                  <div className="space-y-3 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto">
+                  <div className="space-y-2 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto md:flex-1 md:pt-4">
                     {/* Desktop Slideshow - now used for all screen sizes */}
                     <div
                       ref={slideshowRef}
@@ -2015,7 +2015,7 @@ export default function Page() {
                       {/* Replace the AnimatePresence with a crossfade effect */}
                       <div className="relative w-full h-full">
                         {/* Enhanced Mobile Feed View */}
-                        <div className="block sm:hidden space-y-3">
+                        <div className="block sm:hidden space-y-2">
                           {initialImages.map((src: string, index: number) => (
                             <ImageCarouselItem
                               key={`mobile-${src}`}
@@ -2105,7 +2105,7 @@ export default function Page() {
 
                           {/* Lazy load remaining images */}
                           {lazyImages.length > 0 && (
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                               {lazyImages.map((src: string, index: number) => (
                                 <motion.div
                                   key={`mobile-lazy-${src}`}
@@ -2212,7 +2212,7 @@ export default function Page() {
                         </div>
 
                         {/* Enhanced Desktop Slideshow View */}
-                        <div className="hidden sm:flex relative w-full h-full min-h-[50vh] max-h-[70vh] items-center justify-center">
+                        <div className="hidden sm:flex relative w-full h-full min-h-[50vh] max-h-[60vh] items-center justify-center">
                           {images.map((src, index) => (
                             <motion.div
                               key={src}
