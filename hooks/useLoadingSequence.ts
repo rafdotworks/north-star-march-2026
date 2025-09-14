@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { LOADING_SEQUENCE } from "@/components/animations/LoadingAnimations";
 
 export interface LoadingSequenceState {
@@ -6,6 +6,22 @@ export interface LoadingSequenceState {
   imagesLoaded: boolean;
   navigationLoaded: boolean;
   allLoaded: boolean;
+  loadingProgress: number;
+  estimatedTimeRemaining: number;
+  isAdaptive: boolean;
+}
+
+export interface LoadingMetrics {
+  startTime: number;
+  textStartTime: number;
+  imagesStartTime: number;
+  navigationStartTime: number;
+  actualLoadTimes: {
+    text: number | null;
+    images: number | null;
+    navigation: number | null;
+  };
+  connectionQuality: "fast" | "medium" | "slow";
 }
 
 export function useLoadingSequence() {
@@ -14,36 +30,159 @@ export function useLoadingSequence() {
     imagesLoaded: false,
     navigationLoaded: false,
     allLoaded: false,
+    loadingProgress: 0,
+    estimatedTimeRemaining: 0,
+    isAdaptive: false,
   });
 
-  useEffect(() => {
-    // Images load first (work carousel priority)
-    const imagesTimer = setTimeout(() => {
-      setLoadingState((prev) => ({ ...prev, imagesLoaded: true }));
-    }, LOADING_SEQUENCE.IMAGES_DELAY * 1000);
+  const metricsRef = useRef<LoadingMetrics>({
+    startTime: Date.now(),
+    textStartTime: 0,
+    imagesStartTime: 0,
+    navigationStartTime: 0,
+    actualLoadTimes: {
+      text: null,
+      images: null,
+      navigation: null,
+    },
+    connectionQuality: "medium",
+  });
 
-    // Text loads after images
-    const textTimer = setTimeout(() => {
-      setLoadingState((prev) => ({ ...prev, textLoaded: true }));
-    }, LOADING_SEQUENCE.TEXT_DELAY * 1000);
+  // Detect connection quality
+  const detectConnectionQuality = useCallback(() => {
+    if (typeof window !== "undefined" && "connection" in navigator) {
+      const connection = (navigator as any).connection;
+      const effectiveType = connection.effectiveType || "unknown";
+      const downlink = connection.downlink || 0;
 
-    // Navigation loads last
-    const navTimer = setTimeout(() => {
-      setLoadingState((prev) => ({ ...prev, navigationLoaded: true }));
-    }, LOADING_SEQUENCE.NAV_DELAY * 1000);
+      if (
+        effectiveType === "slow-2g" ||
+        effectiveType === "2g" ||
+        downlink < 0.5
+      ) {
+        return "slow";
+      } else if (effectiveType === "3g" || downlink < 1.5) {
+        return "medium";
+      } else {
+        return "fast";
+      }
+    }
+    return "medium";
+  }, []);
 
-    // All loaded
-    const allLoadedTimer = setTimeout(() => {
-      setLoadingState((prev) => ({ ...prev, allLoaded: true }));
-    }, (LOADING_SEQUENCE.NAV_DELAY + 0.5) * 1000);
+  // Calculate adaptive timing based on connection and actual load times
+  const calculateAdaptiveTiming = useCallback(() => {
+    const metrics = metricsRef.current;
+    const baseTiming = {
+      text: 0.3,
+      images: 1.5,
+      navigation: 3.2,
+    };
 
-    return () => {
-      clearTimeout(imagesTimer);
-      clearTimeout(textTimer);
-      clearTimeout(navTimer);
-      clearTimeout(allLoadedTimer);
+    // Adjust based on connection quality
+    const connectionMultiplier = {
+      fast: 0.8,
+      medium: 1.0,
+      slow: 1.4,
+    }[metrics.connectionQuality];
+
+    // If we have actual load times, use them to predict future timing
+    if (metrics.actualLoadTimes.text) {
+      const textLoadTime = metrics.actualLoadTimes.text;
+      const adjustedTextDelay = Math.max(
+        0.2,
+        Math.min(1.0, textLoadTime / 1000)
+      );
+      baseTiming.text = adjustedTextDelay;
+    }
+
+    if (metrics.actualLoadTimes.images) {
+      const imagesLoadTime = metrics.actualLoadTimes.images;
+      const adjustedImagesDelay = Math.max(
+        1.0,
+        Math.min(3.0, imagesLoadTime / 1000)
+      );
+      baseTiming.images = adjustedImagesDelay;
+    }
+
+    return {
+      text: baseTiming.text * connectionMultiplier,
+      images: baseTiming.images * connectionMultiplier,
+      navigation: baseTiming.navigation * connectionMultiplier,
     };
   }, []);
+
+  // Update loading progress
+  const updateLoadingProgress = useCallback(() => {
+    const metrics = metricsRef.current;
+    const elapsed = Date.now() - metrics.startTime;
+    const totalEstimated = 4000; // Base estimate of 4 seconds
+    const progress = Math.min(0.95, elapsed / totalEstimated);
+
+    setLoadingState((prev) => ({
+      ...prev,
+      loadingProgress: progress,
+      estimatedTimeRemaining: Math.max(0, totalEstimated - elapsed),
+    }));
+  }, []);
+
+  useEffect(() => {
+    metricsRef.current.connectionQuality = detectConnectionQuality();
+    metricsRef.current.startTime = Date.now();
+
+    // Start progress updates
+    const progressInterval = setInterval(updateLoadingProgress, 100);
+
+    // Calculate adaptive timing
+    const adaptiveTiming = calculateAdaptiveTiming();
+
+    // Text loads first with adaptive timing
+    metricsRef.current.textStartTime = Date.now();
+    const textTimer = setTimeout(() => {
+      metricsRef.current.actualLoadTimes.text =
+        Date.now() - metricsRef.current.textStartTime;
+      setLoadingState((prev) => ({
+        ...prev,
+        textLoaded: true,
+        isAdaptive: true,
+      }));
+    }, adaptiveTiming.text * 1000);
+
+    // Images load after text with adaptive timing
+    metricsRef.current.imagesStartTime = Date.now();
+    const imagesTimer = setTimeout(() => {
+      metricsRef.current.actualLoadTimes.images =
+        Date.now() - metricsRef.current.imagesStartTime;
+      setLoadingState((prev) => ({ ...prev, imagesLoaded: true }));
+    }, adaptiveTiming.images * 1000);
+
+    // Navigation loads last with adaptive timing
+    metricsRef.current.navigationStartTime = Date.now();
+    const navTimer = setTimeout(() => {
+      metricsRef.current.actualLoadTimes.navigation =
+        Date.now() - metricsRef.current.navigationStartTime;
+      setLoadingState((prev) => ({ ...prev, navigationLoaded: true }));
+    }, adaptiveTiming.navigation * 1000);
+
+    // All loaded - ensure minimum loading time for smooth experience
+    const minLoadingTime = 2500; // Minimum 2.5 seconds for smooth experience
+    const allLoadedTimer = setTimeout(() => {
+      setLoadingState((prev) => ({
+        ...prev,
+        allLoaded: true,
+        loadingProgress: 1,
+        estimatedTimeRemaining: 0,
+      }));
+    }, Math.max(minLoadingTime, adaptiveTiming.navigation * 1000 + 500));
+
+    return () => {
+      clearTimeout(textTimer);
+      clearTimeout(imagesTimer);
+      clearTimeout(navTimer);
+      clearTimeout(allLoadedTimer);
+      clearInterval(progressInterval);
+    };
+  }, [detectConnectionQuality, calculateAdaptiveTiming, updateLoadingProgress]);
 
   return loadingState;
 }

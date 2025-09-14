@@ -17,6 +17,10 @@ import {
   EnhancedStaggeredTextItem,
   WordReveal,
   FadeIn,
+  LoadingProgress,
+  BreathingSkeleton,
+  ProgressiveLoadingStates,
+  LoadingTransition,
 } from "@/components/animations/LoadingAnimations";
 import { useLoadingSequence } from "@/hooks/useLoadingSequence";
 
@@ -37,6 +41,31 @@ export default function Page() {
 
   // Enhanced loading sequence management
   const loadingSequence = useLoadingSequence();
+
+  // Progressive loading stages
+  const [currentLoadingStage, setCurrentLoadingStage] = useState(0);
+  const loadingStages = [
+    "Initializing...",
+    "Loading content...",
+    "Preparing images...",
+    "Finalizing experience...",
+  ];
+
+  // Update loading stages based on loading sequence
+  useEffect(() => {
+    if (loadingSequence.textLoaded && currentLoadingStage < 1) {
+      setCurrentLoadingStage(1);
+    }
+    if (loadingSequence.imagesLoaded && currentLoadingStage < 2) {
+      setCurrentLoadingStage(2);
+    }
+    if (loadingSequence.navigationLoaded && currentLoadingStage < 3) {
+      setCurrentLoadingStage(3);
+    }
+    if (loadingSequence.allLoaded && currentLoadingStage < 4) {
+      setCurrentLoadingStage(4);
+    }
+  }, [loadingSequence, currentLoadingStage]);
 
   // Image loading and transition states
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
@@ -1531,7 +1560,7 @@ export default function Page() {
     if (carouselAnimationComplete && !finalTextAnimationComplete) {
       const timer = setTimeout(() => {
         setFinalTextAnimationComplete(true);
-      }, 1000); // Allow time for WordReveal animations to complete
+      }, 2000); // Allow more time for WordReveal animations to complete naturally
       return () => clearTimeout(timer);
     }
   }, [carouselAnimationComplete, finalTextAnimationComplete]);
@@ -1613,39 +1642,41 @@ export default function Page() {
                           {/* Mobile skeleton */}
                           <div className="block sm:hidden space-y-4">
                             {[1, 2, 3].map((i) => (
-                              <motion.div
-                                key={i}
-                                className="w-full"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                  duration: 1.5,
-                                  delay: 1.5 + i * 0.2,
-                                  ease: [0.16, 1, 0.3, 1],
-                                }}
-                              >
-                                <div className="w-full h-[350px] md:h-[300px] bg-foreground/5 rounded-lg animate-pulse" />
-                              </motion.div>
+                              <BreathingSkeleton key={i} className="w-full">
+                                <motion.div
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{
+                                    duration: 1.8,
+                                    delay: 1.5 + i * 0.3,
+                                    ease: [0.16, 1, 0.3, 1],
+                                  }}
+                                >
+                                  <div className="w-full h-[350px] md:h-[300px] bg-foreground/5 rounded-lg" />
+                                </motion.div>
+                              </BreathingSkeleton>
                             ))}
                           </div>
 
                           {/* Desktop skeleton */}
                           <div className="hidden sm:block relative w-full h-full">
-                            <motion.div
-                              initial={{ opacity: 0, y: 30 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{
-                                duration: 2.0,
-                                delay: 1.8,
-                                ease: [0.16, 1, 0.3, 1],
-                              }}
-                              className="w-full h-[600px] md:h-[400px] bg-foreground/5 rounded-lg animate-pulse"
-                            />
+                            <BreathingSkeleton>
+                              <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                  duration: 2.4,
+                                  delay: 1.8,
+                                  ease: [0.16, 1, 0.3, 1],
+                                }}
+                                className="w-full h-[600px] md:h-[400px] bg-foreground/5 rounded-lg"
+                              />
+                            </BreathingSkeleton>
                           </div>
                         </div>
                       </div>
 
-                      {/* Subtle loading indicator */}
+                      {/* Enhanced loading progress indicator */}
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -1654,26 +1685,52 @@ export default function Page() {
                           delay: 1.5,
                           ease: [0.22, 1, 0.36, 1],
                         }}
-                        className="flex items-center justify-center mt-12"
+                        className="flex flex-col items-center justify-center mt-12 space-y-4"
                       >
-                        <motion.div
-                          className="w-12 h-0.5 bg-gradient-to-r from-transparent via-foreground/40 to-transparent rounded-full"
-                          animate={{
-                            scaleX: [0.4, 1, 0.4],
-                            opacity: [0.3, 0.6, 0.3],
-                          }}
-                          transition={{
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
+                        <LoadingProgress
+                          progress={loadingSequence.loadingProgress}
+                          isAdaptive={loadingSequence.isAdaptive}
+                          estimatedTimeRemaining={
+                            loadingSequence.estimatedTimeRemaining
+                          }
+                          className="w-32"
                         />
+
+                        {/* Connection quality indicator */}
+                        {loadingSequence.isAdaptive && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.8 }}
+                            className="text-xs text-foreground/30"
+                          >
+                            Optimizing for your connection
+                          </motion.div>
+                        )}
+
+                        {/* Progressive loading states */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.0 }}
+                          className="mt-6"
+                        >
+                          <ProgressiveLoadingStates
+                            currentStage={currentLoadingStage}
+                            stages={loadingStages}
+                            className="text-center"
+                          />
+                        </motion.div>
                       </motion.div>
 
                       {/* Skeleton for other sections */}
                       <div className="space-y-4 md:space-y-3">
-                        <div className="w-full h-[120px] md:h-[100px] bg-foreground/5 rounded animate-pulse" />
-                        <div className="w-full h-[150px] md:h-[120px] bg-foreground/5 rounded animate-pulse" />
+                        <BreathingSkeleton>
+                          <div className="w-full h-[120px] md:h-[100px] bg-foreground/5 rounded" />
+                        </BreathingSkeleton>
+                        <BreathingSkeleton>
+                          <div className="w-full h-[150px] md:h-[120px] bg-foreground/5 rounded" />
+                        </BreathingSkeleton>
                       </div>
                     </div>
                   </div>
@@ -1811,10 +1868,10 @@ export default function Page() {
                           ease: [0.22, 1, 0.36, 1],
                         }}
                         onAnimationComplete={() => {
-                          // Main text complete - trigger subtext after a pause
+                          // Main text complete - trigger subtext after a longer pause for natural flow
                           setTimeout(() => {
                             setFirstLineComplete(true);
-                          }, 800);
+                          }, 1200);
                         }}
                       >
                         <div className="tracking-tight text-xl md:whitespace-nowrap">
@@ -1865,7 +1922,7 @@ export default function Page() {
                               }}
                               transition={{
                                 duration: 1.0,
-                                delay: 0.6,
+                                delay: 1.2,
                                 ease: [0.22, 1, 0.36, 1],
                               }}
                             >
@@ -1896,10 +1953,10 @@ export default function Page() {
                           ease: [0.22, 1, 0.36, 1],
                         }}
                         onAnimationComplete={() => {
-                          // Main text complete - trigger subtext after a pause
+                          // Main text complete - trigger subtext after a longer pause for natural flow
                           setTimeout(() => {
                             setFirstLineComplete(true);
-                          }, 600);
+                          }, 1000);
                         }}
                       >
                         <div className="tracking-tight text-lg md:whitespace-nowrap">
@@ -1950,7 +2007,7 @@ export default function Page() {
                               }}
                               transition={{
                                 duration: 1.0,
-                                delay: 0.6,
+                                delay: 1.2,
                                 ease: [0.22, 1, 0.36, 1],
                               }}
                             >
@@ -1992,10 +2049,10 @@ export default function Page() {
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   onAnimationComplete={() => {
-                    // Carousel complete - trigger final text
+                    // Carousel complete - trigger final text after longer pause for natural flow
                     setTimeout(() => {
                       setCarouselAnimationComplete(true);
-                    }, 1000);
+                    }, 2500);
                   }}
                 >
                   <div className="space-y-2 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto md:flex-1 md:pt-4">

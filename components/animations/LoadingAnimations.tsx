@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ReactNode } from "react";
 
 // Enhanced easing curves for delightful micro-interactions
@@ -25,9 +25,9 @@ export const EASING = {
 export const textRevealAnimation = {
   initial: {
     opacity: 0,
-    filter: "blur(25px)",
-    y: 30,
-    scale: 0.98,
+    filter: "blur(35px)",
+    y: 40,
+    scale: 0.95,
   },
   animate: {
     opacity: 1,
@@ -36,7 +36,7 @@ export const textRevealAnimation = {
     scale: 1,
   },
   transition: {
-    duration: 1.8,
+    duration: 2.8,
     ease: EASING.textReveal,
   },
 };
@@ -48,9 +48,9 @@ export const staggeredTextReveal = {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.08,
-        duration: 0.6,
+        staggerChildren: 0.18,
+        delayChildren: 0.12,
+        duration: 0.8,
         ease: EASING.staggeredText,
       },
     },
@@ -58,9 +58,9 @@ export const staggeredTextReveal = {
   item: {
     hidden: {
       opacity: 0,
-      filter: "blur(25px)",
-      y: 25,
-      scale: 0.98,
+      filter: "blur(30px)",
+      y: 35,
+      scale: 0.96,
     },
     visible: {
       opacity: 1,
@@ -68,7 +68,7 @@ export const staggeredTextReveal = {
       y: 0,
       scale: 1,
       transition: {
-        duration: 1.6,
+        duration: 2.2,
         ease: EASING.textReveal,
       },
     },
@@ -116,9 +116,9 @@ export const wordRevealAnimation = {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.15,
-        duration: 0.6,
+        staggerChildren: 0.12,
+        delayChildren: 0.2,
+        duration: 0.8,
         ease: EASING.staggeredText,
       },
     },
@@ -126,9 +126,9 @@ export const wordRevealAnimation = {
   word: {
     hidden: {
       opacity: 0,
-      filter: "blur(20px)",
-      y: 20,
-      scale: 0.97,
+      filter: "blur(25px)",
+      y: 25,
+      scale: 0.96,
     },
     visible: {
       opacity: 1,
@@ -136,7 +136,7 @@ export const wordRevealAnimation = {
       y: 0,
       scale: 1,
       transition: {
-        duration: 1.4,
+        duration: 1.8,
         ease: EASING.textReveal,
       },
     },
@@ -181,9 +181,9 @@ export const phraseRevealAnimation = {
 export const imageCarouselAnimation = {
   initial: {
     opacity: 0,
-    filter: "blur(10px)",
-    scale: 0.98,
-    y: 30,
+    filter: "blur(20px)",
+    scale: 0.95,
+    y: 40,
   },
   animate: {
     opacity: 1,
@@ -192,7 +192,7 @@ export const imageCarouselAnimation = {
     y: 0,
   },
   transition: {
-    duration: 1.8,
+    duration: 2.6,
     ease: EASING.secondary,
   },
 };
@@ -258,12 +258,12 @@ export const slideUpAnimation = {
   },
 };
 
-// Loading sequence timing constants
+// Loading sequence timing constants - enhanced for slower, more natural loading
 export const LOADING_SEQUENCE = {
-  IMAGES_DELAY: 1.2, // Images start after text (mobile priority: text first)
-  TEXT_DELAY: 0.2, // Text starts first on mobile
-  NAV_DELAY: 2.8, // Navigation appears last
-  STAGGER_DELAY: 0.12, // Stagger between elements
+  IMAGES_DELAY: 1.8, // Images start after text (mobile priority: text first)
+  TEXT_DELAY: 0.4, // Text starts first on mobile
+  NAV_DELAY: 3.6, // Navigation appears last
+  STAGGER_DELAY: 0.16, // Stagger between elements
 } as const;
 
 // Text Reveal Component
@@ -671,6 +671,202 @@ export function SlideUp({
       {...props}
     >
       {children}
+    </motion.div>
+  );
+}
+
+// Enhanced Loading Progress Component
+export function LoadingProgress({
+  progress,
+  isAdaptive,
+  estimatedTimeRemaining,
+  className = "",
+  ...props
+}: {
+  progress: number;
+  isAdaptive: boolean;
+  estimatedTimeRemaining: number;
+  className?: string;
+  [key: string]: any;
+}) {
+  return (
+    <motion.div
+      className={`relative ${className}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: EASING.smooth }}
+      {...props}
+    >
+      {/* Progress bar container */}
+      <div className="w-full h-0.5 bg-foreground/10 rounded-full overflow-hidden">
+        <motion.div
+          className="h-full bg-gradient-to-r from-foreground/20 via-foreground/40 to-foreground/60 rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress * 100}%` }}
+          transition={{
+            duration: 0.3,
+            ease: EASING.smooth,
+            delay: 0.2,
+          }}
+        />
+      </div>
+
+      {/* Adaptive indicator */}
+      {isAdaptive && (
+        <motion.div
+          className="absolute -top-6 right-0 text-xs text-foreground/40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          Adaptive
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
+
+// Enhanced Loading Skeleton with breathing animation
+export function BreathingSkeleton({
+  children,
+  className = "",
+  ...props
+}: {
+  children: ReactNode;
+  className?: string;
+  [key: string]: any;
+}) {
+  return (
+    <motion.div
+      className={className}
+      animate={{
+        opacity: [0.4, 0.7, 0.4],
+        scale: [0.98, 1.01, 0.98],
+      }}
+      transition={{
+        duration: 2.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// Progressive Loading States Component
+export function ProgressiveLoadingStates({
+  currentStage,
+  stages,
+  className = "",
+  ...props
+}: {
+  currentStage: number;
+  stages: string[];
+  className?: string;
+  [key: string]: any;
+}) {
+  return (
+    <motion.div
+      className={`space-y-2 ${className}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, ease: EASING.smooth }}
+      {...props}
+    >
+      {stages.map((stage, index) => (
+        <motion.div
+          key={index}
+          className="flex items-center space-x-3"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{
+            opacity: index <= currentStage ? 1 : 0.3,
+            x: 0,
+          }}
+          transition={{
+            duration: 0.4,
+            delay: index * 0.1,
+            ease: EASING.smooth,
+          }}
+        >
+          <motion.div
+            className={`w-2 h-2 rounded-full ${
+              index < currentStage
+                ? "bg-foreground/60"
+                : index === currentStage
+                ? "bg-foreground/40"
+                : "bg-foreground/20"
+            }`}
+            animate={{
+              scale: index === currentStage ? [1, 1.2, 1] : 1,
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: index === currentStage ? Infinity : 0,
+              ease: "easeInOut",
+            }}
+          />
+          <span
+            className={`text-xs ${
+              index <= currentStage
+                ? "text-foreground/60"
+                : "text-foreground/30"
+            }`}
+          >
+            {stage}
+          </span>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
+
+// Enhanced Loading Transition Component
+export function LoadingTransition({
+  isLoading,
+  children,
+  fallback,
+  className = "",
+  ...props
+}: {
+  isLoading: boolean;
+  children: ReactNode;
+  fallback: ReactNode;
+  className?: string;
+  [key: string]: any;
+}) {
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: EASING.smooth }}
+      {...props}
+    >
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: EASING.smooth }}
+          >
+            {fallback}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.8, ease: EASING.smooth }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
