@@ -1796,105 +1796,201 @@ export default function Page() {
                 {/* Desktop Layout - Text First */}
                 <motion.div
                   className="w-full hidden md:block md:flex-shrink-0"
-                  variants={{
-                    hidden: { opacity: 0 },
-                    visible: {
-                      opacity: 1,
-                      transition: {
-                        staggerChildren: 0.12,
-                        delayChildren: 0.3,
-                        duration: 0.8,
-                        ease: EASING.staggeredText,
-                      },
-                    },
-                  }}
-                  initial="hidden"
-                  animate="visible"
-                  onAnimationComplete={() => {
-                    // First line complete - trigger carousel
-                    setTimeout(() => {
-                      setFirstLineComplete(true);
-                    }, 500);
-                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, ease: EASING.primary }}
                 >
-                  <div className="text-left mb-4 md:mb-0 md:text-center">
+                  <div className="text-center mb-6">
                     {loadingSequence.textLoaded && (
-                      <EnhancedStaggeredTextContainer staggerDelay={0.12}>
-                        <EnhancedStaggeredTextItem>
-                          <div className="tracking-tight text-xl md:whitespace-nowrap">
-                            <WordReveal
-                              text="Raf leads as a Senior Designer and Design Engineer"
-                              className="text-foreground/70"
-                            />
-                          </div>
-                        </EnhancedStaggeredTextItem>
-                      </EnhancedStaggeredTextContainer>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        transition={{
+                          duration: 1.5,
+                          delay: 0.3,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        onAnimationComplete={() => {
+                          // Main text complete - trigger subtext after a pause
+                          setTimeout(() => {
+                            setFirstLineComplete(true);
+                          }, 800);
+                        }}
+                      >
+                        <div className="tracking-tight text-xl md:whitespace-nowrap">
+                          <WordReveal
+                            text="Raf leads as a Senior Designer and Design Engineer"
+                            className="text-foreground/70"
+                          />
+                        </div>
+                      </motion.div>
                     )}
+                  </div>
+
+                  {/* Secondary text for desktop */}
+                  <div className="text-center mb-8">
+                    <div className="space-y-3">
+                      <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
+                        {loadingSequence.textLoaded && firstLineComplete && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            transition={{
+                              duration: 1.2,
+                              delay: 0.2,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                          >
+                            Now building in Toronto in person. Past at Coinbase,
+                            Voiceflow, Theoriq & more
+                          </motion.div>
+                        )}
+                      </div>
+                      <div className="min-h-[1.25em]">
+                        <a
+                          href="mailto:raf@raf.works"
+                          className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
+                        >
+                          {loadingSequence.textLoaded && firstLineComplete && (
+                            <motion.div
+                              initial={{
+                                opacity: 0,
+                                y: 10,
+                                filter: "blur(6px)",
+                              }}
+                              animate={{
+                                opacity: 1,
+                                y: 0,
+                                filter: "blur(0px)",
+                              }}
+                              transition={{
+                                duration: 1.0,
+                                delay: 0.6,
+                                ease: [0.22, 1, 0.36, 1],
+                              }}
+                            >
+                              raf@raf.works
+                            </motion.div>
+                          )}
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
 
                 {/* Mobile Layout - Text First */}
                 <motion.div
                   className="w-full block md:hidden"
-                  variants={{
-                    hidden: { opacity: 0 },
-                    visible: {
-                      opacity: 1,
-                      transition: {
-                        staggerChildren: 0.15,
-                        delayChildren: 0.3,
-                        duration: 0.8,
-                        ease: EASING.staggeredText,
-                      },
-                    },
-                  }}
-                  initial="hidden"
-                  animate="visible"
-                  onAnimationComplete={() => {
-                    // First line complete - trigger carousel
-                    setTimeout(() => {
-                      setFirstLineComplete(true);
-                    }, 500);
-                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, ease: EASING.primary }}
                 >
-                  <div className="text-left mb-4 md:mb-[2vh]">
+                  <div className="text-left mb-4">
                     {loadingSequence.textLoaded && (
-                      <EnhancedStaggeredTextContainer staggerDelay={0.15}>
-                        <EnhancedStaggeredTextItem>
-                          <div className="tracking-tight text-lg md:whitespace-nowrap">
-                            <WordReveal
-                              text="Raf leads as a Senior Designer and Design Engineer."
-                              className="text-foreground/70"
-                            />
-                          </div>
-                        </EnhancedStaggeredTextItem>
-                      </EnhancedStaggeredTextContainer>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        transition={{
+                          duration: 1.5,
+                          delay: 0.3,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        onAnimationComplete={() => {
+                          // Main text complete - trigger subtext after a pause
+                          setTimeout(() => {
+                            setFirstLineComplete(true);
+                          }, 600);
+                        }}
+                      >
+                        <div className="tracking-tight text-lg md:whitespace-nowrap">
+                          <WordReveal
+                            text="Raf leads as a Senior Designer and Design Engineer."
+                            className="text-foreground/70"
+                          />
+                        </div>
+                      </motion.div>
                     )}
+                  </div>
+
+                  {/* Secondary text for mobile */}
+                  <div className="text-left mb-6">
+                    <div className="space-y-4">
+                      <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
+                        {loadingSequence.textLoaded && firstLineComplete && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            transition={{
+                              duration: 1.2,
+                              delay: 0.2,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                          >
+                            Now building in Toronto in person. Past at Coinbase,
+                            VoiceFlow, Theoriq & more
+                          </motion.div>
+                        )}
+                      </div>
+                      <div className="mt-4 min-h-[1.25em]">
+                        <a
+                          href="mailto:raf@raf.works"
+                          className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
+                        >
+                          {loadingSequence.textLoaded && firstLineComplete && (
+                            <motion.div
+                              initial={{
+                                opacity: 0,
+                                y: 10,
+                                filter: "blur(6px)",
+                              }}
+                              animate={{
+                                opacity: 1,
+                                y: 0,
+                                filter: "blur(0px)",
+                              }}
+                              transition={{
+                                duration: 1.0,
+                                delay: 0.6,
+                                ease: [0.22, 1, 0.36, 1],
+                              }}
+                            >
+                              raf@raf.works
+                            </motion.div>
+                          )}
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
 
                 <motion.div
                   className="w-full"
-                  variants={{
-                    hidden: {
-                      opacity: 0,
-                      filter: "blur(15px)",
-                      y: 40,
-                      scale: 0.98,
-                    },
-                    visible: {
-                      opacity: 1,
-                      filter: "blur(0px)",
-                      y: 0,
-                      scale: 1,
-                      transition: {
-                        duration: 1.8,
-                        ease: EASING.textReveal,
-                      },
-                    },
+                  initial={{
+                    opacity: 0,
+                    y: 40,
+                    filter: "blur(15px)",
+                    scale: 0.98,
                   }}
-                  initial="hidden"
-                  animate={firstLineComplete ? "visible" : "hidden"}
+                  animate={
+                    firstLineComplete
+                      ? {
+                          opacity: 1,
+                          y: 0,
+                          filter: "blur(0px)",
+                          scale: 1,
+                        }
+                      : {
+                          opacity: 0,
+                          y: 40,
+                          filter: "blur(15px)",
+                          scale: 0.98,
+                        }
+                  }
+                  transition={{
+                    duration: 2.0,
+                    delay: 0.5,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                   onAnimationComplete={() => {
                     // Carousel complete - trigger final text
                     setTimeout(() => {
@@ -1927,7 +2023,7 @@ export default function Page() {
                               delay={index * 0.3}
                             >
                               <motion.div
-                                className={`relative w-full ${
+                                className={`relative w-full rounded-lg overflow-hidden ${
                                   workVideos[src] ? "cursor-pointer group" : ""
                                 }`}
                                 onClick={() => {
@@ -1935,16 +2031,32 @@ export default function Page() {
                                     handleOpenVideoModal(src);
                                   }
                                 }}
+                                animate={{
+                                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                                  borderColor: "rgba(0, 0, 0, 0.05)",
+                                }}
+                                whileHover={{
+                                  scale: 1.02,
+                                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15)",
+                                  borderColor: "rgba(0, 0, 0, 0.12)",
+                                  transition: {
+                                    duration: 0.4,
+                                    ease: [0.22, 1, 0.36, 1],
+                                  },
+                                }}
+                                style={{
+                                  border: "1px solid",
+                                  transition:
+                                    "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                                }}
                               >
                                 <Image
                                   src={getOptimizedImageSrc(src)}
                                   alt={`Work preview ${index + 1}`}
                                   width={900}
                                   height={700}
-                                  className={`w-full object-contain bg-transparent max-w-full ${
-                                    workVideos[src]
-                                      ? "transition-opacity duration-300 hover:opacity-90"
-                                      : ""
+                                  className={`w-full object-contain bg-transparent max-w-full transition-all duration-300 ${
+                                    workVideos[src] ? "hover:opacity-90" : ""
                                   }`}
                                   priority={index < loadingConfig.initialCount}
                                   loading={
@@ -2006,8 +2118,8 @@ export default function Page() {
                                     ease: [0.22, 1, 0.36, 1],
                                   }}
                                 >
-                                  <div
-                                    className={`relative w-full ${
+                                  <motion.div
+                                    className={`relative w-full rounded-lg overflow-hidden ${
                                       workVideos[src]
                                         ? "cursor-pointer group"
                                         : ""
@@ -2017,6 +2129,26 @@ export default function Page() {
                                         handleOpenVideoModal(src);
                                       }
                                     }}
+                                    animate={{
+                                      boxShadow:
+                                        "0 4px 20px rgba(0, 0, 0, 0.08)",
+                                      borderColor: "rgba(0, 0, 0, 0.05)",
+                                    }}
+                                    whileHover={{
+                                      scale: 1.02,
+                                      boxShadow:
+                                        "0 8px 32px rgba(0, 0, 0, 0.15)",
+                                      borderColor: "rgba(0, 0, 0, 0.12)",
+                                      transition: {
+                                        duration: 0.4,
+                                        ease: [0.22, 1, 0.36, 1],
+                                      },
+                                    }}
+                                    style={{
+                                      border: "1px solid",
+                                      transition:
+                                        "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                                    }}
                                   >
                                     <Image
                                       src={getOptimizedImageSrc(src)}
@@ -2025,9 +2157,9 @@ export default function Page() {
                                       }`}
                                       width={900}
                                       height={700}
-                                      className={`w-full object-contain bg-transparent max-w-full ${
+                                      className={`w-full object-contain bg-transparent max-w-full transition-all duration-300 ${
                                         workVideos[src]
-                                          ? "transition-opacity duration-300 hover:opacity-90"
+                                          ? "hover:opacity-90"
                                           : ""
                                       }`}
                                       loading="lazy"
@@ -2072,7 +2204,7 @@ export default function Page() {
                                         </div>
                                       </div>
                                     )}
-                                  </div>
+                                  </motion.div>
                                 </motion.div>
                               ))}
                             </div>
@@ -2108,7 +2240,7 @@ export default function Page() {
                               }}
                             >
                               <motion.div
-                                className={`relative w-full h-full ${
+                                className={`relative w-full h-full rounded-xl overflow-hidden ${
                                   workVideos[src] ? "cursor-pointer group" : ""
                                 }`}
                                 onClick={() => {
@@ -2116,15 +2248,33 @@ export default function Page() {
                                     handleOpenVideoModal(src);
                                   }
                                 }}
+                                animate={{
+                                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                                  borderColor: "rgba(0, 0, 0, 0.08)",
+                                }}
+                                whileHover={{
+                                  scale: 1.01,
+                                  boxShadow: "0 12px 48px rgba(0, 0, 0, 0.18)",
+                                  borderColor: "rgba(0, 0, 0, 0.15)",
+                                  transition: {
+                                    duration: 0.5,
+                                    ease: [0.22, 1, 0.36, 1],
+                                  },
+                                }}
+                                style={{
+                                  border: "1px solid",
+                                  transition:
+                                    "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+                                }}
                               >
                                 <Image
                                   src={getOptimizedImageSrc(src)}
                                   alt={`Work preview ${index + 1}`}
                                   width={1400}
                                   height={900}
-                                  className={`w-full h-full object-contain bg-transparent max-w-full ${
+                                  className={`w-full h-full object-contain bg-transparent max-w-full transition-all duration-300 ${
                                     workVideos[src]
-                                      ? "transition-all duration-300 hover:brightness-105"
+                                      ? "hover:brightness-105"
                                       : ""
                                   }`}
                                   style={{
@@ -2196,98 +2346,6 @@ export default function Page() {
                     {/* Open works button removed */}
                   </div>
                 </motion.div>
-
-                {/* Mobile Layout - Other Text After Carousel */}
-                <div className="w-full block md:hidden">
-                  <div className="text-left mt-6 mb-4">
-                    <div className="space-y-4">
-                      <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
-                        {loadingSequence.textLoaded &&
-                          carouselAnimationComplete && (
-                            <motion.div
-                              initial={{ opacity: 0, filter: "blur(20px)" }}
-                              animate={{ opacity: 1, filter: "blur(0px)" }}
-                              transition={{
-                                duration: 1.4,
-                                delay: 0.2,
-                                ease: [0.25, 0.46, 0.45, 0.94],
-                              }}
-                            >
-                              Now building in Toronto in person. Past at
-                              Coinbase, VoiceFlow, Theoriq & more
-                            </motion.div>
-                          )}
-                      </div>
-                      <div className="mt-4 min-h-[1.25em]">
-                        <a
-                          href="mailto:raf@raf.works"
-                          className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
-                        >
-                          {loadingSequence.textLoaded &&
-                            carouselAnimationComplete && (
-                              <motion.div
-                                initial={{ opacity: 0, filter: "blur(20px)" }}
-                                animate={{ opacity: 1, filter: "blur(0px)" }}
-                                transition={{
-                                  duration: 1.4,
-                                  delay: 0.6,
-                                  ease: [0.25, 0.46, 0.45, 0.94],
-                                }}
-                              >
-                                raf@raf.works
-                              </motion.div>
-                            )}
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Desktop Layout - Other Text After Carousel */}
-                <div className="w-full hidden md:block md:flex-shrink-0">
-                  <div className="text-left mt-6 md:mt-0 md:text-center">
-                    <div className="space-y-3">
-                      <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
-                        {loadingSequence.textLoaded &&
-                          carouselAnimationComplete && (
-                            <motion.div
-                              initial={{ opacity: 0, filter: "blur(20px)" }}
-                              animate={{ opacity: 1, filter: "blur(0px)" }}
-                              transition={{
-                                duration: 1.4,
-                                delay: 0.2,
-                                ease: [0.25, 0.46, 0.45, 0.94],
-                              }}
-                            >
-                              Now building in Toronto in person. Past at
-                              Coinbase, Voiceflow, Theoriq & more
-                            </motion.div>
-                          )}
-                      </div>
-                      <div className="mt-4 min-h-[1.25em]">
-                        <a
-                          href="mailto:raf@raf.works"
-                          className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
-                        >
-                          {loadingSequence.textLoaded &&
-                            carouselAnimationComplete && (
-                              <motion.div
-                                initial={{ opacity: 0, filter: "blur(20px)" }}
-                                animate={{ opacity: 1, filter: "blur(0px)" }}
-                                transition={{
-                                  duration: 1.4,
-                                  delay: 0.6,
-                                  ease: [0.25, 0.46, 0.45, 0.94],
-                                }}
-                              >
-                                raf@raf.works
-                              </motion.div>
-                            )}
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* 
               {/* About Section 

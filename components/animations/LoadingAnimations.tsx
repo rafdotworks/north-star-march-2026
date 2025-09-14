@@ -260,10 +260,10 @@ export const slideUpAnimation = {
 
 // Loading sequence timing constants
 export const LOADING_SEQUENCE = {
-  IMAGES_DELAY: 1.5, // Images start after text (mobile priority: text first)
-  TEXT_DELAY: 0.3, // Text starts first on mobile
-  NAV_DELAY: 3.0, // Navigation appears last
-  STAGGER_DELAY: 0.15, // Stagger between elements
+  IMAGES_DELAY: 1.2, // Images start after text (mobile priority: text first)
+  TEXT_DELAY: 0.2, // Text starts first on mobile
+  NAV_DELAY: 2.8, // Navigation appears last
+  STAGGER_DELAY: 0.12, // Stagger between elements
 } as const;
 
 // Text Reveal Component
