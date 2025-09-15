@@ -2144,25 +2144,30 @@ export default function Page() {
                                 />
                                 {workVideos[src] && (
                                   <div
-                                    className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                                    className="absolute inset-0 cursor-pointer group"
                                     onClick={() => handleOpenVideoModal(src)}
                                     style={{
                                       pointerEvents: "auto",
                                       zIndex: 3,
                                     }}
                                   >
-                                    <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110 hover:shadow-xl group-hover:animate-pulse">
-                                      <svg
-                                        width="18"
-                                        height="18"
-                                        viewBox="0 0 24 24"
-                                        fill="white"
-                                        stroke="none"
-                                        className="ml-0.5"
-                                      >
-                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                      </svg>
+                                    {/* Subtle corner indicator */}
+                                    <div className="absolute bottom-3 right-4 w-8 h-8 flex items-center justify-center">
+                                      <div className="w-5 h-5 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-white/25 group-hover:scale-110">
+                                        <svg
+                                          width="8"
+                                          height="8"
+                                          viewBox="0 0 24 24"
+                                          fill="white"
+                                          stroke="none"
+                                          className="ml-0.5 opacity-70 group-hover:opacity-90 transition-opacity"
+                                        >
+                                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                        </svg>
+                                      </div>
                                     </div>
+                                    {/* Subtle overlay hint */}
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
                                   </div>
                                 )}
                               </motion.div>
@@ -2252,7 +2257,7 @@ export default function Page() {
                                     />
                                     {workVideos[src] && (
                                       <div
-                                        className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                                        className="absolute inset-0 cursor-pointer group"
                                         onClick={() =>
                                           handleOpenVideoModal(src)
                                         }
@@ -2261,18 +2266,23 @@ export default function Page() {
                                           zIndex: 3,
                                         }}
                                       >
-                                        <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110 hover:shadow-xl group-hover:animate-pulse">
-                                          <svg
-                                            width="18"
-                                            height="18"
-                                            viewBox="0 0 24 24"
-                                            fill="white"
-                                            stroke="none"
-                                            className="ml-0.5"
-                                          >
-                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                          </svg>
+                                        {/* Subtle corner indicator */}
+                                        <div className="absolute bottom-3 right-4 w-8 h-8 flex items-center justify-center">
+                                          <div className="w-5 h-5 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-white/25 group-hover:scale-110">
+                                            <svg
+                                              width="8"
+                                              height="8"
+                                              viewBox="0 0 24 24"
+                                              fill="white"
+                                              stroke="none"
+                                              className="ml-0.5 opacity-70 group-hover:opacity-90 transition-opacity"
+                                            >
+                                              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                            </svg>
+                                          </div>
                                         </div>
+                                        {/* Subtle overlay hint */}
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
                                       </div>
                                     )}
                                   </motion.div>
@@ -2382,25 +2392,30 @@ export default function Page() {
                                 {workVideos[src] &&
                                   index === currentImageIndex && (
                                     <div
-                                      className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                                      className="absolute inset-0 cursor-pointer group"
                                       onClick={() => handleOpenVideoModal(src)}
                                       style={{
                                         pointerEvents: "auto",
                                         zIndex: 3,
                                       }}
                                     >
-                                      <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110 hover:shadow-xl group-hover:animate-pulse">
-                                        <svg
-                                          width="18"
-                                          height="18"
-                                          viewBox="0 0 24 24"
-                                          fill="white"
-                                          stroke="none"
-                                          className="ml-0.5"
-                                        >
-                                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                        </svg>
+                                      {/* Subtle corner indicator */}
+                                      <div className="absolute bottom-4 right-5 w-10 h-10 flex items-center justify-center">
+                                        <div className="w-6 h-6 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-white/25 group-hover:scale-110">
+                                          <svg
+                                            width="10"
+                                            height="10"
+                                            viewBox="0 0 24 24"
+                                            fill="white"
+                                            stroke="none"
+                                            className="ml-0.5 opacity-70 group-hover:opacity-90 transition-opacity"
+                                          >
+                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                          </svg>
+                                        </div>
                                       </div>
+                                      {/* Subtle overlay hint */}
+                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
                                     </div>
                                   )}
                               </motion.div>
