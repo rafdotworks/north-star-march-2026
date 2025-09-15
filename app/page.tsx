@@ -1868,10 +1868,10 @@ export default function Page() {
                           ease: [0.22, 1, 0.36, 1],
                         }}
                         onAnimationComplete={() => {
-                          // Main text complete - trigger subtext after a longer pause for natural flow
+                          // Main text complete - trigger subtext after consistent pause
                           setTimeout(() => {
                             setFirstLineComplete(true);
-                          }, 1200);
+                          }, 1000);
                         }}
                       >
                         <div className="tracking-tight text-xl md:whitespace-nowrap">
@@ -1890,16 +1890,19 @@ export default function Page() {
                       <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
                         {loadingSequence.textLoaded && firstLineComplete && (
                           <motion.div
-                            initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
                             transition={{
-                              duration: 1.2,
-                              delay: 0.2,
+                              duration: 0.8,
+                              delay: 0.1,
                               ease: [0.22, 1, 0.36, 1],
                             }}
                           >
-                            Now building in Toronto in person. Past at Coinbase,
-                            Voiceflow, Theoriq & more
+                            <WordReveal
+                              text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
+                              className="text-foreground/70"
+                              delay={0.1}
+                            />
                           </motion.div>
                         )}
                       </div>
@@ -1910,23 +1913,19 @@ export default function Page() {
                         >
                           {loadingSequence.textLoaded && firstLineComplete && (
                             <motion.div
-                              initial={{
-                                opacity: 0,
-                                y: 10,
-                                filter: "blur(6px)",
-                              }}
-                              animate={{
-                                opacity: 1,
-                                y: 0,
-                                filter: "blur(0px)",
-                              }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
                               transition={{
-                                duration: 1.0,
-                                delay: 1.2,
+                                duration: 0.8,
+                                delay: 0.3,
                                 ease: [0.22, 1, 0.36, 1],
                               }}
                             >
-                              raf@raf.works
+                              <WordReveal
+                                text="raf@raf.works"
+                                className="text-foreground/70"
+                                delay={0.3}
+                              />
                             </motion.div>
                           )}
                         </a>
@@ -1953,7 +1952,7 @@ export default function Page() {
                           ease: [0.22, 1, 0.36, 1],
                         }}
                         onAnimationComplete={() => {
-                          // Main text complete - trigger subtext after a longer pause for natural flow
+                          // Main text complete - trigger subtext after consistent pause
                           setTimeout(() => {
                             setFirstLineComplete(true);
                           }, 1000);
@@ -1975,16 +1974,19 @@ export default function Page() {
                       <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
                         {loadingSequence.textLoaded && firstLineComplete && (
                           <motion.div
-                            initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
                             transition={{
-                              duration: 1.2,
-                              delay: 0.2,
+                              duration: 0.8,
+                              delay: 0.1,
                               ease: [0.22, 1, 0.36, 1],
                             }}
                           >
-                            Now building in Toronto in person. Past at Coinbase,
-                            VoiceFlow, Theoriq & more
+                            <WordReveal
+                              text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
+                              className="text-foreground/70"
+                              delay={0.1}
+                            />
                           </motion.div>
                         )}
                       </div>
@@ -1995,23 +1997,19 @@ export default function Page() {
                         >
                           {loadingSequence.textLoaded && firstLineComplete && (
                             <motion.div
-                              initial={{
-                                opacity: 0,
-                                y: 10,
-                                filter: "blur(6px)",
-                              }}
-                              animate={{
-                                opacity: 1,
-                                y: 0,
-                                filter: "blur(0px)",
-                              }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
                               transition={{
-                                duration: 1.0,
-                                delay: 1.2,
+                                duration: 0.8,
+                                delay: 0.3,
                                 ease: [0.22, 1, 0.36, 1],
                               }}
                             >
-                              raf@raf.works
+                              <WordReveal
+                                text="raf@raf.works"
+                                className="text-foreground/70"
+                                delay={0.3}
+                              />
                             </motion.div>
                           )}
                         </a>
@@ -2068,6 +2066,12 @@ export default function Page() {
                         setTransitionProgress(0);
                       }}
                       onTouchStart={() => setIsSlideshowPaused(true)}
+                      onTouchEnd={() => {
+                        // Add a small delay before resuming on touch end
+                        setTimeout(() => {
+                          setIsSlideshowPaused(false);
+                        }, 1000);
+                      }}
                     >
                       {/* Replace the AnimatePresence with a crossfade effect */}
                       <div className="relative w-full h-full">
@@ -2080,7 +2084,7 @@ export default function Page() {
                               delay={index * 0.3}
                             >
                               <motion.div
-                                className={`relative w-full rounded-lg overflow-hidden ${
+                                className={`relative w-full overflow-hidden ${
                                   workVideos[src] ? "cursor-pointer group" : ""
                                 }`}
                                 onClick={() => {
@@ -2088,16 +2092,20 @@ export default function Page() {
                                     handleOpenVideoModal(src);
                                   }
                                 }}
-                                animate={{
-                                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-                                }}
+                                onMouseEnter={() => setIsSlideshowPaused(true)}
+                                onMouseLeave={() => setIsSlideshowPaused(false)}
                                 whileHover={{
-                                  scale: 1.02,
-                                  borderRadius: "8px",
-                                  boxShadow:
-                                    "0 8px 32px rgba(0, 0, 0, 0.15), 0 0 20px rgba(255, 255, 255, 0.1)",
+                                  scale: 1.03,
+                                  y: -4,
                                   transition: {
                                     duration: 0.4,
+                                    ease: [0.22, 1, 0.36, 1],
+                                  },
+                                }}
+                                whileTap={{
+                                  scale: 0.98,
+                                  transition: {
+                                    duration: 0.1,
                                     ease: [0.22, 1, 0.36, 1],
                                   },
                                 }}
@@ -2175,7 +2183,7 @@ export default function Page() {
                                   }}
                                 >
                                   <motion.div
-                                    className={`relative w-full rounded-lg overflow-hidden ${
+                                    className={`relative w-full overflow-hidden ${
                                       workVideos[src]
                                         ? "cursor-pointer group"
                                         : ""
@@ -2185,17 +2193,24 @@ export default function Page() {
                                         handleOpenVideoModal(src);
                                       }
                                     }}
-                                    animate={{
-                                      boxShadow:
-                                        "0 4px 20px rgba(0, 0, 0, 0.08)",
-                                    }}
+                                    onMouseEnter={() =>
+                                      setIsSlideshowPaused(true)
+                                    }
+                                    onMouseLeave={() =>
+                                      setIsSlideshowPaused(false)
+                                    }
                                     whileHover={{
-                                      scale: 1.02,
-                                      borderRadius: "8px",
-                                      boxShadow:
-                                        "0 8px 32px rgba(0, 0, 0, 0.15), 0 0 20px rgba(255, 255, 255, 0.1)",
+                                      scale: 1.03,
+                                      y: -4,
                                       transition: {
                                         duration: 0.4,
+                                        ease: [0.22, 1, 0.36, 1],
+                                      },
+                                    }}
+                                    whileTap={{
+                                      scale: 0.98,
+                                      transition: {
+                                        duration: 0.1,
                                         ease: [0.22, 1, 0.36, 1],
                                       },
                                     }}
@@ -2294,7 +2309,7 @@ export default function Page() {
                               }}
                             >
                               <motion.div
-                                className={`relative w-full h-full rounded-xl overflow-hidden ${
+                                className={`relative w-full h-full overflow-hidden ${
                                   workVideos[src] ? "cursor-pointer group" : ""
                                 }`}
                                 onClick={() => {
@@ -2302,22 +2317,18 @@ export default function Page() {
                                     handleOpenVideoModal(src);
                                   }
                                 }}
-                                animate={{
-                                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                                }}
+                                onMouseEnter={() => setIsSlideshowPaused(true)}
+                                onMouseLeave={() => setIsSlideshowPaused(false)}
                                 whileHover={{
-                                  scale: 1.01,
-                                  borderRadius: "12px",
-                                  boxShadow:
-                                    "0 12px 48px rgba(0, 0, 0, 0.18), 0 0 30px rgba(255, 255, 255, 0.08)",
+                                  scale: 1.005,
                                   transition: {
-                                    duration: 0.5,
+                                    duration: 0.3,
                                     ease: [0.22, 1, 0.36, 1],
                                   },
                                 }}
                                 style={{
                                   transition:
-                                    "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+                                    "all 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
                                 }}
                               >
                                 <Image
