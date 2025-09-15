@@ -2086,7 +2086,7 @@ export default function Page() {
                               <motion.div
                                 className={`relative w-full overflow-hidden ${
                                   workVideos[src] ? "cursor-pointer group" : ""
-                                }`}
+                                } hover:shadow-2xl hover:shadow-black/10`}
                                 onClick={() => {
                                   if (workVideos[src]) {
                                     handleOpenVideoModal(src);
@@ -2119,8 +2119,10 @@ export default function Page() {
                                   alt={`Work preview ${index + 1}`}
                                   width={900}
                                   height={700}
-                                  className={`w-full object-contain bg-transparent max-w-full transition-all duration-300 ${
-                                    workVideos[src] ? "hover:opacity-90" : ""
+                                  className={`w-full object-contain bg-transparent max-w-full transition-all duration-400 ${
+                                    workVideos[src]
+                                      ? "group-hover:brightness-105"
+                                      : ""
                                   }`}
                                   priority={index < loadingConfig.initialCount}
                                   loading={
@@ -2149,7 +2151,7 @@ export default function Page() {
                                       zIndex: 3,
                                     }}
                                   >
-                                    <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110">
+                                    <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110 hover:shadow-xl group-hover:animate-pulse">
                                       <svg
                                         width="18"
                                         height="18"
@@ -2187,7 +2189,7 @@ export default function Page() {
                                       workVideos[src]
                                         ? "cursor-pointer group"
                                         : ""
-                                    }`}
+                                    } hover:shadow-2xl hover:shadow-black/10`}
                                     onClick={() => {
                                       if (workVideos[src]) {
                                         handleOpenVideoModal(src);
@@ -2226,9 +2228,9 @@ export default function Page() {
                                       }`}
                                       width={900}
                                       height={700}
-                                      className={`w-full object-contain bg-transparent max-w-full transition-all duration-300 ${
+                                      className={`w-full object-contain bg-transparent max-w-full transition-all duration-400 ${
                                         workVideos[src]
-                                          ? "hover:opacity-90"
+                                          ? "group-hover:brightness-105"
                                           : ""
                                       }`}
                                       loading="lazy"
@@ -2259,7 +2261,7 @@ export default function Page() {
                                           zIndex: 3,
                                         }}
                                       >
-                                        <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110">
+                                        <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110 hover:shadow-xl group-hover:animate-pulse">
                                           <svg
                                             width="18"
                                             height="18"
@@ -2311,7 +2313,7 @@ export default function Page() {
                               <motion.div
                                 className={`relative w-full h-full overflow-hidden ${
                                   workVideos[src] ? "cursor-pointer group" : ""
-                                }`}
+                                } hover:shadow-2xl hover:shadow-black/15`}
                                 onClick={() => {
                                   if (workVideos[src]) {
                                     handleOpenVideoModal(src);
@@ -2320,15 +2322,23 @@ export default function Page() {
                                 onMouseEnter={() => setIsSlideshowPaused(true)}
                                 onMouseLeave={() => setIsSlideshowPaused(false)}
                                 whileHover={{
-                                  scale: 1.005,
+                                  scale: 1.02,
+                                  y: -6,
                                   transition: {
-                                    duration: 0.3,
+                                    duration: 0.5,
+                                    ease: [0.22, 1, 0.36, 1],
+                                  },
+                                }}
+                                whileTap={{
+                                  scale: 0.99,
+                                  transition: {
+                                    duration: 0.1,
                                     ease: [0.22, 1, 0.36, 1],
                                   },
                                 }}
                                 style={{
                                   transition:
-                                    "all 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+                                    "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
                                 }}
                               >
                                 <Image
@@ -2336,9 +2346,9 @@ export default function Page() {
                                   alt={`Work preview ${index + 1}`}
                                   width={1400}
                                   height={900}
-                                  className={`w-full h-full object-contain bg-transparent max-w-full transition-all duration-300 ${
+                                  className={`w-full h-full object-contain bg-transparent max-w-full transition-all duration-500 ${
                                     workVideos[src]
-                                      ? "hover:brightness-105"
+                                      ? "group-hover:brightness-110 group-hover:contrast-105"
                                       : ""
                                   }`}
                                   style={{
@@ -2379,7 +2389,7 @@ export default function Page() {
                                         zIndex: 3,
                                       }}
                                     >
-                                      <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110">
+                                      <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-sm rounded-full p-2.5 shadow-lg transition-all duration-300 hover:bg-black/60 hover:scale-110 hover:shadow-xl group-hover:animate-pulse">
                                         <svg
                                           width="18"
                                           height="18"
