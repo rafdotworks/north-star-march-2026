@@ -2086,7 +2086,7 @@ export default function Page() {
                               <motion.div
                                 className={`relative w-full overflow-hidden ${
                                   workVideos[src] ? "cursor-pointer group" : ""
-                                } hover:shadow-2xl hover:shadow-black/10`}
+                                } hover:shadow-md hover:shadow-black/3 transition-shadow duration-800`}
                                 onClick={() => {
                                   if (workVideos[src]) {
                                     handleOpenVideoModal(src);
@@ -2095,23 +2095,23 @@ export default function Page() {
                                 onMouseEnter={() => setIsSlideshowPaused(true)}
                                 onMouseLeave={() => setIsSlideshowPaused(false)}
                                 whileHover={{
-                                  scale: 1.03,
-                                  y: -4,
+                                  scale: 1.005,
+                                  y: -1,
                                   transition: {
-                                    duration: 0.4,
-                                    ease: [0.22, 1, 0.36, 1],
+                                    duration: 0.8,
+                                    ease: [0.12, 1, 0.25, 1],
                                   },
                                 }}
                                 whileTap={{
-                                  scale: 0.98,
+                                  scale: 0.998,
                                   transition: {
-                                    duration: 0.1,
-                                    ease: [0.22, 1, 0.36, 1],
+                                    duration: 0.2,
+                                    ease: [0.12, 1, 0.25, 1],
                                   },
                                 }}
                                 style={{
                                   transition:
-                                    "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                                    "all 0.8s cubic-bezier(0.12, 1, 0.25, 1)",
                                 }}
                               >
                                 <Image
@@ -2119,9 +2119,9 @@ export default function Page() {
                                   alt={`Work preview ${index + 1}`}
                                   width={900}
                                   height={700}
-                                  className={`w-full object-contain bg-transparent max-w-full transition-all duration-400 ${
+                                  className={`w-full object-contain bg-transparent max-w-full transition-all duration-800 ${
                                     workVideos[src]
-                                      ? "group-hover:brightness-105"
+                                      ? "group-hover:brightness-101"
                                       : ""
                                   }`}
                                   priority={index < loadingConfig.initialCount}
@@ -2143,32 +2143,35 @@ export default function Page() {
                                   }
                                 />
                                 {workVideos[src] && (
-                                  <div
-                                    className="absolute inset-0 cursor-pointer group"
-                                    onClick={() => handleOpenVideoModal(src)}
-                                    style={{
-                                      pointerEvents: "auto",
-                                      zIndex: 3,
-                                    }}
-                                  >
-                                    {/* Subtle corner indicator */}
-                                    <div className="absolute bottom-3 right-4 w-8 h-8 flex items-center justify-center">
-                                      <div className="w-5 h-5 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-white/25 group-hover:scale-110">
+                                  <>
+                                    {/* Centered play button - positioned in the center of the image */}
+                                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                      <div className="w-12 h-12 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-black/30 group-hover:scale-110">
                                         <svg
-                                          width="8"
-                                          height="8"
+                                          width="16"
+                                          height="16"
                                           viewBox="0 0 24 24"
                                           fill="white"
                                           stroke="none"
-                                          className="ml-0.5 opacity-70 group-hover:opacity-90 transition-opacity"
+                                          className="ml-1 opacity-90 group-hover:opacity-100 transition-opacity"
                                         >
                                           <polygon points="5 3 19 12 5 21 5 3"></polygon>
                                         </svg>
                                       </div>
                                     </div>
-                                    {/* Subtle overlay hint */}
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
-                                  </div>
+                                    {/* Clickable overlay */}
+                                    <div
+                                      className="absolute inset-0 cursor-pointer group"
+                                      onClick={() => handleOpenVideoModal(src)}
+                                      style={{
+                                        pointerEvents: "auto",
+                                        zIndex: 3,
+                                      }}
+                                    >
+                                      {/* Subtle overlay hint */}
+                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-800"></div>
+                                    </div>
+                                  </>
                                 )}
                               </motion.div>
                             </ImageCarouselItem>
@@ -2194,7 +2197,7 @@ export default function Page() {
                                       workVideos[src]
                                         ? "cursor-pointer group"
                                         : ""
-                                    } hover:shadow-2xl hover:shadow-black/10`}
+                                    } hover:shadow-md hover:shadow-black/3 transition-shadow duration-800`}
                                     onClick={() => {
                                       if (workVideos[src]) {
                                         handleOpenVideoModal(src);
@@ -2207,23 +2210,23 @@ export default function Page() {
                                       setIsSlideshowPaused(false)
                                     }
                                     whileHover={{
-                                      scale: 1.03,
-                                      y: -4,
+                                      scale: 1.005,
+                                      y: -1,
                                       transition: {
-                                        duration: 0.4,
-                                        ease: [0.22, 1, 0.36, 1],
+                                        duration: 0.8,
+                                        ease: [0.12, 1, 0.25, 1],
                                       },
                                     }}
                                     whileTap={{
-                                      scale: 0.98,
+                                      scale: 0.998,
                                       transition: {
-                                        duration: 0.1,
-                                        ease: [0.22, 1, 0.36, 1],
+                                        duration: 0.2,
+                                        ease: [0.12, 1, 0.25, 1],
                                       },
                                     }}
                                     style={{
                                       transition:
-                                        "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                                        "all 0.8s cubic-bezier(0.12, 1, 0.25, 1)",
                                     }}
                                   >
                                     <Image
@@ -2233,9 +2236,9 @@ export default function Page() {
                                       }`}
                                       width={900}
                                       height={700}
-                                      className={`w-full object-contain bg-transparent max-w-full transition-all duration-400 ${
+                                      className={`w-full object-contain bg-transparent max-w-full transition-all duration-800 ${
                                         workVideos[src]
-                                          ? "group-hover:brightness-105"
+                                          ? "group-hover:brightness-101"
                                           : ""
                                       }`}
                                       loading="lazy"
@@ -2256,34 +2259,37 @@ export default function Page() {
                                       }
                                     />
                                     {workVideos[src] && (
-                                      <div
-                                        className="absolute inset-0 cursor-pointer group"
-                                        onClick={() =>
-                                          handleOpenVideoModal(src)
-                                        }
-                                        style={{
-                                          pointerEvents: "auto",
-                                          zIndex: 3,
-                                        }}
-                                      >
-                                        {/* Subtle corner indicator */}
-                                        <div className="absolute bottom-3 right-4 w-8 h-8 flex items-center justify-center">
-                                          <div className="w-5 h-5 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-white/25 group-hover:scale-110">
+                                      <>
+                                        {/* Centered play button - positioned in the center of the image */}
+                                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                          <div className="w-12 h-12 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-black/30 group-hover:scale-110">
                                             <svg
-                                              width="8"
-                                              height="8"
+                                              width="16"
+                                              height="16"
                                               viewBox="0 0 24 24"
                                               fill="white"
                                               stroke="none"
-                                              className="ml-0.5 opacity-70 group-hover:opacity-90 transition-opacity"
+                                              className="ml-1 opacity-90 group-hover:opacity-100 transition-opacity"
                                             >
                                               <polygon points="5 3 19 12 5 21 5 3"></polygon>
                                             </svg>
                                           </div>
                                         </div>
-                                        {/* Subtle overlay hint */}
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
-                                      </div>
+                                        {/* Clickable overlay */}
+                                        <div
+                                          className="absolute inset-0 cursor-pointer group"
+                                          onClick={() =>
+                                            handleOpenVideoModal(src)
+                                          }
+                                          style={{
+                                            pointerEvents: "auto",
+                                            zIndex: 3,
+                                          }}
+                                        >
+                                          {/* Subtle overlay hint */}
+                                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-800"></div>
+                                        </div>
+                                      </>
                                     )}
                                   </motion.div>
                                 </motion.div>
@@ -2323,7 +2329,7 @@ export default function Page() {
                               <motion.div
                                 className={`relative w-full h-full overflow-hidden ${
                                   workVideos[src] ? "cursor-pointer group" : ""
-                                } hover:shadow-2xl hover:shadow-black/15`}
+                                } hover:shadow-lg hover:shadow-black/4 transition-shadow duration-900`}
                                 onClick={() => {
                                   if (workVideos[src]) {
                                     handleOpenVideoModal(src);
@@ -2332,23 +2338,23 @@ export default function Page() {
                                 onMouseEnter={() => setIsSlideshowPaused(true)}
                                 onMouseLeave={() => setIsSlideshowPaused(false)}
                                 whileHover={{
-                                  scale: 1.02,
-                                  y: -6,
+                                  scale: 1.003,
+                                  y: -1,
                                   transition: {
-                                    duration: 0.5,
-                                    ease: [0.22, 1, 0.36, 1],
+                                    duration: 0.9,
+                                    ease: [0.12, 1, 0.25, 1],
                                   },
                                 }}
                                 whileTap={{
-                                  scale: 0.99,
+                                  scale: 0.999,
                                   transition: {
-                                    duration: 0.1,
-                                    ease: [0.22, 1, 0.36, 1],
+                                    duration: 0.2,
+                                    ease: [0.12, 1, 0.25, 1],
                                   },
                                 }}
                                 style={{
                                   transition:
-                                    "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+                                    "all 0.9s cubic-bezier(0.12, 1, 0.25, 1)",
                                 }}
                               >
                                 <Image
@@ -2356,9 +2362,9 @@ export default function Page() {
                                   alt={`Work preview ${index + 1}`}
                                   width={1400}
                                   height={900}
-                                  className={`w-full h-full object-contain bg-transparent max-w-full transition-all duration-500 ${
+                                  className={`w-full h-full object-contain bg-transparent max-w-full transition-all duration-900 ${
                                     workVideos[src]
-                                      ? "group-hover:brightness-110 group-hover:contrast-105"
+                                      ? "group-hover:brightness-101 group-hover:contrast-101"
                                       : ""
                                   }`}
                                   style={{
@@ -2391,32 +2397,37 @@ export default function Page() {
                                 />
                                 {workVideos[src] &&
                                   index === currentImageIndex && (
-                                    <div
-                                      className="absolute inset-0 cursor-pointer group"
-                                      onClick={() => handleOpenVideoModal(src)}
-                                      style={{
-                                        pointerEvents: "auto",
-                                        zIndex: 3,
-                                      }}
-                                    >
-                                      {/* Subtle corner indicator */}
-                                      <div className="absolute bottom-4 right-5 w-10 h-10 flex items-center justify-center">
-                                        <div className="w-6 h-6 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-white/25 group-hover:scale-110">
+                                    <>
+                                      {/* Centered play button - positioned in the center of the image */}
+                                      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                        <div className="w-12 h-12 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-black/30 group-hover:scale-110">
                                           <svg
-                                            width="10"
-                                            height="10"
+                                            width="16"
+                                            height="16"
                                             viewBox="0 0 24 24"
                                             fill="white"
                                             stroke="none"
-                                            className="ml-0.5 opacity-70 group-hover:opacity-90 transition-opacity"
+                                            className="ml-1 opacity-90 group-hover:opacity-100 transition-opacity"
                                           >
                                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
                                           </svg>
                                         </div>
                                       </div>
-                                      {/* Subtle overlay hint */}
-                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
-                                    </div>
+                                      {/* Clickable overlay */}
+                                      <div
+                                        className="absolute inset-0 cursor-pointer group"
+                                        onClick={() =>
+                                          handleOpenVideoModal(src)
+                                        }
+                                        style={{
+                                          pointerEvents: "auto",
+                                          zIndex: 3,
+                                        }}
+                                      >
+                                        {/* Subtle overlay hint */}
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-900"></div>
+                                      </div>
+                                    </>
                                   )}
                               </motion.div>
                             </motion.div>
