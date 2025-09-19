@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
@@ -32,6 +32,15 @@ export default function Page() {
   const SLIDESHOW_CHECK_INTERVAL = 2000; // Check every 2 seconds if slideshow is stuck
 
   // Core UI state management
+  const mainContentRef = useRef<HTMLElement | null>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+  const noteModalRef = useRef<HTMLDivElement | null>(null);
+  const allNotesModalRef = useRef<HTMLDivElement | null>(null);
+  const videoModalRef = useRef<HTMLDivElement | null>(null);
+  const noteModalCloseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const allNotesCloseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const videoModalCloseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const shouldReduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
@@ -1072,6 +1081,50 @@ export default function Page() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isNotesModalOpen || isAllNotesModalOpen || isVideoModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen]);
+
+  useEffect(() => {
+    if (isNotesModalOpen) {
+      previouslyFocusedElementRef.current =
+        (document.activeElement as HTMLElement) ?? null;
+      requestAnimationFrame(() => {
+        noteModalCloseButtonRef.current?.focus();
+      });
+    }
+  }, [isNotesModalOpen]);
+
+  useEffect(() => {
+    if (isAllNotesModalOpen) {
+      previouslyFocusedElementRef.current =
+        (document.activeElement as HTMLElement) ?? null;
+      requestAnimationFrame(() => {
+        allNotesCloseButtonRef.current?.focus();
+      });
+    }
+  }, [isAllNotesModalOpen]);
+
+  useEffect(() => {
+    if (isVideoModalOpen) {
+      previouslyFocusedElementRef.current =
+        (document.activeElement as HTMLElement) ?? null;
+      requestAnimationFrame(() => {
+        videoModalCloseButtonRef.current?.focus();
+      });
+    }
+  }, [isVideoModalOpen]);
+
+  useEffect(() => {
+    if (!isNotesModalOpen && !isAllNotesModalOpen && !isVideoModalOpen) {
+      previouslyFocusedElementRef.current?.focus?.();
+    }
+  }, [isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen]);
+
   /**
    * Navigates to the next note in the sequence
    * Wraps around to the beginning when reaching the end
@@ -1499,6 +1552,50 @@ export default function Page() {
     },
   };
 
+  const focusableElementSelector =
+    'a[href]:not([tabindex="-1"]), button:not([disabled]):not([tabindex="-1"]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [role="button"]:not([tabindex="-1"])';
+
+  const handleFocusTrapKeyDown = (
+    event: React.KeyboardEvent,
+    containerRef: React.RefObject<HTMLDivElement>
+  ) => {
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const focusableElements = Array.from(
+      container.querySelectorAll<HTMLElement>(focusableElementSelector)
+    ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex !== -1);
+
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      if (typeof container.focus === "function") {
+        container.focus();
+      }
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement as HTMLElement | null;
+
+    if (!event.shiftKey && activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+      return;
+    }
+
+    if (event.shiftKey && activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+    }
+  };
+
   // Optimized: Simplified video modal opening
   const handleOpenVideoModal = (imageSrc: string) => {
     const videoUrl = workVideos[imageSrc];
@@ -1746,6 +1843,16 @@ export default function Page() {
 
   return (
     <ErrorBoundary>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:z-50 focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-foreground focus:text-background focus:rounded-md focus:shadow-lg"
+        onClick={(event) => {
+          event.preventDefault();
+          mainContentRef.current?.focus();
+        }}
+      >
+        Skip to content
+      </a>
       <div
         style={{
           filter: blurAmount > 0 ? `blur(${blurAmount}px)` : "none",
@@ -1815,16 +1922,24 @@ export default function Page() {
         </motion.div>
 
         <motion.main
-          initial={{ opacity: 0 }}
+          id="main-content"
+          ref={mainContentRef}
+          tabIndex={-1}
+          initial={shouldReduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{
-            duration: 2,
-            ease: EASING.primary,
-          }}
+          transition={
+            shouldReduceMotion
+              ? { duration: 0 }
+              : {
+                  duration: 2,
+                  ease: EASING.primary,
+                }
+          }
           className="px-6 sm:px-10 py-4 md:py-6 pb-4 md:pb-6 md:px-28 bg-background relative overflow-x-hidden md:h-screen md:overflow-hidden"
           style={{
             minHeight: "100vh",
             willChange: "auto",
+            scrollMarginTop: "var(--header-offset, 4rem)",
           }}
         >
           <div className="w-full max-w-screen-xl mx-auto relative z-10">
@@ -2590,30 +2705,42 @@ export default function Page() {
                 <>
                   {/* Fixed backdrop */}
                   <motion.div
-                    initial={{ opacity: 0 }}
+                    initial={shouldReduceMotion ? false : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                    }
                     className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
                     onClick={handleCloseNote}
                   />
 
                   {/* Scrollable content */}
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                    }
                     className="fixed inset-0 z-50 flex items-center justify-center"
                     onClick={(e) => {
                       if (e.target === e.currentTarget) {
                         handleCloseNote(e);
                       }
                     }}
-                    // Add tabIndex to prevent focus issues on mobile
                     tabIndex={-1}
-                    // Add outline: none to remove focus outline
-                    style={{ outline: "none" }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="note-modal-title"
+                    ref={noteModalRef}
+                    onKeyDown={(event) =>
+                      handleFocusTrapKeyDown(event, noteModalRef)
+                    }
                   >
                     {/* Card stack container - centered in viewport */}
                     <div className="w-full max-w-3xl mx-auto px-4 relative">
@@ -2685,6 +2812,7 @@ export default function Page() {
                                   animate={{ opacity: 1 }}
                                   transition={{ duration: 0.2 }}
                                   className="text-xl font-medium text-foreground mt-1.5 tracking-tight"
+                                  id="note-modal-title"
                                 >
                                   {notes[currentNoteIndex].title}
                                 </motion.div>
@@ -2700,6 +2828,7 @@ export default function Page() {
                                   transition={{ duration: 0.2 }}
                                   onClick={handleCloseNote}
                                   className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-foreground/5 transition-colors"
+                                  ref={noteModalCloseButtonRef}
                                   aria-label="Close note"
                                 >
                                   <svg
@@ -2853,26 +2982,42 @@ export default function Page() {
                 <>
                   {/* Fixed backdrop */}
                   <motion.div
-                    initial={{ opacity: 0 }}
+                    initial={shouldReduceMotion ? false : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                    }
                     className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
                     onClick={() => setIsAllNotesModalOpen(false)}
                   />
 
                   {/* Scrollable content */}
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                    }
                     className="fixed inset-0 z-50 overflow-y-auto"
                     onClick={(e) => {
                       if (e.target === e.currentTarget) {
                         setIsAllNotesModalOpen(false);
                       }
                     }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="all-notes-modal-title"
+                    tabIndex={-1}
+                    ref={allNotesModalRef}
+                    onKeyDown={(event) =>
+                      handleFocusTrapKeyDown(event, allNotesModalRef)
+                    }
                   >
                     {/* Content container */}
                     <motion.div
@@ -2883,6 +3028,12 @@ export default function Page() {
                       className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <h2
+                        id="all-notes-modal-title"
+                        className="sr-only"
+                      >
+                        All notes
+                      </h2>
                       {/* Close button - positioned in top right */}
                       <motion.button
                         initial={{ opacity: 0 }}
@@ -2894,6 +3045,7 @@ export default function Page() {
                           e.stopPropagation();
                           setIsAllNotesModalOpen(false);
                         }}
+                        ref={allNotesCloseButtonRef}
                         aria-label="Close all notes"
                       >
                         <svg
@@ -2917,9 +3069,10 @@ export default function Page() {
                               new Date(a.date).getTime()
                           )
                           .map((note, index) => (
-                            <motion.div
+                            <motion.button
                               key={note.id}
-                              className="py-6 first:pt-0 cursor-pointer"
+                              type="button"
+                              className="w-full text-left py-6 first:pt-0 cursor-pointer bg-transparent border-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground/40"
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{
@@ -2956,7 +3109,7 @@ export default function Page() {
                                   </p>
                                 </div>
                               </div>
-                            </motion.div>
+                            </motion.button>
                           ))}
                       </div>
                     </motion.div>
@@ -2975,32 +3128,55 @@ export default function Page() {
             <>
               {/* Fixed backdrop */}
               <motion.div
-                initial={{ opacity: 0 }}
+                initial={shouldReduceMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                }
                 className="fixed inset-0 backdrop-blur-md bg-black/85 z-50"
                 onClick={handleCloseVideoModal}
               />
 
               {/* Modal container */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                }
                 className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
                 onClick={handleCloseVideoModal}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="video-modal-title"
+                tabIndex={-1}
+                ref={videoModalRef}
+                onKeyDown={(event) =>
+                  handleFocusTrapKeyDown(event, videoModalRef)
+                }
               >
                 {/* Content container */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.98 }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                  }
                   className="relative w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  <h2 id="video-modal-title" className="sr-only">
+                    Project video
+                  </h2>
                   {/* Sticky close button */}
                   <motion.button
                     initial={{ opacity: 0 }}
@@ -3009,6 +3185,8 @@ export default function Page() {
                     transition={{ delay: 0.2, duration: 0.3 }}
                     className="absolute top-6 right-6 z-10 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
                     onClick={handleCloseVideoModal}
+                    ref={videoModalCloseButtonRef}
+                    aria-label="Close video"
                   >
                     <svg
                       width="24"
