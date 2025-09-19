@@ -23,6 +23,7 @@ import {
   LoadingTransition,
 } from "@/components/animations/LoadingAnimations";
 import { useLoadingSequence } from "@/hooks/useLoadingSequence";
+import { WorkImageContainer } from "./components/hover";
 
 export default function Page() {
   // Slideshow timing configuration
@@ -2083,97 +2084,35 @@ export default function Page() {
                               className="w-full"
                               delay={index * 0.3}
                             >
-                              <motion.div
-                                className={`relative w-full overflow-hidden ${
-                                  workVideos[src] ? "cursor-pointer group" : ""
-                                } hover:shadow-md hover:shadow-black/3 transition-shadow duration-800`}
-                                onClick={() => {
-                                  if (workVideos[src]) {
-                                    handleOpenVideoModal(src);
-                                  }
-                                }}
+                              <WorkImageContainer
+                                src={getOptimizedImageSrc(src)}
+                                alt={`Work preview ${index + 1}`}
+                                width={900}
+                                height={700}
+                                hasVideo={!!workVideos[src]}
+                                onVideoClick={() => handleOpenVideoModal(src)}
                                 onMouseEnter={() => setIsSlideshowPaused(true)}
                                 onMouseLeave={() => setIsSlideshowPaused(false)}
-                                whileHover={{
-                                  scale: 1.005,
-                                  y: -1,
-                                  transition: {
-                                    duration: 0.8,
-                                    ease: [0.12, 1, 0.25, 1],
-                                  },
-                                }}
-                                whileTap={{
-                                  scale: 0.998,
-                                  transition: {
-                                    duration: 0.2,
-                                    ease: [0.12, 1, 0.25, 1],
-                                  },
-                                }}
-                                style={{
-                                  transition:
-                                    "all 0.8s cubic-bezier(0.12, 1, 0.25, 1)",
-                                }}
-                              >
-                                <Image
-                                  src={getOptimizedImageSrc(src)}
-                                  alt={`Work preview ${index + 1}`}
-                                  width={900}
-                                  height={700}
-                                  className={`w-full object-contain bg-transparent max-w-full transition-all duration-800 ${
-                                    workVideos[src]
-                                      ? "group-hover:brightness-101"
-                                      : ""
-                                  }`}
-                                  priority={index < loadingConfig.initialCount}
-                                  loading={
-                                    index < loadingConfig.initialCount
-                                      ? "eager"
-                                      : "lazy"
-                                  }
-                                  onLoad={() => handleImageLoad(src)}
-                                  placeholder="blur"
-                                  blurDataURL={generatePlaceholder(900, 700)}
-                                  sizes={isMobile ? "100vw" : "50vw"}
-                                  quality={
-                                    imageLoadingStrategy === "minimal"
-                                      ? 60
-                                      : imageLoadingStrategy === "conservative"
-                                      ? 75
-                                      : 85
-                                  }
-                                />
-                                {workVideos[src] && (
-                                  <>
-                                    {/* Centered play button - positioned in the center of the image */}
-                                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                                      <div className="w-12 h-12 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-black/30 group-hover:scale-110">
-                                        <svg
-                                          width="16"
-                                          height="16"
-                                          viewBox="0 0 24 24"
-                                          fill="white"
-                                          stroke="none"
-                                          className="ml-1 opacity-90 group-hover:opacity-100 transition-opacity"
-                                        >
-                                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                        </svg>
-                                      </div>
-                                    </div>
-                                    {/* Clickable overlay */}
-                                    <div
-                                      className="absolute inset-0 cursor-pointer group"
-                                      onClick={() => handleOpenVideoModal(src)}
-                                      style={{
-                                        pointerEvents: "auto",
-                                        zIndex: 3,
-                                      }}
-                                    >
-                                      {/* Subtle overlay hint */}
-                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-800"></div>
-                                    </div>
-                                  </>
-                                )}
-                              </motion.div>
+                                onLoad={() => handleImageLoad(src)}
+                                variant="mobile"
+                                priority={index < loadingConfig.initialCount}
+                                loading={
+                                  index < loadingConfig.initialCount
+                                    ? "eager"
+                                    : "lazy"
+                                }
+                                placeholder="blur"
+                                blurDataURL={generatePlaceholder(900, 700)}
+                                sizes={isMobile ? "100vw" : "50vw"}
+                                quality={
+                                  imageLoadingStrategy === "minimal"
+                                    ? 60
+                                    : imageLoadingStrategy === "conservative"
+                                    ? 75
+                                    : 85
+                                }
+                                isLoaded={!!loadedImages[src]}
+                              />
                             </ImageCarouselItem>
                           ))}
 
@@ -2192,106 +2131,39 @@ export default function Page() {
                                     ease: [0.22, 1, 0.36, 1],
                                   }}
                                 >
-                                  <motion.div
-                                    className={`relative w-full overflow-hidden ${
-                                      workVideos[src]
-                                        ? "cursor-pointer group"
-                                        : ""
-                                    } hover:shadow-md hover:shadow-black/3 transition-shadow duration-800`}
-                                    onClick={() => {
-                                      if (workVideos[src]) {
-                                        handleOpenVideoModal(src);
-                                      }
-                                    }}
+                                  <WorkImageContainer
+                                    src={getOptimizedImageSrc(src)}
+                                    alt={`Work preview ${
+                                      initialImages.length + index + 1
+                                    }`}
+                                    width={900}
+                                    height={700}
+                                    hasVideo={!!workVideos[src]}
+                                    onVideoClick={() =>
+                                      handleOpenVideoModal(src)
+                                    }
                                     onMouseEnter={() =>
                                       setIsSlideshowPaused(true)
                                     }
                                     onMouseLeave={() =>
                                       setIsSlideshowPaused(false)
                                     }
-                                    whileHover={{
-                                      scale: 1.005,
-                                      y: -1,
-                                      transition: {
-                                        duration: 0.8,
-                                        ease: [0.12, 1, 0.25, 1],
-                                      },
-                                    }}
-                                    whileTap={{
-                                      scale: 0.998,
-                                      transition: {
-                                        duration: 0.2,
-                                        ease: [0.12, 1, 0.25, 1],
-                                      },
-                                    }}
-                                    style={{
-                                      transition:
-                                        "all 0.8s cubic-bezier(0.12, 1, 0.25, 1)",
-                                    }}
-                                  >
-                                    <Image
-                                      src={getOptimizedImageSrc(src)}
-                                      alt={`Work preview ${
-                                        initialImages.length + index + 1
-                                      }`}
-                                      width={900}
-                                      height={700}
-                                      className={`w-full object-contain bg-transparent max-w-full transition-all duration-800 ${
-                                        workVideos[src]
-                                          ? "group-hover:brightness-101"
-                                          : ""
-                                      }`}
-                                      loading="lazy"
-                                      onLoad={() => handleImageLoad(src)}
-                                      placeholder="blur"
-                                      blurDataURL={generatePlaceholder(
-                                        900,
-                                        700
-                                      )}
-                                      sizes={isMobile ? "100vw" : "50vw"}
-                                      quality={
-                                        imageLoadingStrategy === "minimal"
-                                          ? 60
-                                          : imageLoadingStrategy ===
-                                            "conservative"
-                                          ? 75
-                                          : 85
-                                      }
-                                    />
-                                    {workVideos[src] && (
-                                      <>
-                                        {/* Centered play button - positioned in the center of the image */}
-                                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                                          <div className="w-12 h-12 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-black/30 group-hover:scale-110">
-                                            <svg
-                                              width="16"
-                                              height="16"
-                                              viewBox="0 0 24 24"
-                                              fill="white"
-                                              stroke="none"
-                                              className="ml-1 opacity-90 group-hover:opacity-100 transition-opacity"
-                                            >
-                                              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                            </svg>
-                                          </div>
-                                        </div>
-                                        {/* Clickable overlay */}
-                                        <div
-                                          className="absolute inset-0 cursor-pointer group"
-                                          onClick={() =>
-                                            handleOpenVideoModal(src)
-                                          }
-                                          style={{
-                                            pointerEvents: "auto",
-                                            zIndex: 3,
-                                          }}
-                                        >
-                                          {/* Subtle overlay hint */}
-                                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-800"></div>
-                                        </div>
-                                      </>
-                                    )}
-                                  </motion.div>
+                                    onLoad={() => handleImageLoad(src)}
+                                    variant="mobile"
+                                    loading="lazy"
+                                    placeholder="blur"
+                                    blurDataURL={generatePlaceholder(900, 700)}
+                                    sizes={isMobile ? "100vw" : "50vw"}
+                                    quality={
+                                      imageLoadingStrategy === "minimal"
+                                        ? 60
+                                        : imageLoadingStrategy ===
+                                          "conservative"
+                                        ? 75
+                                        : 85
+                                    }
+                                    isLoaded={!!loadedImages[src]}
+                                  />
                                 </motion.div>
                               ))}
                             </div>
@@ -2326,110 +2198,35 @@ export default function Page() {
                                 zIndex: index === currentImageIndex ? 2 : 1,
                               }}
                             >
-                              <motion.div
-                                className={`relative w-full h-full overflow-hidden ${
-                                  workVideos[src] ? "cursor-pointer group" : ""
-                                } hover:shadow-lg hover:shadow-black/4 transition-shadow duration-900`}
-                                onClick={() => {
-                                  if (workVideos[src]) {
-                                    handleOpenVideoModal(src);
-                                  }
-                                }}
+                              <WorkImageContainer
+                                src={getOptimizedImageSrc(src)}
+                                alt={`Work preview ${index + 1}`}
+                                width={1400}
+                                height={900}
+                                hasVideo={!!workVideos[src]}
+                                onVideoClick={() => handleOpenVideoModal(src)}
                                 onMouseEnter={() => setIsSlideshowPaused(true)}
                                 onMouseLeave={() => setIsSlideshowPaused(false)}
-                                whileHover={{
-                                  scale: 1.003,
-                                  y: -1,
-                                  transition: {
-                                    duration: 0.9,
-                                    ease: [0.12, 1, 0.25, 1],
-                                  },
-                                }}
-                                whileTap={{
-                                  scale: 0.999,
-                                  transition: {
-                                    duration: 0.2,
-                                    ease: [0.12, 1, 0.25, 1],
-                                  },
-                                }}
-                                style={{
-                                  transition:
-                                    "all 0.9s cubic-bezier(0.12, 1, 0.25, 1)",
-                                }}
-                              >
-                                <Image
-                                  src={getOptimizedImageSrc(src)}
-                                  alt={`Work preview ${index + 1}`}
-                                  width={1400}
-                                  height={900}
-                                  className={`w-full h-full object-contain bg-transparent max-w-full transition-all duration-900 ${
-                                    workVideos[src]
-                                      ? "group-hover:brightness-101 group-hover:contrast-101"
-                                      : ""
-                                  }`}
-                                  style={{
-                                    objectPosition: "center center",
-                                    display: "block",
-                                    filter: !loadedImages[src]
-                                      ? "blur(20px)"
-                                      : "none",
-                                    opacity: !loadedImages[src] ? 0.5 : 1,
-                                    transition:
-                                      "filter 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-                                  }}
-                                  onLoad={() => handleImageLoad(src)}
-                                  loading={
-                                    index < loadingConfig.initialCount
-                                      ? "eager"
-                                      : "lazy"
-                                  }
-                                  priority={index < loadingConfig.initialCount}
-                                  placeholder="blur"
-                                  blurDataURL={generatePlaceholder(1400, 900)}
-                                  sizes="100vw"
-                                  quality={
-                                    imageLoadingStrategy === "minimal"
-                                      ? 60
-                                      : imageLoadingStrategy === "conservative"
-                                      ? 75
-                                      : 85
-                                  }
-                                />
-                                {workVideos[src] &&
-                                  index === currentImageIndex && (
-                                    <>
-                                      {/* Centered play button - positioned in the center of the image */}
-                                      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                                        <div className="w-12 h-12 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-black/30 group-hover:scale-110">
-                                          <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="white"
-                                            stroke="none"
-                                            className="ml-1 opacity-90 group-hover:opacity-100 transition-opacity"
-                                          >
-                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                          </svg>
-                                        </div>
-                                      </div>
-                                      {/* Clickable overlay */}
-                                      <div
-                                        className="absolute inset-0 cursor-pointer group"
-                                        onClick={() =>
-                                          handleOpenVideoModal(src)
-                                        }
-                                        style={{
-                                          pointerEvents: "auto",
-                                          zIndex: 3,
-                                        }}
-                                      >
-                                        {/* Subtle overlay hint */}
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/2 transition-colors duration-900"></div>
-                                      </div>
-                                    </>
-                                  )}
-                              </motion.div>
+                                onLoad={() => handleImageLoad(src)}
+                                variant="desktop"
+                                loading={
+                                  index < loadingConfig.initialCount
+                                    ? "eager"
+                                    : "lazy"
+                                }
+                                priority={index < loadingConfig.initialCount}
+                                placeholder="blur"
+                                blurDataURL={generatePlaceholder(1400, 900)}
+                                sizes="100vw"
+                                quality={
+                                  imageLoadingStrategy === "minimal"
+                                    ? 60
+                                    : imageLoadingStrategy === "conservative"
+                                    ? 75
+                                    : 85
+                                }
+                                isLoaded={!!loadedImages[src]}
+                              />
                             </motion.div>
                           ))}
 
