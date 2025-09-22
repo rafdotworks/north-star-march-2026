@@ -84,11 +84,18 @@ export default function Page() {
   const [carouselAnimationComplete, setCarouselAnimationComplete] =
     useState(false);
   const [firstLineComplete, setFirstLineComplete] = useState(false);
+  const [secondLineComplete, setSecondLineComplete] = useState(false);
   const [finalTextAnimationComplete, setFinalTextAnimationComplete] =
     useState(false);
   const [transitionProgress, setTransitionProgress] = useState(0);
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
   const [blurAmount, setBlurAmount] = useState(15);
+
+  useEffect(() => {
+    if (shouldReduceMotion && firstLineComplete) {
+      setSecondLineComplete(true);
+    }
+  }, [shouldReduceMotion, firstLineComplete]);
 
   // Scroll and animation states
   const [scrollY, setScrollY] = useState(0);
@@ -741,38 +748,41 @@ export default function Page() {
     };
   }, [isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen, images.length]);
 
+  // Add a ref for the slideshow container
+  const slideshowRef = useRef<HTMLDivElement>(null);
+
+  // Add state to track if slideshow is in viewport
+  const [isInViewport, setIsInViewport] = useState(false);
+
   /**
    * Initializes slideshow when component is mounted
-   * Starts with first image immediately
+   * Starts with first image immediately once the carousel is visible
    */
   useEffect(() => {
     if (
       mounted &&
+      criticalContentLoaded &&
+      isInViewport &&
       !isNotesModalOpen &&
       !isAllNotesModalOpen &&
       !isVideoModalOpen &&
       !isSlideshowPaused &&
       !initialLoadComplete
     ) {
-      // Start immediately without delay
       setCurrentImageIndex(0);
       setTransitionProgress(0);
       setInitialLoadComplete(true);
     }
   }, [
     mounted,
+    criticalContentLoaded,
+    isInViewport,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
     isSlideshowPaused,
     initialLoadComplete,
   ]);
-
-  // Add a ref for the slideshow container
-  const slideshowRef = useRef<HTMLDivElement>(null);
-
-  // Add state to track if slideshow is in viewport
-  const [isInViewport, setIsInViewport] = useState(false);
 
   /**
    * IntersectionObserver setup for slideshow viewport detection
@@ -810,11 +820,18 @@ export default function Page() {
       isInViewport &&
       !isNotesModalOpen &&
       !isAllNotesModalOpen &&
-      !isVideoModalOpen
+      !isVideoModalOpen &&
+      finalTextAnimationComplete
     ) {
       setTransitionProgress(0);
     }
-  }, [isInViewport, isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen]);
+  }, [
+    isInViewport,
+    isNotesModalOpen,
+    isAllNotesModalOpen,
+    isVideoModalOpen,
+    finalTextAnimationComplete,
+  ]);
 
   /**
    * Main slideshow interval effect
@@ -826,6 +843,7 @@ export default function Page() {
       !mounted ||
       !criticalContentLoaded ||
       !finalTextAnimationComplete ||
+      !isInViewport ||
       isNotesModalOpen ||
       isAllNotesModalOpen ||
       isVideoModalOpen ||
@@ -842,6 +860,7 @@ export default function Page() {
     mounted,
     criticalContentLoaded,
     finalTextAnimationComplete,
+    isInViewport,
     isNotesModalOpen,
     isAllNotesModalOpen,
     isVideoModalOpen,
@@ -2018,6 +2037,7 @@ export default function Page() {
                               text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
                               className="text-foreground/70"
                               delay={0.1}
+                              onAnimationComplete={() => setSecondLineComplete(true)}
                             />
                           </motion.div>
                         )}
@@ -2027,20 +2047,20 @@ export default function Page() {
                           href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
                           className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
                         >
-                          {loadingSequence.textLoaded && firstLineComplete && (
+                          {loadingSequence.textLoaded && secondLineComplete && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               transition={{
                                 duration: 0.8,
-                                delay: 0.3,
+                                delay: 0.2,
                                 ease: [0.22, 1, 0.36, 1],
                               }}
                             >
                               <WordReveal
                                 text="raf@raf.works"
                                 className="text-foreground/70"
-                                delay={0.3}
+                                delay={0.2}
                               />
                             </motion.div>
                           )}
@@ -2102,6 +2122,7 @@ export default function Page() {
                               text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
                               className="text-foreground/70"
                               delay={0.1}
+                              onAnimationComplete={() => setSecondLineComplete(true)}
                             />
                           </motion.div>
                         )}
@@ -2111,20 +2132,20 @@ export default function Page() {
                           href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
                           className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
                         >
-                          {loadingSequence.textLoaded && firstLineComplete && (
+                          {loadingSequence.textLoaded && secondLineComplete && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               transition={{
                                 duration: 0.8,
-                                delay: 0.3,
+                                delay: 0.2,
                                 ease: [0.22, 1, 0.36, 1],
                               }}
                             >
                               <WordReveal
                                 text="raf@raf.works"
                                 className="text-foreground/70"
-                                delay={0.3}
+                                delay={0.2}
                               />
                             </motion.div>
                           )}
@@ -2143,7 +2164,7 @@ export default function Page() {
                     scale: 0.98,
                   }}
                   animate={
-                    firstLineComplete
+                    secondLineComplete
                       ? {
                           opacity: 1,
                           y: 0,
@@ -2159,7 +2180,7 @@ export default function Page() {
                   }
                   transition={{
                     duration: 2.0,
-                    delay: 0.5,
+                    delay: 0.3,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   onAnimationComplete={() => {
