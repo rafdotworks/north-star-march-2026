@@ -2119,7 +2119,7 @@ export default function Page() {
                             }}
                           >
                             <WordReveal
-                              text="Now building in Toronto in person. Past at Coinbase, VoiceFlow, Theoriq & more"
+                              text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
                               className="text-foreground/70"
                               delay={0.1}
                               onAnimationComplete={() => setSecondLineComplete(true)}
