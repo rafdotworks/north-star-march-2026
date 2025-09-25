@@ -1589,7 +1589,9 @@ export default function Page() {
 
     const focusableElements = Array.from(
       container.querySelectorAll<HTMLElement>(focusableElementSelector)
-    ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex !== -1);
+    ).filter(
+      (element) => !element.hasAttribute("disabled") && element.tabIndex !== -1
+    );
 
     if (focusableElements.length === 0) {
       event.preventDefault();
@@ -1722,6 +1724,9 @@ export default function Page() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 3);
   }, []);
+
+  const isSecondaryTextReady = loadingSequence.textLoaded && firstLineComplete;
+  const isEmailReady = loadingSequence.textLoaded && secondLineComplete;
 
   if (!mounted) {
     // Show nothing until mounted
@@ -2023,7 +2028,7 @@ export default function Page() {
                   <div className="text-center mb-4">
                     <div className="space-y-2">
                       <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
-                        {loadingSequence.textLoaded && firstLineComplete && (
+                        {isSecondaryTextReady && (
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -2037,7 +2042,9 @@ export default function Page() {
                               text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
                               className="text-foreground/70"
                               delay={0.1}
-                              onAnimationComplete={() => setSecondLineComplete(true)}
+                              onAnimationComplete={() =>
+                                setSecondLineComplete(true)
+                              }
                             />
                           </motion.div>
                         )}
@@ -2047,7 +2054,7 @@ export default function Page() {
                           href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
                           className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
                         >
-                          {loadingSequence.textLoaded && secondLineComplete && (
+                          {isEmailReady && (
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
@@ -2077,79 +2084,110 @@ export default function Page() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
-                  <div className="text-left mb-3">
-                    {loadingSequence.textLoaded && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                        transition={{
-                          duration: 1.5,
-                          delay: 0.3,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        onAnimationComplete={() => {
-                          // Main text complete - trigger subtext after consistent pause
-                          setTimeout(() => {
-                            setFirstLineComplete(true);
-                          }, 1000);
-                        }}
-                      >
-                        <div className="tracking-tight text-lg md:whitespace-nowrap">
-                          <WordReveal
-                            text="Raf leads as a Senior Designer and Design Engineer."
-                            className="text-foreground/70"
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-
-                  {/* Secondary text for mobile */}
-                  <div className="text-left mb-4">
-                    <div className="space-y-3">
-                      <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
-                        {loadingSequence.textLoaded && firstLineComplete && (
+                  <div className="flex min-h-screen min-h-[100svh] flex-col justify-end pb-8 pb-[calc(env(safe-area-inset-bottom)+1.75rem)]">
+                    <div className="space-y-4">
+                      <div className="text-left">
+                        {loadingSequence.textLoaded && (
                           <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
+                            initial={{
+                              opacity: 0,
+                              y: 20,
+                              filter: "blur(10px)",
+                            }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                             transition={{
-                              duration: 0.8,
-                              delay: 0.1,
+                              duration: 1.5,
+                              delay: 0.3,
                               ease: [0.22, 1, 0.36, 1],
                             }}
+                            onAnimationComplete={() => {
+                              // Main text complete - trigger subtext after consistent pause
+                              setTimeout(() => {
+                                setFirstLineComplete(true);
+                              }, 1000);
+                            }}
                           >
-                            <WordReveal
-                              text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
-                              className="text-foreground/70"
-                              delay={0.1}
-                              onAnimationComplete={() => setSecondLineComplete(true)}
-                            />
+                            <div className="tracking-tight text-lg md:whitespace-nowrap">
+                              <WordReveal
+                                text="Raf leads as a Senior Designer and Design Engineer."
+                                className="text-foreground/70"
+                              />
+                            </div>
                           </motion.div>
                         )}
                       </div>
-                      <div className="mt-3 min-h-[1.25em]">
-                        <a
-                          href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
-                          className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
-                        >
-                          {loadingSequence.textLoaded && secondLineComplete && (
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{
-                                duration: 0.8,
-                                delay: 0.2,
-                                ease: [0.22, 1, 0.36, 1],
-                              }}
+
+                      {/* Secondary text for mobile */}
+                      <div className="text-left">
+                        <div className="space-y-3">
+                          <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
+                            {!isSecondaryTextReady && (
+                              <span
+                                className="block opacity-0 select-none"
+                                aria-hidden="true"
+                              >
+                                Now building in Toronto in person. Past at
+                                Coinbase, Voiceflow, Theoriq & more
+                              </span>
+                            )}
+                            {isSecondaryTextReady && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{
+                                  duration: 0.8,
+                                  delay: 0.1,
+                                  ease: [0.22, 1, 0.36, 1],
+                                }}
+                              >
+                                <WordReveal
+                                  text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
+                                  className="text-foreground/70"
+                                  delay={0.1}
+                                  onAnimationComplete={() =>
+                                    setSecondLineComplete(true)
+                                  }
+                                />
+                              </motion.div>
+                            )}
+                          </div>
+                          <div className="mt-3 min-h-[1.25em]">
+                            <a
+                              href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
+                              className={`text-sm text-foreground/70 hover:text-foreground transition-colors inline-block ${
+                                isEmailReady ? "" : "pointer-events-none"
+                              }`}
+                              aria-disabled={!isEmailReady}
+                              tabIndex={isEmailReady ? undefined : -1}
                             >
-                              <WordReveal
-                                text="raf@raf.works"
-                                className="text-foreground/70"
-                                delay={0.2}
-                              />
-                            </motion.div>
-                          )}
-                        </a>
+                              {!isEmailReady && (
+                                <span
+                                  className="block opacity-0 select-none"
+                                  aria-hidden="true"
+                                >
+                                  raf@raf.works
+                                </span>
+                              )}
+                              {isEmailReady && (
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{
+                                    duration: 0.8,
+                                    delay: 0.2,
+                                    ease: [0.22, 1, 0.36, 1],
+                                  }}
+                                >
+                                  <WordReveal
+                                    text="raf@raf.works"
+                                    className="text-foreground/70"
+                                    delay={0.2}
+                                  />
+                                </motion.div>
+                              )}
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -3049,10 +3087,7 @@ export default function Page() {
                       className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <h2
-                        id="all-notes-modal-title"
-                        className="sr-only"
-                      >
+                      <h2 id="all-notes-modal-title" className="sr-only">
                         All notes
                       </h2>
                       {/* Close button - positioned in top right */}
