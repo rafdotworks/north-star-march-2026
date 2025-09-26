@@ -1522,14 +1522,14 @@ export default function Page() {
                   ease: EASING.primary,
                 }
           }
-          className="px-6 sm:px-10 py-4 md:py-6 pb-4 md:pb-6 md:px-28 bg-background relative overflow-x-hidden md:h-screen md:overflow-hidden"
+          className="px-6 sm:px-10 py-4 md:py-0 pb-4 md:px-28 bg-background relative overflow-x-hidden md:min-h-screen md:flex md:flex-col md:justify-center md:overflow-hidden"
           style={{
             minHeight: "100vh",
             willChange: "auto",
             scrollMarginTop: "var(--header-offset, 4rem)",
           }}
         >
-          <div className="w-full max-w-screen-xl mx-auto relative z-10">
+          <div className="w-full max-w-screen-xl mx-auto relative z-10 md:flex md:flex-col md:justify-center md:h-full">
             {/* Navigation completely removed - Clean interface */}
 
             {/* Enhanced Content Section - Only show when fully loaded */}
@@ -1544,13 +1544,13 @@ export default function Page() {
                   duration: 1.2,
                   ease: EASING.primary,
                 }}
-                className="space-y-3 md:space-y-0 md:flex md:flex-col md:justify-start md:items-center md:py-0 md:h-full md:pt-16"
+                className="space-y-3 md:space-y-0 md:flex md:flex-col md:items-center md:justify-center md:py-0 md:h-full md:flex-1 md:gap-6"
                 style={{
                   transform: animationsComplete ? "none" : undefined,
                   willChange: animationsComplete
                     ? "auto"
                     : "transform, opacity",
-                  gap: isMobile ? undefined : "clamp(3vh, 4vh, 5vh)",
+                  gap: isMobile ? undefined : "clamp(2vh, 3vh, 4vh)",
                 }}
               >
                 {/* Desktop Layout - Text First */}
@@ -1560,7 +1560,7 @@ export default function Page() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
-                  <div className="text-center mb-4">
+                  <div className="text-center mb-2 md:mb-4">
                     {loadingSequence.textLoaded && (
                       <motion.div
                         initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
@@ -1588,7 +1588,7 @@ export default function Page() {
                   </div>
 
                   {/* Secondary text for desktop */}
-                  <div className="text-center mb-4">
+                  <div className="text-center mb-3">
                     <div className="space-y-3">
                       <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
                         {isSecondaryTextReady && (
@@ -1791,11 +1791,11 @@ export default function Page() {
                     }, 2500);
                   }}
                 >
-                  <div className="space-y-2 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto md:flex-1 md:pt-4">
+                  <div className="space-y-2 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto md:flex-1">
                     {/* Desktop Slideshow - now used for all screen sizes */}
                     <div
                       ref={slideshowRef}
-                      className="w-full mb-0 overflow-hidden relative md:flex-1 md:flex md:items-center md:justify-center"
+                      className="w-full mb-0 overflow-hidden relative md:flex-1 md:flex md:items-center md:justify-center md:max-h-[75vh]"
                       onMouseEnter={() => {
                         setIsSlideshowPaused(true);
                       }}
@@ -1907,7 +1907,7 @@ export default function Page() {
                         </div>
 
                         {/* Enhanced Desktop Slideshow View */}
-                        <div className="hidden sm:flex relative w-full min-h-[50vh] items-center justify-center">
+                        <div className="hidden sm:flex relative w-full min-h-[45vh] md:max-h-[72vh] lg:max-h-[76vh] items-center justify-center">
                           {images.map((src, index) => (
                             <motion.div
                               key={src}
@@ -1970,7 +1970,7 @@ export default function Page() {
                           <img
                             src={images[0]}
                             alt="Layout placeholder"
-                            className="w-full invisible"
+                            className="w-full h-full invisible object-contain"
                           />
                         </div>
                       </div>
