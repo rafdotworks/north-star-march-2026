@@ -99,7 +99,7 @@ export const WeatherEffect: React.FC<WeatherEffectProps> = ({
                         ease: "easeInOut",
                       }}
                     >
-                      Raf is in {weatherState.location} - where it's{" "}
+                      Raf is in {weatherState.location} - where it&apos;s{" "}
                       {weatherState.condition?.toLowerCase() || "clear"} and{" "}
                       {weatherState.temperature}°C
                     </motion.span>

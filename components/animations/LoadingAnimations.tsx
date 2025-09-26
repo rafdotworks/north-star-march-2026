@@ -665,25 +665,35 @@ export function SlideUp({
 }
 
 // Enhanced Loading Progress Component
+interface LoadingProgressProps extends MotionDivProps {
+  progress: number;
+  isAdaptive: boolean;
+  estimatedTimeRemaining: number;
+}
+
 export function LoadingProgress({
   progress,
   isAdaptive,
   estimatedTimeRemaining,
   className = "",
   ...props
-}: {
-  progress: number;
-  isAdaptive: boolean;
-  estimatedTimeRemaining: number;
-  className?: string;
-  [key: string]: any;
-}) {
+}: LoadingProgressProps) {
+  const accessibleTimeRemaining = Math.max(
+    0,
+    Math.round(estimatedTimeRemaining)
+  );
+
   return (
     <motion.div
       className={`relative ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: EASING.smooth }}
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(progress * 100)}
+      aria-valuetext={`Approximately ${accessibleTimeRemaining} seconds remaining`}
       {...props}
     >
       {/* Progress bar container */}
@@ -716,15 +726,15 @@ export function LoadingProgress({
 }
 
 // Enhanced Loading Skeleton with breathing animation
+interface BreathingSkeletonProps extends MotionDivWithChildren {
+  className?: string;
+}
+
 export function BreathingSkeleton({
   children,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  className?: string;
-  [key: string]: any;
-}) {
+}: BreathingSkeletonProps) {
   return (
     <motion.div
       className={className}
@@ -745,17 +755,18 @@ export function BreathingSkeleton({
 }
 
 // Progressive Loading States Component
+interface ProgressiveLoadingStatesProps extends MotionDivProps {
+  currentStage: number;
+  stages: string[];
+  className?: string;
+}
+
 export function ProgressiveLoadingStates({
   currentStage,
   stages,
   className = "",
   ...props
-}: {
-  currentStage: number;
-  stages: string[];
-  className?: string;
-  [key: string]: any;
-}) {
+}: ProgressiveLoadingStatesProps) {
   return (
     <motion.div
       className={`space-y-2 ${className}`}
@@ -812,19 +823,19 @@ export function ProgressiveLoadingStates({
 }
 
 // Enhanced Loading Transition Component
+interface LoadingTransitionProps extends MotionDivWithChildren {
+  isLoading: boolean;
+  fallback: ReactNode;
+  className?: string;
+}
+
 export function LoadingTransition({
   isLoading,
   children,
   fallback,
   className = "",
   ...props
-}: {
-  isLoading: boolean;
-  children: ReactNode;
-  fallback: ReactNode;
-  className?: string;
-  [key: string]: any;
-}) {
+}: LoadingTransitionProps) {
   return (
     <motion.div
       className={className}

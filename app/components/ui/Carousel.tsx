@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 /**
@@ -80,8 +80,6 @@ export function WorkCarousel({ items }: { items: WorkItem[] }) {
             key={idx}
             item={item}
             index={idx}
-            total={items.length}
-            progress={smoothProgress}
           />
         ))}
       </div>
@@ -97,19 +95,7 @@ export function WorkCarousel({ items }: { items: WorkItem[] }) {
   );
 }
 
-function Slide({
-  item,
-  index,
-  total,
-  progress,
-}: {
-  item: WorkItem;
-  index: number;
-  total: number;
-  progress: any; // MotionValue<number>
-}) {
-  const [hovered, setHovered] = useState(false);
-
+function Slide({ item, index }: { item: WorkItem; index: number }) {
   // Alternate between two card styles
   const isLayeredStyle = index % 2 === 0;
 
@@ -122,8 +108,6 @@ function Slide({
         maxWidth: "85%",
         height: "280px", // Shorter height to match reference
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
       {isLayeredStyle ? (
         // Layered style (exact layout from reference)
@@ -132,8 +116,10 @@ function Slide({
             {/* Layered visual elements */}
             <div className="absolute inset-0 p-6">
               {/* Back layer - dark strip with quote icon */}
-              <div className="absolute left-0 top-6 w-16 h-32 bg-gray-800 rounded-r-2xl flex items-start justify-center pt-4">
-                <div className="w-6 h-6 text-white text-lg font-bold">"</div>
+                <div className="absolute left-0 top-6 w-16 h-32 bg-gray-800 rounded-r-2xl flex items-start justify-center pt-4">
+                  <div className="w-6 h-6 text-white text-lg font-bold">
+                    &quot;
+                  </div>
               </div>
 
               {/* Middle layer - image card */}

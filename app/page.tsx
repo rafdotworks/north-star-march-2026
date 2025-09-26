@@ -17,11 +17,24 @@ import {
 import { useLoadingSequence } from "@/hooks/useLoadingSequence";
 import { WorkImageContainer } from "./components/hover";
 
+type NetworkInformationLike = {
+  effectiveType?: string;
+  downlink?: number;
+  saveData?: boolean;
+};
+
+type NavigatorWithConnection = Navigator & {
+  connection?: NetworkInformationLike;
+};
+
 export default function Page() {
   // Slideshow timing configuration
   const SLIDESHOW_INTERVAL = 3000; // 3 seconds between images
   const SLIDESHOW_STUCK_THRESHOLD = SLIDESHOW_INTERVAL * 4; // 12 seconds - 4x the normal interval
   const SLIDESHOW_CHECK_INTERVAL = 2000; // Check every 2 seconds if slideshow is stuck
+  const SLIDESHOW_PREVIEW_SPEED = 200; // Fast preview cadence in ms while remaining perceptible
+  const SLIDESHOW_PREVIEW_LOOPS = 1; // Number of quick loops through the carousel
+  const SLIDESHOW_PREVIEW_SETTLE_DELAY = 400; // Brief pause before returning to normal speed
 
   // Core UI state management
   const mainContentRef = useRef<HTMLElement | null>(null);
@@ -73,6 +86,8 @@ export default function Page() {
   const [finalTextAnimationComplete, setFinalTextAnimationComplete] =
     useState(false);
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
+  const [isPreviewComplete, setIsPreviewComplete] = useState(false);
+  const [isPreviewRunning, setIsPreviewRunning] = useState(false);
   const [blurAmount, setBlurAmount] = useState(15);
 
   useEffect(() => {
@@ -148,11 +163,11 @@ export default function Page() {
       setIsMobileReady(true);
 
       // Enhanced connection detection
-      if ("connection" in navigator) {
-        const connection = (navigator as any).connection;
-        const effectiveType = connection.effectiveType || "unknown";
-        const downlink = connection.downlink || 0;
-        const saveData = connection.saveData || false;
+      const navigatorWithConnection = navigator as NavigatorWithConnection;
+
+      if (navigatorWithConnection.connection) {
+        const { effectiveType = "unknown", downlink = 0, saveData = false } =
+          navigatorWithConnection.connection;
 
         setConnectionType(effectiveType);
 
@@ -678,6 +693,7 @@ export default function Page() {
       !mounted ||
       !criticalContentLoaded ||
       !finalTextAnimationComplete ||
+      !isPreviewComplete ||
       !isInViewport ||
       isVideoModalOpen ||
       isSlideshowPaused
@@ -693,6 +709,7 @@ export default function Page() {
     mounted,
     criticalContentLoaded,
     finalTextAnimationComplete,
+    isPreviewComplete,
     isInViewport,
     isVideoModalOpen,
     isSlideshowPaused,
@@ -1216,6 +1233,57 @@ export default function Page() {
   const [lastImageChangeTime, setLastImageChangeTime] = useState<number>(
     Date.now()
   );
+
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      setIsPreviewComplete(true);
+      setIsPreviewRunning(false);
+    }
+  }, [shouldReduceMotion]);
+
+  const previewPrerequisitesMet =
+    !shouldReduceMotion &&
+    !isPreviewComplete &&
+    mounted &&
+    criticalContentLoaded &&
+    finalTextAnimationComplete &&
+    initialLoadComplete &&
+    isInViewport &&
+    !isVideoModalOpen &&
+    !isSlideshowPaused;
+
+  useEffect(() => {
+    if (!previewPrerequisitesMet) {
+      return;
+    }
+
+    setIsPreviewRunning(true);
+
+    let previewSteps = 0;
+    const totalSteps = images.length * SLIDESHOW_PREVIEW_LOOPS;
+    let settleTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    const previewInterval = window.setInterval(() => {
+      previewSteps += 1;
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+
+      if (previewSteps >= totalSteps) {
+        window.clearInterval(previewInterval);
+        settleTimeout = window.setTimeout(() => {
+          setIsPreviewRunning(false);
+          setIsPreviewComplete(true);
+        }, SLIDESHOW_PREVIEW_SETTLE_DELAY);
+      }
+    }, SLIDESHOW_PREVIEW_SPEED);
+
+    return () => {
+      window.clearInterval(previewInterval);
+      if (settleTimeout) {
+        clearTimeout(settleTimeout);
+      }
+      setIsPreviewRunning(false);
+    };
+  }, [previewPrerequisitesMet, images.length]);
 
   // Add a fallback mechanism to restart the slideshow if it gets stuck
   useEffect(() => {
@@ -1925,11 +1993,19 @@ export default function Page() {
                                     : "blur(8px)",
                                 y: index === currentImageIndex ? 0 : 15,
                               }}
-                              transition={{
-                                duration: 2.2,
-                                ease: [0.22, 1, 0.36, 1],
-                                delay: 0,
-                              }}
+                              transition={
+                                isPreviewRunning
+                                  ? {
+                                      duration: 0.25,
+                                      ease: "linear",
+                                      delay: 0,
+                                    }
+                                  : {
+                                      duration: 2.2,
+                                      ease: [0.22, 1, 0.36, 1],
+                                      delay: 0,
+                                    }
+                              }
                               style={{
                                 zIndex: index === currentImageIndex ? 2 : 1,
                               }}
@@ -2062,7 +2138,7 @@ export default function Page() {
                                 }}
                               >
                                 <span className="font-raf">Raf</span> is in{" "}
-                                {weatherState.location} - where it's{" "}
+                                {weatherState.location} - where it&apos;s{" "}
                                 {weatherState.condition?.toLowerCase() ||
                                   "clear"}{" "}
                                 and {weatherState.temperature}°C
