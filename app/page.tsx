@@ -1782,42 +1782,6 @@ export default function Page() {
                               </motion.div>
                             )}
                           </div>
-                          <div className="min-h-[1.25em]">
-                            <a
-                              href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
-                              className={`text-sm text-foreground/70 hover:text-foreground transition-colors inline-block ${
-                                isEmailReady ? "" : "pointer-events-none"
-                              }`}
-                              aria-disabled={!isEmailReady}
-                              tabIndex={isEmailReady ? undefined : -1}
-                            >
-                              {!isEmailReady && (
-                                <span
-                                  className="block opacity-0 select-none"
-                                  aria-hidden="true"
-                                >
-                                  raf@raf.works
-                                </span>
-                              )}
-                              {isEmailReady && (
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{
-                                    duration: 0.8,
-                                    delay: 0.2,
-                                    ease: [0.22, 1, 0.36, 1],
-                                  }}
-                                >
-                                  <WordReveal
-                                    text="raf@raf.works"
-                                    className="text-foreground/70"
-                                    delay={0.2}
-                                  />
-                                </motion.div>
-                              )}
-                            </a>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -1972,6 +1936,43 @@ export default function Page() {
                               ))}
                             </div>
                           )}
+
+                          <div className="pt-4 min-h-[1.25em]">
+                            <a
+                              href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
+                              className={`text-sm text-foreground/70 hover:text-foreground transition-colors inline-block ${
+                                isEmailReady ? "" : "pointer-events-none"
+                              }`}
+                              aria-disabled={!isEmailReady}
+                              tabIndex={isEmailReady ? undefined : -1}
+                            >
+                              {!isEmailReady && (
+                                <span
+                                  className="block opacity-0 select-none"
+                                  aria-hidden="true"
+                                >
+                                  raf@raf.works
+                                </span>
+                              )}
+                              {isEmailReady && (
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{
+                                    duration: 0.8,
+                                    delay: 0.2,
+                                    ease: [0.22, 1, 0.36, 1],
+                                  }}
+                                >
+                                  <WordReveal
+                                    text="raf@raf.works"
+                                    className="text-foreground/70"
+                                    delay={0.2}
+                                  />
+                                </motion.div>
+                              )}
+                            </a>
+                          </div>
                         </div>
 
                         {/* Enhanced Desktop Slideshow View */}
