@@ -59,18 +59,18 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
 
   const hoverScale = hasVideo
     ? variant === "desktop"
-      ? 0.985
-      : 0.99
+      ? 0.986
+      : 0.992
     : variant === "desktop"
     ? 1.01
-    : 1.012;
+    : 1.008;
   const hoverFilter = hasVideo
     ? variant === "desktop"
-      ? "brightness(0.88) saturate(0.82)"
-      : "brightness(0.93) saturate(0.9)"
+      ? "brightness(0.9) saturate(0.88)"
+      : "brightness(0.94) saturate(0.92)"
     : variant === "desktop"
-    ? "brightness(1.06) saturate(1.05)"
-    : "brightness(1.05) saturate(1.03)";
+    ? "brightness(1.04) saturate(1.04)"
+    : "brightness(1.03) saturate(1.02)";
 
   const filterSegments = [
     !isLoaded ? "blur(20px)" : "",
@@ -79,13 +79,7 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
 
   const transformValue = isHovered ? `scale(${hoverScale})` : "scale(1)";
   const filterValue = filterSegments.join(" ") || "none";
-  const transitionDuration = hasVideo
-    ? variant === "desktop"
-      ? 0.9
-      : 0.8
-    : variant === "desktop"
-    ? 0.65
-    : 0.55;
+  const transitionDuration = variant === "desktop" ? 0.75 : 0.65;
   const transitionValue = `transform ${transitionDuration}s ${hoverEasingCss}, filter ${transitionDuration}s ${hoverEasingCss}, opacity 0.6s ${hoverEasingCss}`;
 
   const handleMouseEnter = () => {
@@ -128,95 +122,31 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
     ? {
         rest: {
           opacity: 0,
-          scale: 0.96,
-          transition: { duration: 0.6, ease: hoverEasingMotion },
-        },
-        hover: {
-          opacity: 1,
-          scale: 1,
-          transition: { duration: 0.6, ease: hoverEasingMotion },
-        },
-      }
-    : {
-        rest: {
-          opacity: 0,
-          scale: 0.94,
-          transition: { duration: 0.45, ease: hoverEasingMotion },
-        },
-        hover: {
-          opacity: 0.85,
-          scale: 1,
-          transition: { duration: 0.6, ease: hoverEasingMotion },
-        },
-      };
-
-  const glowVariants = hasVideo
-    ? {
-        rest: {
-          opacity: 0,
-          scale: 0.9,
-          transition: { duration: 0.6, ease: hoverEasingMotion },
-        },
-        hover: {
-          opacity: 1,
-          scale: 1.08,
-          transition: { duration: 0.8, ease: hoverEasingMotion },
-        },
-      }
-    : {
-        rest: {
-          opacity: 0,
-          scale: 0.95,
-          transition: { duration: 0.45, ease: hoverEasingMotion },
-        },
-        hover: {
-          opacity: 0.9,
-          scale: 1.04,
-          transition: { duration: 0.65, ease: hoverEasingMotion },
-        },
-      };
-
-  const pauseBadgeVariants = hasVideo
-    ? {
-        rest: {
-          opacity: 0,
-          scale: 0.75,
-          filter: "blur(6px)",
-          transition: { duration: 0.45, ease: hoverEasingMotion },
-        },
-        hover: {
-          opacity: 1,
-          scale: 1,
-          filter: "blur(0px)",
-          transition: { duration: 0.6, ease: hoverEasingMotion },
-        },
-      }
-    : {
-        rest: {
-          opacity: 0,
-          scale: 0.8,
-          filter: "blur(4px)",
-          transition: { duration: 0.4, ease: hoverEasingMotion },
-        },
-        hover: {
-          opacity: 0.9,
-          scale: 1,
-          filter: "blur(0px)",
+          scale: 0.97,
           transition: { duration: 0.55, ease: hoverEasingMotion },
+        },
+        hover: {
+          opacity: 0.32,
+          scale: 1,
+          transition: { duration: 0.55, ease: hoverEasingMotion },
+        },
+      }
+    : {
+        rest: {
+          opacity: 0,
+          scale: 0.97,
+          transition: { duration: 0.45, ease: hoverEasingMotion },
+        },
+        hover: {
+          opacity: 0.16,
+          scale: 1,
+          transition: { duration: 0.45, ease: hoverEasingMotion },
         },
       };
 
   const overlayBackgroundClass = hasVideo
-    ? "absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.3)_0%,rgba(0,0,0,0.5)_65%,rgba(0,0,0,0.6)_100%)]"
-    : "absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.45)_0%,rgba(255,255,255,0.12)_55%,rgba(255,255,255,0)_90%)] mix-blend-screen";
-
-  const pauseBadgeClass = hasVideo
-    ? "relative flex h-16 w-16 items-center justify-center rounded-full bg-black/50 backdrop-blur-md shadow-xl ring-1 ring-white/30"
-    : "relative flex h-14 w-14 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-lg shadow-black/10 ring-1 ring-black/10";
-
-  const pauseBarClass = hasVideo
-    ? "block h-6 w-1 rounded-full bg-white/92"
-    : "block h-6 w-1 rounded-full bg-foreground/70";
+    ? "bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.05)_0%,rgba(0,0,0,0.18)_55%,rgba(0,0,0,0.25)_100%)]"
+    : "bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.08)_40%,rgba(255,255,255,0)_80%)]";
 
   return (
     <WorkImageHover
@@ -243,17 +173,11 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
         quality={quality}
       />
       <motion.div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        className={`pointer-events-none absolute inset-0 ${overlayBackgroundClass}`}
         variants={overlayVariants}
         initial="rest"
         animate={isHovered ? "hover" : "rest"}
-      >
-        <motion.div className={overlayBackgroundClass} variants={glowVariants} />
-        <motion.div className={pauseBadgeClass} variants={pauseBadgeVariants}>
-          <span className={`mr-1 ${pauseBarClass}`}></span>
-          <span className={pauseBarClass}></span>
-        </motion.div>
-      </motion.div>
+      />
       {hasVideo && <VideoPlayButton onClick={onVideoClick} />}
     </WorkImageHover>
   );

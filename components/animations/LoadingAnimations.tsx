@@ -1,7 +1,21 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ReactNode } from "react";
+import { ComponentProps, ReactNode } from "react";
+
+type MotionDivProps = ComponentProps<typeof motion.div>;
+type MotionSpanProps = ComponentProps<typeof motion.span>;
+type MotionLiProps = ComponentProps<typeof motion.li>;
+type MotionUlProps = ComponentProps<typeof motion.ul>;
+type MotionSectionProps = ComponentProps<typeof motion.section>;
+type MotionButtonProps = ComponentProps<typeof motion.button>;
+
+type MotionDivWithChildren = MotionDivProps & { children: ReactNode };
+type MotionSpanWithChildren = MotionSpanProps & { children: ReactNode };
+type MotionLiWithChildren = MotionLiProps & { children: ReactNode };
+type MotionUlWithChildren = MotionUlProps & { children: ReactNode };
+type MotionSectionWithChildren = MotionSectionProps & { children: ReactNode };
+type MotionButtonWithChildren = MotionButtonProps & { children: ReactNode };
 
 // Enhanced easing curves for delightful micro-interactions
 export const EASING = {
@@ -267,17 +281,16 @@ export const LOADING_SEQUENCE = {
 } as const;
 
 // Text Reveal Component
+interface TextRevealProps extends MotionDivWithChildren {
+  delay?: number;
+}
+
 export function TextReveal({
   children,
   delay = 0,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  delay?: number;
-  className?: string;
-  [key: string]: any;
-}) {
+}: TextRevealProps) {
   return (
     <motion.div
       initial={textRevealAnimation.initial}
@@ -299,11 +312,7 @@ export function StaggeredTextContainer({
   children,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  className?: string;
-  [key: string]: any;
-}) {
+}: MotionDivWithChildren) {
   return (
     <motion.div
       variants={staggeredTextReveal.container}
@@ -322,11 +331,7 @@ export function StaggeredTextItem({
   children,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  className?: string;
-  [key: string]: any;
-}) {
+}: MotionDivWithChildren) {
   return (
     <motion.div
       variants={staggeredTextReveal.item}
@@ -341,17 +346,17 @@ export function StaggeredTextItem({
 // Enhanced Text Reveal Components
 
 // Character-by-Character Text Reveal
+interface CharacterRevealProps extends MotionDivProps {
+  text: string;
+  delay?: number;
+}
+
 export function CharacterReveal({
   text,
   className = "",
   delay = 0,
   ...props
-}: {
-  text: string;
-  className?: string;
-  delay?: number;
-  [key: string]: any;
-}) {
+}: CharacterRevealProps) {
   return (
     <motion.div
       variants={characterRevealAnimation.container}
@@ -375,17 +380,17 @@ export function CharacterReveal({
 }
 
 // Word-by-Word Text Reveal
+interface WordRevealProps extends MotionDivProps {
+  text: string;
+  delay?: number;
+}
+
 export function WordReveal({
   text,
   className = "",
   delay = 0,
   ...props
-}: {
-  text: string;
-  className?: string;
-  delay?: number;
-  [key: string]: any;
-}) {
+}: WordRevealProps) {
   const words = text.split(" ");
 
   return (
@@ -411,17 +416,17 @@ export function WordReveal({
 }
 
 // Phrase-by-Phrase Text Reveal
+interface PhraseRevealProps extends MotionDivProps {
+  phrases: string[];
+  delay?: number;
+}
+
 export function PhraseReveal({
   phrases,
   className = "",
   delay = 0,
   ...props
-}: {
-  phrases: string[];
-  className?: string;
-  delay?: number;
-  [key: string]: any;
-}) {
+}: PhraseRevealProps) {
   return (
     <motion.div
       variants={phraseRevealAnimation.container}
@@ -445,17 +450,17 @@ export function PhraseReveal({
 }
 
 // Enhanced Staggered Text Container with better timing
+interface EnhancedStaggeredTextContainerProps
+  extends MotionDivWithChildren {
+  staggerDelay?: number;
+}
+
 export function EnhancedStaggeredTextContainer({
   children,
   className = "",
   staggerDelay = 0.12,
   ...props
-}: {
-  children: ReactNode;
-  className?: string;
-  staggerDelay?: number;
-  [key: string]: any;
-}) {
+}: EnhancedStaggeredTextContainerProps) {
   return (
     <motion.div
       variants={{
@@ -485,11 +490,7 @@ export function EnhancedStaggeredTextItem({
   children,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  className?: string;
-  [key: string]: any;
-}) {
+}: MotionDivWithChildren) {
   return (
     <motion.div
       variants={{
@@ -519,17 +520,16 @@ export function EnhancedStaggeredTextItem({
 }
 
 // Image Carousel Item
+interface ImageCarouselItemProps extends MotionDivWithChildren {
+  delay?: number;
+}
+
 export function ImageCarouselItem({
   children,
   delay = 0,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  delay?: number;
-  className?: string;
-  [key: string]: any;
-}) {
+}: ImageCarouselItemProps) {
   return (
     <motion.div
       initial={imageCarouselAnimation.initial}
@@ -547,17 +547,16 @@ export function ImageCarouselItem({
 }
 
 // Navigation Reveal Component
+interface NavigationRevealProps extends MotionDivWithChildren {
+  delay?: number;
+}
+
 export function NavigationReveal({
   children,
   delay = 0,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  delay?: number;
-  className?: string;
-  [key: string]: any;
-}) {
+}: NavigationRevealProps) {
   return (
     <motion.div
       initial={navigationRevealAnimation.initial}
@@ -579,11 +578,7 @@ export function LoadingSkeleton({
   children,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  className?: string;
-  [key: string]: any;
-}) {
+}: MotionDivWithChildren) {
   return (
     <motion.div
       initial={skeletonAnimation.initial}
@@ -602,11 +597,7 @@ export function MicroInteraction({
   children,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  className?: string;
-  [key: string]: any;
-}) {
+}: MotionDivWithChildren) {
   return (
     <motion.div
       whileHover={microInteractionHover.whileHover}
@@ -620,17 +611,16 @@ export function MicroInteraction({
 }
 
 // Fade In Component
+interface FadeInProps extends MotionDivWithChildren {
+  delay?: number;
+}
+
 export function FadeIn({
   children,
   delay = 0,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  delay?: number;
-  className?: string;
-  [key: string]: any;
-}) {
+}: FadeInProps) {
   return (
     <motion.div
       initial={fadeInAnimation.initial}
@@ -648,17 +638,16 @@ export function FadeIn({
 }
 
 // Slide Up Component
+interface SlideUpProps extends MotionDivWithChildren {
+  delay?: number;
+}
+
 export function SlideUp({
   children,
   delay = 0,
   className = "",
   ...props
-}: {
-  children: ReactNode;
-  delay?: number;
-  className?: string;
-  [key: string]: any;
-}) {
+}: SlideUpProps) {
   return (
     <motion.div
       initial={slideUpAnimation.initial}

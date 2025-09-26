@@ -65,13 +65,13 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
 
   const shadowClasses =
     variant === "mobile"
-      ? "hover:shadow-md hover:shadow-black/3 transition-shadow duration-800"
-      : "hover:shadow-lg hover:shadow-black/4 transition-shadow duration-900";
+      ? "transition-shadow duration-800 hover:shadow-[0_18px_40px_rgba(15,15,15,0.16)]"
+      : "transition-shadow duration-900 hover:shadow-[0_22px_55px_rgba(15,15,15,0.18)]";
 
   const baseClasses =
     variant === "mobile"
-      ? "relative w-full overflow-hidden"
-      : "relative flex h-full w-full items-center justify-center overflow-hidden";
+      ? "group relative w-full overflow-hidden"
+      : "group relative flex h-full w-full items-center justify-center overflow-hidden";
 
   const transitionStyle =
     variant === "mobile"
@@ -80,7 +80,7 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
 
   return (
     <motion.div
-      className={`${baseClasses} ${hasVideo ? "cursor-pointer group" : ""} ${shadowClasses} ${className}`}
+      className={`${baseClasses} ${hasVideo ? "cursor-pointer" : ""} ${shadowClasses} ${className}`}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
