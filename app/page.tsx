@@ -1,26 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { notes } from "./data/notes";
 
 // Enhanced animation components
 import {
   ImageCarouselItem,
   EASING,
-  EnhancedStaggeredTextContainer,
-  EnhancedStaggeredTextItem,
   WordReveal,
-  FadeIn,
   LoadingProgress,
   BreathingSkeleton,
   ProgressiveLoadingStates,
-  LoadingTransition,
 } from "@/components/animations/LoadingAnimations";
 import { useLoadingSequence } from "@/hooks/useLoadingSequence";
 import { WorkImageContainer } from "./components/hover";
@@ -34,20 +26,13 @@ export default function Page() {
   // Core UI state management
   const mainContentRef = useRef<HTMLElement | null>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
-  const noteModalRef = useRef<HTMLDivElement | null>(null);
-  const allNotesModalRef = useRef<HTMLDivElement | null>(null);
   const videoModalRef = useRef<HTMLDivElement | null>(null);
-  const noteModalCloseButtonRef = useRef<HTMLButtonElement | null>(null);
-  const allNotesCloseButtonRef = useRef<HTMLButtonElement | null>(null);
   const videoModalCloseButtonRef = useRef<HTMLButtonElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
-  const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
-  const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
 
   // Enhanced loading sequence management
   const loadingSequence = useLoadingSequence();
@@ -87,7 +72,6 @@ export default function Page() {
   const [secondLineComplete, setSecondLineComplete] = useState(false);
   const [finalTextAnimationComplete, setFinalTextAnimationComplete] =
     useState(false);
-  const [transitionProgress, setTransitionProgress] = useState(0);
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
   const [blurAmount, setBlurAmount] = useState(15);
 
@@ -101,23 +85,6 @@ export default function Page() {
   const [scrollY, setScrollY] = useState(0);
   const [animationsComplete, setAnimationsComplete] = useState(false);
   const [criticalContentLoaded, setCriticalContentLoaded] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState(0);
-
-  /**
-   * Viewport height management for responsive design
-   * Updates on window resize to ensure proper layout calculations
-   */
-  useEffect(() => {
-    const updateViewportHeight = () => {
-      setViewportHeight(window.innerHeight);
-    };
-
-    updateViewportHeight();
-    window.addEventListener("resize", updateViewportHeight);
-
-    return () => window.removeEventListener("resize", updateViewportHeight);
-  }, []);
-
   /**
    * Optimized scroll handling with throttling
    * Improves performance by reducing scroll event frequency
@@ -145,25 +112,6 @@ export default function Page() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Time-based UI state for dynamic theming
-  const [timeState, setTimeState] = useState<{
-    hour: number;
-    minute: number;
-    timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night";
-    progress: number;
-  }>({
-    hour: new Date().getHours(),
-    minute: new Date().getMinutes(),
-    timeOfDay: (() => {
-      const hour = new Date().getHours();
-      if (hour >= 5 && hour < 8) return "dawn";
-      if (hour >= 8 && hour < 12) return "morning";
-      if (hour >= 12 && hour < 17) return "afternoon";
-      if (hour >= 17 && hour < 21) return "evening";
-      return "night";
-    })(),
-    progress: 0.5,
-  });
   const [focusAnimationRun, setFocusAnimationRun] = useState(false);
 
   // Weather state management for dynamic UI effects
@@ -409,9 +357,6 @@ export default function Page() {
       }, 8000);
     }
 
-    // Optimized: Less frequent time updates
-    const timeInterval = setInterval(updateTimeState, 30000); // Update every 30 seconds instead of every second
-
     // Set up keyboard event listener
     window.addEventListener("keydown", handleKeyDown);
 
@@ -438,14 +383,8 @@ export default function Page() {
 
     // Start the slideshow after a short delay to ensure images are loaded
     const slideshowTimer = setTimeout(() => {
-      if (
-        !isNotesModalOpen &&
-        !isAllNotesModalOpen &&
-        !isSlideshowPaused &&
-        criticalContentLoaded
-      ) {
+      if (!isSlideshowPaused && criticalContentLoaded) {
         setCurrentImageIndex(0);
-        setTransitionProgress(0);
       }
     }, 1000);
 
@@ -480,7 +419,6 @@ export default function Page() {
     // checkCriticalContent();
 
     return () => {
-      clearInterval(timeInterval);
       clearTimeout(slideshowTimer);
       clearTimeout(animationTimer);
       clearTimeout(fallbackTimer);
@@ -549,71 +487,6 @@ export default function Page() {
       };
     }
   }, [mounted, focusAnimationRun]);
-
-  /**
-   * Updates time state based on EST timezone
-   * Handles DST adjustments and calculates time of day periods
-   * @returns {void}
-   */
-  const updateTimeState = () => {
-    const now = new Date();
-    const estOffset = -5;
-
-    /**
-     * Determines if current time is in Daylight Saving Time
-     * @returns {boolean} True if currently in DST
-     */
-    const isDST = () => {
-      const jan = new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
-      const jul = new Date(now.getFullYear(), 6, 1).getTimezoneOffset();
-      return Math.max(jan, jul) !== now.getTimezoneOffset();
-    };
-
-    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-    const estTime = new Date(utc + 3600000 * (estOffset + (isDST() ? 1 : 0)));
-
-    const hour = estTime.getHours();
-    const minute = estTime.getMinutes();
-
-    let timeOfDay: "dawn" | "morning" | "afternoon" | "evening" | "night";
-    if (hour >= 5 && hour < 8) {
-      timeOfDay = "dawn";
-    } else if (hour >= 8 && hour < 12) {
-      timeOfDay = "morning";
-    } else if (hour >= 12 && hour < 17) {
-      timeOfDay = "afternoon";
-    } else if (hour >= 17 && hour < 21) {
-      timeOfDay = "evening";
-    } else {
-      timeOfDay = "night";
-    }
-
-    let progress = 0;
-    if (timeOfDay === "dawn") {
-      progress = ((hour - 5) * 60 + minute) / (3 * 60);
-    } else if (timeOfDay === "morning") {
-      progress = ((hour - 8) * 60 + minute) / (4 * 60);
-    } else if (timeOfDay === "afternoon") {
-      progress = ((hour - 12) * 60 + minute) / (5 * 60);
-    } else if (timeOfDay === "evening") {
-      progress = ((hour - 17) * 60 + minute) / (4 * 60);
-    } else {
-      if (hour >= 21) {
-        progress = ((hour - 21) * 60 + minute) / (8 * 60);
-      } else {
-        progress = ((hour + 3) * 60 + minute) / (8 * 60);
-      }
-    }
-
-    progress = Math.max(0, Math.min(1, progress));
-
-    setTimeState({
-      hour,
-      minute,
-      timeOfDay,
-      progress,
-    });
-  };
 
   /**
    * Fetches weather data for a specified location using OpenMeteo API
@@ -695,40 +568,29 @@ export default function Page() {
 
   /**
    * Handles keyboard navigation and modal interactions
-   * - Escape key closes any open modal
-   * - Arrow keys navigate through images or notes
+   * - Escape key closes the video modal
+   * - Arrow keys navigate through images
    * @param {KeyboardEvent} e - The keyboard event
    */
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
-      if (isNotesModalOpen || isAllNotesModalOpen || isVideoModalOpen) {
-        // setIsPhotosModalOpen(false);
-        setIsNotesModalOpen(false);
-        setIsAllNotesModalOpen(false);
+      if (isVideoModalOpen) {
         setIsVideoModalOpen(false);
       }
       return;
     }
 
-    if (isNotesModalOpen || isAllNotesModalOpen || isVideoModalOpen) return;
+    if (isVideoModalOpen) return;
 
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
       setIsSlideshowPaused(true);
 
       if (e.key === "ArrowRight") {
-        if (!isNotesModalOpen) {
-          setCurrentImageIndex((prev) => (prev + 1) % images.length);
-        } else {
-          handleNextNote();
-        }
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
       } else {
-        if (!isNotesModalOpen) {
-          setCurrentImageIndex((prev) =>
-            prev === 0 ? images.length - 1 : prev - 1
-          );
-        } else {
-          handlePrevNote();
-        }
+        setCurrentImageIndex((prev) =>
+          prev === 0 ? images.length - 1 : prev - 1
+        );
       }
     }
   };
@@ -746,7 +608,7 @@ export default function Page() {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen, images.length]);
+  }, [isVideoModalOpen, images.length]);
 
   // Add a ref for the slideshow container
   const slideshowRef = useRef<HTMLDivElement>(null);
@@ -763,22 +625,17 @@ export default function Page() {
       mounted &&
       criticalContentLoaded &&
       isInViewport &&
-      !isNotesModalOpen &&
-      !isAllNotesModalOpen &&
       !isVideoModalOpen &&
       !isSlideshowPaused &&
       !initialLoadComplete
     ) {
       setCurrentImageIndex(0);
-      setTransitionProgress(0);
       setInitialLoadComplete(true);
     }
   }, [
     mounted,
     criticalContentLoaded,
     isInViewport,
-    isNotesModalOpen,
-    isAllNotesModalOpen,
     isVideoModalOpen,
     isSlideshowPaused,
     initialLoadComplete,
@@ -812,28 +669,6 @@ export default function Page() {
   }, [mounted]);
 
   /**
-   * Handles slideshow visibility state
-   * Resets progress when slideshow becomes visible
-   */
-  useEffect(() => {
-    if (
-      isInViewport &&
-      !isNotesModalOpen &&
-      !isAllNotesModalOpen &&
-      !isVideoModalOpen &&
-      finalTextAnimationComplete
-    ) {
-      setTransitionProgress(0);
-    }
-  }, [
-    isInViewport,
-    isNotesModalOpen,
-    isAllNotesModalOpen,
-    isVideoModalOpen,
-    finalTextAnimationComplete,
-  ]);
-
-  /**
    * Main slideshow interval effect
    * Advances to next image every SLIDESHOW_INTERVAL seconds when conditions are met
    * Waits for final text animation to complete before starting
@@ -844,8 +679,6 @@ export default function Page() {
       !criticalContentLoaded ||
       !finalTextAnimationComplete ||
       !isInViewport ||
-      isNotesModalOpen ||
-      isAllNotesModalOpen ||
       isVideoModalOpen ||
       isSlideshowPaused
     )
@@ -861,21 +694,10 @@ export default function Page() {
     criticalContentLoaded,
     finalTextAnimationComplete,
     isInViewport,
-    isNotesModalOpen,
-    isAllNotesModalOpen,
     isVideoModalOpen,
     isSlideshowPaused,
     images.length,
   ]);
-
-  // Enhanced image loading with retry logic and connection awareness
-  const [imageRetryCount, setImageRetryCount] = useState<{
-    [key: string]: number;
-  }>({});
-  const [imageLoadTimeouts, setImageLoadTimeouts] = useState<{
-    [key: string]: NodeJS.Timeout;
-  }>({});
-  const [viewportImages, setViewportImages] = useState<Set<string>>(new Set());
 
   /**
    * Enhanced image preloader with retry logic and connection awareness
@@ -905,7 +727,6 @@ export default function Page() {
           // Exponential backoff for retries
           const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
           setTimeout(() => {
-            setImageRetryCount((prev) => ({ ...prev, [src]: retryCount + 1 }));
             preloadImage(src, retryCount + 1)
               .then(resolve)
               .catch(reject);
@@ -942,16 +763,12 @@ export default function Page() {
     const nextImages = [];
     for (let i = 1; i <= 3; i++) {
       const nextIndex = (currentImageIndex + i) % images.length;
-      if (
-        !loadedImages[images[nextIndex]] &&
-        !viewportImages.has(images[nextIndex])
-      ) {
+      if (!loadedImages[images[nextIndex]]) {
         nextImages.push(images[nextIndex]);
       }
     }
 
     nextImages.forEach((src) => {
-      setViewportImages((prev) => new Set([...prev, src]));
       preloadImage(src).catch(() => {
         // Silently handle preload failures
       });
@@ -1000,17 +817,6 @@ export default function Page() {
   }, [currentImageIndex, criticalContentLoaded, mounted]);
 
   /**
-   * Cleanup timeouts on unmount
-   */
-  useEffect(() => {
-    return () => {
-      Object.values(imageLoadTimeouts).forEach((timeout) => {
-        if (timeout) clearTimeout(timeout);
-      });
-    };
-  }, [imageLoadTimeouts]);
-
-  /**
    * Handles image loading completion
    * Updates loading state and triggers slideshow when appropriate
    * @param {string} src - Source path of the loaded image
@@ -1039,17 +845,6 @@ export default function Page() {
       }
 
       // Check if all images are loaded
-      const allLoaded = images.every((imgSrc) => newState[imgSrc]);
-      if (
-        allLoaded &&
-        mounted &&
-        !isNotesModalOpen &&
-        !isAllNotesModalOpen &&
-        !isVideoModalOpen
-      ) {
-        setTransitionProgress(0);
-      }
-
       return newState;
     });
   };
@@ -1077,20 +872,6 @@ export default function Page() {
   };
 
   /**
-   * Closes the note modal with animation
-   * Re-enables scrolling and cleans up modal state
-   * @param {React.MouseEvent} e - Mouse event from close action
-   */
-  const handleCloseNote = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    document.body.style.overflow = "";
-
-    setTimeout(() => {
-      setIsNotesModalOpen(false);
-    }, 100);
-  };
-
-  /**
    * Cleanup effect for modal state
    * Ensures scrolling is re-enabled when component unmounts
    */
@@ -1101,32 +882,12 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    if (isNotesModalOpen || isAllNotesModalOpen || isVideoModalOpen) {
+    if (isVideoModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
-  }, [isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen]);
-
-  useEffect(() => {
-    if (isNotesModalOpen) {
-      previouslyFocusedElementRef.current =
-        (document.activeElement as HTMLElement) ?? null;
-      requestAnimationFrame(() => {
-        noteModalCloseButtonRef.current?.focus();
-      });
-    }
-  }, [isNotesModalOpen]);
-
-  useEffect(() => {
-    if (isAllNotesModalOpen) {
-      previouslyFocusedElementRef.current =
-        (document.activeElement as HTMLElement) ?? null;
-      requestAnimationFrame(() => {
-        allNotesCloseButtonRef.current?.focus();
-      });
-    }
-  }, [isAllNotesModalOpen]);
+  }, [isVideoModalOpen]);
 
   useEffect(() => {
     if (isVideoModalOpen) {
@@ -1135,191 +896,10 @@ export default function Page() {
       requestAnimationFrame(() => {
         videoModalCloseButtonRef.current?.focus();
       });
-    }
-  }, [isVideoModalOpen]);
-
-  useEffect(() => {
-    if (!isNotesModalOpen && !isAllNotesModalOpen && !isVideoModalOpen) {
+    } else {
       previouslyFocusedElementRef.current?.focus?.();
     }
-  }, [isNotesModalOpen, isAllNotesModalOpen, isVideoModalOpen]);
-
-  /**
-   * Navigates to the next note in the sequence
-   * Wraps around to the beginning when reaching the end
-   */
-  const handleNextNote = () => {
-    setCurrentNoteIndex((prev) => (prev + 1) % notes.length);
-  };
-
-  /**
-   * Navigates to the previous note in the sequence
-   * Wraps around to the end when reaching the beginning
-   */
-  const handlePrevNote = () => {
-    setCurrentNoteIndex((prev) => (prev - 1 + notes.length) % notes.length);
-  };
-
-  /**
-   * Animation variants for card transitions
-   * Provides smooth enter/exit animations with scaling and opacity
-   */
-  const cardVariants = {
-    enter: (direction: number) => ({
-      opacity: 0,
-      scale: 0.98,
-      y: 10,
-    }),
-    center: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        opacity: { duration: 0.3 },
-        scale: { duration: 0.3 },
-        y: { duration: 0.3 },
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-    exit: (direction: number) => ({
-      opacity: 0,
-      scale: 0.98,
-      y: 10,
-      transition: {
-        opacity: { duration: 0.2 },
-        scale: { duration: 0.2 },
-        y: { duration: 0.2 },
-        ease: [0.22, 1, 0.36, 1],
-      },
-    }),
-  };
-
-  // State for tracking navigation direction
-  const [direction, setDirection] = useState(0);
-
-  /**
-   * Updates navigation direction and note index
-   * @param {number} newDirection - Direction of navigation (1 for next, -1 for previous)
-   * @param {number} newIndex - New note index to navigate to
-   */
-  const navigateWithDirection = (newDirection: number, newIndex: number) => {
-    setDirection(newDirection);
-    setCurrentNoteIndex(newIndex);
-  };
-
-  /**
-   * Navigates to next note with direction tracking
-   * Wraps around to beginning when reaching the end
-   */
-  const handleNextNoteWithDirection = () => {
-    navigateWithDirection(1, (currentNoteIndex + 1) % notes.length);
-  };
-
-  /**
-   * Navigates to previous note with direction tracking
-   * Wraps around to end when reaching the beginning
-   */
-  const handlePrevNoteWithDirection = () => {
-    navigateWithDirection(
-      -1,
-      (currentNoteIndex - 1 + notes.length) % notes.length
-    );
-  };
-
-  /**
-   * Formats current time for display in 12-hour format
-   * @returns {string} Formatted time string with AM/PM and timezone
-   */
-  const formatTime = () => {
-    if (!mounted) return "";
-
-    const { hour, minute } = timeState;
-    const period = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour % 12 || 12;
-    const displayMinute = minute < 10 ? `0${minute}` : minute;
-
-    return `${displayHour}:${displayMinute} ${period} EST`;
-  };
-
-  /**
-   * Calculates time difference between user's local time and EST
-   * @param {boolean} isMobile - Whether the calculation is for mobile view
-   * @returns {string} Human-readable time difference message
-   */
-  const getTimeDifference = (isMobile = false) => {
-    if (!mounted) return "";
-
-    const localDate = new Date();
-
-    const estOptions = {
-      timeZone: "America/New_York",
-      hour: "numeric" as const,
-      minute: "numeric" as const,
-      hour12: false,
-    };
-    const estHour = parseInt(
-      new Intl.DateTimeFormat("en-US", estOptions).format(localDate)
-    );
-
-    const localOptions = { hour: "numeric" as const, hour12: false };
-    const localHour = parseInt(
-      new Intl.DateTimeFormat("en-US", localOptions).format(localDate)
-    );
-
-    let hourDifference = localHour - estHour;
-
-    if (hourDifference > 12) {
-      hourDifference -= 24;
-    } else if (hourDifference < -12) {
-      hourDifference += 24;
-    }
-
-    if (isMobile) {
-      // Mobile: always concise, one-line, no wrapping
-      if (hourDifference === 0) {
-        return (
-          <>
-            Same timezone as <span className="font-raf">Raf</span>
-          </>
-        );
-      } else if (hourDifference > 0) {
-        return (
-          <>
-            <span className="font-raf">Raf</span> is {hourDifference}h behind
-          </>
-        );
-      } else {
-        return (
-          <>
-            <span className="font-raf">Raf</span> is {Math.abs(hourDifference)}h
-            ahead
-          </>
-        );
-      }
-    } else {
-      // Desktop: use concise format to prevent wrapping
-      if (hourDifference === 0) {
-        return (
-          <>
-            Same timezone as <span className="font-raf">Raf</span>
-          </>
-        );
-      } else if (hourDifference > 0) {
-        return (
-          <>
-            <span className="font-raf">Raf</span> is {hourDifference}h behind
-          </>
-        );
-      } else {
-        return (
-          <>
-            <span className="font-raf">Raf</span> is {Math.abs(hourDifference)}h
-            ahead
-          </>
-        );
-      }
-    }
-  };
+  }, [isVideoModalOpen]);
 
   /**
    * Toggles weather effect display
@@ -1640,8 +1220,7 @@ export default function Page() {
   // Add a fallback mechanism to restart the slideshow if it gets stuck
   useEffect(() => {
     // Skip only if a modal is open
-    if (isNotesModalOpen || isAllNotesModalOpen || isVideoModalOpen || !mounted)
-      return;
+    if (isVideoModalOpen || !mounted) return;
 
     // Check if the slideshow is stuck (no image change for more than the threshold)
     const checkInterval = setInterval(() => {
@@ -1654,20 +1233,12 @@ export default function Page() {
         // Force the next image in sequence
         setCurrentImageIndex((prev) => (prev + 1) % images.length);
         // Reset progress
-        setTransitionProgress(0);
         setLastImageChangeTime(currentTime);
       }
     }, SLIDESHOW_CHECK_INTERVAL);
 
     return () => clearInterval(checkInterval);
-  }, [
-    isNotesModalOpen,
-    isAllNotesModalOpen,
-    isVideoModalOpen,
-    lastImageChangeTime,
-    mounted,
-    images.length,
-  ]);
+  }, [isVideoModalOpen, lastImageChangeTime, mounted, images.length]);
 
   // Update lastImageChangeTime whenever the image changes
   useEffect(() => {
@@ -1689,7 +1260,6 @@ export default function Page() {
     if (mounted) {
       // Start with the first image
       setCurrentImageIndex(0);
-      setTransitionProgress(0);
       setLastImageChangeTime(Date.now());
 
       // Log that the slideshow is starting
@@ -1717,13 +1287,6 @@ export default function Page() {
       clickPosition: { x: window.innerWidth / 2, y: 0 },
     }));
   };
-
-  // Add memoized notes sorting
-  const sortedNotes = useMemo(() => {
-    return [...notes]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 3);
-  }, []);
 
   const isSecondaryTextReady = loadingSequence.textLoaded && firstLineComplete;
   const isEmailReady = loadingSequence.textLoaded && secondLineComplete;
@@ -2026,7 +1589,7 @@ export default function Page() {
 
                   {/* Secondary text for desktop */}
                   <div className="text-center mb-4">
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
                         {isSecondaryTextReady && (
                           <motion.div
@@ -2238,7 +1801,6 @@ export default function Page() {
                       }}
                       onMouseLeave={() => {
                         setIsSlideshowPaused(false);
-                        setTransitionProgress(0);
                       }}
                       onTouchStart={() => setIsSlideshowPaused(true)}
                       onTouchEnd={() => {
@@ -2417,56 +1979,6 @@ export default function Page() {
                     {/* Open works button removed */}
                   </div>
                 </motion.div>
-
-                {/* 
-              {/* About Section 
-              <section className="w-full">
-                <div className="space-y-8">
-                  <div className="space-y-6">
-                    <p className="text-foreground/70 tracking-tight text-lg">
-                      Raf is a Product Designer. His contributions include{" "}
-                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                        Theoriq
-                      </span>
-                      ,{" "}
-                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                        CurbCutOS
-                      </span>
-                      , various crypto startups and{" "}
-                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                        Zalando
-                      </span>
-                      .<br /> He has also partnered with clients like{" "}
-                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                        w.ai
-                      </span>
-                      ,{" "}
-                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                        US.court
-                      </span>
-                      ,{" "}
-                      <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                        Artscapy
-                      </span>
-                      , and many more.
-                    </p>
-                    <p className="tracking-tight text-lg">
-                      <span className="text-foreground/70">
-                        Originally from{" "}
-                        <span className="text-foreground/90 hover:text-foreground transition-colors duration-300">
-                          Italy
-                        </span>
-                        , where he studied software and design, and now{" "}
-                        <span className="text-foreground font-medium">
-                          based in Toronto
-                        </span>
-                        ,<br /> Raf enjoys portraitures, yoga, and inspiring
-                        workspaces.{" "}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </section> */}
 
                 {/* Experience, Notes, and About sections are currently disabled */}
               </motion.div>
@@ -2757,426 +2269,8 @@ export default function Page() {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Notes Modal */}
-            <AnimatePresence>
-              {isNotesModalOpen && (
-                <>
-                  {/* Fixed backdrop */}
-                  <motion.div
-                    initial={shouldReduceMotion ? false : { opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={
-                      shouldReduceMotion
-                        ? { duration: 0 }
-                        : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
-                    }
-                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                    onClick={handleCloseNote}
-                  />
-
-                  {/* Scrollable content */}
-                  <motion.div
-                    initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
-                    transition={
-                      shouldReduceMotion
-                        ? { duration: 0 }
-                        : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
-                    }
-                    className="fixed inset-0 z-50 flex items-center justify-center"
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) {
-                        handleCloseNote(e);
-                      }
-                    }}
-                    tabIndex={-1}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="note-modal-title"
-                    ref={noteModalRef}
-                    onKeyDown={(event) =>
-                      handleFocusTrapKeyDown(event, noteModalRef)
-                    }
-                  >
-                    {/* Card stack container - centered in viewport */}
-                    <div className="w-full max-w-3xl mx-auto px-4 relative">
-                      {/* Background cards for stack effect - hide on mobile */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, rotate: -0.5 }}
-                        animate={{ opacity: 1, y: 0, rotate: -0.5 }}
-                        exit={{ opacity: 0, y: -5, rotate: -0.5 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="absolute inset-x-0 top-4 mx-auto w-[98%] h-[calc(100%-16px)] bg-white/80 dark:bg-zinc-900/80 rounded-xl shadow-lg -z-10 hidden sm:block"
-                        style={{
-                          boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.05)",
-                        }}
-                      ></motion.div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, rotate: 0.5 }}
-                        animate={{ opacity: 1, y: 0, rotate: 0.5 }}
-                        exit={{ opacity: 0, y: -5, rotate: 0.5 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="absolute inset-x-0 top-2 mx-auto w-[99%] h-[calc(100%-8px)] bg-white/90 dark:bg-zinc-900/90 rounded-xl shadow-lg -z-20 hidden sm:block"
-                        style={{
-                          boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.08)",
-                        }}
-                      ></motion.div>
-
-                      {/* Main content card with horizontal transition */}
-                      <AnimatePresence
-                        initial={false}
-                        custom={direction}
-                        mode="wait"
-                      >
-                        <motion.div
-                          key={currentNoteIndex}
-                          custom={direction}
-                          variants={cardVariants}
-                          initial={isNotesModalOpen ? "enter" : false}
-                          animate="center"
-                          exit="exit"
-                          className="w-full bg-white/95 dark:bg-zinc-900/95 rounded-xl overflow-hidden relative sm:rounded-xl sm:w-full shadow-lg"
-                          style={{
-                            backdropFilter: "blur(10px)",
-                            WebkitBackdropFilter: "blur(10px)",
-                          }}
-                          id={`note-card-modal-${currentNoteIndex}`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {/* Card inner content with padding */}
-                          <div className="px-8 md:px-16 py-20 pb-32 overflow-y-auto max-h-[85vh]">
-                            {/* Header area with controls */}
-                            <div className="absolute top-0 left-0 right-0 h-28 px-8 md:px-16 flex items-center justify-between bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm z-10 border-b border-foreground/[0.03]">
-                              {/* Left side - Date and Title */}
-                              <div className="flex flex-col">
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="text-sm text-foreground/40 font-light tracking-wide"
-                                >
-                                  {new Date(
-                                    notes[currentNoteIndex].date
-                                  ).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })}
-                                </motion.div>
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="text-xl font-medium text-foreground mt-1.5 tracking-tight"
-                                  id="note-modal-title"
-                                >
-                                  {notes[currentNoteIndex].title}
-                                </motion.div>
-                              </div>
-
-                              {/* Right side - Close button */}
-                              <div className="flex items-center gap-4">
-                                {/* Close button - for all devices */}
-                                <motion.button
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                  onClick={handleCloseNote}
-                                  className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-foreground/5 transition-colors"
-                                  ref={noteModalCloseButtonRef}
-                                  aria-label="Close note"
-                                >
-                                  <svg
-                                    width="14"
-                                    height="14"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    className="text-foreground/40 hover:text-foreground/60 transition-colors"
-                                  >
-                                    <path d="M18 6L6 18M6 6l12 12" />
-                                  </svg>
-                                </motion.button>
-                              </div>
-                            </div>
-
-                            {/* Content area with enhanced typography */}
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.3, ease: "easeInOut" }}
-                              className="prose dark:prose-invert max-w-none mt-16 relative pb-8 sm:pb-0 min-h-[40vh] note-content"
-                            >
-                              <motion.div
-                                key={currentNoteIndex}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{
-                                  duration: 0.4,
-                                  ease: [0.22, 1, 0.36, 1],
-                                }}
-                                className="text-foreground/70 leading-relaxed tracking-wide"
-                              >
-                                <ReactMarkdown
-                                  components={{
-                                    h1: ({ node, ...props }) => null,
-                                    p: ({ node, children, ...props }) => (
-                                      <p className="leading-relaxed" {...props}>
-                                        {children}
-                                      </p>
-                                    ),
-                                    blockquote: ({
-                                      node,
-                                      children,
-                                      ...props
-                                    }) => (
-                                      <blockquote className="!pl-6" {...props}>
-                                        {children}
-                                      </blockquote>
-                                    ),
-                                  }}
-                                >
-                                  {notes[currentNoteIndex].content}
-                                </ReactMarkdown>
-                              </motion.div>
-                            </motion.div>
-
-                            {/* Navigation controls with enhanced styling */}
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.3, duration: 0.5 }}
-                              className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-8 md:px-16 py-4 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border-t border-foreground/[0.03]"
-                            >
-                              {/* Left side - Previous note */}
-                              <motion.button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handlePrevNoteWithDirection();
-                                }}
-                                className="flex items-center gap-2 text-sm text-foreground/40 hover:text-foreground transition-colors group"
-                                aria-label="Previous note"
-                              >
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  className="transform transition-transform group-hover:-translate-x-0.5"
-                                >
-                                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                                </svg>
-                                <span className="hidden sm:inline">
-                                  Previous
-                                </span>
-                              </motion.button>
-
-                              {/* Center - Note selector dots */}
-                              <div className="flex items-center gap-2">
-                                {notes.map((_, index) => (
-                                  <motion.button
-                                    key={index}
-                                    whileHover={{ scale: 1.2 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigateWithDirection(
-                                        index > currentNoteIndex ? 1 : -1,
-                                        index
-                                      );
-                                    }}
-                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                                      currentNoteIndex === index
-                                        ? "bg-foreground w-3"
-                                        : "bg-foreground/30"
-                                    }`}
-                                    aria-label={`Go to note ${index + 1}`}
-                                  />
-                                ))}
-                              </div>
-
-                              {/* Right side - Next note */}
-                              <motion.button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleNextNoteWithDirection();
-                                }}
-                                className="flex items-center gap-2 text-sm text-foreground/40 hover:text-foreground transition-colors group"
-                                aria-label="Next note"
-                              >
-                                <span className="hidden sm:inline">Next</span>
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  className="transform transition-transform group-hover:translate-x-0.5"
-                                >
-                                  <path d="M5 12h14M12 5l7 7-7 7" />
-                                </svg>
-                              </motion.button>
-                            </motion.div>
-                          </div>
-                        </motion.div>
-                      </AnimatePresence>
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-
-            {/* All Notes Modal */}
-            <AnimatePresence>
-              {isAllNotesModalOpen && (
-                <>
-                  {/* Fixed backdrop */}
-                  <motion.div
-                    initial={shouldReduceMotion ? false : { opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={
-                      shouldReduceMotion
-                        ? { duration: 0 }
-                        : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
-                    }
-                    className="fixed inset-0 backdrop-blur-lg bg-background/60 z-50"
-                    onClick={() => setIsAllNotesModalOpen(false)}
-                  />
-
-                  {/* Scrollable content */}
-                  <motion.div
-                    initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
-                    transition={
-                      shouldReduceMotion
-                        ? { duration: 0 }
-                        : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
-                    }
-                    className="fixed inset-0 z-50 overflow-y-auto"
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) {
-                        setIsAllNotesModalOpen(false);
-                      }
-                    }}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="all-notes-modal-title"
-                    tabIndex={-1}
-                    ref={allNotesModalRef}
-                    onKeyDown={(event) =>
-                      handleFocusTrapKeyDown(event, allNotesModalRef)
-                    }
-                  >
-                    {/* Content container */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="w-full max-w-3xl mx-auto px-6 md:px-12 py-16 pb-24 my-12 bg-white/95 dark:bg-zinc-900/95 rounded-xl shadow-xl relative"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <h2 id="all-notes-modal-title" className="sr-only">
-                        All notes
-                      </h2>
-                      {/* Close button - positioned in top right */}
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ delay: 0.2, duration: 0.3 }}
-                        className="absolute top-6 right-6 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsAllNotesModalOpen(false);
-                        }}
-                        ref={allNotesCloseButtonRef}
-                        aria-label="Close all notes"
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="transition-transform duration-300 hover:scale-110 text-white/70 hover:text-white"
-                        >
-                          <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                      </motion.button>
-
-                      <div className="flex flex-col divide-y divide-foreground/10 mt-8">
-                        {notes
-                          .sort(
-                            (a, b) =>
-                              new Date(b.date).getTime() -
-                              new Date(a.date).getTime()
-                          )
-                          .map((note, index) => (
-                            <motion.button
-                              key={note.id}
-                              type="button"
-                              className="w-full text-left py-6 first:pt-0 cursor-pointer bg-transparent border-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground/40"
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{
-                                duration: 0.3,
-                                delay: index * 0.05,
-                              }}
-                              whileHover={{ x: 2 }}
-                              onClick={() => {
-                                setCurrentNoteIndex(index);
-                                setIsAllNotesModalOpen(false);
-                                setTimeout(
-                                  () => setIsNotesModalOpen(true),
-                                  100
-                                );
-                              }}
-                            >
-                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start">
-                                <div className="text-sm text-foreground/50 whitespace-nowrap min-w-[90px]">
-                                  {new Date(note.date).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                      month: "short",
-                                      day: "numeric",
-                                      year: "numeric",
-                                    }
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <p className="text-lg text-foreground hover:text-foreground/90 transition-colors mb-1">
-                                    {note.title}
-                                  </p>
-                                  <p className="text-base text-foreground/60 line-clamp-2">
-                                    {note.excerpt}
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.button>
-                          ))}
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
           </div>
         </motion.main>
-
-        {/* Optimized: Removed ImagePreloader component */}
 
         {/* Video Modal */}
         <AnimatePresence>
