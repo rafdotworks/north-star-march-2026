@@ -1714,7 +1714,7 @@ export default function Page() {
                               </motion.div>
                             )}
                           </div>
-                          <div className="mt-3 min-h-[1.25em]">
+                          <div className="min-h-[1.25em]">
                             <a
                               href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
                               className={`text-sm text-foreground/70 hover:text-foreground transition-colors inline-block ${
