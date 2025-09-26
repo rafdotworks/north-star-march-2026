@@ -4,17 +4,13 @@ import React from "react";
 
 interface VideoPlayButtonProps {
   onClick?: () => void;
-  className?: string;
 }
 
 /**
  * Localized video play button component
  * Provides consistent play button styling and interactions
  */
-export const VideoPlayButton: React.FC<VideoPlayButtonProps> = ({
-  onClick,
-  className = "",
-}) => {
+export const VideoPlayButton: React.FC<VideoPlayButtonProps> = ({ onClick }) => {
   return (
     <>
       {/* Centered play button - positioned in the center of the image */}
