@@ -68,6 +68,11 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
       ? "hover:shadow-md hover:shadow-black/3 transition-shadow duration-800"
       : "hover:shadow-lg hover:shadow-black/4 transition-shadow duration-900";
 
+  const baseClasses =
+    variant === "mobile"
+      ? "relative w-full overflow-hidden"
+      : "relative flex h-full w-full items-center justify-center overflow-hidden";
+
   const transitionStyle =
     variant === "mobile"
       ? "all 0.8s cubic-bezier(0.12, 1, 0.25, 1)"
@@ -75,9 +80,7 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
 
   return (
     <motion.div
-      className={`relative w-full overflow-hidden ${
-        hasVideo ? "cursor-pointer group" : ""
-      } ${shadowClasses} ${className}`}
+      className={`${baseClasses} ${hasVideo ? "cursor-pointer group" : ""} ${shadowClasses} ${className}`}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -85,6 +88,7 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
       whileTap={tapConfig[variant]}
       style={{
         transition: transitionStyle,
+        height: variant === "desktop" ? "100%" : undefined,
       }}
     >
       {children}

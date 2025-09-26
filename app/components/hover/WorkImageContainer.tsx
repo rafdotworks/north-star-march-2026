@@ -67,12 +67,17 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
       ? {
           objectPosition: "center center",
           display: "block",
+          width: "100%",
+          height: "100%",
           filter: !isLoaded ? "blur(20px)" : "none",
           opacity: !isLoaded ? 0.5 : 1,
           transition:
             "filter 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
         }
-      : {};
+      : {
+          width: "100%",
+          height: "auto",
+        };
 
   return (
     <WorkImageHover

@@ -1907,7 +1907,7 @@ export default function Page() {
                         </div>
 
                         {/* Enhanced Desktop Slideshow View */}
-                        <div className="hidden sm:flex relative w-full h-full min-h-[50vh] max-h-[60vh] items-center justify-center">
+                        <div className="hidden sm:flex relative w-full min-h-[50vh] items-center justify-center">
                           {images.map((src, index) => (
                             <motion.div
                               key={src}
