@@ -166,8 +166,11 @@ export default function Page() {
       const navigatorWithConnection = navigator as NavigatorWithConnection;
 
       if (navigatorWithConnection.connection) {
-        const { effectiveType = "unknown", downlink = 0, saveData = false } =
-          navigatorWithConnection.connection;
+        const {
+          effectiveType = "unknown",
+          downlink = 0,
+          saveData = false,
+        } = navigatorWithConnection.connection;
 
         setConnectionType(effectiveType);
 
@@ -1670,7 +1673,7 @@ export default function Page() {
                             }}
                           >
                             <WordReveal
-                              text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
+                              text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more."
                               className="text-foreground/70"
                               delay={0.1}
                               onAnimationComplete={() =>
@@ -1758,7 +1761,7 @@ export default function Page() {
                                 aria-hidden="true"
                               >
                                 Now building in Toronto in person. Past at
-                                Coinbase, Voiceflow, Theoriq & more
+                                Coinbase, Voiceflow, Theoriq & more.
                               </span>
                             )}
                             {isSecondaryTextReady && (
@@ -1772,7 +1775,7 @@ export default function Page() {
                                 }}
                               >
                                 <WordReveal
-                                  text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more"
+                                  text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more."
                                   className="text-foreground/70"
                                   delay={0.1}
                                   onAnimationComplete={() =>
@@ -1789,7 +1792,7 @@ export default function Page() {
                 </motion.div>
 
                 <motion.div
-                  className="w-full"
+                  className="w-full mt-3 md:mt-0"
                   initial={{
                     opacity: 0,
                     y: 40,
