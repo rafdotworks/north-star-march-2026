@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -29,8 +30,8 @@ type NavigatorWithConnection = Navigator & {
 
 export default function Page() {
   // Slideshow timing configuration
-  const SLIDESHOW_INTERVAL = 3000; // 3 seconds between images
-  const SLIDESHOW_STUCK_THRESHOLD = SLIDESHOW_INTERVAL * 4; // 12 seconds - 4x the normal interval
+  const SLIDESHOW_INTERVAL = 2400; // 2.4 seconds between images once running
+  const SLIDESHOW_STUCK_THRESHOLD = SLIDESHOW_INTERVAL * 4; // 9.6 seconds - 4x the normal interval
   const SLIDESHOW_CHECK_INTERVAL = 2000; // Check every 2 seconds if slideshow is stuck
   const SLIDESHOW_PREVIEW_SPEED = 200; // Fast preview cadence in ms while remaining perceptible
   const SLIDESHOW_PREVIEW_LOOPS = 1; // Number of quick loops through the carousel
@@ -41,6 +42,7 @@ export default function Page() {
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const videoModalRef = useRef<HTMLDivElement | null>(null);
   const videoModalCloseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -1264,7 +1266,7 @@ export default function Page() {
 
     let previewSteps = 0;
     const totalSteps = images.length * SLIDESHOW_PREVIEW_LOOPS;
-    let settleTimeout: ReturnType<typeof setTimeout> | undefined;
+    let settleTimeout: number | undefined;
 
     const previewInterval = window.setInterval(() => {
       previewSteps += 1;
@@ -1281,8 +1283,8 @@ export default function Page() {
 
     return () => {
       window.clearInterval(previewInterval);
-      if (settleTimeout) {
-        clearTimeout(settleTimeout);
+      if (settleTimeout !== undefined) {
+        window.clearTimeout(settleTimeout);
       }
       setIsPreviewRunning(false);
     };
@@ -1652,6 +1654,11 @@ export default function Page() {
                           <WordReveal
                             text="Raf leads as a Senior Designer and Design Engineer"
                             className="text-foreground/70"
+                            interactiveWord={{
+                              word: "Raf",
+                              onActivate: () => router.push("/raf"),
+                              ariaLabel: "Navigate to Raf",
+                            }}
                           />
                         </div>
                       </motion.div>
@@ -1940,41 +1947,68 @@ export default function Page() {
                             </div>
                           )}
 
-                          <div className="pt-4 min-h-[1.25em]">
-                            <a
-                              href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
-                              className={`text-sm text-foreground/70 hover:text-foreground transition-colors inline-block ${
-                                isEmailReady ? "" : "pointer-events-none"
-                              }`}
-                              aria-disabled={!isEmailReady}
-                              tabIndex={isEmailReady ? undefined : -1}
-                            >
-                              {!isEmailReady && (
-                                <span
-                                  className="block opacity-0 select-none"
-                                  aria-hidden="true"
-                                >
-                                  raf@raf.works
-                                </span>
-                              )}
-                              {isEmailReady && (
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{
-                                    duration: 0.8,
-                                    delay: 0.2,
-                                    ease: [0.22, 1, 0.36, 1],
-                                  }}
-                                >
-                                  <WordReveal
-                                    text="raf@raf.works"
-                                    className="text-foreground/70"
-                                    delay={0.2}
-                                  />
-                                </motion.div>
-                              )}
-                            </a>
+                          <div className="pt-4 space-y-2">
+                            <div className="min-h-[1.25em]">
+                              <a
+                                href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
+                                className={`text-sm text-foreground/70 hover:text-foreground transition-colors inline-block ${
+                                  isEmailReady ? "" : "pointer-events-none"
+                                }`}
+                                aria-disabled={!isEmailReady}
+                                tabIndex={isEmailReady ? undefined : -1}
+                              >
+                                {!isEmailReady && (
+                                  <span
+                                    className="block opacity-0 select-none"
+                                    aria-hidden="true"
+                                  >
+                                    raf@raf.works
+                                  </span>
+                                )}
+                                {isEmailReady && (
+                                  <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{
+                                      duration: 0.8,
+                                      delay: 0.2,
+                                      ease: [0.22, 1, 0.36, 1],
+                                    }}
+                                  >
+                                    <WordReveal
+                                      text="raf@raf.works"
+                                      className="text-foreground/70"
+                                      delay={0.2}
+                                    />
+                                  </motion.div>
+                                )}
+                              </a>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-foreground/60">
+                              <a
+                                href="https://www.linkedin.com/in/raffaelevitaledesign/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground/20 rounded-sm"
+                              >
+                                LinkedIn
+                              </a>
+                              <span
+                                aria-hidden="true"
+                                className="text-foreground/20"
+                              >
+                                •
+                              </span>
+                              <a
+                                href="https://x.com/lfgraf"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground/20 rounded-sm"
+                              >
+                                X
+                              </a>
+                            </div>
                           </div>
                         </div>
 
