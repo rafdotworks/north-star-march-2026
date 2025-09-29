@@ -162,213 +162,94 @@
 
 @layer base {
   :root {
-    /* — Core hue anchors (adjust these to nudge the vibe) */
-    --accent-h: 226; /* indigo/blue */
-    --accent-s: 92%;
-    --accent-l: 66%;
+    /* Polished Neutral Brown Theme - Light Mode */
+    --bg-primary: #f1e4d2; /* Refined warm cream background */
+    --bg-secondary: #e6d7c7; /* Subtle cream sidebar */
+    --text-primary: #2c1810; /* Rich espresso text */
+    --text-secondary: #5d4037; /* Muted brown secondary */
+    --accent-primary: #b8956f; /* Refined caramel accent */
+    --accent-hover: #8d5524; /* Deep chocolate hover */
+    --border: #c8b299; /* Harmonious brown borders */
 
-    --neutral-h: 220; /* cool gray ramp */
-    --neutral-s: 10%;
+    /* Core colors - Light Mode (HSL format for Tailwind) */
+    --background: 35 25% 92%; /* #F1E4D2 - refined warm cream */
+    --background-rgb: 241 228 210; /* RGB values for gradients */
+    --foreground: 20 60% 10%; /* #2c1810 - rich espresso */
+    --card: 35 25% 90%; /* #e6d7c7 - subtle cream card */
+    --card-foreground: 20 60% 10%; /* #2c1810 - rich espresso */
+    --popover: 35 25% 90%; /* #e6d7c7 - subtle cream popover */
+    --popover-foreground: 20 60% 10%; /* #2c1810 - rich espresso */
+    --primary: 20 60% 10%; /* #2c1810 - rich espresso */
+    --primary-foreground: 35 25% 92%; /* #F1E4D2 - refined warm cream */
+    --secondary: 35 20% 80%; /* #c8b299 - subtle taupe */
+    --secondary-foreground: 20 60% 10%; /* #2c1810 - rich espresso */
+    --muted: 20 30% 35%; /* #5d4037 - muted brown */
+    --muted-foreground: 20 30% 35%; /* #5d4037 - muted brown */
+    --accent: 35 40% 60%; /* #b8956f - refined caramel */
+    --accent-foreground: 20 60% 10%; /* #2c1810 - rich espresso */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 35 30% 85%;
+    --border: 35 20% 80%; /* #c8b299 - harmonious brown */
+    --input: 35 20% 80%; /* #c8b299 - harmonious brown */
+    --ring: 35 40% 60%; /* #b8956f - refined caramel */
+    --radius: 0.5rem;
+    --font-sans: var(--font-ronzino);
 
-    /* — Light surfaces (practical hsl() variables) */
-    --bg: hsl(var(--neutral-h) var(--neutral-s) 99%);
-    --bg-muted: hsl(var(--neutral-h) var(--neutral-s) 97%);
-    --bg-subtle: hsl(var(--neutral-h) var(--neutral-s) 95%);
+    /* Navigation Colors - Refined Palette */
+    --nav-work: #b8956f; /* Refined caramel */
+    --nav-about: #a67c52; /* Warm cinnamon */
+    --nav-projects: #8d5524; /* Deep chocolate */
+    --nav-contact: #c8b299; /* Subtle taupe */
 
-    /* — Content (practical hsl() variables) */
-    --fg: hsl(var(--neutral-h) 15% 10%);
-    --fg-muted: hsl(var(--neutral-h) 10% 35%);
-    --fg-inverse: hsl(var(--neutral-h) 10% 99%);
-
-    /* — Components (practical hsl() variables) */
-    --card: var(--bg);
-    --popover: var(--bg);
-    --border-color: hsl(var(--neutral-h) 12% 86%);
-    --border-strong: hsl(var(--neutral-h) 12% 80%);
-    --input-bg: hsl(var(--neutral-h) 12% 92%);
-    --ring-color: hsl(var(--accent-h) 90% 60%);
-
-    /* — Brand / States (practical hsl() variables) */
-    --primary-color: hsl(var(--accent-h) var(--accent-s) var(--accent-l));
-    --primary-foreground-color: white;
-    --secondary-color: hsl(var(--neutral-h) 12% 92%);
-    --secondary-foreground-color: hsl(var(--neutral-h) 15% 12%);
-    --accent-color: hsl(var(--accent-h) 70% 96%);
-    --accent-foreground-color: hsl(var(--accent-h) 60% 28%);
-    --success: hsl(145 60% 40%);
-    --warning: hsl(40 90% 45%);
-    --destructive-color: hsl(0 72% 50%);
-
-    /* — Syntax-ish hints (optional) */
-    --code-fg: hsl(var(--neutral-h) 18% 18%);
-    --code-bg: hsl(var(--neutral-h) 15% 96%);
-    --code-accent: var(--primary-color);
-
-    /* — Radii / shadows */
-    --radius: 14px;
-    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.06);
-    --shadow-md: 0 8px 20px hsl(0 0% 0% / 0.1);
-
-    /* Tailwind-consumed tokens (HSL triplets only, no hsl()) */
-    --background: var(--neutral-h) var(--neutral-s) 99%;
-    --background-rgb: 245 247 250; /* approximate RGB for subtle overlays */
-    --foreground: var(--neutral-h) 15% 10%;
-    --card: var(--neutral-h) var(--neutral-s) 99%;
-    --card-foreground: var(--neutral-h) 15% 10%;
-    --popover: var(--neutral-h) var(--neutral-s) 99%;
-    --popover-foreground: var(--neutral-h) 15% 10%;
-    --primary: var(--accent-h) var(--accent-s) var(--accent-l);
-    --primary-foreground: 0 0% 100%;
-    --secondary: var(--neutral-h) 12% 92%;
-    --secondary-foreground: var(--neutral-h) 15% 12%;
-    --muted: var(--neutral-h) 10% 35%;
-    --muted-foreground: var(--neutral-h) 10% 35%;
-    --accent: var(--accent-h) 70% 96%;
-    --accent-foreground: var(--accent-h) 60% 28%;
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: var(--neutral-h) 12% 86%;
-    --input: var(--neutral-h) 12% 92%;
-    --ring: var(--accent-h) 90% 60%;
-
-    /* Legacy vars mapped to new tokens (for existing CSS) */
-    --bg-primary: var(--bg);
-    --bg-secondary: var(--bg-muted);
-    --text-primary: var(--fg);
-    --text-secondary: var(--fg-muted);
-    --accent-primary: var(--primary-color);
-    --accent-hover: var(--primary-color);
-
-    /* Navigation Colors (mapped to primary by default) */
-    --nav-work: var(--primary-color);
-    --nav-about: var(--primary-color);
-    --nav-projects: var(--primary-color);
-    --nav-contact: var(--primary-color);
-
-    /* Scrollbar (light) */
-    --scrollbar-color: rgba(0, 0, 0, 0.08);
-    --scrollbar-hover-color: rgba(0, 0, 0, 0.12);
+    /* Weather-based scrollbar colors - will be set via JS */
+    --scrollbar-color: rgba(200, 178, 153, 0.15);
+    --scrollbar-hover-color: rgba(200, 178, 153, 0.25);
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      /* Practical dark variables */
-      --bg: hsl(var(--neutral-h) 14% 8%);
-      --bg-muted: hsl(var(--neutral-h) 14% 10%);
-      --bg-subtle: hsl(var(--neutral-h) 14% 12%);
+      /* Polished Neutral Brown Theme - Dark Mode */
+      --bg-primary: #1a1410; /* Deep neutral espresso background */
+      --bg-secondary: #2d2520; /* Refined dark chocolate sidebar */
+      --text-primary: #e6d7c7; /* Warm neutral cream text */
+      --text-secondary: #c8b299; /* Subtle taupe secondary */
+      --accent-primary: #d4a574; /* Refined caramel accent */
+      --accent-hover: #b8956f; /* Warm toffee hover */
+      --border: #3d2f24; /* Harmonious coffee borders */
 
-      --fg: hsl(var(--neutral-h) 15% 95%);
-      --fg-muted: hsl(var(--neutral-h) 10% 70%);
-      --fg-inverse: hsl(var(--neutral-h) 15% 6%);
+      /* Core colors - Dark Mode (HSL format for Tailwind) */
+      --background: 20 25% 8%; /* #1a1410 - deep neutral espresso */
+      --background-rgb: 26 20 16; /* RGB values for dark mode gradients */
+      --foreground: 35 25% 90%; /* #e6d7c7 - warm neutral cream */
+      --card: 20 20% 12%; /* #2d2520 - refined dark chocolate */
+      --card-foreground: 35 25% 90%; /* #e6d7c7 - warm neutral cream */
+      --popover: 20 20% 12%; /* #2d2520 - refined dark chocolate */
+      --popover-foreground: 35 25% 90%; /* #e6d7c7 - warm neutral cream */
+      --primary: 35 25% 90%; /* #e6d7c7 - warm neutral cream */
+      --primary-foreground: 20 25% 8%; /* #1a1410 - deep neutral espresso */
+      --secondary: 20 20% 12%; /* #2d2520 - refined dark chocolate */
+      --secondary-foreground: 35 25% 90%; /* #e6d7c7 - warm neutral cream */
+      --muted: 35 15% 70%; /* #c8b299 - subtle taupe */
+      --muted-foreground: 35 15% 70%; /* #c8b299 - subtle taupe */
+      --accent: 35 40% 60%; /* #d4a574 - refined caramel */
+      --accent-foreground: 20 25% 8%; /* #1a1410 - deep neutral espresso */
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 35 25% 90%;
+      --border: 20 25% 20%; /* #3d2f24 - harmonious coffee */
+      --input: 20 25% 20%; /* #3d2f24 - harmonious coffee */
+      --ring: 35 40% 60%; /* #d4a574 - refined caramel */
 
-      --card: hsl(var(--neutral-h) 14% 8.5%);
-      --popover: hsl(var(--neutral-h) 14% 9%);
-      --border-color: hsl(var(--neutral-h) 12% 18%);
-      --border-strong: hsl(var(--neutral-h) 12% 24%);
-      --input-bg: hsl(var(--neutral-h) 12% 14%);
-      --ring-color: hsl(var(--accent-h) 95% 66%);
+      /* Navigation Colors - Refined Dark Palette */
+      --nav-work: #d4a574; /* Refined caramel */
+      --nav-about: #b8956f; /* Warm toffee */
+      --nav-projects: #a67c52; /* Rich cinnamon */
+      --nav-contact: #c8b299; /* Subtle taupe */
 
-      --primary-color: hsl(var(--accent-h) 85% 70%);
-      --primary-foreground-color: hsl(var(--neutral-h) 10% 6%);
-      --secondary-color: hsl(var(--neutral-h) 12% 16%);
-      --secondary-foreground-color: hsl(var(--neutral-h) 12% 92%);
-      --accent-color: hsl(var(--accent-h) 50% 20%);
-      --accent-foreground-color: hsl(var(--accent-h) 90% 84%);
-      --success: hsl(145 55% 52%);
-      --warning: hsl(40 90% 58%);
-      --destructive-color: hsl(0 72% 60%);
-
-      --code-fg: hsl(var(--neutral-h) 18% 86%);
-      --code-bg: hsl(var(--neutral-h) 14% 10%);
-      --code-accent: var(--primary-color);
-
-      /* Tailwind-consumed tokens (dark) */
-      --background: var(--neutral-h) 14% 8%;
-      --background-rgb: 20 23 28; /* approximate RGB for overlays */
-      --foreground: var(--neutral-h) 15% 95%;
-      --card: var(--neutral-h) 14% 8.5%;
-      --card-foreground: var(--neutral-h) 15% 95%;
-      --popover: var(--neutral-h) 14% 9%;
-      --popover-foreground: var(--neutral-h) 15% 95%;
-      --primary: var(--accent-h) 85% 70%;
-      --primary-foreground: var(--neutral-h) 10% 6%;
-      --secondary: var(--neutral-h) 12% 16%;
-      --secondary-foreground: var(--neutral-h) 12% 92%;
-      --muted: var(--neutral-h) 10% 70%;
-      --muted-foreground: var(--neutral-h) 10% 70%;
-      --accent: var(--accent-h) 50% 20%;
-      --accent-foreground: var(--accent-h) 90% 84%;
-      --destructive: 0 72% 60%;
-      --destructive-foreground: var(--neutral-h) 10% 6%;
-      --border: var(--neutral-h) 12% 18%;
-      --input: var(--neutral-h) 12% 14%;
-      --ring: var(--accent-h) 95% 66%;
-
-      /* Legacy mappings (dark) */
-      --bg-primary: var(--bg);
-      --bg-secondary: var(--bg-muted);
-      --text-primary: var(--fg);
-      --text-secondary: var(--fg-muted);
-      --accent-primary: var(--primary-color);
-      --accent-hover: var(--primary-color);
-
-      /* Scrollbar (dark) */
-      --scrollbar-color: rgba(255, 255, 255, 0.1);
-      --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
+      /* Weather-based scrollbar colors - dark mode */
+      --scrollbar-color: rgba(61, 47, 36, 0.15);
+      --scrollbar-hover-color: rgba(61, 47, 36, 0.25);
     }
   }
-}
-
-/* Support explicit theme switching via data attribute */
-[data-theme="dark"] {
-  /* Mirror dark tokens */
-  --bg: hsl(var(--neutral-h) 14% 8%);
-  --bg-muted: hsl(var(--neutral-h) 14% 10%);
-  --bg-subtle: hsl(var(--neutral-h) 14% 12%);
-
-  --fg: hsl(var(--neutral-h) 15% 95%);
-  --fg-muted: hsl(var(--neutral-h) 10% 70%);
-  --fg-inverse: hsl(var(--neutral-h) 15% 6%);
-
-  --card: hsl(var(--neutral-h) 14% 8.5%);
-  --popover: hsl(var(--neutral-h) 14% 9%);
-  --border-color: hsl(var(--neutral-h) 12% 18%);
-  --border-strong: hsl(var(--neutral-h) 12% 24%);
-  --input-bg: hsl(var(--neutral-h) 12% 14%);
-  --ring-color: hsl(var(--accent-h) 95% 66%);
-
-  --primary-color: hsl(var(--accent-h) 85% 70%);
-  --primary-foreground-color: hsl(var(--neutral-h) 10% 6%);
-  --secondary-color: hsl(var(--neutral-h) 12% 16%);
-  --secondary-foreground-color: hsl(var(--neutral-h) 12% 92%);
-  --accent-color: hsl(var(--accent-h) 50% 20%);
-  --accent-foreground-color: hsl(var(--accent-h) 90% 84%);
-
-  --code-fg: hsl(var(--neutral-h) 18% 86%);
-  --code-bg: hsl(var(--neutral-h) 14% 10%);
-  --code-accent: var(--primary-color);
-
-  /* Tailwind triplets */
-  --background: var(--neutral-h) 14% 8%;
-  --background-rgb: 20 23 28;
-  --foreground: var(--neutral-h) 15% 95%;
-  --card: var(--neutral-h) 14% 8.5%;
-  --card-foreground: var(--neutral-h) 15% 95%;
-  --popover: var(--neutral-h) 14% 9%;
-  --popover-foreground: var(--neutral-h) 15% 95%;
-  --primary: var(--accent-h) 85% 70%;
-  --primary-foreground: var(--neutral-h) 10% 6%;
-  --secondary: var(--neutral-h) 12% 16%;
-  --secondary-foreground: var(--neutral-h) 12% 92%;
-  --muted: var(--neutral-h) 10% 70%;
-  --muted-foreground: var(--neutral-h) 10% 70%;
-  --accent: var(--accent-h) 50% 20%;
-  --accent-foreground: var(--accent-h) 90% 84%;
-  --destructive: 0 72% 60%;
-  --destructive-foreground: var(--neutral-h) 10% 6%;
-  --border: var(--neutral-h) 12% 18%;
-  --input: var(--neutral-h) 12% 14%;
-  --ring: var(--accent-h) 95% 66%;
 }
 
 /* Add system preference support */
@@ -394,41 +275,6 @@ body {
   font-size: 16px;
   overscroll-behavior: none;
   height: 100%;
-}
-
-/* Practical mappings (utility classes remain via Tailwind) */
-body {
-  background: var(--bg);
-  color: var(--fg);
-}
-.card {
-  background: var(--card);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius);
-}
-.btn-primary {
-  background: var(--primary-color);
-  color: var(--primary-foreground-color);
-}
-.btn-secondary {
-  background: var(--secondary-color);
-  color: var(--secondary-foreground-color);
-}
-input,
-textarea {
-  background: var(--input-bg);
-  border: 1px solid var(--border-color);
-  color: var(--fg);
-}
-a {
-  color: var(--primary-color);
-}
-kbd,
-code,
-pre {
-  background: var(--code-bg);
-  color: var(--code-fg);
 }
 
 @layer utilities {

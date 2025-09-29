@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ComponentProps, ReactNode, KeyboardEvent } from "react";
+import { ComponentProps, ReactNode } from "react";
 
 type MotionDivProps = ComponentProps<typeof motion.div>;
 type MotionSpanProps = ComponentProps<typeof motion.span>;
@@ -380,23 +380,15 @@ export function CharacterReveal({
 }
 
 // Word-by-Word Text Reveal
-interface WordRevealInteractiveWord {
-  word: string;
-  onActivate: () => void;
-  ariaLabel?: string;
-}
-
 interface WordRevealProps extends MotionDivProps {
   text: string;
   delay?: number;
-  interactiveWord?: WordRevealInteractiveWord;
 }
 
 export function WordReveal({
   text,
   className = "",
   delay = 0,
-  interactiveWord,
   ...props
 }: WordRevealProps) {
   const words = text.split(" ");
@@ -410,38 +402,15 @@ export function WordReveal({
       className={className}
       {...props}
     >
-      {words.map((word, index) => {
-        const isInteractive = interactiveWord && word === interactiveWord.word;
-
-        const interactiveProps = isInteractive
-          ? {
-              role: "link" as const,
-              tabIndex: 0,
-              onClick: () => interactiveWord.onActivate(),
-              onKeyDown: (event: KeyboardEvent<HTMLSpanElement>) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  interactiveWord.onActivate();
-                }
-              },
-              "aria-label":
-                interactiveWord.ariaLabel ?? `${word} navigation link`,
-            }
-          : {};
-
-        return (
-          <motion.span
-            key={index}
-            variants={wordRevealAnimation.word}
-            className={`inline-block mr-1 ${
-              word === "Raf" ? "font-raf" : ""
-            }`}
-            {...interactiveProps}
-          >
-            {word}
-          </motion.span>
-        );
-      })}
+      {words.map((word, index) => (
+        <motion.span
+          key={index}
+          variants={wordRevealAnimation.word}
+          className={`inline-block mr-1 ${word === "Raf" ? "font-raf" : ""}`}
+        >
+          {word}
+        </motion.span>
+      ))}
     </motion.div>
   );
 }
