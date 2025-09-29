@@ -61,6 +61,30 @@ export default function Page() {
     "Finalizing experience...",
   ];
 
+  const emailContactLink =
+    "mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D";
+
+  const mobileContactLinks = [
+    {
+      href: emailContactLink,
+      label: "raf@raf.works",
+      ariaLabel: "Email Raf",
+      openInNewTab: false,
+    },
+    {
+      href: "https://www.linkedin.com/in/raffaelevitaledesign/",
+      label: "LinkedIn",
+      ariaLabel: "Raf on LinkedIn",
+      openInNewTab: true,
+    },
+    {
+      href: "https://x.com/lfgraf",
+      label: "X",
+      ariaLabel: "Raf on X",
+      openInNewTab: true,
+    },
+  ];
+
   // Update loading stages based on loading sequence
   useEffect(() => {
     if (loadingSequence.textLoaded && currentLoadingStage < 1) {
@@ -1692,7 +1716,7 @@ export default function Page() {
                       </div>
                       <div className="min-h-[1.25em]">
                         <a
-                          href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
+                          href={emailContactLink}
                           className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
                         >
                           {isEmailReady && (
@@ -1947,67 +1971,62 @@ export default function Page() {
                             </div>
                           )}
 
-                          <div className="pt-4 space-y-2">
-                            <div className="min-h-[1.25em]">
-                              <a
-                                href="mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D"
-                                className={`text-sm text-foreground/70 hover:text-foreground transition-colors inline-block ${
-                                  isEmailReady ? "" : "pointer-events-none"
-                                }`}
-                                aria-disabled={!isEmailReady}
-                                tabIndex={isEmailReady ? undefined : -1}
-                              >
-                                {!isEmailReady && (
-                                  <span
-                                    className="block opacity-0 select-none"
-                                    aria-hidden="true"
+                          <div className="pt-4">
+                            <div className="flex items-center gap-3 text-sm">
+                              {mobileContactLinks.map((link, index) => (
+                                <React.Fragment key={link.href}>
+                                  {index > 0 && (
+                                    <span
+                                      aria-hidden="true"
+                                      className="text-foreground/20"
+                                    >
+                                      •
+                                    </span>
+                                  )}
+                                  <a
+                                    href={link.href}
+                                    target={
+                                      link.openInNewTab ? "_blank" : undefined
+                                    }
+                                    rel={
+                                      link.openInNewTab
+                                        ? "noopener noreferrer"
+                                        : undefined
+                                    }
+                                    aria-label={link.ariaLabel}
+                                    className={`inline-flex items-center text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground/20 rounded-sm ${
+                                      isEmailReady ? "" : "pointer-events-none"
+                                    }`}
+                                    aria-disabled={!isEmailReady}
+                                    tabIndex={isEmailReady ? undefined : -1}
                                   >
-                                    raf@raf.works
-                                  </span>
-                                )}
-                                {isEmailReady && (
-                                  <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{
-                                      duration: 0.8,
-                                      delay: 0.2,
-                                      ease: [0.22, 1, 0.36, 1],
-                                    }}
-                                  >
-                                    <WordReveal
-                                      text="raf@raf.works"
-                                      className="text-foreground/70"
-                                      delay={0.2}
-                                    />
-                                  </motion.div>
-                                )}
-                              </a>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-foreground/60">
-                              <a
-                                href="https://www.linkedin.com/in/raffaelevitaledesign/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground/20 rounded-sm"
-                              >
-                                LinkedIn
-                              </a>
-                              <span
-                                aria-hidden="true"
-                                className="text-foreground/20"
-                              >
-                                •
-                              </span>
-                              <a
-                                href="https://x.com/lfgraf"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground/20 rounded-sm"
-                              >
-                                X
-                              </a>
+                                    {!isEmailReady ? (
+                                      <span
+                                        className="block opacity-0 select-none"
+                                        aria-hidden="true"
+                                      >
+                                        {link.label}
+                                      </span>
+                                    ) : (
+                                      <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{
+                                          duration: 0.8,
+                                          delay: 0.2 + index * 0.05,
+                                          ease: [0.22, 1, 0.36, 1],
+                                        }}
+                                      >
+                                        <WordReveal
+                                          text={link.label}
+                                          className="text-foreground/70"
+                                          delay={0.2 + index * 0.05}
+                                        />
+                                      </motion.div>
+                                    )}
+                                  </a>
+                                </React.Fragment>
+                              ))}
                             </div>
                           </div>
                         </div>
