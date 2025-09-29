@@ -1681,7 +1681,7 @@ export default function Page() {
                       >
                         <div className="tracking-tight text-xl md:whitespace-nowrap">
                           <WordReveal
-                            text="Raf builds as a Senior Designer and Design Engineer"
+                            text="Raf leads as a Senior Designer and Design Engineer"
                             className="text-foreground/70"
                             interactiveWord={{
                               word: "Raf",
@@ -1782,7 +1782,7 @@ export default function Page() {
                           >
                             <div className="tracking-tight text-lg md:whitespace-nowrap">
                               <WordReveal
-                                text="Raf builds as a Senior Designer and Design Engineer."
+                                text="Raf leads as a Senior Designer and Design Engineer."
                                 className="text-foreground/70"
                               />
                             </div>

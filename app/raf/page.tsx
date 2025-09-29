@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   EASING,
   EnhancedStaggeredTextContainer,
@@ -12,7 +11,6 @@ import {
 export default function RafPage() {
   const [mounted, setMounted] = useState(false);
   const shouldReduceMotion = useReducedMotion();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     setMounted(true);
@@ -89,7 +87,7 @@ export default function RafPage() {
           </motion.div>
 
           {/* Content */}
-          <EnhancedStaggeredTextContainer className="prose max-w-none space-y-7 md:space-y-8">
+          <EnhancedStaggeredTextContainer className="max-w-none space-y-7 md:space-y-8">
             <EnhancedStaggeredTextItem>
               <p className="text-foreground/90 leading-[1.85] text-lg">
                 I grew up on the Amalfi Coast in Italy and dropped out of
