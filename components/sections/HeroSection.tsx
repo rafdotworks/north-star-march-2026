@@ -155,7 +155,7 @@ export function HeroSection({
                       ease: [0.12, 1, 0.28, 1],
                     }}
                   >
-                    Raf leads as a{" "}
+                    Raf builds as a{" "}
                   </motion.span>
                   <motion.span
                     className="text-foreground font-medium"

@@ -23,7 +23,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
   isMobile = false,
 }) => {
   const phrases = [
-    "Raf leads as a Senior Designer and Design Engineer",
+    "Raf builds as a Senior Designer and Design Engineer",
     "Now in stealth in Toronto",
     "Past at Coinbase, VoiceFlow, Theoriq & more",
     "raf@raf.works",
@@ -41,7 +41,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                     <EnhancedStaggeredTextItem>
                       <div className="tracking-tight text-lg md:whitespace-nowrap">
                         <WordReveal
-                          text="Raf leads as a Senior Designer and Design Engineer"
+                          text="Raf builds as a Senior Designer and Design Engineer"
                           className="text-foreground/70"
                         />
                       </div>
@@ -112,7 +112,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                         ease: EASING.textReveal,
                       }}
                     >
-                      Raf leads as a{" "}
+                      Raf builds as a{" "}
                     </motion.span>
                     <motion.span
                       className="text-foreground font-medium"
@@ -293,7 +293,7 @@ export const TextAnimation: React.FC<TextAnimationProps> = ({
                   <EnhancedStaggeredTextItem>
                     <div className="tracking-tight text-lg md:whitespace-nowrap">
                       <WordReveal
-                        text="Raf leads as a Senior Designer and Design Engineer."
+                        text="Raf builds as a Senior Designer and Design Engineer."
                         className="text-foreground/70"
                       />
                     </div>

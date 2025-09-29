@@ -85,6 +85,11 @@ export default function Page() {
     },
   ];
 
+  const mobileHeroBottomPadding =
+    "max(2.75rem, calc(env(safe-area-inset-bottom, 0px) + 2.25rem))";
+  const mobileContactBottomPadding =
+    "max(2.25rem, calc(env(safe-area-inset-bottom, 0px) + 1.75rem))";
+
   // Update loading stages based on loading sequence
   useEffect(() => {
     if (loadingSequence.textLoaded && currentLoadingStage < 1) {
@@ -1676,7 +1681,7 @@ export default function Page() {
                       >
                         <div className="tracking-tight text-xl md:whitespace-nowrap">
                           <WordReveal
-                            text="Raf leads as a Senior Designer and Design Engineer"
+                            text="Raf builds as a Senior Designer and Design Engineer"
                             className="text-foreground/70"
                             interactiveWord={{
                               word: "Raf",
@@ -1749,7 +1754,10 @@ export default function Page() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
-                  <div className="flex min-h-screen min-h-[100svh] flex-col justify-end pb-8 pb-[calc(env(safe-area-inset-bottom)+1.75rem)]">
+                  <div
+                    className="flex min-h-screen min-h-[100svh] flex-col justify-end"
+                    style={{ paddingBottom: mobileHeroBottomPadding }}
+                  >
                     <div className="space-y-4">
                       <div className="text-left">
                         {loadingSequence.textLoaded && (
@@ -1774,7 +1782,7 @@ export default function Page() {
                           >
                             <div className="tracking-tight text-lg md:whitespace-nowrap">
                               <WordReveal
-                                text="Raf leads as a Senior Designer and Design Engineer."
+                                text="Raf builds as a Senior Designer and Design Engineer."
                                 className="text-foreground/70"
                               />
                             </div>
@@ -1971,7 +1979,12 @@ export default function Page() {
                             </div>
                           )}
 
-                          <div className="pt-4">
+                          <div
+                            className="pt-6"
+                            style={{
+                              paddingBottom: mobileContactBottomPadding,
+                            }}
+                          >
                             <div className="flex items-center gap-3 text-sm">
                               {mobileContactLinks.map((link, index) => (
                                 <React.Fragment key={link.href}>

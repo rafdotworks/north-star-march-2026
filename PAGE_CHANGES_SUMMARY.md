@@ -21,7 +21,7 @@
 
 - **Location**: Loading state section (lines ~1560-1720)
 - **Action**:
-  - Added "Raf leads as a Senior Designer and Design Engineer" text to loading state for ALL devices
+  - Added "Raf builds as a Senior Designer and Design Engineer" text to loading state for ALL devices
   - Removed duplicate mobile-only text animation from loading state
   - Removed duplicate text animations from main content area (both mobile and desktop versions)
 - **Impact**: Text now appears harmoniously at the beginning of loading for all devices
@@ -29,7 +29,7 @@
 ### **4. Restored Text Animation in Main Content** ✅
 
 - **Location**: After slideshow section (lines ~2240-2280)
-- **Action**: Added back the "Raf leads as a Senior Designer and Design Engineer" text animation in the main content area
+- **Action**: Added back the "Raf builds as a Senior Designer and Design Engineer" text animation in the main content area
 - **Impact**: Text appears both during loading AND after loading is complete
 
 ### **5. Added Hover Pause/Resume for Slideshow** ✅
