@@ -1709,7 +1709,7 @@ export default function Page() {
                             }}
                           >
                             <WordReveal
-                              text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more."
+                              text="Past at Coinbase, Voiceflow, Theoriq & more."
                               className="text-foreground/70"
                               delay={0.1}
                               onAnimationComplete={() =>
@@ -1799,8 +1799,7 @@ export default function Page() {
                                 className="block opacity-0 select-none"
                                 aria-hidden="true"
                               >
-                                Now building in Toronto in person. Past at
-                                Coinbase, Voiceflow, Theoriq & more.
+                                Past at Coinbase, Voiceflow, Theoriq & more.
                               </span>
                             )}
                             {isSecondaryTextReady && (
@@ -1814,7 +1813,7 @@ export default function Page() {
                                 }}
                               >
                                 <WordReveal
-                                  text="Now building in Toronto in person. Past at Coinbase, Voiceflow, Theoriq & more."
+                                  text="Past at Coinbase, Voiceflow, Theoriq & more."
                                   className="text-foreground/70"
                                   delay={0.1}
                                   onAnimationComplete={() =>
