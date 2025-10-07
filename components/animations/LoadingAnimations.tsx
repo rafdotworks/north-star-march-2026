@@ -4,18 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ComponentProps, ReactNode, KeyboardEvent } from "react";
 
 type MotionDivProps = ComponentProps<typeof motion.div>;
-type MotionSpanProps = ComponentProps<typeof motion.span>;
-type MotionLiProps = ComponentProps<typeof motion.li>;
-type MotionUlProps = ComponentProps<typeof motion.ul>;
-type MotionSectionProps = ComponentProps<typeof motion.section>;
-type MotionButtonProps = ComponentProps<typeof motion.button>;
 
 type MotionDivWithChildren = MotionDivProps & { children: ReactNode };
-type MotionSpanWithChildren = MotionSpanProps & { children: ReactNode };
-type MotionLiWithChildren = MotionLiProps & { children: ReactNode };
-type MotionUlWithChildren = MotionUlProps & { children: ReactNode };
-type MotionSectionWithChildren = MotionSectionProps & { children: ReactNode };
-type MotionButtonWithChildren = MotionButtonProps & { children: ReactNode };
 
 // Enhanced easing curves for delightful micro-interactions
 export const EASING = {
