@@ -365,6 +365,23 @@ export default function Page() {
   // Optimized: Removed heavy image preloader component
   // Images now load progressively as needed
 
+  /**
+   * Generates a placeholder color for images during loading
+   * Uses a curated set of subtle, design-friendly colors that match the site's aesthetic
+   * @param {number} index - The index of the image in the gallery
+   * @returns {string} RGBA color value for the placeholder
+   */
+  const getImagePlaceholder = (index: number) => {
+    const placeholderColors = [
+      "rgba(245, 245, 245, 0.8)", // Light gray
+      "rgba(240, 240, 245, 0.8)", // Light blue-gray
+      "rgba(245, 240, 235, 0.8)", // Light warm gray
+      "rgba(235, 240, 245, 0.8)", // Light cool gray
+      "rgba(240, 245, 240, 0.8)", // Light mint
+    ];
+
+    return placeholderColors[index % placeholderColors.length];
+  };
 
   /**
    * Initial component setup and cleanup
@@ -376,7 +393,7 @@ export default function Page() {
     // Optimized: Only fetch weather on desktop and with longer timeout
     let weatherTimeout: NodeJS.Timeout | undefined;
     if (!isMobile) {
-      fetchWeatherData().catch((error) => {
+      const weatherPromise = fetchWeatherData().catch((error) => {
         console.warn(
           "Weather API failed, continuing without weather data:",
           error
@@ -392,6 +409,26 @@ export default function Page() {
     // Set up keyboard event listener
     window.addEventListener("keydown", handleKeyDown);
 
+    /**
+     * Checks if critical images (first three) are loaded
+     * Used to determine when to start the slideshow
+     */
+    const checkCriticalContent = () => {
+      // Only check if mobile detection is ready
+      if (!isMobileReady) return;
+
+      if (isMobile) {
+        // On mobile, only gate on the first image
+        if (loadedImages[initialImages[0]]) {
+          setCriticalContentLoaded(true);
+        }
+      } else {
+        // On desktop, only gate on the first image for faster loading
+        if (loadedImages[initialImages[0]]) {
+          setCriticalContentLoaded(true);
+        }
+      }
+    };
 
     // Start the slideshow after a short delay to ensure images are loaded
     const slideshowTimer = setTimeout(() => {
@@ -440,7 +477,6 @@ export default function Page() {
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update scrollbar color when weather condition changes
@@ -499,7 +535,6 @@ export default function Page() {
         if (cleanup) cleanup();
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, focusAnimationRun]);
 
   /**
@@ -622,7 +657,6 @@ export default function Page() {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVideoModalOpen, images.length]);
 
   // Add a ref for the slideshow container
@@ -681,7 +715,6 @@ export default function Page() {
         observer.unobserve(slideshowElement);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
   /**
@@ -823,7 +856,6 @@ export default function Page() {
         );
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, isMobileReady, imageLoadingStrategy]);
 
   /**
@@ -833,7 +865,6 @@ export default function Page() {
     if (mounted && criticalContentLoaded) {
       preloadViewportImages();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentImageIndex, criticalContentLoaded, mounted]);
 
   /**
@@ -869,6 +900,27 @@ export default function Page() {
     });
   };
 
+  const fadeInAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: {
+      duration: 2,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.3,
+        delayChildren: 0.2,
+        duration: 1.2,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
 
   /**
    * Cleanup effect for modal state
@@ -900,6 +952,18 @@ export default function Page() {
     }
   }, [isVideoModalOpen]);
 
+  /**
+   * Toggles weather effect display
+   * Centers effect at top of page when enabled
+   * @param {React.MouseEvent} e - Mouse event from toggle action
+   */
+  const toggleWeatherEffect = (e: React.MouseEvent) => {
+    setWeatherState((prev) => ({
+      ...prev,
+      showWeatherEffect: !prev.showWeatherEffect,
+      clickPosition: { x: window.innerWidth / 2, y: 0 },
+    }));
+  };
 
   /**
    * Returns color value based on current weather condition
@@ -926,6 +990,10 @@ export default function Page() {
     return conditions[weatherState.condition] || "rgba(125, 125, 125, 0.2)";
   };
 
+  // Get scrollbar color based on weather condition
+  const updateScrollbarColor = () => {
+    // Removed entire function
+  };
 
   // Get weather icon based on condition
   const getWeatherIcon = (condition: string | null) => {
@@ -1109,6 +1177,30 @@ export default function Page() {
     );
   };
 
+  const backgroundElements = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        delay: 0.2,
+        duration: 2.5,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
+
+  const slideInFromBottom = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 0.6,
+      y: 0,
+      transition: {
+        duration: 1.2,
+        delay: 1.2,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
 
   const focusableElementSelector =
     'a[href]:not([tabindex="-1"]), button:not([disabled]):not([tabindex="-1"]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [role="button"]:not([tabindex="-1"])';
@@ -1248,7 +1340,7 @@ export default function Page() {
     }, SLIDESHOW_CHECK_INTERVAL);
 
     return () => clearInterval(checkInterval);
-  }, [isVideoModalOpen, lastImageChangeTime, mounted, images.length, SLIDESHOW_STUCK_THRESHOLD, SLIDESHOW_CHECK_INTERVAL]);
+  }, [isVideoModalOpen, lastImageChangeTime, mounted, images.length]);
 
   // Update lastImageChangeTime whenever the image changes
   useEffect(() => {
@@ -1287,6 +1379,16 @@ export default function Page() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Change weather location (simplified to just show Toronto)
+  const changeWeatherLocation = () => {
+    fetchWeatherData("Toronto");
+    // Show the weather effect
+    setWeatherState((prev) => ({
+      ...prev,
+      showWeatherEffect: true,
+      clickPosition: { x: window.innerWidth / 2, y: 0 },
+    }));
+  };
 
   const isSecondaryTextReady = loadingSequence.textLoaded && firstLineComplete;
   const isEmailReady = loadingSequence.textLoaded && secondLineComplete;
@@ -1697,7 +1799,8 @@ export default function Page() {
                                 className="block opacity-0 select-none"
                                 aria-hidden="true"
                               >
-                                Reflecting on what's next. Past at Coinbase, Voiceflow, Theoriq & more.
+                                Reflecting on what&apos;s next. Past at
+                                Coinbase, Voiceflow, Theoriq & more.
                               </span>
                             )}
                             {isSecondaryTextReady && (

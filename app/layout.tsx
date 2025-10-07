@@ -55,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${ronzino.variable} ${eduMarist.variable}`}>
+    <html lang="en" className={`${ronzino.variable} ${eduMarist.variable}`} suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" href="/favicon.png" />
@@ -66,7 +66,7 @@ export default function RootLayout({
         <link rel="preload" as="image" href="/work/voiceflow-landing.png" />
         <link rel="preload" as="image" href="/work/theoriq-prod-hero.png" />
       </head>
-      <body className={ronzino.className}>
+      <body className={ronzino.className} suppressHydrationWarning>
         {children}
         <Analytics />
         <ConsoleEasterEgg />
