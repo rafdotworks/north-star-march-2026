@@ -1102,20 +1102,19 @@ export default function Page() {
       active: {
         opacity: 1,
         scale: 1,
-        filter: "blur(0px)", // Sharp focus for active panel
+        // No blur - keep it simple and clean
         transition: {
-          duration: 0.7,
-          ease: EASING.tertiary,
+          duration: 1.2,  // Slower, more deliberate transition
+          ease: EASING.secondary,  // Use smoother easing for scroll
         },
       },
       inactive: {
-        opacity: 0.92, // SIMPLIFIED: Subtle fade (was 0.4 - too dark), keeps images visible
-        scale: 0.985,
-        // CRITICAL: No blur on inactive - images must stay sharp after initial animation
-        // Only opacity + scale change during scroll to keep works fully visible
+        opacity: 0.88, // Simple fade effect only
+        scale: 0.98,  // Subtle scale for depth
+        // No blur - simplified animation
         transition: {
-          duration: 0.7,
-          ease: EASING.tertiary,
+          duration: 1.2,  // Match active duration for smooth scroll
+          ease: EASING.secondary,  // Consistent easing
         },
       },
     } as const;
@@ -1312,12 +1311,13 @@ export default function Page() {
                           ease: [0.22, 1, 0.36, 1],
                         }}
                         onAnimationComplete={() => {
+                          // Extended pause after text appears - let it breathe
                           setTimeout(() => {
                             setFirstLineComplete(true);
                             setTimeout(() => {
                               setSecondLineComplete(true);
-                            }, 500);
-                          }, 1000);
+                            }, 800); // Increased from 500ms for more deliberate pacing
+                          }, 1500); // Increased from 1000ms to let text fully settle
                         }}
                       >
                         <div className="tracking-tight text-xl md:whitespace-nowrap">
@@ -1358,35 +1358,97 @@ export default function Page() {
                           "calc(env(safe-area-inset-top, 0px) + 20px)",
                       }}
                     >
-                      <motion.div
-                        initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                        transition={{
-                          duration: 1.0,
-                          delay: 0.2,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        onAnimationComplete={() => {
-                          setTimeout(() => {
-                            setFirstLineComplete(true);
-                            // Increased delay for harmonious timing - allows text to breathe before images appear
-                            setTimeout(() => setSecondLineComplete(true), 900);
-                          }, 600);
-                        }}
-                      >
-                        <div className="tracking-tight text-lg">
-                          <WordReveal
-                            text="Raf leads design, crafts narratives and ships code."
-                            className="text-foreground/70"
-                            interactiveWord={{
-                              word: "Raf",
-                              onActivate: () => setIsAboutModalOpen(true),
-                              ariaLabel: "About Raf",
+                      <div className="tracking-tight text-lg">
+                        {/* Three-line text reveal with sequential animation matching desktop timing */}
+                        <motion.div className="space-y-0 text-foreground/70">
+                          {/* Line 1: "Raf leads design," */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            transition={{
+                              duration: 1.8,  // Match desktop WordReveal duration
+                              delay: 0.3,      // Match desktop initial delay
+                              ease: EASING.textReveal,  // Use same easing as desktop
                             }}
-                            interactiveHintVisible={isFooterReady}
-                          />
-                        </div>
-                      </motion.div>
+                            onAnimationComplete={() => {
+                              // After first line completes, trigger second line with pause
+                              setTimeout(() => {
+                                setFirstLineComplete(true);
+                              }, 600);  // Pause between lines
+                            }}
+                          >
+                            <span
+                              className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block mr-1 relative"
+                              onClick={() => setIsAboutModalOpen(true)}
+                              role="link"
+                              tabIndex={0}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  setIsAboutModalOpen(true);
+                                }
+                              }}
+                              aria-label="About Raf"
+                            >
+                              Raf
+                              {/* Interactive hint underline */}
+                              <motion.div
+                                className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
+                                style={{ bottom: 0, background: "currentColor", originX: 0 }}
+                                initial={{ scaleX: 0, opacity: 0 }}
+                                animate={{
+                                  scaleX: isFooterReady ? 1 : 0,
+                                  opacity: isFooterReady ? 0.18 : 0,
+                                }}
+                                transition={{
+                                  duration: 0.35,
+                                  ease: [0.22, 1, 0.36, 1],
+                                  delay: 0.1,
+                                }}
+                              />
+                            </span>
+                            <span>leads design,</span>
+                          </motion.div>
+
+                          {/* Line 2: "crafts narratives," */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                            animate={firstLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                            transition={{
+                              duration: 1.8,  // Match desktop WordReveal duration
+                              delay: 0,
+                              ease: EASING.textReveal,  // Use same easing as desktop
+                            }}
+                            onAnimationComplete={() => {
+                              // After second line completes, trigger third line with pause
+                              setTimeout(() => {
+                                setSecondLineComplete(true);
+                              }, 600);  // Pause between lines
+                            }}
+                          >
+                            crafts narratives,
+                          </motion.div>
+
+                          {/* Line 3: "and ships code." */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                            animate={secondLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                            transition={{
+                              duration: 1.8,  // Match desktop WordReveal duration
+                              delay: 0,
+                              ease: EASING.textReveal,  // Use same easing as desktop
+                            }}
+                            onAnimationComplete={() => {
+                              // Third line complete - trigger image and caption reveals with deliberate delay
+                              setTimeout(() => {
+                                // Images and captions can now animate in
+                              }, 1500);  // Let text fully settle before images appear
+                            }}
+                          >
+                            and ships code.
+                          </motion.div>
+                        </motion.div>
+                      </div>
                     </header>
 
                     {/* Scroll container with padding to account for fixed header/footer */}
@@ -1421,31 +1483,27 @@ export default function Page() {
                               <motion.div
                                 initial={{
                                   opacity: 0,
-                                  y: shouldReduceMotion ? 0 : 14,
+                                  y: shouldReduceMotion ? 0 : 40,
                                   filter: shouldReduceMotion
                                     ? undefined
-                                    : "blur(8px)", // SIMPLIFIED: Gentle blur like text animation
-                                  scale: shouldReduceMotion ? 1 : 0.98,
+                                    : "blur(20px)", // Match desktop blur amount
+                                  scale: shouldReduceMotion ? 1 : 0.95,
                                 }}
                                 animate={
-                                  // CRITICAL FIX: Different conditions for first vs other images
-                                  // First image (index 0): Wait for text sequence to complete (harmonious timing)
-                                  // Other images (index > 0): Animate immediately when loaded (prevents stuck blur)
+                                  // Only animate after all text lines are complete for first image
                                   (index === 0
                                     ? loadedImages[src] && secondLineComplete
                                     : loadedImages[src])
                                     ? {
                                         opacity: 1,
                                         y: 0,
-                                        // SIMPLIFIED MOBILE IMAGE REVEAL: Simple fade + gentle blur (harmonious with text)
-                                        // No complex staging - just smooth 8px blur → sharp focus
                                         filter: "blur(0px)",
                                         scale: 1,
                                         transition: {
-                                          duration: 1.8, // Keep harmonious timing
-                                          ease: EASING.primary,
-                                          // Only first image waits for text harmony
-                                          delay: index === 0 ? 0.55 : 0,
+                                          duration: 2.6, // Match desktop image reveal duration
+                                          ease: EASING.secondary, // Use same easing as desktop
+                                          // First image appears after text completes with much longer delay
+                                          delay: index === 0 ? 2.5 : 0,  // Increased from 1.0 to 2.5 seconds
                                         },
                                       }
                                     : {}
@@ -1490,13 +1548,12 @@ export default function Page() {
                                 const parsed = parseCaption(caption);
                                 return (
                                   <motion.figcaption
-                                    // ALIGNMENT: Changed from text-center to text-left to align with
-                                    // header text and About modal content (unified mobile alignment)
-                                    className="w-full text-left text-sm leading-snug text-foreground/70 dark:text-foreground/80"
+                                    // ALIGNMENT: Center-aligned to be central to the image (as per requirements)
+                                    className="w-full text-center text-sm leading-snug text-foreground/70 dark:text-foreground/80"
                                     initial={{
                                       opacity: 0,
                                       y: 8,
-                                      filter: "blur(6px)",
+                                      filter: "blur(10px)",
                                     }}
                                     animate={
                                       loadedImages[src] && secondLineComplete
@@ -1508,10 +1565,10 @@ export default function Page() {
                                         : {}
                                     }
                                     transition={{
-                                      duration: 0.6,
-                                      ease: EASING.tertiary,
-                                      // Caption follows image with harmonious delay
-                                      delay: 0.85,
+                                      duration: 1.2,  // Increased for slower caption reveal (match desktop)
+                                      ease: [0.16, 1, 0.3, 1],  // Match desktop caption easing
+                                      // Caption follows image with more deliberate delay
+                                      delay: index === 0 ? 3.0 : 0.3,  // Much longer delay for first caption after text
                                     }}
                                     onAnimationComplete={() => {
                                       if (index === 0) {
@@ -1549,7 +1606,7 @@ export default function Page() {
                     */}
                     <footer
                       ref={footerRef as React.RefObject<HTMLElement>}
-                      className={`fixed bottom-0 left-0 right-0 z-30 pt-4 bg-gradient-to-t from-background/85 to-transparent backdrop-blur ${MOBILE_CONTENT_PADDING}`}
+                      className={`fixed bottom-0 left-0 right-0 z-30 pt-4 bg-gradient-to-t from-background/95 via-background/90 to-transparent backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-md ${MOBILE_CONTENT_PADDING}`}
                       style={{ paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING }}
                       aria-label="Mobile contact links"
                     >
@@ -1579,7 +1636,7 @@ export default function Page() {
                                   : undefined
                               }
                               aria-label={link.ariaLabel}
-                              className="text-foreground/75 hover:text-foreground transition-colors"
+                              className="text-foreground/85 hover:text-foreground font-medium transition-colors"
                             >
                               {link.label}
                             </a>
@@ -1614,14 +1671,14 @@ export default function Page() {
                         }
                   }
                   transition={{
-                    duration: 2,
-                    delay: 0.3,
+                    duration: 2.8, // Increased from 2s for slower reveal
+                    delay: 1.2, // Increased from 0.3s - significant pause after text
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   onAnimationComplete={() => {
                     setTimeout(() => {
                       setCarouselAnimationComplete(true);
-                    }, 200);
+                    }, 400); // Increased from 200ms
                   }}
                 >
                   <div className="space-y-2 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto md:flex-1 md:py-2">
@@ -1756,9 +1813,9 @@ export default function Page() {
                           filter: "blur(0px) saturate(1)",
                         }}
                         transition={{
-                          duration: 0.6,
+                          duration: 1.2, // Increased from 0.6s for slower caption reveal
                           ease: [0.16, 1, 0.3, 1],
-                          delay: 0.08,
+                          delay: 0.3, // Increased from 0.08s for more deliberate appearance
                         }}
                       >
                         <div
@@ -1795,9 +1852,9 @@ export default function Page() {
                                       filter: "blur(0px) saturate(1)",
                                     }}
                                     transition={{
-                                      duration: 0.55,
+                                      duration: 1.0, // Increased from 0.55s for slower text reveal
                                       ease: [0.16, 1, 0.3, 1],
-                                      delay: 0.02,
+                                      delay: 0.15, // Increased from 0.02s for staged appearance after year
                                     }}
                                     className="text-foreground/80 text-sm font-medium sm:text-right"
                                   >
