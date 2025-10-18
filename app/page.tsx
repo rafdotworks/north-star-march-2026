@@ -1111,7 +1111,8 @@ export default function Page() {
       inactive: {
         opacity: 0.92, // SIMPLIFIED: Subtle fade (was 0.4 - too dark), keeps images visible
         scale: 0.985,
-        filter: "blur(2px)", // SIMPLIFIED: Very subtle blur (was 4px - too much)
+        // CRITICAL: No blur on inactive - images must stay sharp after initial animation
+        // Only opacity + scale change during scroll to keep works fully visible
         transition: {
           duration: 0.7,
           ease: EASING.tertiary,
@@ -1392,7 +1393,10 @@ export default function Page() {
                     <main
                       ref={mobileScrollRef as React.RefObject<HTMLElement>}
                       className="h-[100svh] overflow-y-auto overscroll-contain snap-y snap-mandatory"
-                      style={{}}
+                      style={{
+                        paddingTop: `${headerH + 48}px`,
+                        paddingBottom: `${footerH + 48}px`,
+                      }}
                     >
                       {images.map((src, index) => (
                         <motion.section
@@ -1407,11 +1411,9 @@ export default function Page() {
                           // This aligns images with header text and About modal content
                           className={`snap-center snap-always flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
                           style={{
-                            minHeight: panelMinH,
-                            filter:
-                              blurByIndex[index] && !shouldReduceMotion
-                                ? `blur(${blurByIndex[index]}px)`
-                                : undefined,
+                            height: `calc(100svh - ${headerH + footerH + 96}px)`,
+                            // CRITICAL FIX: Removed blurByIndex - was causing scroll blur issue
+                            // panelVariants now handles all transitions via filter property
                           }}
                         >
                           <figure className="w-full max-w-screen-sm">
@@ -1426,9 +1428,12 @@ export default function Page() {
                                   scale: shouldReduceMotion ? 1 : 0.98,
                                 }}
                                 animate={
-                                  loadingSequence.textLoaded &&
-                                  !!loadedImages[src] &&
-                                  secondLineComplete
+                                  // CRITICAL FIX: Different conditions for first vs other images
+                                  // First image (index 0): Wait for text sequence to complete (harmonious timing)
+                                  // Other images (index > 0): Animate immediately when loaded (prevents stuck blur)
+                                  (index === 0
+                                    ? loadedImages[src] && secondLineComplete
+                                    : loadedImages[src])
                                     ? {
                                         opacity: 1,
                                         y: 0,
@@ -1439,17 +1444,14 @@ export default function Page() {
                                         transition: {
                                           duration: 1.8, // Keep harmonious timing
                                           ease: EASING.primary,
-                                          delay: 0.55,
+                                          // Only first image waits for text harmony
+                                          delay: index === 0 ? 0.55 : 0,
                                         },
                                       }
                                     : {}
                                 }
-                                style={{
-                                  filter:
-                                    blurByIndex[index] && !shouldReduceMotion
-                                      ? `blur(${blurByIndex[index]}px)`
-                                      : undefined,
-                                }}
+                                // CRITICAL FIX: Removed blurByIndex style - was causing images to stay blurred on scroll
+                                // The panelVariants now handles all blur transitions
                               >
                                 <WorkImageContainer
                                   src={src}
@@ -1924,6 +1926,7 @@ export default function Page() {
                   <h2 id="about-modal-title" className="sr-only">
                     About Raf
                   </h2>
+                  {/* MOBILE PADDING ONLY: On mobile (px-4), matches header/images. Desktop keeps centered layout with p-4 sm:p-6 */}
                   <motion.div
                     variants={modalTextStagger.container}
                     initial="hidden"

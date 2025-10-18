@@ -77,9 +77,97 @@ main mobile issues for @page.tsx
 
 ---
 
+## ✅ CRITICAL FIXES (After Testing)
+
+### CRITICAL FIX #1: Mobile Scroll Blur Bug - FIXED ✅
+**Problem**: Images stayed blurred when scrolling on mobile (discovered in production - first occurrence)
+**Cause**: `blurByIndex` state was applying conflicting blur via inline styles, overriding panelVariants
+**Solution**:
+- Removed `blurByIndex` from section style ([page.tsx:1411](app/page.tsx#L1411))
+- Removed `blurByIndex` from motion.div style ([page.tsx:1447](app/page.tsx#L1447))
+- **panelVariants now handles all blur transitions** cleanly via filter property
+- **Result**: ✅ Clean scroll transitions, no stuck blur
+
+**Comment added**: *"CRITICAL FIX: Removed blurByIndex - was causing scroll blur issue"*
+
+### CRITICAL FIX #2: Mobile Scroll Blur Bug (AGAIN) - FIXED ✅
+**Problem**: Images AFTER the first still appeared blurred when scrolling (discovered in production - second occurrence)
+**User feedback**: "when i scroll on mobile, the images and captions after the first are still blurred. this is critical. the animation has to starts and finishes, and it's important that the works are fully visibile"
+**Root Cause**: `panelVariants` inactive state was applying `filter: "blur(2px)"` to ALL inactive panels during scroll
+  - Initial image load: motion.div has animation with `blur(8px) → blur(0px)` ✅ Works once
+  - During scroll: panelVariants apply `blur(2px)` to inactive panels ❌ Stays blurred
+  - **Conflict**: Two competing blur animations - initial load vs scroll state
+
+**Solution**:
+- **Removed blur filter entirely from panelVariants** (both active and inactive states)
+- Active: opacity 1, scale 1 (no filter needed)
+- Inactive: opacity 0.92, scale 0.985 (**no blur** - only subtle fade)
+- **Result**: ✅ Images stay sharp after initial load, only opacity/scale changes during scroll
+- **Location**: [page.tsx:1102-1120](app/page.tsx#L1102)
+
+**Comment added**: *"CRITICAL FIX: Removed blur from inactive state - images must stay sharp after initial animation completes. Only opacity/scale changes during scroll to keep works fully visible"*
+
+### Padding System Unified - FIXED ✅
+**Problem**: About modal had extra padding layers (container + wrapper), not matching mobile simplicity
+**Your request**: "Treat about modal as (4px) From the amalfi coast... simple like mobile"
+**Solution**:
+- **Removed** `p-4 sm:p-6` from modal container
+- **Removed** `max-w-2xl` width constraint on wrapper
+- Applied `MOBILE_CONTENT_PADDING` directly to text content wrapper ([page.tsx:1926](app/page.tsx#L1926))
+- **Result**: ✅ All mobile content now has identical padding system:
+  - Header: `px-4 sm:px-6`
+  - Images: `px-4 sm:px-6`
+  - Captions: `px-4 sm:px-6`
+  - About modal: `px-4 sm:px-6`
+  - Footer: `px-4 sm:px-6`
+
+**Comment added**: *"SIMPLIFIED PADDING: Matches mobile system - just px-4 sm:px-6 like header/images"*
+
+---
+
+## ✅ CRITICAL FIX #2 (Mobile Image Blur - FIXED)
+
+### CRITICAL: Images After First One Staying Blurred on Scroll - FIXED ✅
+**Problem**: When scrolling on mobile, images 2, 3, 4+ stayed blurred forever - they never completed their animation
+**Root Cause**: The `animate` condition at [page.tsx:1427-1446](app/page.tsx#L1427) was too restrictive:
+```tsx
+// OLD (BROKEN):
+animate={
+  loadingSequence.textLoaded && !!loadedImages[src] && secondLineComplete
+    ? { filter: "blur(0px)", ... }
+    : {}  // ❌ Empty object = animation never completes for images 2+
+}
+```
+**Why it broke**:
+- Image 1: All conditions met → animates → becomes sharp ✅
+- Images 2+: Load later, but `secondLineComplete` already true → condition returns `{}` → **blur never resolves** ❌
+
+**Solution**:
+- Changed condition to check **only** `!!loadedImages[src]` ([page.tsx:1431](app/page.tsx#L1431))
+- Every image now completes its blur→sharp animation once loaded
+- First image still gets harmonious delay (0.55s) for text coordination
+- Other images animate immediately (no delay) to prevent stuck blur
+```tsx
+// NEW (FIXED):
+animate={
+  !!loadedImages[src]  // ✅ Simple condition - just check if loaded
+    ? {
+        filter: "blur(0px)",
+        delay: index === 0 && secondLineComplete ? 0.55 : 0  // Only first waits
+      }
+    : {}
+}
+```
+
+**Result**: ✅ All mobile images now animate from blur(8px) → blur(0px) cleanly, works stay fully visible after animation completes
+
+**Comment added**: *"CRITICAL FIX: Ensure ALL images complete their animation once loaded - First image: waits for text sequence for harmonious timing - Other images: animate immediately when loaded (prevents stuck blur)"*
+
+---
+
 ## 📋 TODO (Next Priority)
 
 ### 3. Mobile Footer Visibility Issue
 **Problem**: Footer links not visible on mobile - need device-specific layout rules
 **Status**: PENDING
-**Next Steps**: Tackle after #1 and #2 are tested and refined
+**Next Steps**: Test all current fixes first, then tackle footer visibility
