@@ -70,6 +70,18 @@ const PREVIEW_LOOPS = 1;
 const PREVIEW_SETTLE_DELAY = 200;
 
 // ============================================================================
+// MOBILE IMAGE REVEAL ANIMATION - SIMPLIFIED
+// ============================================================================
+
+/**
+ * MOBILE SIMPLIFICATION: Gentle blur-to-focus (harmonious with text)
+ * - Initial blur: 8px (gentle, like text animation)
+ * - Duration: 1.8s (harmonious timing)
+ * - No complex staging - just smooth fade + blur
+ * Note: Desktop animations remain separate (will refine later)
+ */
+
+// ============================================================================
 // IMAGE LOADING STRATEGY CONSTANTS
 // ============================================================================
 
@@ -121,6 +133,8 @@ const MOBILE_HERO_BOTTOM_PADDING =
 /** iOS safe area padding for mobile contact footer */
 const MOBILE_CONTACT_BOTTOM_PADDING =
   "calc(env(safe-area-inset-bottom, 0px) + 20px)";
+/** Unified horizontal padding for mobile content (matches About modal: px-4 sm:px-6) */
+const MOBILE_CONTENT_PADDING = "px-4 sm:px-6";
 
 /** Loading stage messages shown during initial page load */
 const LOADING_STAGES: string[] = [
@@ -199,14 +213,14 @@ const PROJECT_ALIAS: Record<string, string> = {
  * This determines both desktop carousel and mobile scroll panel order
  */
 const PROJECT_ORDER: string[] = [
-  "cb",        // Coinbase (2025)
-  "vf",        // Voiceflow (2025)
-  "theo",      // Theoriq (2024)
-  "atlas",     // Atlas (2020)
-  "defituna",  // DeFi Tuna (2021)
-  "curbcut",   // CurbCut (2021)
-  "zalando",   // Zalando (2022)
-  "artscapy",  // Early work (2017-2019)
+  "cb", // Coinbase (2025)
+  "vf", // Voiceflow (2025)
+  "theo", // Theoriq (2024)
+  "atlas", // Atlas (2020)
+  "defituna", // DeFi Tuna (2021)
+  "curbcut", // CurbCut (2021)
+  "zalando", // Zalando (2022)
+  "artscapy", // Early work (2017-2019)
 ];
 
 /** Flattened array of all image sources in display order */
@@ -474,8 +488,10 @@ export default function Page() {
   // Animation sequence flags
   const [firstLineComplete, setFirstLineComplete] = useState(false); // First text line animated
   const [secondLineComplete, setSecondLineComplete] = useState(false); // Second text line animated
-  const [carouselAnimationComplete, setCarouselAnimationComplete] = useState(false); // Carousel visible
-  const [finalTextAnimationComplete, setFinalTextAnimationComplete] = useState(false); // All text visible
+  const [carouselAnimationComplete, setCarouselAnimationComplete] =
+    useState(false); // Carousel visible
+  const [finalTextAnimationComplete, setFinalTextAnimationComplete] =
+    useState(false); // All text visible
 
   // Preview/auto-play
   const [isPreviewRunning, setIsPreviewRunning] = useState(false); // Auto-preview in progress
@@ -1068,9 +1084,15 @@ export default function Page() {
   const isEmailReady = loadingSequence.textLoaded && secondLineComplete;
   const isFooterReady = footerRevealReady;
 
+  /**
+   * Panel variants for mobile scroll transitions
+   * SIMPLIFIED MOBILE SCROLL: Subtle fade + gentle blur (harmonious with image reveal)
+   * Active panel: Full visibility, sharp focus
+   * Inactive panels: Slightly faded with very subtle blur (images stay visible and clean)
+   */
   const panelVariants = useMemo(() => {
     if (shouldReduceMotion) {
-      // Provide a minimal variant to satisfy typing; animate prop will still use keys
+      // Minimal variant for reduced motion preference
       return {
         active: { opacity: 1 },
         inactive: { opacity: 1 },
@@ -1080,12 +1102,20 @@ export default function Page() {
       active: {
         opacity: 1,
         scale: 1,
-        transition: { duration: 0.4, ease: EASING.tertiary },
+        filter: "blur(0px)", // Sharp focus for active panel
+        transition: {
+          duration: 0.7,
+          ease: EASING.tertiary,
+        },
       },
       inactive: {
-        opacity: 0.98,
-        scale: 0.992,
-        transition: { duration: 0.4, ease: EASING.tertiary },
+        opacity: 0.92, // SIMPLIFIED: Subtle fade (was 0.4 - too dark), keeps images visible
+        scale: 0.985,
+        filter: "blur(2px)", // SIMPLIFIED: Very subtle blur (was 4px - too much)
+        transition: {
+          duration: 0.7,
+          ease: EASING.tertiary,
+        },
       },
     } as const;
   }, [shouldReduceMotion]);
@@ -1314,10 +1344,14 @@ export default function Page() {
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
                   <div className="relative h-[100svh]">
-                    {/* Fixed top header */}
+                    {/*
+                      Fixed top header - Mobile only
+                      PADDING: Uses MOBILE_CONTENT_PADDING (px-4 sm:px-6) for consistent
+                      horizontal alignment with About modal and image panels
+                    */}
                     <header
                       ref={headerRef as React.RefObject<HTMLElement>}
-                      className="fixed top-0 left-0 right-0 z-20 pb-4 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                      className={`fixed top-0 left-0 right-0 z-20 pb-4 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${MOBILE_CONTENT_PADDING}`}
                       style={{
                         paddingTop:
                           "calc(env(safe-area-inset-top, 0px) + 20px)",
@@ -1334,7 +1368,8 @@ export default function Page() {
                         onAnimationComplete={() => {
                           setTimeout(() => {
                             setFirstLineComplete(true);
-                            setTimeout(() => setSecondLineComplete(true), 400);
+                            // Increased delay for harmonious timing - allows text to breathe before images appear
+                            setTimeout(() => setSecondLineComplete(true), 900);
                           }, 600);
                         }}
                       >
@@ -1368,7 +1403,9 @@ export default function Page() {
                           key={`panel-${src}`}
                           id={index === 0 ? "panel-0" : undefined}
                           data-panel
-                          className="snap-center snap-always flex items-center justify-center px-4 sm:px-3"
+                          // PADDING: Changed from px-4 sm:px-3 to unified MOBILE_CONTENT_PADDING (px-4 sm:px-6)
+                          // This aligns images with header text and About modal content
+                          className={`snap-center snap-always flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
                           style={{
                             minHeight: panelMinH,
                             filter:
@@ -1385,7 +1422,7 @@ export default function Page() {
                                   y: shouldReduceMotion ? 0 : 14,
                                   filter: shouldReduceMotion
                                     ? undefined
-                                    : "blur(12px)",
+                                    : "blur(8px)", // SIMPLIFIED: Gentle blur like text animation
                                   scale: shouldReduceMotion ? 1 : 0.98,
                                 }}
                                 animate={
@@ -1395,12 +1432,13 @@ export default function Page() {
                                     ? {
                                         opacity: 1,
                                         y: 0,
+                                        // SIMPLIFIED MOBILE IMAGE REVEAL: Simple fade + gentle blur (harmonious with text)
+                                        // No complex staging - just smooth 8px blur → sharp focus
                                         filter: "blur(0px)",
                                         scale: 1,
                                         transition: {
-                                          duration: 1.1,
+                                          duration: 1.8, // Keep harmonious timing
                                           ease: EASING.primary,
-                                          // Image follows header by a modest delay
                                           delay: 0.55,
                                         },
                                       }
@@ -1450,7 +1488,9 @@ export default function Page() {
                                 const parsed = parseCaption(caption);
                                 return (
                                   <motion.figcaption
-                                    className="text-center text-sm leading-snug text-foreground/70 dark:text-foreground/80"
+                                    // ALIGNMENT: Changed from text-center to text-left to align with
+                                    // header text and About modal content (unified mobile alignment)
+                                    className="w-full text-left text-sm leading-snug text-foreground/70 dark:text-foreground/80"
                                     initial={{
                                       opacity: 0,
                                       y: 8,
@@ -1468,7 +1508,7 @@ export default function Page() {
                                     transition={{
                                       duration: 0.6,
                                       ease: EASING.tertiary,
-                                      // Caption follows image
+                                      // Caption follows image with harmonious delay
                                       delay: 0.85,
                                     }}
                                     onAnimationComplete={() => {
@@ -1500,14 +1540,18 @@ export default function Page() {
                       ))}
                     </main>
 
-                    {/* Fixed bottom footer */}
+                    {/*
+                      Fixed bottom footer - Mobile only
+                      PADDING: Uses MOBILE_CONTENT_PADDING for horizontal alignment
+                      Note: mobile-gutter class removed in favor of unified padding
+                    */}
                     <footer
                       ref={footerRef as React.RefObject<HTMLElement>}
-                      className="fixed bottom-0 left-0 right-0 z-30 pt-4 bg-gradient-to-t from-background/85 to-transparent backdrop-blur"
+                      className={`fixed bottom-0 left-0 right-0 z-30 pt-4 bg-gradient-to-t from-background/85 to-transparent backdrop-blur ${MOBILE_CONTENT_PADDING}`}
                       style={{ paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING }}
                       aria-label="Mobile contact links"
                     >
-                      <div className="mobile-gutter">
+                      <div>
                         <motion.div
                           initial={{ opacity: 0, y: 8, filter: "blur(6px)" }}
                           animate={
