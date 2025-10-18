@@ -42,7 +42,6 @@ import {
   ImageCarouselItem,
   LoadingProgress,
   ProgressiveLoadingStates,
-  WordReveal,
 } from "@/components/animations/LoadingAnimations";
 import { useLoadingSequence } from "@/hooks/useLoadingSequence"; // Adaptive loading based on network
 import {
@@ -1302,37 +1301,97 @@ export default function Page() {
                 >
                   <div className="text-center mb-2 md:mb-4">
                     {loadingSequence.textLoaded && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                        transition={{
-                          duration: 1.5,
-                          delay: 0.3,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        onAnimationComplete={() => {
-                          // Extended pause after text appears - let it breathe
-                          setTimeout(() => {
-                            setFirstLineComplete(true);
-                            setTimeout(() => {
-                              setSecondLineComplete(true);
-                            }, 800); // Increased from 500ms for more deliberate pacing
-                          }, 1500); // Increased from 1000ms to let text fully settle
-                        }}
-                      >
-                        <div className="tracking-tight text-xl md:whitespace-nowrap">
-                          <WordReveal
-                            text="Raf leads design, crafts narratives and ships code."
-                            className="text-foreground/70"
-                            interactiveWord={{
-                              word: "Raf",
-                              onActivate: () => setIsAboutModalOpen(true),
-                              ariaLabel: "About Raf",
+                      <div className="tracking-tight text-xl md:whitespace-nowrap">
+                        {/* Three-part text reveal on single line - matching mobile timing */}
+                        <span className="text-foreground/70">
+                          {/* Part 1: "Raf leads design," */}
+                          <motion.span
+                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            transition={{
+                              duration: 1.8,
+                              delay: 0.3,
+                              ease: EASING.textReveal,
                             }}
-                            interactiveHintVisible={true}
-                          />
-                        </div>
-                      </motion.div>
+                            onAnimationComplete={() => {
+                              // After first part completes, trigger second part
+                              setTimeout(() => {
+                                setFirstLineComplete(true);
+                              }, 600);
+                            }}
+                          >
+                            <span
+                              className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block relative"
+                              onClick={() => setIsAboutModalOpen(true)}
+                              role="link"
+                              tabIndex={0}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  setIsAboutModalOpen(true);
+                                }
+                              }}
+                              aria-label="About Raf"
+                            >
+                              Raf
+                              {/* Interactive hint underline */}
+                              <motion.div
+                                className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
+                                style={{ bottom: 0, background: "currentColor", originX: 0 }}
+                                initial={{ scaleX: 0, opacity: 0 }}
+                                animate={{
+                                  scaleX: isFooterReady ? 1 : 0,
+                                  opacity: isFooterReady ? 0.18 : 0,
+                                }}
+                                transition={{
+                                  duration: 0.35,
+                                  ease: [0.22, 1, 0.36, 1],
+                                  delay: 0.1,
+                                }}
+                              />
+                            </span>
+                            {" leads design, "}
+                          </motion.span>
+
+                          {/* Part 2: "crafts narratives" */}
+                          <motion.span
+                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                            animate={firstLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                            transition={{
+                              duration: 1.8,
+                              delay: 0,
+                              ease: EASING.textReveal,
+                            }}
+                            onAnimationComplete={() => {
+                              // After second part completes, trigger third part
+                              setTimeout(() => {
+                                setSecondLineComplete(true);
+                              }, 600);
+                            }}
+                          >
+                            crafts narratives{" "}
+                          </motion.span>
+
+                          {/* Part 3: "and ships code." */}
+                          <motion.span
+                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                            animate={secondLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                            transition={{
+                              duration: 1.8,
+                              delay: 0,
+                              ease: EASING.textReveal,
+                            }}
+                            onAnimationComplete={() => {
+                              // Third part complete - images can now animate with delay
+                              setTimeout(() => {
+                                // Signal for images to appear
+                              }, 1500);
+                            }}
+                          >
+                            and ships code.
+                          </motion.span>
+                        </span>
+                      </div>
                     )}
                   </div>
                 </motion.div>
@@ -1671,8 +1730,8 @@ export default function Page() {
                         }
                   }
                   transition={{
-                    duration: 2.8, // Increased from 2s for slower reveal
-                    delay: 1.2, // Increased from 0.3s - significant pause after text
+                    duration: 2.8, // Slower reveal matching mobile polish
+                    delay: 2.5, // Match mobile timing - significant pause after text completes
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   onAnimationComplete={() => {
