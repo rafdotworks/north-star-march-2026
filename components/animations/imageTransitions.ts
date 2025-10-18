@@ -1,4 +1,4 @@
-import { Transition, Variants } from "framer-motion";
+import { Variants } from "framer-motion";
 
 export type Direction = 1 | -1; // 1: next (forward), -1: previous (back)
 export type AnimationLevel = 0 | 1 | 2 | 3;
@@ -11,7 +11,7 @@ const DURATIONS: Record<AnimationLevel, number> = {
 };
 
 // Calmer easing
-const EASE: Transition["ease"] = [0.16, 1, 0.3, 1];
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export function pageTurnVariants(
   level: AnimationLevel,
