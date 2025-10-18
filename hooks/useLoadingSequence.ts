@@ -1,29 +1,54 @@
+/**
+ * ============================================================================
+ * LOADING SEQUENCE HOOK - hooks/useLoadingSequence.ts
+ * ============================================================================
+ *
+ * Adaptive loading system that adjusts animation timing based on:
+ * - Network connection speed (fast/medium/slow)
+ * - Actual resource load times
+ * - Progressive content reveal strategy
+ *
+ * LOADING STAGES:
+ * 1. Text (0.3-1.0s): Hero text and typography
+ * 2. Images (1.5-3.0s): Critical images load
+ * 3. Navigation (3.2s+): Full UI ready
+ * 4. All loaded: Complete experience
+ *
+ * Used by: app/page.tsx for orchestrating page reveal sequence
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { LOADING_SEQUENCE } from "@/components/animations/LoadingAnimations";
 
+/** Return type for useLoadingSequence hook */
 export interface LoadingSequenceState {
-  textLoaded: boolean;
-  imagesLoaded: boolean;
-  navigationLoaded: boolean;
-  allLoaded: boolean;
-  loadingProgress: number;
-  estimatedTimeRemaining: number;
-  isAdaptive: boolean;
+  textLoaded: boolean; // Stage 1: Text content ready
+  imagesLoaded: boolean; // Stage 2: Images ready
+  navigationLoaded: boolean; // Stage 3: Navigation ready
+  allLoaded: boolean; // Stage 4: Complete
+  loadingProgress: number; // 0-1 progress value
+  estimatedTimeRemaining: number; // Milliseconds remaining
+  isAdaptive: boolean; // True if using adaptive timing
 }
 
+/** Internal metrics for adaptive timing calculations */
 export interface LoadingMetrics {
-  startTime: number;
-  textStartTime: number;
-  imagesStartTime: number;
-  navigationStartTime: number;
+  startTime: number; // Sequence start timestamp
+  textStartTime: number; // Text stage start
+  imagesStartTime: number; // Images stage start
+  navigationStartTime: number; // Navigation stage start
   actualLoadTimes: {
-    text: number | null;
-    images: number | null;
-    navigation: number | null;
+    text: number | null; // Actual text load duration (ms)
+    images: number | null; // Actual images load duration (ms)
+    navigation: number | null; // Actual navigation load duration (ms)
   };
-  connectionQuality: "fast" | "medium" | "slow";
+  connectionQuality: "fast" | "medium" | "slow"; // Detected connection speed
 }
 
+/**
+ * Main loading sequence hook with adaptive timing
+ * Detects connection speed and adjusts load delays accordingly
+ */
 export function useLoadingSequence() {
   const [loadingState, setLoadingState] = useState<LoadingSequenceState>({
     textLoaded: false,

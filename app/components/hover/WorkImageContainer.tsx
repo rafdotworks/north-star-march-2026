@@ -1,37 +1,58 @@
 "use client";
 
+/**
+ * ============================================================================
+ * WORK IMAGE CONTAINER - app/components/hover/WorkImageContainer.tsx
+ * ============================================================================
+ *
+ * Main container for work portfolio images with sophisticated hover effects.
+ *
+ * FEATURES:
+ * - Responsive hover animations (scale, brightness, saturation)
+ * - Mobile vs desktop variants with different interaction patterns
+ * - Video preview integration with play button
+ * - Next.js Image optimization (lazy loading, blur placeholders)
+ * - Loading state transitions
+ *
+ * HOVER BEHAVIOR:
+ * - With video: Scales down, darkens (invites click to play)
+ * - Without video: Scales up, brightens (showcases work)
+ *
+ * Used by: app/page.tsx for all work showcase images
+ */
+
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { WorkImageHover } from "./WorkImageHover";
 import { VideoPlayButton } from "./VideoPlayButton";
 
+/** Props for WorkImageContainer component */
 interface WorkImageContainerProps {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-  hasVideo?: boolean;
-  onVideoClick?: () => void;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
-  onLoad?: () => void;
-  className?: string;
-  variant?: "mobile" | "desktop";
-  // Image optimization props
-  priority?: boolean;
-  loading?: "eager" | "lazy";
-  quality?: number;
-  sizes?: string;
-  placeholder?: "blur";
-  blurDataURL?: string;
+  src: string; // Image source path
+  alt: string; // Accessibility description
+  width: number; // Natural image width
+  height: number; // Natural image height
+  hasVideo?: boolean; // Whether image has associated video
+  onVideoClick?: () => void; // Video play handler
+  onMouseEnter?: () => void; // Mouse enter handler (pauses slideshow)
+  onMouseLeave?: () => void; // Mouse leave handler (resumes slideshow)
+  onLoad?: () => void; // Image load completion handler
+  className?: string; // Additional CSS classes
+  variant?: "mobile" | "desktop"; // Responsive variant
+  // Next.js Image optimization props
+  priority?: boolean; // Load eagerly (critical images)
+  loading?: "eager" | "lazy"; // Loading strategy
+  quality?: number; // Image quality (1-100)
+  sizes?: string; // Responsive sizes attribute
+  placeholder?: "blur"; // Blur-up placeholder
+  blurDataURL?: string; // Blur placeholder data URL
   // Loading state
-  isLoaded?: boolean;
+  isLoaded?: boolean; // Image loaded status
 }
 
 /**
- * Localized work image container component
- * Combines image display with hover effects and video interactions
+ * Work image container with localized hover effects and video integration
  */
 export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
   src,
@@ -53,33 +74,59 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
   blurDataURL,
   isLoaded = true,
 }) => {
+  // ========================================================================
+  // STATE & CONSTANTS
+  // ========================================================================
+
   const [isHovered, setIsHovered] = useState(false);
+
+  /** Easing curve for smooth hover transitions */
   const hoverEasingMotion = [0.22, 1, 0.36, 1] as const;
   const hoverEasingCss = "cubic-bezier(0.22, 1, 0.36, 1)";
 
+  // ========================================================================
+  // HOVER EFFECT CALCULATIONS
+  // ========================================================================
+
+  /**
+   * Scale on hover - different for video vs non-video images
+   * Video: Scale down (0.986/0.992) - invites interaction
+   * No video: Scale up (1.01/1.008) - showcases detail
+   */
   const hoverScale = hasVideo
     ? variant === "desktop"
-      ? 0.986
-      : 0.992
+      ? 0.986 // Desktop with video: subtle scale down
+      : 0.992 // Mobile with video: very subtle scale down
     : variant === "desktop"
-    ? 1.01
-    : 1.008;
+    ? 1.01 // Desktop no video: subtle scale up
+    : 1.008; // Mobile no video: very subtle scale up
+
+  /**
+   * Filter effects on hover
+   * Video: Darken/desaturate - suggests interactivity
+   * No video: Brighten/saturate - enhances appearance
+   */
   const hoverFilter = hasVideo
     ? variant === "desktop"
-      ? "brightness(0.9) saturate(0.88)"
-      : "brightness(0.94) saturate(0.92)"
+      ? "brightness(0.9) saturate(0.88)" // Desktop: more dramatic darkening
+      : "brightness(0.94) saturate(0.92)" // Mobile: subtle darkening
     : variant === "desktop"
-    ? "brightness(1.04) saturate(1.04)"
-    : "brightness(1.03) saturate(1.02)";
+    ? "brightness(1.04) saturate(1.04)" // Desktop: subtle brightening
+    : "brightness(1.03) saturate(1.02)"; // Mobile: very subtle brightening
 
+  /**
+   * Combined filter segments (loading blur + hover effects)
+   * Only applies hover filter when image is loaded
+   */
   const filterSegments = [
-    !isLoaded ? "blur(20px)" : "",
-    isLoaded && isHovered ? hoverFilter : "",
+    !isLoaded ? "blur(20px)" : "", // Loading state blur
+    isLoaded && isHovered ? hoverFilter : "", // Hover effect filter
   ].filter(Boolean);
 
+  /** Final computed values for image styling */
   const transformValue = isHovered ? `scale(${hoverScale})` : "scale(1)";
   const filterValue = filterSegments.join(" ") || "none";
-  const transitionDuration = variant === "desktop" ? 0.75 : 0.65;
+  const transitionDuration = variant === "desktop" ? 0.75 : 0.65; // Desktop slightly longer
   const transitionValue = `transform ${transitionDuration}s ${hoverEasingCss}, filter ${transitionDuration}s ${hoverEasingCss}, opacity 0.6s ${hoverEasingCss}`;
 
   const handleMouseEnter = () => {

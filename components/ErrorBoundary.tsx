@@ -1,17 +1,46 @@
 "use client";
 
+/**
+ * ============================================================================
+ * ERROR BOUNDARY - components/ErrorBoundary.tsx
+ * ============================================================================
+ *
+ * React error boundary component for graceful error handling.
+ *
+ * FEATURES:
+ * - Catches JavaScript errors in child component tree
+ * - Logs error details to console
+ * - Shows user-friendly fallback UI
+ * - Provides refresh button to recover
+ * - Optional custom fallback component
+ *
+ * USAGE:
+ * Wrap critical UI sections to prevent full page crashes:
+ * <ErrorBoundary>
+ *   <YourComponent />
+ * </ErrorBoundary>
+ *
+ * Used by: app/page.tsx to wrap main content
+ */
+
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
+/** Props for ErrorBoundary component */
 interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
+  children: ReactNode; // Content to protect with error boundary
+  fallback?: ReactNode; // Optional custom error UI
 }
 
+/** Internal state tracking error status */
 interface State {
-  hasError: boolean;
-  error?: Error;
+  hasError: boolean; // Whether an error has occurred
+  error?: Error; // The caught error object
 }
 
+/**
+ * Error boundary component (class-based, required by React)
+ * Catches errors during rendering, lifecycle methods, and constructors
+ */
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,

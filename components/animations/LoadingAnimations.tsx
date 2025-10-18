@@ -1,5 +1,25 @@
 "use client";
 
+/**
+ * ============================================================================
+ * LOADING ANIMATIONS - components/animations/LoadingAnimations.tsx
+ * ============================================================================
+ *
+ * Central animation system for the portfolio site.
+ * Provides reusable animation components, easing curves, and motion variants.
+ *
+ * EXPORTS:
+ * - EASING: Bezier curve presets for consistent motion
+ * - Text animations: TextReveal, WordReveal, ProgressiveLoadingStates
+ * - Image animations: ImageCarouselItem, WorkImageHover
+ * - UI animations: NavigationReveal, BreathingSkeleton, LoadingProgress
+ * - Modal animations: modalOverlayVariants, modalContainerVariants, etc.
+ *
+ * Used extensively by:
+ * - app/page.tsx (main homepage)
+ * - app/components/hover (work image interactions)
+ */
+
 import { motion, AnimatePresence } from "framer-motion";
 import { ComponentProps, ReactNode, KeyboardEvent, useId } from "react";
 
@@ -7,7 +27,16 @@ type MotionDivProps = ComponentProps<typeof motion.div>;
 
 type MotionDivWithChildren = MotionDivProps & { children: ReactNode };
 
-// Enhanced easing curves for delightful micro-interactions
+// ============================================================================
+// EASING CURVES - Cubic bezier presets for motion design
+// ============================================================================
+
+/**
+ * EASING: Predefined cubic bezier curves for consistent motion
+ * Format: [x1, y1, x2, y2] for cubic-bezier()
+ *
+ * Usage: transition={{ ease: EASING.primary }}
+ */
 export const EASING = {
   // Primary easing for main content reveals
   primary: [0.12, 1, 0.28, 1],

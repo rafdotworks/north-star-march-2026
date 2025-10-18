@@ -1,5 +1,31 @@
 "use client";
 
+/**
+ * ============================================================================
+ * MAIN HOMEPAGE COMPONENT - app/page.tsx
+ * ============================================================================
+ *
+ * Primary portfolio page with adaptive layout and sophisticated animations.
+ *
+ * FEATURES:
+ * - Desktop: Animated image carousel with page-turn effects
+ * - Mobile: Vertical scroll with snap-to-panel behavior
+ * - Adaptive loading sequence based on network speed
+ * - Video modal system for project showcases
+ * - About modal with bio information
+ * - Accessibility-first with keyboard navigation & focus management
+ *
+ * FILE STRUCTURE:
+ * 1. CONSTANTS & CONFIGURATION (lines 60-100)
+ * 2. PROJECT DATA & MAPPINGS (lines 102-250)
+ * 3. HELPER FUNCTIONS (lines 252-290)
+ * 4. MAIN COMPONENT (lines 292+)
+ * 5. STATE MANAGEMENT (lines 300-340)
+ * 6. EFFECTS & LIFECYCLE (lines 350-720)
+ * 7. EVENT HANDLERS (lines 722-900)
+ * 8. RENDER LOGIC (lines 920+)
+ */
+
 import React, {
   useCallback,
   useEffect,
@@ -9,7 +35,7 @@ import React, {
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile"; // Mobile breakpoint detection (768px)
 import {
   BreathingSkeleton,
   EASING,
@@ -18,7 +44,7 @@ import {
   ProgressiveLoadingStates,
   WordReveal,
 } from "@/components/animations/LoadingAnimations";
-import { useLoadingSequence } from "@/hooks/useLoadingSequence";
+import { useLoadingSequence } from "@/hooks/useLoadingSequence"; // Adaptive loading based on network
 import {
   modalOverlayVariants,
   modalContainerVariants,
@@ -26,23 +52,48 @@ import {
   modalTextStagger,
   modalReduced,
 } from "@/components/animations/LoadingAnimations";
-import { WorkImageContainer } from "./components/hover";
-import useAnimationLevel from "@/hooks/useAnimationLevel";
-import { pageTurnVariants } from "@/components/animations/imageTransitions";
+import { WorkImageContainer } from "./components/hover"; // Work image with hover effects
+import useAnimationLevel from "@/hooks/useAnimationLevel"; // Animation preference detection
+import { pageTurnVariants } from "@/components/animations/imageTransitions"; // Page-turn animation variants
 
+// ============================================================================
+// TIMING & INTERACTION CONSTANTS
+// ============================================================================
+
+/** Debounce time for carousel navigation clicks to prevent rapid clicking (ms) */
 const NAVIGATION_DEBOUNCE = 300;
+/** Speed of auto-preview animation - time per image transition (ms) */
 const PREVIEW_SPEED = 120;
+/** Number of complete loops through all images in the preview sequence */
 const PREVIEW_LOOPS = 1;
+/** Delay before settling after preview animation completes (ms) */
 const PREVIEW_SETTLE_DELAY = 200;
+
+// ============================================================================
+// IMAGE LOADING STRATEGY CONSTANTS
+// ============================================================================
+
+/** Number of images to load immediately on initial page load (critical content) */
 const INITIAL_IMAGE_COUNT = 2;
+/** Total number of images to preload eagerly after initial load */
 const PRELOAD_IMAGE_COUNT = 4;
+/** How many images ahead to preload during carousel navigation (adaptive lookahead) */
 const PRELOAD_LOOKAHEAD = 3;
+/** Maximum time to wait for individual image loads before timeout (ms) */
 const IMAGE_LOAD_TIMEOUT = 8000;
+/** Number of retry attempts for failed image loads with exponential backoff */
 const IMAGE_RETRY_ATTEMPTS = 2;
+/** Image quality for Next.js Image optimization (1-100, higher = better quality) */
 const IMAGE_QUALITY = 85;
 
+// ============================================================================
+// CONTACT & UI CONSTANTS
+// ============================================================================
+
+/** Primary email contact link */
 const EMAIL_CONTACT_LINK = "mailto:raf@raf.works";
 
+/** Mobile footer contact links (visible at bottom of mobile view) */
 const MOBILE_CONTACT_LINKS = [
   {
     href: EMAIL_CONTACT_LINK,
@@ -64,11 +115,14 @@ const MOBILE_CONTACT_LINKS = [
   },
 ] as const;
 
+/** iOS safe area padding for mobile hero section (accounts for notch/home indicator) */
 const MOBILE_HERO_BOTTOM_PADDING =
   "max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))";
+/** iOS safe area padding for mobile contact footer */
 const MOBILE_CONTACT_BOTTOM_PADDING =
   "calc(env(safe-area-inset-bottom, 0px) + 20px)";
 
+/** Loading stage messages shown during initial page load */
 const LOADING_STAGES: string[] = [
   "Initializing...",
   "Loading content...",
@@ -76,31 +130,48 @@ const LOADING_STAGES: string[] = [
   "Finalizing experience...",
 ];
 
-// Group images by project. One image per project, consolidated under /work
+// ============================================================================
+// PROJECT DATA - Image paths grouped by project
+// ============================================================================
+
+/**
+ * PROJECTS: Maps project keys to their image paths
+ * Each project has one representative image for the carousel
+ * All images are stored in /public/work/
+ */
 const PROJECTS: Record<string, { images: string[] }> = {
+  // Current/recent work (2024-2025)
   atlas: {
-    images: ["/work/atlas-2.png"],
+    images: ["/work/atlas-2.png"], // Crypto marketplace, NFT era
   },
   cb: {
-    images: ["/work/cb-1.png"],
+    images: ["/work/cb-1.png"], // Coinbase Developer Platform
   },
   vf: {
-    images: ["/work/vf-0.png"],
+    images: ["/work/vf-0.png"], // Voiceflow product redesign
   },
   defituna: {
-    images: ["/work/defituna-1.png"],
+    images: ["/work/defituna-1.png"], // DeFi project
   },
   theo: {
-    images: ["/work/theo-1.png"],
+    images: ["/work/theo-1.png"], // Theoriq - AI platform, founding designer
   },
-  // Legacy/early works
-  curbcut: { images: ["/work/curbcutos.png"] },
-  zalando: { images: ["/work/zalando-dodont.png"] },
-  artscapy: { images: ["/work/artscapy.png"] },
-  nationalArchives: { images: ["/work/us.png"] },
+  // Legacy/early works (2017-2022)
+  curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools
+  zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
+  artscapy: { images: ["/work/artscapy.png"] }, // Early brand work
+  nationalArchives: { images: ["/work/us.png"] }, // Early brand work
 };
 
-// Reuse existing project-level videos
+// ============================================================================
+// VIDEO MAPPINGS - Vimeo URLs for project case studies
+// ============================================================================
+
+/**
+ * PROJECT_VIDEOS: Maps project keys to Vimeo embed URLs
+ * Videos open in modal overlay when user clicks play button on image
+ * Only projects with videos appear in this map
+ */
 const PROJECT_VIDEOS: Record<string, string> = {
   atlas:
     "https://player.vimeo.com/video/1034334194?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
@@ -110,29 +181,48 @@ const PROJECT_VIDEOS: Record<string, string> = {
     "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
 };
 
-// Map new project identifiers to legacy video keys
+/**
+ * PROJECT_ALIAS: Maps new project identifiers to legacy video keys
+ * Used when project naming differs between PROJECTS and PROJECT_VIDEOS
+ */
 const PROJECT_ALIAS: Record<string, string> = {
-  defituna: "defi",
+  defituna: "defi", // defituna project uses 'defi' video key
 };
 
-// Display order for projects in the carousel (mobile + desktop)
+// ============================================================================
+// CAROUSEL CONFIGURATION
+// ============================================================================
+
+/**
+ * PROJECT_ORDER: Defines the sequence of projects in the carousel
+ * Order: Recent work → Legacy work (chronological reverse)
+ * This determines both desktop carousel and mobile scroll panel order
+ */
 const PROJECT_ORDER: string[] = [
-  // coinbase, voiceflow, theoriq, atlas, defituna, curbcut, zalando, early works
-  "cb",
-  "vf",
-  "theo",
-  "atlas",
-  "defituna",
-  "curbcut",
-  "zalando",
-  "artscapy",
+  "cb",        // Coinbase (2025)
+  "vf",        // Voiceflow (2025)
+  "theo",      // Theoriq (2024)
+  "atlas",     // Atlas (2020)
+  "defituna",  // DeFi Tuna (2021)
+  "curbcut",   // CurbCut (2021)
+  "zalando",   // Zalando (2022)
+  "artscapy",  // Early work (2017-2019)
 ];
 
+/** Flattened array of all image sources in display order */
 const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
   (key) => PROJECTS[key]?.images ?? []
 );
 
-// Derive video URL based on project from image src
+// ============================================================================
+// HELPER FUNCTIONS - Project identification and data retrieval
+// ============================================================================
+
+/**
+ * Derives project key from image source path
+ * @param src - Image source path (e.g., "/work/cb-1.png")
+ * @returns Project key (e.g., "cb") or null if not found
+ */
 function getProjectFromSrc(src: string): string | null {
   if (src.includes("/work/")) {
     const filename = src.split("/").pop() || "";
@@ -150,6 +240,14 @@ function getProjectFromSrc(src: string): string | null {
   return null;
 }
 
+/**
+ * Gets Vimeo video URL for a given image source
+ * @param src - Image source path
+ * @returns Vimeo embed URL or null if no video exists
+ *
+ * Special rules:
+ * - Atlas video only shows on atlas-2.png (not atlas-1.png)
+ */
 function getVideoForSrc(src: string): string | null {
   const project = getProjectFromSrc(src);
   if (!project) return null;
@@ -161,7 +259,15 @@ function getVideoForSrc(src: string): string | null {
   return PROJECT_VIDEOS[key] ?? null;
 }
 
-// Project-level captions (year — description). Description may include project name.
+// ============================================================================
+// CAPTION DATA - Project descriptions shown below images
+// ============================================================================
+
+/**
+ * PROJECT_CAPTIONS: Text descriptions for each project
+ * Format: "YEAR — Description"
+ * Used on both desktop and mobile views
+ */
 const PROJECT_CAPTIONS: Record<string, string> = {
   cb: "2025 — Led the SQL Playground and Embedded Wallets launch for Coinbase Developer Platform.",
   vf: "2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion from first interaction.",
@@ -180,12 +286,21 @@ const PROJECT_CAPTIONS: Record<string, string> = {
     "From 2017 — Built brands, interfaces, and launch sites that taught the value of clarity and restraint.",
 };
 
+/**
+ * Gets project-level caption for an image source
+ * @param src - Image source path
+ * @returns Caption string or null
+ */
 function getCaptionForSrc(src: string): string | null {
   const project = getProjectFromSrc(src);
   if (!project) return null;
   return PROJECT_CAPTIONS[project] ?? null;
 }
 
+/**
+ * WORK_CAPTIONS: Legacy per-image captions (deprecated in favor of PROJECT_CAPTIONS)
+ * Kept for backwards compatibility
+ */
 const WORK_CAPTIONS: Record<string, string> = {
   "/work/cb-1.png":
     "2025 — Designed SQL Playground and Embedded Wallets — making developer tools feel effortless",
@@ -217,16 +332,31 @@ const WORK_CAPTIONS: Record<string, string> = {
     "2017–2019 — Built brands, launch sites, and interfaces that taught restraint and speed.",
 };
 
-// Prefer per-image caption, then fallback to project-level caption
+/**
+ * Gets caption for mobile view (prefers specific over project-level)
+ * @param src - Image source path
+ * @returns Caption string or null
+ */
 function getMobileCaptionForSrc(src: string): string | null {
   return WORK_CAPTIONS[src] ?? getCaptionForSrc(src);
 }
 
-// Grouped caption helpers (mobile)
+/**
+ * Gets caption for a specific project key
+ * @param project - Project key (e.g., "cb", "vf")
+ * @returns Caption string or null
+ */
 function getProjectCaption(project: string): string | null {
   return PROJECT_CAPTIONS[project] ?? null;
 }
 
+/**
+ * Determines if a caption should be rendered for grouped mobile panels
+ * Only shows caption on the last image of each project group
+ * @param images - Array of all image sources
+ * @param index - Current image index
+ * @returns true if caption should be shown
+ */
 function shouldRenderGroupCaption(images: string[], index: number): boolean {
   const current = getProjectFromSrc(images[index]);
   const next =
@@ -234,13 +364,26 @@ function shouldRenderGroupCaption(images: string[], index: number): boolean {
   return current !== null && current !== next;
 }
 
+// ============================================================================
+// IMAGE LOADING BUCKETS - Prioritized loading strategy
+// ============================================================================
+
+/** First 2 images - loaded immediately (critical) */
 const INITIAL_IMAGES = IMAGE_SOURCES.slice(0, INITIAL_IMAGE_COUNT);
+/** Next 2 images - preloaded after initial (eager) */
 const PRELOAD_IMAGES = IMAGE_SOURCES.slice(
   INITIAL_IMAGE_COUNT,
   PRELOAD_IMAGE_COUNT
 );
+/** Remaining images - loaded on demand (lazy) */
 const LAZY_IMAGES = IMAGE_SOURCES.slice(PRELOAD_IMAGE_COUNT);
 
+/**
+ * Generates SVG placeholder for images during loading
+ * @param width - Placeholder width in pixels
+ * @param height - Placeholder height in pixels
+ * @returns Base64-encoded SVG data URL
+ */
 const generatePlaceholder = (width = 400, height = 300) =>
   `data:image/svg+xml;base64,${btoa(`
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
@@ -249,6 +392,11 @@ const generatePlaceholder = (width = 400, height = 300) =>
       </svg>
     `)}`;
 
+/**
+ * Parses caption string into year and description parts
+ * @param caption - Full caption string (e.g., "2025 — Description text")
+ * @returns Object with year and description properties
+ */
 const parseCaption = (caption: string) => {
   // Split on the first occurrence of " — " only, preserving additional dashes in description
   const parts = caption.split(" — ", 2);
@@ -258,78 +406,124 @@ const parseCaption = (caption: string) => {
   return { year: "", description: caption };
 };
 
-// Rolling two-digit year animation helper (animates last two digits)
+/**
+ * Renders year text (placeholder for potential rolling animation)
+ * @param year - Year string to render
+ * @returns Year string or null
+ */
 function renderYearWithRolling(year: string | undefined | null) {
   if (!year) return null;
   // Keep it simple: return raw text for both single years and ranges
   return year;
 }
 
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export default function Page() {
-  const mainContentRef = useRef<HTMLElement | null>(null);
-  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
-  const videoModalRef = useRef<HTMLDivElement | null>(null);
-  const imageMeasureRef = useRef<HTMLDivElement | null>(null);
-  const slideshowRef = useRef<HTMLDivElement | null>(null);
-  const shouldReduceMotion = useReducedMotion();
-  const isMobile = useIsMobile();
-  const animationLevel = useAnimationLevel();
+  // ============================================================================
+  // REFS - DOM element references and persistent values
+  // ============================================================================
 
-  const [mounted, setMounted] = useState(false);
-  const [blurAmount, setBlurAmount] = useState(15);
-  const [focusAnimationRun, setFocusAnimationRun] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
-  const [criticalContentLoaded, setCriticalContentLoaded] = useState(false);
-  const [carouselAnimationComplete, setCarouselAnimationComplete] =
-    useState(false);
-  const [firstLineComplete, setFirstLineComplete] = useState(false);
-  const [secondLineComplete, setSecondLineComplete] = useState(false);
-  const [finalTextAnimationComplete, setFinalTextAnimationComplete] =
-    useState(false);
-  const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [previousImageIndex, setPreviousImageIndex] = useState(0);
-  const lastDirectionRef = useRef<1 | -1>(1);
-  const [lastDirection, setLastDirection] = useState<1 | -1>(1);
-  const hasAutoScrolledRef = useRef(false);
-  const [isPreviewRunning, setIsPreviewRunning] = useState(false);
-  const [isPreviewComplete, setIsPreviewComplete] = useState(false);
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [isInViewport, setIsInViewport] = useState(false);
-  const [imageWidth, setImageWidth] = useState<number | null>(null);
-  const [footerRevealReady, setFooterRevealReady] = useState(false);
-  const mobileScrollRef = useRef<HTMLElement | null>(null);
-  const [activePanelIndex, setActivePanelIndex] = useState(0);
-  const scrollRafIdRef = useRef<number | null>(null);
-  const headerRef = useRef<HTMLElement | null>(null);
-  const footerRef = useRef<HTMLElement | null>(null);
-  const [headerH, setHeaderH] = useState<number>(0);
-  const [footerH, setFooterH] = useState<number>(0);
-  const [blurByIndex, setBlurByIndex] = useState<number[]>([]);
-  const [isScrolling, setIsScrolling] = useState(false);
+  const mainContentRef = useRef<HTMLElement | null>(null); // Main content for skip link focus
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null); // Focus restoration for modals
+  const videoModalRef = useRef<HTMLDivElement | null>(null); // Video modal for focus trap
+  const imageMeasureRef = useRef<HTMLDivElement | null>(null); // Measures image width for caption alignment
+  const slideshowRef = useRef<HTMLDivElement | null>(null); // Slideshow container for intersection observer
+  const mobileScrollRef = useRef<HTMLElement | null>(null); // Mobile scroll container
+  const scrollRafIdRef = useRef<number | null>(null); // RAF ID for scroll performance
+  const headerRef = useRef<HTMLElement | null>(null); // Mobile header for height measurement
+  const footerRef = useRef<HTMLElement | null>(null); // Mobile footer for height measurement
+  const lastDirectionRef = useRef<1 | -1>(1); // Carousel navigation direction (persistent)
+  const hasAutoScrolledRef = useRef(false); // Prevents multiple auto-scrolls
 
+  // ============================================================================
+  // HOOKS - External state and utilities
+  // ============================================================================
+
+  const shouldReduceMotion = useReducedMotion(); // Respects prefers-reduced-motion
+  const isMobile = useIsMobile(); // Mobile breakpoint (< 768px)
+  const animationLevel = useAnimationLevel(); // Animation preference level
+  const loadingSequence = useLoadingSequence(); // Adaptive loading state manager
+
+  // ============================================================================
+  // STATE - Component state management
+  // ============================================================================
+
+  // Core lifecycle
+  const [mounted, setMounted] = useState(false); // Client-side mount status
+  const [criticalContentLoaded, setCriticalContentLoaded] = useState(false); // First image loaded
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false); // Initial setup complete
+
+  // Focus/blur animation (entrance effect)
+  const [blurAmount, setBlurAmount] = useState(15); // Initial blur amount (15px)
+  const [focusAnimationRun, setFocusAnimationRun] = useState(false); // Focus animation started
+
+  // Carousel state
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Active carousel image
+  const [previousImageIndex, setPreviousImageIndex] = useState(0); // Previous image for transitions
+  const [lastDirection, setLastDirection] = useState<1 | -1>(1); // Carousel direction (1=forward, -1=back)
+  const [isNavigating, setIsNavigating] = useState(false); // Navigation debounce flag
+  const [isSlideshowPaused, setIsSlideshowPaused] = useState(false); // Pause auto-preview
+
+  // Image loading
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({}); // Track loaded images
+  const [imageWidth, setImageWidth] = useState<number | null>(null); // Current image width for layout
+
+  // Animation sequence flags
+  const [firstLineComplete, setFirstLineComplete] = useState(false); // First text line animated
+  const [secondLineComplete, setSecondLineComplete] = useState(false); // Second text line animated
+  const [carouselAnimationComplete, setCarouselAnimationComplete] = useState(false); // Carousel visible
+  const [finalTextAnimationComplete, setFinalTextAnimationComplete] = useState(false); // All text visible
+
+  // Preview/auto-play
+  const [isPreviewRunning, setIsPreviewRunning] = useState(false); // Auto-preview in progress
+  const [isPreviewComplete, setIsPreviewComplete] = useState(false); // Auto-preview finished
+  const [isInViewport, setIsInViewport] = useState(false); // Slideshow in viewport
+
+  // Modal state
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false); // Video modal visible
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null); // Active video URL
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // About modal visible
+
+  // Mobile-specific state
+  const [activePanelIndex, setActivePanelIndex] = useState(0); // Active mobile scroll panel
+  const [headerH, setHeaderH] = useState<number>(0); // Mobile header height
+  const [footerH, setFooterH] = useState<number>(0); // Mobile footer height
+  const [blurByIndex, setBlurByIndex] = useState<number[]>([]); // Per-panel blur amounts
+  const [isScrolling, setIsScrolling] = useState(false); // Mobile scroll in progress
+  const [footerRevealReady, setFooterRevealReady] = useState(false); // Mobile footer ready to show
+
+  // Loading stage tracking
+  const [currentLoadingStage, setCurrentLoadingStage] = useState(0); // Current loading stage (0-4)
+
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
+
+  /** Minimum panel height accounting for fixed mobile header/footer */
   const panelMinH = useMemo(
     () => `calc(100svh - ${headerH + footerH}px)`,
     [headerH, footerH]
   );
 
-  const loadingSequence = useLoadingSequence();
-  const [currentLoadingStage, setCurrentLoadingStage] = useState(0);
+  // ============================================================================
+  // EFFECTS - Lifecycle and side effects
+  // ============================================================================
 
+  // EFFECT: Client-side mount detection
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Mobile-only: ensure we start at the top when the page mounts/detects mobile
+  // EFFECT: Mobile scroll position reset (mobile-only)
   useEffect(() => {
     if (!isMobile) return;
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [isMobile]);
 
+  // EFFECT: Loading stage progression tracking
   useEffect(() => {
     let stage = 0;
     if (loadingSequence.textLoaded) stage = 1;
@@ -344,14 +538,15 @@ export default function Page() {
     loadingSequence.textLoaded,
   ]);
 
-  // Mobile: auto-scroll disabled per request to avoid unexpected jumps
-
+  // EFFECT: Skip second line animation if reduced motion enabled
   useEffect(() => {
     if (shouldReduceMotion && firstLineComplete) {
       setSecondLineComplete(true);
     }
   }, [shouldReduceMotion, firstLineComplete]);
 
+  // EFFECT: Initial page blur-to-focus animation (entrance effect)
+  // Animates from 15px blur to 0px over 1.5s with cubic easing
   useEffect(() => {
     if (!mounted || focusAnimationRun) {
       return;

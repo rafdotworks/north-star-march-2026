@@ -1,21 +1,55 @@
+/**
+ * ============================================================================
+ * ROOT LAYOUT - app/layout.tsx
+ * ============================================================================
+ *
+ * Next.js App Router root layout component.
+ * Sets up global configuration, fonts, metadata, and analytics.
+ *
+ * KEY FEATURES:
+ * - Custom font loading (Ronzino, Edu Marist)
+ * - SEO metadata (Open Graph, Twitter Cards)
+ * - Vercel Analytics integration
+ * - Console easter egg for developers
+ * - Critical image preloading
+ * - Mobile-safe viewport configuration
+ *
+ * FONTS:
+ * - Ronzino: Primary body font (--font-ronzino)
+ * - Edu Marist: Secondary/accent font (--font-edu-marist)
+ *
+ * Both use font-display: swap for performance
+ */
+
 import type { Metadata } from "next";
 import "./globals.css";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
 import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
 
+// ============================================================================
+// FONT CONFIGURATION
+// ============================================================================
+
+/** Primary body font - Ronzino Regular */
 const ronzino = localFont({
   src: "../public/fonts/Ronzino-Regular.otf",
   variable: "--font-ronzino",
-  display: "swap",
+  display: "swap", // Show fallback font while loading
 });
 
+/** Secondary/accent font - Edu Marist Regular */
 const eduMarist = localFont({
   src: "../public/fonts/EduMarist-Regular.woff2",
   variable: "--font-edu-marist",
   display: "swap",
 });
 
+// ============================================================================
+// SEO METADATA
+// ============================================================================
+
+/** Site metadata for SEO and social sharing */
 export const metadata: Metadata = {
   title: "Raf V. - AI Product Designer & Design Engineer",
   description:
