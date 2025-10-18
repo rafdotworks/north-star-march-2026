@@ -2,261 +2,84 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# RAF.WORKS - Design Portfolio & Animation Showcase
-
 ## Project Overview
 
-This is a sophisticated Next.js 15.3.0 portfolio website for Raf, a Senior Product Designer and Design Engineer based in Toronto. The site showcases advanced animation techniques, interactive design elements, and a curated collection of work, photos, and design notes.
+This is a Next.js 15 portfolio website for Raf, a designer and design engineer. The site features sophisticated animations, custom loading sequences, and an image carousel showcasing work.
 
 ## Development Commands
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server  
-- `npm run lint` - Run Next.js ESLint checks
-
-## Architecture & Technology Stack
-
-### Core Framework
-- **Next.js 15.3.0** with TypeScript and App Router
-- **React 18** with modern hooks and state management
-- **Tailwind CSS** with extensive customization and animation utilities
-- **Framer Motion** for React-based animations
-- **GSAP 3.12.7** for high-performance timeline animations
-
-### Key Dependencies
-- **Animation Libraries**: Framer Motion (latest), GSAP 3.12.7, Tailwind CSS Animate
-- **UI Components**: Radix UI component library (shadcn/ui) for accessible UI elements
-- **Styling**: Tailwind CSS with custom extensions, @tailwindcss/typography
-- **Analytics**: Vercel Analytics integration
-- **Fonts**: Custom local fonts (Ronzino, Edu Marist)
-
-## Project Structure
-
-### Main Application Files
-- `app/page.tsx` - Main portfolio page with complex state management and animations
-- `app/layout.tsx` - Root layout with font configuration and metadata
-- `app/globals.css` - Global styles and animation keyframes
-- `tailwind.config.js` - Tailwind configuration with custom animations
-
-### Core Components
-- `components/LiquidGlass.tsx` - Interactive liquid glass effect with custom shader implementation
-- `components/Curtain/Curtain.tsx` - Japanese-style curtain loading animation
-- `app/components/ProgressiveImage.tsx` - Progressive image loading with real-time progress tracking
-- `app/components/AnimatedContent.tsx` - Animated content containers
-- `app/components/ConsoleEasterEgg.tsx` - Console-based easter egg feature
-
-### Data Layer
-- `app/data/works.ts` - Work portfolio data structure
-- `app/data/notes.ts` - Design notes and reflections
-- `app/data/photos.ts` - Photo collection data
-
-### UI Components (shadcn/ui)
-- Uses shadcn/ui component system with Radix UI primitives
-- Components located in `components/ui/` 
-- Configuration in `components.json`
-- Path aliases: `@/components`, `@/lib/utils`, `@/ui`
-- Tailwind CSS with CSS variables for theming
-
-## Key Features & Animations
-
-### 1. Japanese Curtain Loading Animation
-**Location**: `components/Curtain/Curtain.tsx`
-
-A sophisticated GSAP-powered entrance animation that creates a dramatic reveal effect:
-
-**Technical Features**:
-- Time-aware color theming (adjusts based on time of day)
-- 3D perspective transforms with rotationY and rotationX
-- Multi-stage timeline orchestration
-- Hardware-accelerated rendering with transform-gpu
-- Automatic cleanup and memory management
-
-**Animation Sequence**:
-1. Initial scale and brightness adjustment
-2. Horizontal panel separation with Y-axis rotation
-3. Vertical movement with X-axis rotation
-4. Subtle wave animation overlay
-
-### 2. Liquid Glass Interactive Effect
-**Location**: `components/LiquidGlass.tsx`
-
-A custom WebGL-style shader implementation using pure JavaScript and SVG filters:
-
-**Technical Implementation**:
-- Mathematical SDF (Signed Distance Function) calculations
-- Real-time displacement mapping
-- Interactive mouse tracking with smooth interpolation
-- Canvas-based distortion generation
-- SVG filter integration for visual effects
-- Draggable glass element with position constraints
-
-**Core Features**:
-- Rounded rectangle SDF calculations
-- Smooth step interpolation
-- Real-time shader updates
-- Hardware-accelerated backdrop filters
-
-### 3. Progressive Image Loading System
-**Location**: `app/components/ProgressiveImage.tsx`
-
-Advanced image loading with visual feedback and smooth transitions:
-
-**Features**:
-- XMLHttpRequest-based progress monitoring
-- Shimmer placeholder effects during loading
-- Blur-to-focus transitions using Framer Motion
-- Memory-efficient blob URL handling
-- Graceful error handling and fallbacks
-- Real-time progress indicators
-
-### 4. Main Page Complex State Management
-**Location**: `app/page.tsx`
-
-The main page demonstrates sophisticated React state management with:
-
-**State Categories**:
-- **UI State**: Modal visibility, current indices, slideshow controls
-- **Loading State**: Image loading progress, transition states
-- **Animation State**: Scroll tracking, animation completion flags
-- **Interactive State**: Mouse tracking, viewport calculations
-
-**Key Features**:
-- Optimized scroll handling with requestAnimationFrame
-- Image preloading and caching system
-- Responsive slideshow functionality
-- Modal system for photos, notes, and videos
-- Viewport-aware animations
-
-## Animation System Architecture
-
-### Custom Tailwind Animations
-```javascript
-keyframes: {
-  "slow-pulse": {
-    "0%, 100%": { opacity: "0.08", transform: "scale(1)" },
-    "50%": { opacity: "0.12", transform: "scale(1.05)" },
-  },
-  twinkle: {
-    "0%, 100%": { opacity: "0.3", transform: "scale(1)" },
-    "50%": { opacity: "0.8", transform: "scale(1.2)" },
-  },
-}
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint
 ```
 
-### Framer Motion Integration
-- Consistent easing functions across components
-- Staggered animations for content reveal
-- Exit animations for modal transitions
-- Responsive animation scaling
+## Tech Stack
 
-### GSAP Timeline Management
-- Complex multi-stage animations
-- Proper cleanup and memory management
-- 3D transform optimizations
-- Time-based animation adjustments
+- **Framework**: Next.js 15 with App Router
+- **Styling**: Tailwind CSS with custom fonts (Ronzino, Edu Marist)
+- **Animations**: Framer Motion
+- **Analytics**: Vercel Analytics
+- **TypeScript**: Strict mode enabled
 
-## Design System
+## Architecture
 
-### Typography
-- **Primary Font**: Ronzino (custom local font)
-- **Secondary Font**: Edu Marist (custom local font)
-- **Fallback**: Inter (Google Fonts)
-- **Weight**: Primarily 400 (normal) with 500 for emphasis
+### App Structure
 
-### Color System
-- HSL-based color variables for theme consistency
-- Dark mode support with system preference detection
-- Time-aware color adjustments in animations
-- Muted color palette focusing on content
+The app uses Next.js App Router with the following structure:
 
-### Animation Timing
-- **Micro-interactions**: 0.2-0.3s
-- **Content transitions**: 0.5-0.8s
-- **Major reveals**: 1.4-2s
-- **Ambient effects**: 2-8s
+- `app/page.tsx` - Main homepage (large file ~1000+ lines, contains slideshow logic and layout)
+- `app/layout.tsx` - Root layout with font loading, metadata, and analytics
+- `app/raf/page.tsx` - Additional page route
+- `app/components/` - App-specific components (hover effects, easter eggs)
+- `components/` - Shared components (ErrorBoundary, LoadingAnimations)
+- `hooks/` - Custom React hooks
+- `public/` - Static assets (images, fonts, favicons)
 
-## Performance Optimizations
+### Key Systems
 
-### Hardware Acceleration
-- Strategic use of `transform-gpu` classes
-- 3D transforms for GPU acceleration
-- Optimized animation sequences
+**Animation System** (`components/animations/LoadingAnimations.tsx`)
+- Centralized animation configurations and easing curves
+- Reusable animation components: `TextReveal`, `WordReveal`, `ImageCarouselItem`, `NavigationReveal`
+- Loading sequence timing constants in `LOADING_SEQUENCE`
+- Custom easing curves defined in `EASING` object
 
-### Memory Management
-- Proper cleanup in useEffect hooks
-- Animation instance disposal
-- Event listener cleanup
-- Blob URL revocation in image loading
+**Loading Sequence** (`hooks/useLoadingSequence.ts`)
+- Adaptive loading based on network conditions
+- Progressive loading stages: text → images → navigation
+- Connection quality detection (fast/medium/slow)
+- Returns loading state with progress tracking
 
-### Loading Strategies
-- Progressive image loading with visual feedback
-- Critical content loading flags
-- Preloading strategies for smooth transitions
+**Hover Effects** (`app/components/hover/`)
+- `WorkImageHover` - Localized hover animations with mobile/desktop variants
+- `WorkImageContainer` - Container wrapper for work images
+- `VideoPlayButton` - Video playback controls
 
-## Content Management
+**Mobile Detection** (`hooks/use-mobile.tsx`)
+- Mobile breakpoint: 768px
+- Returns boolean `isMobile` state
 
-### Portfolio Structure
-- **Works**: Design projects with images and videos
-- **Photos**: Personal photography collection
-- **Notes**: Design reflections and thoughts
+### Path Aliases
 
-### Data Organization
-- TypeScript interfaces for type safety
-- Centralized data files for easy maintenance
-- Structured content with metadata
+- `@/*` maps to root directory (configured in tsconfig.json)
 
-## Interactive Features
+### Styling
 
-### Easter Eggs
-- Console-based easter egg system
-- Hidden interactive elements
-- Playful user discoveries
+- Dark mode: Based on system preference (`darkMode: "media"`)
+- Custom font variables: `--font-ronzino`, `--font-edu-marist`
+- Custom animations: `slow-pulse`, `twinkle`
+- HSL-based color system with CSS variables
 
-### Modal System
-- Photo gallery with navigation
-- Video playback integration
-- Note reading experience
-- Smooth enter/exit transitions
+### Next.js Configuration
 
-## Technical Achievements
+- Images are unoptimized (`images: { unoptimized: true }`)
+- Redirect `/deck` to Figma presentation
 
-1. **Hybrid Animation System**: Successfully integrates GSAP, Framer Motion, and CSS animations
-2. **Custom Shader Implementation**: Pure JavaScript WebGL-style effects without WebGL dependency
-3. **Advanced Loading Systems**: Real-time progress tracking with visual feedback
-4. **Responsive Design**: Viewport-aware animations and layouts
-5. **Performance Optimization**: Hardware acceleration and memory management
-6. **Interactive Physics**: Mathematical approach to liquid distortion effects
+### Important Notes
 
-## Development Guidelines
-
-### Adding New Animations
-1. Choose appropriate library based on complexity
-2. Implement proper cleanup in useEffect hooks
-3. Use hardware acceleration for transform-heavy animations
-4. Test performance across devices
-5. Consider reduced motion preferences
-
-### Code Organization
-- Keep animation logic close to components
-- Use TypeScript for type safety
-- Implement proper error boundaries
-- Document complex animation sequences
-
-## Important Technical Notes
-
-### Building for Production
-- Uses `NODE_OPTIONS='--no-deprecation'` to suppress warnings during build
-- Images are unoptimized (`unoptimized: true` in next.config.js)
-- Custom redirect from `/deck` to Figma presentation
-
-### Font System
-- Custom fonts loaded via `localFont` from `/public/fonts/`
-- CSS variables: `--font-ronzino`, `--font-edu-marist`
-- Typography plugin configured for consistent styling
-
-### No Test Framework
-- Project does not include testing setup
-- No test runner, testing library, or test scripts configured
-
-This portfolio represents a sophisticated example of modern web animation techniques, combining multiple animation libraries with custom implementations to create a cohesive, performant, and engaging user experience.
+- Main page is large (~1000 lines) - use offset/limit when reading
+- Slideshow timing constants are defined at top of `app/page.tsx`
+- Loading animations use blur effects for sophisticated reveals
+- Mobile-first approach with safe area insets for iOS
+- Vercel Analytics enabled in production

@@ -8,6 +8,8 @@ import {
   EnhancedStaggeredTextItem,
 } from "@/components/animations/LoadingAnimations";
 
+// Deprecated: About content is shown via modal on the home page.
+// This route is intentionally removed to avoid duplication.
 export default function RafPage() {
   const [mounted, setMounted] = useState(false);
   const shouldReduceMotion = useReducedMotion();
@@ -68,7 +70,7 @@ export default function RafPage() {
 
       <motion.main
         id="main"
-        className="px-6 sm:px-10 md:px-28 pt-24 md:pt-28 pb-24"
+        className="sm:px-10 md:px-28 pt-24 md:pt-28 pb-24"
         variants={containerVariants}
         initial={shouldReduceMotion ? false : "hidden"}
         animate="visible"
@@ -90,78 +92,31 @@ export default function RafPage() {
           <EnhancedStaggeredTextContainer className="max-w-none space-y-7 md:space-y-8">
             <EnhancedStaggeredTextItem>
               <p className="text-foreground/90 leading-[1.85] text-lg">
-                I grew up on the Amalfi Coast in Italy and dropped out of
-                university as a software engineer to begin my career designing —
-                brands, websites, products. I wanted to try it all.
+                I grew up on the Amalfi Coast and now live in Toronto, often
+                spending time in Lisbon.
               </p>
             </EnhancedStaggeredTextItem>
 
             <EnhancedStaggeredTextItem>
               <p className="text-foreground/90 leading-[1.85] text-lg">
-                My first step into tech was an internship at Apple, after
-                graduating cum laude in design, where I worked on watchOS 6. It
-                was a challenge-based program that taught me rigor and detail at
-                a global scale.
+                For the past eight years, I’ve designed and engineered products
+                across industries — from AI platforms and marketplaces to B2B
+                tools and activation.
               </p>
             </EnhancedStaggeredTextItem>
 
             <EnhancedStaggeredTextItem>
               <p className="text-foreground/90 leading-[1.85] text-lg">
-                After that came more than ten startups. I shaped brands, built
-                websites and decks, and designed experiences end to end. That
-                work gave me breadth. It showed me that design doesn’t just live
-                in pixels, it lives in how people discover, trust, and use a
-                product.
+                I’m industry-agnostic at heart; I believe good principles of
+                design and storytelling work everywhere.
               </p>
             </EnhancedStaggeredTextItem>
 
             <EnhancedStaggeredTextItem>
               <p className="text-foreground/90 leading-[1.85] text-lg">
-                The real turning point was Zalando in 2021. I built and scaled
-                their B2B design system, and that’s when I realized something
-                important: users never see a Figma file. They only feel what
-                ships in the browser. That realization pulled me across the gap
-                between design and engineering, into what I now call my craft —
-                design engineering.
-              </p>
-            </EnhancedStaggeredTextItem>
-
-            <EnhancedStaggeredTextItem>
-              <p className="text-foreground/90 leading-[1.85] text-lg">
-                From there, I focused on clarity and craft in equal measure. At
-                Theoriq, I led design as we grew to 140,000 active users in six
-                months, spanning product, brand, and marketing. At Voiceflow, I
-                redesigned activation flows and the web presence, driving
-                stronger onboarding and adoption. At Coinbase, I built
-                interactive tools like the SQL Playground and Embedded Wallets,
-                making the Developer Platform the best experience for
-                developers, and contributed to initiatives like Pay with USDC
-                and unified log-ins.
-              </p>
-            </EnhancedStaggeredTextItem>
-
-            <EnhancedStaggeredTextItem>
-              <p className="text-foreground/90 leading-[1.85] text-lg">
-                Now at Frequency, I’m helping brands scale their presence
-                through systems and interactive storytelling.
-              </p>
-            </EnhancedStaggeredTextItem>
-
-            <EnhancedStaggeredTextItem>
-              <p className="text-foreground/90 leading-[1.85] text-lg">
-                Through all of this, my focus has stayed the same: building
-                experiences that turn complexity into clarity. Design systems
-                that scale. Landing pages that convert. Microsites and
-                animations that tell a story.
-              </p>
-            </EnhancedStaggeredTextItem>
-
-            <EnhancedStaggeredTextItem>
-              <p className="text-foreground/90 leading-[1.85] text-lg font-medium">
-                I see the web as a storytelling medium. Every detail — from
-                performance to accessibility to interaction — shapes how people
-                experience a brand. My work is about making those moments not
-                just usable, but memorable.
+                My work is about making complexity feel human and building
+                systems people can trust. I value clarity, restraint, and
+                kindness — doing things with care and doing them well.
               </p>
             </EnhancedStaggeredTextItem>
           </EnhancedStaggeredTextContainer>
@@ -183,6 +138,15 @@ export default function RafPage() {
                 aria-label="Raf on LinkedIn"
               >
                 LinkedIn
+              </a>
+              <a
+                href="https://x.com/lfgraf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-foreground/70 hover:text-foreground transition-colors"
+                aria-label="Raf on X"
+              >
+                X
               </a>
               <a
                 href="mailto:raf@raf.works"

@@ -1,115 +1,286 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-// Enhanced animation components
 import {
-  ImageCarouselItem,
-  EASING,
-  WordReveal,
-  LoadingProgress,
   BreathingSkeleton,
+  EASING,
+  ImageCarouselItem,
+  LoadingProgress,
   ProgressiveLoadingStates,
+  WordReveal,
 } from "@/components/animations/LoadingAnimations";
 import { useLoadingSequence } from "@/hooks/useLoadingSequence";
+import {
+  modalOverlayVariants,
+  modalContainerVariants,
+  modalPanelVariants,
+  modalTextStagger,
+  modalReduced,
+} from "@/components/animations/LoadingAnimations";
 import { WorkImageContainer } from "./components/hover";
+import useAnimationLevel from "@/hooks/useAnimationLevel";
+import { pageTurnVariants } from "@/components/animations/imageTransitions";
 
-type NetworkInformationLike = {
-  effectiveType?: string;
-  downlink?: number;
-  saveData?: boolean;
+const NAVIGATION_DEBOUNCE = 300;
+const PREVIEW_SPEED = 120;
+const PREVIEW_LOOPS = 1;
+const PREVIEW_SETTLE_DELAY = 200;
+const INITIAL_IMAGE_COUNT = 2;
+const PRELOAD_IMAGE_COUNT = 4;
+const PRELOAD_LOOKAHEAD = 3;
+const IMAGE_LOAD_TIMEOUT = 8000;
+const IMAGE_RETRY_ATTEMPTS = 2;
+const IMAGE_QUALITY = 85;
+
+const EMAIL_CONTACT_LINK = "mailto:raf@raf.works";
+
+const MOBILE_CONTACT_LINKS = [
+  {
+    href: EMAIL_CONTACT_LINK,
+    label: "raf@raf.works",
+    ariaLabel: "Email Raf",
+    openInNewTab: false,
+  },
+  {
+    href: "https://www.linkedin.com/in/raffaelevitaledesign/",
+    label: "LinkedIn",
+    ariaLabel: "Raf on LinkedIn",
+    openInNewTab: true,
+  },
+  {
+    href: "https://x.com/lfgraf",
+    label: "X",
+    ariaLabel: "Raf on X",
+    openInNewTab: true,
+  },
+] as const;
+
+const MOBILE_HERO_BOTTOM_PADDING =
+  "max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))";
+const MOBILE_CONTACT_BOTTOM_PADDING =
+  "calc(env(safe-area-inset-bottom, 0px) + 20px)";
+
+const LOADING_STAGES: string[] = [
+  "Initializing...",
+  "Loading content...",
+  "Preparing images...",
+  "Finalizing experience...",
+];
+
+// Group images by project. One image per project, consolidated under /work
+const PROJECTS: Record<string, { images: string[] }> = {
+  atlas: {
+    images: ["/work/atlas-2.png"],
+  },
+  cb: {
+    images: ["/work/cb-1.png"],
+  },
+  vf: {
+    images: ["/work/vf-0.png"],
+  },
+  defituna: {
+    images: ["/work/defituna-1.png"],
+  },
+  theo: {
+    images: ["/work/theo-1.png"],
+  },
+  // Legacy/early works
+  curbcut: { images: ["/work/curbcutos.png"] },
+  zalando: { images: ["/work/zalando-dodont.png"] },
+  artscapy: { images: ["/work/artscapy.png"] },
+  nationalArchives: { images: ["/work/us.png"] },
 };
 
-type NavigatorWithConnection = Navigator & {
-  connection?: NetworkInformationLike;
+// Reuse existing project-level videos
+const PROJECT_VIDEOS: Record<string, string> = {
+  atlas:
+    "https://player.vimeo.com/video/1034334194?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+  theo: "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+  defi: "https://player.vimeo.com/video/1034767734?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+  curbcut:
+    "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
 };
+
+// Map new project identifiers to legacy video keys
+const PROJECT_ALIAS: Record<string, string> = {
+  defituna: "defi",
+};
+
+// Display order for projects in the carousel (mobile + desktop)
+const PROJECT_ORDER: string[] = [
+  // coinbase, voiceflow, theoriq, atlas, defituna, curbcut, zalando, early works
+  "cb",
+  "vf",
+  "theo",
+  "atlas",
+  "defituna",
+  "curbcut",
+  "zalando",
+  "artscapy",
+];
+
+const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
+  (key) => PROJECTS[key]?.images ?? []
+);
+
+// Derive video URL based on project from image src
+function getProjectFromSrc(src: string): string | null {
+  if (src.includes("/work/")) {
+    const filename = src.split("/").pop() || "";
+    const hasHyphen = filename.includes("-");
+    if (hasHyphen) {
+      const prefix = filename.split("-")[0];
+      if (prefix) return prefix;
+    }
+  }
+  if (src.includes("curbcut")) return "curbcut";
+  if (src.includes("zalando")) return "zalando";
+  if (src.includes("artscapy")) return "artscapy";
+  if (src.endsWith("/us.png") || src.includes("/us.png"))
+    return "nationalArchives";
+  return null;
+}
+
+function getVideoForSrc(src: string): string | null {
+  const project = getProjectFromSrc(src);
+  if (!project) return null;
+  // Special rule: atlas video only on second image
+  if (project === "atlas" && !src.endsWith("atlas-2.png")) {
+    return null;
+  }
+  const key = PROJECT_ALIAS[project] ?? project;
+  return PROJECT_VIDEOS[key] ?? null;
+}
+
+// Project-level captions (year — description). Description may include project name.
+const PROJECT_CAPTIONS: Record<string, string> = {
+  cb: "2025 — Led the SQL Playground and Embedded Wallets launch for Coinbase Developer Platform.",
+  vf: "2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion from first interaction.",
+  theo: "2024 — Founding designer at Theoriq, scaling from PDF to 140k users in six months.",
+  atlas:
+    "2020 — Led design for an early crypto marketplace during the first wave of NFTs.",
+  defituna:
+    "2021 — Designed and built for a decentralized finance project, allowing traders to borrow, lend and more.",
+  curbcut:
+    "2021 — Designed calm, legible data tools that made accessibility insights usable for everyone.",
+  zalando:
+    "2022 — Helped establish the first unified B2B design system at Zalando, connecting multiple teams under one shared language.",
+  artscapy:
+    "From 2017 — Built brands, interfaces, and launch sites that taught the value of clarity and restraint.",
+  nationalArchives:
+    "From 2017 — Built brands, interfaces, and launch sites that taught the value of clarity and restraint.",
+};
+
+function getCaptionForSrc(src: string): string | null {
+  const project = getProjectFromSrc(src);
+  if (!project) return null;
+  return PROJECT_CAPTIONS[project] ?? null;
+}
+
+const WORK_CAPTIONS: Record<string, string> = {
+  "/work/cb-1.png":
+    "2025 — Designed SQL Playground and Embedded Wallets — making developer tools feel effortless",
+  "/work/vf-01.png":
+    "2025 — Refined activation and onboarding, aligning product flow with clarity and conversion.",
+  "/work/voiceflow-landing.png":
+    "2025 — Refined activation and onboarding, aligning product flow with clarity and conversion.",
+  "/work/brand 01.png":
+    "2024 — Built brand, system, and product from 0 → 140k users in six months.",
+  "/work/studio 01.png":
+    "2024 — Built brand, system, and product from 0 → 140k users in six months.",
+  "/work/hub and build 01.png":
+    "2024 — Built brand, system, and product from 0 → 140k users in six months.",
+  "/work/atlas.png":
+    "2020 — Led design for an early crypto marketplace at the start of the NFT era.",
+  "/work/atlas-1.png":
+    "2020 — Led design for an early crypto marketplace at the start of the NFT era.",
+  "/work/defi.png":
+    "2020 — Led design and engineering for an experimental DeFi protocol.",
+  "/work/curbcutos.png":
+    "2021 — Designed and led accessibility data tools at CurbCutOS — calm, legible, and human.",
+  "/work/zalando-dodont.png":
+    "2022 — Unified SE (B2B) division at Zalando under one shared design system.",
+  "/work/zalando-spread.png":
+    "2022 — Unified SE (B2B) division at Zalando under one shared design system.",
+  "/work/artscapy.png":
+    "2017–2019 — Built brands, launch sites, and interfaces that taught restraint and speed.",
+  "/work/us.png":
+    "2017–2019 — Built brands, launch sites, and interfaces that taught restraint and speed.",
+};
+
+// Prefer per-image caption, then fallback to project-level caption
+function getMobileCaptionForSrc(src: string): string | null {
+  return WORK_CAPTIONS[src] ?? getCaptionForSrc(src);
+}
+
+// Grouped caption helpers (mobile)
+function getProjectCaption(project: string): string | null {
+  return PROJECT_CAPTIONS[project] ?? null;
+}
+
+function shouldRenderGroupCaption(images: string[], index: number): boolean {
+  const current = getProjectFromSrc(images[index]);
+  const next =
+    index + 1 < images.length ? getProjectFromSrc(images[index + 1]) : null;
+  return current !== null && current !== next;
+}
+
+const INITIAL_IMAGES = IMAGE_SOURCES.slice(0, INITIAL_IMAGE_COUNT);
+const PRELOAD_IMAGES = IMAGE_SOURCES.slice(
+  INITIAL_IMAGE_COUNT,
+  PRELOAD_IMAGE_COUNT
+);
+const LAZY_IMAGES = IMAGE_SOURCES.slice(PRELOAD_IMAGE_COUNT);
+
+const generatePlaceholder = (width = 400, height = 300) =>
+  `data:image/svg+xml;base64,${btoa(`
+      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#f3f4f6"/>
+        <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="system-ui" font-size="14" fill="#9ca3af">Loading...</text>
+      </svg>
+    `)}`;
+
+const parseCaption = (caption: string) => {
+  // Split on the first occurrence of " — " only, preserving additional dashes in description
+  const parts = caption.split(" — ", 2);
+  if (parts.length === 2) {
+    return { year: parts[0], description: parts[1] };
+  }
+  return { year: "", description: caption };
+};
+
+// Rolling two-digit year animation helper (animates last two digits)
+function renderYearWithRolling(year: string | undefined | null) {
+  if (!year) return null;
+  // Keep it simple: return raw text for both single years and ranges
+  return year;
+}
 
 export default function Page() {
-  // Slideshow timing configuration
-  const SLIDESHOW_INTERVAL = 2400; // 2.4 seconds between images once running
-  const SLIDESHOW_STUCK_THRESHOLD = SLIDESHOW_INTERVAL * 4; // 9.6 seconds - 4x the normal interval
-  const SLIDESHOW_CHECK_INTERVAL = 2000; // Check every 2 seconds if slideshow is stuck
-  const SLIDESHOW_PREVIEW_SPEED = 120; // Faster preview cadence for smoother initial transition
-  const SLIDESHOW_PREVIEW_LOOPS = 1; // Number of quick loops through the carousel
-  const SLIDESHOW_PREVIEW_SETTLE_DELAY = 200; // Minimal pause before normal speed kicks in
-
-  // Core UI state management
   const mainContentRef = useRef<HTMLElement | null>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const videoModalRef = useRef<HTMLDivElement | null>(null);
-  const videoModalCloseButtonRef = useRef<HTMLButtonElement | null>(null);
-  const router = useRouter();
+  const imageMeasureRef = useRef<HTMLDivElement | null>(null);
+  const slideshowRef = useRef<HTMLDivElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+  const animationLevel = useAnimationLevel();
+
   const [mounted, setMounted] = useState(false);
+  const [blurAmount, setBlurAmount] = useState(15);
+  const [focusAnimationRun, setFocusAnimationRun] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
-
-  // Enhanced loading sequence management
-  const loadingSequence = useLoadingSequence();
-
-  // Progressive loading stages
-  const [currentLoadingStage, setCurrentLoadingStage] = useState(0);
-  const loadingStages = [
-    "Initializing...",
-    "Loading content...",
-    "Preparing images...",
-    "Finalizing experience...",
-  ];
-
-  const emailContactLink =
-    "mailto:raf@raf.works?subject=%5BYour%20Name%5D&body=Hi%20Raf%2C%0A%0AI%20found%20you%20through%20__________%0A%0AI%20wanted%20to%20talk%20about%20__________%0A%0AI%20think%20we%20could%20__________%20together%0A%0A%E2%80%94%20%5BYour%20Name%5D";
-
-  const mobileContactLinks = [
-    {
-      href: emailContactLink,
-      label: "raf@raf.works",
-      ariaLabel: "Email Raf",
-      openInNewTab: false,
-    },
-    {
-      href: "https://www.linkedin.com/in/raffaelevitaledesign/",
-      label: "LinkedIn",
-      ariaLabel: "Raf on LinkedIn",
-      openInNewTab: true,
-    },
-    {
-      href: "https://x.com/lfgraf",
-      label: "X",
-      ariaLabel: "Raf on X",
-      openInNewTab: true,
-    },
-  ];
-
-  const mobileHeroBottomPadding =
-    "max(2.75rem, calc(env(safe-area-inset-bottom, 0px) + 2.25rem))";
-  const mobileContactBottomPadding =
-    "max(2.25rem, calc(env(safe-area-inset-bottom, 0px) + 1.75rem))";
-
-  // Update loading stages based on loading sequence
-  useEffect(() => {
-    if (loadingSequence.textLoaded && currentLoadingStage < 1) {
-      setCurrentLoadingStage(1);
-    }
-    if (loadingSequence.imagesLoaded && currentLoadingStage < 2) {
-      setCurrentLoadingStage(2);
-    }
-    if (loadingSequence.navigationLoaded && currentLoadingStage < 3) {
-      setCurrentLoadingStage(3);
-    }
-    if (loadingSequence.allLoaded && currentLoadingStage < 4) {
-      setCurrentLoadingStage(4);
-    }
-  }, [loadingSequence, currentLoadingStage]);
-
-  // Image loading and transition states
-  const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>(
-    {}
-  );
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const [criticalContentLoaded, setCriticalContentLoaded] = useState(false);
   const [carouselAnimationComplete, setCarouselAnimationComplete] =
     useState(false);
   const [firstLineComplete, setFirstLineComplete] = useState(false);
@@ -117,9 +288,63 @@ export default function Page() {
   const [finalTextAnimationComplete, setFinalTextAnimationComplete] =
     useState(false);
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false);
-  const [isPreviewComplete, setIsPreviewComplete] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [previousImageIndex, setPreviousImageIndex] = useState(0);
+  const lastDirectionRef = useRef<1 | -1>(1);
+  const [lastDirection, setLastDirection] = useState<1 | -1>(1);
+  const hasAutoScrolledRef = useRef(false);
   const [isPreviewRunning, setIsPreviewRunning] = useState(false);
-  const [blurAmount, setBlurAmount] = useState(15);
+  const [isPreviewComplete, setIsPreviewComplete] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [isInViewport, setIsInViewport] = useState(false);
+  const [imageWidth, setImageWidth] = useState<number | null>(null);
+  const [footerRevealReady, setFooterRevealReady] = useState(false);
+  const mobileScrollRef = useRef<HTMLElement | null>(null);
+  const [activePanelIndex, setActivePanelIndex] = useState(0);
+  const scrollRafIdRef = useRef<number | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
+  const footerRef = useRef<HTMLElement | null>(null);
+  const [headerH, setHeaderH] = useState<number>(0);
+  const [footerH, setFooterH] = useState<number>(0);
+  const [blurByIndex, setBlurByIndex] = useState<number[]>([]);
+  const [isScrolling, setIsScrolling] = useState(false);
+
+  const panelMinH = useMemo(
+    () => `calc(100svh - ${headerH + footerH}px)`,
+    [headerH, footerH]
+  );
+
+  const loadingSequence = useLoadingSequence();
+  const [currentLoadingStage, setCurrentLoadingStage] = useState(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Mobile-only: ensure we start at the top when the page mounts/detects mobile
+  useEffect(() => {
+    if (!isMobile) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [isMobile]);
+
+  useEffect(() => {
+    let stage = 0;
+    if (loadingSequence.textLoaded) stage = 1;
+    if (loadingSequence.imagesLoaded) stage = 2;
+    if (loadingSequence.navigationLoaded) stage = 3;
+    if (loadingSequence.allLoaded) stage = 4;
+    setCurrentLoadingStage(stage);
+  }, [
+    loadingSequence.allLoaded,
+    loadingSequence.imagesLoaded,
+    loadingSequence.navigationLoaded,
+    loadingSequence.textLoaded,
+  ]);
+
+  // Mobile: auto-scroll disabled per request to avoid unexpected jumps
 
   useEffect(() => {
     if (shouldReduceMotion && firstLineComplete) {
@@ -127,1083 +352,477 @@ export default function Page() {
     }
   }, [shouldReduceMotion, firstLineComplete]);
 
-  // Scroll and animation states
-  const [scrollY, setScrollY] = useState(0);
-  const [animationsComplete, setAnimationsComplete] = useState(false);
-  const [criticalContentLoaded, setCriticalContentLoaded] = useState(false);
-  /**
-   * Optimized scroll handling with throttling
-   * Improves performance by reducing scroll event frequency
-   */
   useEffect(() => {
-    let ticking = false;
-    let lastScrollY = 0;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          // Only update if scroll difference is significant
-          if (Math.abs(currentScrollY - lastScrollY) > 5) {
-            setScrollY(currentScrollY);
-            lastScrollY = currentScrollY;
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const [focusAnimationRun, setFocusAnimationRun] = useState(false);
-
-  // Weather state management for dynamic UI effects
-  const [weatherState, setWeatherState] = useState<{
-    temperature: number | null;
-    condition: string | null;
-    isLoading: boolean;
-    showWeatherEffect: boolean;
-    clickPosition: { x: number; y: number } | null;
-    location: string;
-    customLocation: boolean;
-  }>({
-    temperature: null,
-    condition: null,
-    isLoading: true,
-    showWeatherEffect: false,
-    clickPosition: null,
-    location: "Toronto",
-    customLocation: false,
-  });
-
-  // Mobile detection with fallback
-  const isMobile = useIsMobile();
-  const [isMobileReady, setIsMobileReady] = useState(false);
-  const [isSlowConnection, setIsSlowConnection] = useState(false);
-  const [connectionType, setConnectionType] = useState<string>("unknown");
-  const [imageLoadingStrategy, setImageLoadingStrategy] = useState<
-    "aggressive" | "conservative" | "minimal"
-  >("conservative");
-
-  // Enhanced connection detection and loading strategy
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsMobileReady(true);
-
-      // Enhanced connection detection
-      const navigatorWithConnection = navigator as NavigatorWithConnection;
-
-      if (navigatorWithConnection.connection) {
-        const {
-          effectiveType = "unknown",
-          downlink = 0,
-          saveData = false,
-        } = navigatorWithConnection.connection;
-
-        setConnectionType(effectiveType);
-
-        // Determine loading strategy based on connection
-        if (
-          effectiveType === "slow-2g" ||
-          effectiveType === "2g" ||
-          downlink < 0.5 ||
-          saveData
-        ) {
-          setIsSlowConnection(true);
-          setImageLoadingStrategy("minimal");
-          console.log(
-            "Very slow connection detected, using minimal loading strategy"
-          );
-        } else if (effectiveType === "3g" || downlink < 1.5) {
-          setIsSlowConnection(true);
-          setImageLoadingStrategy("conservative");
-          console.log(
-            "Slow connection detected, using conservative loading strategy"
-          );
-        } else {
-          setImageLoadingStrategy("aggressive");
-          console.log(
-            "Good connection detected, using aggressive loading strategy"
-          );
-        }
-      } else {
-        // Fallback: assume conservative loading on mobile
-        if (isMobile) {
-          setImageLoadingStrategy("conservative");
-          setIsSlowConnection(true);
-        } else {
-          setImageLoadingStrategy("aggressive");
-        }
-      }
-    }
-  }, [isMobile]);
-
-  // Prevent multiple re-renders by batching state updates
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-
-  // Collection of work project images to be displayed in the gallery
-  // Enhanced with multiple quality levels and formats
-  const images = [
-    "/work/cb-d.png",
-    "/work/voiceflow-landing.png",
-    "/work/theoriq-prod-hero.png",
-    "/work/theoriq.png",
-    "/work/atlas-1.png",
-    "/work/art-02.png",
-    "/work/wai.png",
-    "/work/curbcut.png",
-    "/work/defi.png",
-    "/work/ethos.png",
-    "/work/us.png",
-    "/work/tela.png",
-    "/work/zalando-dodont.png",
-    "/work/zalando-spread.png",
-  ];
-
-  // Generate low-quality placeholder URLs (base64 encoded 1x1 pixel)
-  const generatePlaceholder = (width: number = 400, height: number = 300) => {
-    return `data:image/svg+xml;base64,${btoa(`
-      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#f3f4f6"/>
-        <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="system-ui" font-size="14" fill="#9ca3af">Loading...</text>
-      </svg>
-    `)}`;
-  };
-
-  // WebP support detection and format optimization
-  const [supportsWebP, setSupportsWebP] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Check WebP support
-      const webpTest = new window.Image();
-      webpTest.onload = webpTest.onerror = () => {
-        setSupportsWebP(webpTest.height === 2);
-      };
-      webpTest.src =
-        "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA";
-    }
-  }, []);
-
-  // Get optimized image source with format support
-  const getOptimizedImageSrc = (src: string): string => {
-    if (supportsWebP === null) return src; // Return original while detecting
-
-    // For now, return original src since we don't have WebP versions
-    // In a real implementation, you would have WebP versions of images
-    // and return the appropriate format based on support
-    return src;
-  };
-
-  // Connection-aware image loading configuration
-  const getImageLoadingConfig = () => {
-    switch (imageLoadingStrategy) {
-      case "minimal":
-        return {
-          initialCount: 1,
-          preloadCount: 2,
-          lazyLoadThreshold: 0,
-          retryAttempts: 1,
-          timeout: 5000,
-        };
-      case "conservative":
-        return {
-          initialCount: 2,
-          preloadCount: 3,
-          lazyLoadThreshold: 100,
-          retryAttempts: 2,
-          timeout: 8000,
-        };
-      case "aggressive":
-        return {
-          initialCount: 4,
-          preloadCount: 6,
-          lazyLoadThreshold: 200,
-          retryAttempts: 3,
-          timeout: 10000,
-        };
-      default:
-        return {
-          initialCount: 2,
-          preloadCount: 3,
-          lazyLoadThreshold: 100,
-          retryAttempts: 2,
-          timeout: 8000,
-        };
-    }
-  };
-
-  const loadingConfig = getImageLoadingConfig();
-  const initialImages = images.slice(0, loadingConfig.initialCount);
-  const preloadImages = images.slice(
-    loadingConfig.initialCount,
-    loadingConfig.preloadCount
-  );
-  const lazyImages = images.slice(loadingConfig.preloadCount);
-
-  // Mapping of work images to their corresponding Vimeo video URLs
-  // Each video is configured with specific player parameters for optimal viewing experience
-  const workVideos: { [key: string]: string } = {
-    // "/work/voiceflow-landing.png":
-    //   "https://player.vimeo.com/video/1099175241?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
-
-    "/work/theoriq-prod-hero.png":
-      "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
-    "/work/defi.png":
-      "https://player.vimeo.com/video/1034767734?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
-    "/work/theoriq.png":
-      "https://player.vimeo.com/video/1033459080?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
-    "/work/atlas-1.png":
-      "https://player.vimeo.com/video/1034334194?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
-    "/work/curbcut.png":
-      "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
-  };
-
-  // Optimized: Removed heavy image preloader component
-  // Images now load progressively as needed
-
-  /**
-   * Generates a placeholder color for images during loading
-   * Uses a curated set of subtle, design-friendly colors that match the site's aesthetic
-   * @param {number} index - The index of the image in the gallery
-   * @returns {string} RGBA color value for the placeholder
-   */
-  const getImagePlaceholder = (index: number) => {
-    const placeholderColors = [
-      "rgba(245, 245, 245, 0.8)", // Light gray
-      "rgba(240, 240, 245, 0.8)", // Light blue-gray
-      "rgba(245, 240, 235, 0.8)", // Light warm gray
-      "rgba(235, 240, 245, 0.8)", // Light cool gray
-      "rgba(240, 245, 240, 0.8)", // Light mint
-    ];
-
-    return placeholderColors[index % placeholderColors.length];
-  };
-
-  /**
-   * Initial component setup and cleanup
-   * Handles weather data fetching, time updates, keyboard events, and critical content loading
-   */
-  useEffect(() => {
-    setMounted(true);
-
-    // Optimized: Only fetch weather on desktop and with longer timeout
-    let weatherTimeout: NodeJS.Timeout | undefined;
-    if (!isMobile) {
-      const weatherPromise = fetchWeatherData().catch((error) => {
-        console.warn(
-          "Weather API failed, continuing without weather data:",
-          error
-        );
-      });
-
-      // Add timeout for weather API
-      weatherTimeout = setTimeout(() => {
-        console.warn("Weather API timeout, continuing without weather data");
-      }, 8000);
+    if (!mounted || focusAnimationRun) {
+      return;
     }
 
-    // Set up keyboard event listener
-    window.addEventListener("keydown", handleKeyDown);
+    setFocusAnimationRun(true);
 
-    /**
-     * Checks if critical images (first three) are loaded
-     * Used to determine when to start the slideshow
-     */
-    const checkCriticalContent = () => {
-      // Only check if mobile detection is ready
-      if (!isMobileReady) return;
-
-      if (isMobile) {
-        // On mobile, only gate on the first image
-        if (loadedImages[initialImages[0]]) {
-          setCriticalContentLoaded(true);
-        }
-      } else {
-        // On desktop, only gate on the first image for faster loading
-        if (loadedImages[initialImages[0]]) {
-          setCriticalContentLoaded(true);
-        }
-      }
-    };
-
-    // Start the slideshow after a short delay to ensure images are loaded
-    const slideshowTimer = setTimeout(() => {
-      if (!isSlideshowPaused && criticalContentLoaded) {
-        setCurrentImageIndex(0);
-      }
-    }, 1000);
-
-    // Optimized: Faster animation completion
-    const animationTimer = setTimeout(() => {
-      setAnimationsComplete(true);
-    }, 2000);
-
-    // Optimized: Faster fallback timers
-    const fallbackDelay = isSlowConnection ? 2000 : 3000;
-    const fallbackTimer = setTimeout(() => {
-      if (!criticalContentLoaded) {
-        console.log(
-          "Fallback: Critical content loading timeout, proceeding anyway"
-        );
-        setCriticalContentLoaded(true);
-      }
-    }, fallbackDelay);
-
-    // Add immediate fallback for when mobile detection fails
-    const immediateFallbackDelay = isSlowConnection ? 500 : 1000;
-    const immediateFallback = setTimeout(() => {
-      if (!criticalContentLoaded && isMobileReady) {
-        console.log(
-          "Immediate fallback: Mobile detection ready but no images loaded"
-        );
-        setCriticalContentLoaded(true);
-      }
-    }, immediateFallbackDelay);
-
-    // Don't call checkCriticalContent immediately - it will be called when images load
-    // checkCriticalContent();
-
-    return () => {
-      clearTimeout(slideshowTimer);
-      clearTimeout(animationTimer);
-      clearTimeout(fallbackTimer);
-      clearTimeout(immediateFallback);
-      if (weatherTimeout) {
-        clearTimeout(weatherTimeout);
-      }
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  // Update scrollbar color when weather condition changes
-  useEffect(() => {
-    if (mounted && weatherState.condition) {
-      // Removed updateScrollbarColor call
-    }
-  }, [mounted, weatherState.condition]);
-
-  /**
-   * Camera focus animation effect
-   * Creates a smooth transition from blurred to focused state
-   * Uses cubic easing for natural camera-like movement
-   * @returns {() => void} Cleanup function to reset blur state
-   */
-  const focusAnimation = () => {
     const totalDuration = 1500;
     const startTime = Date.now();
     const initialBlur = 15;
-
     setBlurAmount(initialBlur);
 
-    const focusInterval = setInterval(() => {
+    const focusInterval = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(1, elapsed / totalDuration);
-
       const easedProgress =
         progress < 0.5
           ? 4 * progress * progress * progress
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-
       const newBlur = initialBlur * (1 - easedProgress);
       setBlurAmount(newBlur);
 
       if (progress >= 1) {
-        clearInterval(focusInterval);
+        window.clearInterval(focusInterval);
         setBlurAmount(0);
       }
     }, 16);
 
     return () => {
-      clearInterval(focusInterval);
+      window.clearInterval(focusInterval);
       setBlurAmount(0);
     };
-  };
+  }, [focusAnimationRun, mounted]);
 
-  /**
-   * Handles focus animation on component mount
-   * Ensures animation only runs once and cleans up properly
-   */
   useEffect(() => {
-    if (mounted && !focusAnimationRun) {
-      setFocusAnimationRun(true);
-      const cleanup = focusAnimation();
-      return () => {
-        if (cleanup) cleanup();
-      };
-    }
-  }, [mounted, focusAnimationRun]);
-
-  /**
-   * Fetches weather data for a specified location using OpenMeteo API
-   * Updates weather state with temperature and conditions
-   * @param {string} location - City name to fetch weather for (defaults to Toronto)
-   */
-  const fetchWeatherData = async (location: string = "Toronto") => {
-    try {
-      const cityCoordinates: { [key: string]: { lat: number; lon: number } } = {
-        Toronto: { lat: 43.65, lon: -79.38 },
-        "New York": { lat: 40.71, lon: -74.01 },
-        London: { lat: 51.51, lon: -0.13 },
-        Paris: { lat: 48.85, lon: 2.35 },
-        Tokyo: { lat: 35.68, lon: 139.77 },
-        Sydney: { lat: -33.87, lon: 151.21 },
-        Berlin: { lat: 52.52, lon: 13.41 },
-        "San Francisco": { lat: 37.77, lon: -122.42 },
-      };
-
-      const coordinates =
-        cityCoordinates[location] || cityCoordinates["Toronto"];
-
-      // Add timeout to prevent hanging requests
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-      const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.lat}&longitude=${coordinates.lon}&current=temperature_2m,weather_code&timezone=America%2FNew_York`,
-        { signal: controller.signal }
-      );
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error("Weather data fetch failed");
-      }
-
-      const data = await response.json();
-
-      /**
-       * Maps OpenMeteo weather codes to human-readable conditions
-       * @param {number} code - Weather code from OpenMeteo API
-       * @returns {string} Human-readable weather condition
-       */
-      const mapWeatherCode = (code: number): string => {
-        if ([0].includes(code)) return "Clear";
-        if ([1, 2].includes(code)) return "Partly Cloudy";
-        if ([3].includes(code)) return "Clouds";
-        if ([45, 48].includes(code)) return "Fog";
-        if ([51, 53, 55].includes(code)) return "Drizzle";
-        if ([56, 57].includes(code)) return "Freezing Drizzle";
-        if ([61, 63, 65].includes(code)) return "Rain";
-        if ([66, 67].includes(code)) return "Freezing Rain";
-        if ([71, 73, 75].includes(code)) return "Snow";
-        if ([77].includes(code)) return "Snow";
-        if ([80, 81, 82].includes(code)) return "Rain";
-        if ([85, 86].includes(code)) return "Snow";
-        if ([95, 96, 99].includes(code)) return "Thunderstorm";
-
-        return "Clear";
-      };
-
-      setWeatherState((prev) => ({
-        ...prev,
-        temperature: Math.round(data.current.temperature_2m),
-        condition: mapWeatherCode(data.current.weather_code),
-        isLoading: false,
-        location: location,
-        customLocation: location !== "Toronto",
-      }));
-    } catch (error) {
-      console.error("Error fetching weather data:", error);
-      setWeatherState((prev) => ({
-        ...prev,
-        isLoading: false,
-      }));
-    }
-  };
-
-  /**
-   * Handles keyboard navigation and modal interactions
-   * - Escape key closes the video modal
-   * - Arrow keys navigate through images
-   * @param {KeyboardEvent} e - The keyboard event
-   */
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      if (isVideoModalOpen) {
-        setIsVideoModalOpen(false);
-      }
+    if (!mounted || criticalContentLoaded) {
       return;
     }
 
-    if (isVideoModalOpen) return;
+    const fallback = window.setTimeout(() => {
+      setCriticalContentLoaded(true);
+    }, 3000);
 
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      setIsSlideshowPaused(true);
-
-      if (e.key === "ArrowRight") {
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
-      } else {
-        setCurrentImageIndex((prev) =>
-          prev === 0 ? images.length - 1 : prev - 1
-        );
-      }
-    }
-  };
-
-  /**
-   * Sets up keyboard event listener for navigation
-   * Cleans up listener on component unmount
-   */
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      handleKeyDown(e);
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
     return () => {
-      window.removeEventListener("keydown", handleKeyPress);
+      window.clearTimeout(fallback);
     };
-  }, [isVideoModalOpen, images.length]);
+  }, [criticalContentLoaded, mounted]);
 
-  // Add a ref for the slideshow container
-  const slideshowRef = useRef<HTMLDivElement>(null);
-
-  // Add state to track if slideshow is in viewport
-  const [isInViewport, setIsInViewport] = useState(false);
-
-  /**
-   * Initializes slideshow when component is mounted
-   * Starts with first image immediately once the carousel is visible
-   */
+  // Measure header/footer heights for fixed layout padding (mobile)
   useEffect(() => {
-    if (
-      mounted &&
-      criticalContentLoaded &&
-      isInViewport &&
-      !isVideoModalOpen &&
-      !isSlideshowPaused &&
-      !initialLoadComplete
-    ) {
-      setCurrentImageIndex(0);
-      setInitialLoadComplete(true);
-    }
-  }, [
-    mounted,
-    criticalContentLoaded,
-    isInViewport,
-    isVideoModalOpen,
-    isSlideshowPaused,
-    initialLoadComplete,
-  ]);
+    if (!isMobile) return;
+    const h = headerRef.current;
+    const f = footerRef.current;
+    const ro = new ResizeObserver(() => {
+      setHeaderH(h?.offsetHeight ?? 0);
+      setFooterH(f?.offsetHeight ?? 0);
+    });
+    if (h) ro.observe(h as Element);
+    if (f) ro.observe(f as Element);
+    const onResize = () => {
+      setHeaderH(h?.offsetHeight ?? 0);
+      setFooterH(f?.offsetHeight ?? 0);
+    };
+    window.addEventListener("resize", onResize);
+    // Initialize once
+    setHeaderH(h?.offsetHeight ?? 0);
+    setFooterH(f?.offsetHeight ?? 0);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onResize);
+    };
+  }, [isMobile]);
 
-  /**
-   * IntersectionObserver setup for slideshow viewport detection
-   * Triggers when slideshow enters or leaves viewport
-   */
+  // Initialize blur array when images list changes
+  useEffect(() => {
+    setBlurByIndex((prev) => {
+      if (prev.length === IMAGE_SOURCES.length) return prev;
+      return new Array(IMAGE_SOURCES.length).fill(0);
+    });
+  }, []);
+
+  const handleImageLoad = useCallback((src: string) => {
+    setLoadedImages((prev) => {
+      if (prev[src]) {
+        return prev;
+      }
+      return { ...prev, [src]: true };
+    });
+
+    if (src === IMAGE_SOURCES[0]) {
+      setCriticalContentLoaded(true);
+    }
+  }, []);
+
+  const preloadImage = useCallback(
+    (src: string, retryCount = 0): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        const img = new window.Image();
+        const timeoutId = window.setTimeout(() => {
+          reject(new Error(`Timeout loading ${src}`));
+        }, IMAGE_LOAD_TIMEOUT);
+
+        img.onload = () => {
+          window.clearTimeout(timeoutId);
+          handleImageLoad(src);
+          resolve();
+        };
+
+        img.onerror = () => {
+          window.clearTimeout(timeoutId);
+
+          if (retryCount < IMAGE_RETRY_ATTEMPTS) {
+            const delay = Math.min(1000 * Math.pow(2, retryCount), 4000);
+            window.setTimeout(() => {
+              preloadImage(src, retryCount + 1)
+                .then(resolve)
+                .catch(reject);
+            }, delay);
+          } else {
+            reject(new Error(`Failed to load ${src}`));
+          }
+        };
+
+        img.src = src;
+      });
+    },
+    [handleImageLoad]
+  );
+
   useEffect(() => {
     if (!mounted) return;
 
-    const slideshowElement = slideshowRef.current;
-    if (!slideshowElement) return;
+    let cancelled = false;
+    const timers = new Set<number>();
+
+    const load = async () => {
+      await Promise.allSettled(INITIAL_IMAGES.map((src) => preloadImage(src)));
+      if (cancelled) return;
+
+      const timer = window.setTimeout(() => {
+        PRELOAD_IMAGES.forEach((src) => {
+          preloadImage(src).catch(() => {});
+        });
+      }, 600);
+
+      timers.add(timer);
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [mounted, preloadImage]);
+
+  useEffect(() => {
+    if (!criticalContentLoaded) return;
+
+    const nextImages: string[] = [];
+    for (let i = 1; i <= PRELOAD_LOOKAHEAD; i++) {
+      const nextIndex = (currentImageIndex + i) % IMAGE_SOURCES.length;
+      const nextSrc = IMAGE_SOURCES[nextIndex];
+      if (!loadedImages[nextSrc]) {
+        nextImages.push(nextSrc);
+      }
+    }
+
+    nextImages.forEach((src) => {
+      preloadImage(src).catch(() => {});
+    });
+  }, [criticalContentLoaded, currentImageIndex, loadedImages, preloadImage]);
+
+  useEffect(() => {
+    const el = imageMeasureRef.current;
+    if (!el) return;
+
+    const update = () => setImageWidth(el.offsetWidth);
+    update();
+
+    const observer = new ResizeObserver(() => update());
+    observer.observe(el);
+    window.addEventListener("resize", update);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [currentImageIndex]);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const element = slideshowRef.current;
+    if (!element) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
+      ([entry]) => {
         setIsInViewport(entry.isIntersecting);
       },
       { threshold: 0.1 }
     );
 
-    observer.observe(slideshowElement);
-
-    return () => {
-      if (slideshowElement) {
-        observer.unobserve(slideshowElement);
-      }
-    };
+    observer.observe(element);
+    return () => observer.disconnect();
   }, [mounted]);
 
-  /**
-   * Main slideshow interval effect
-   * Advances to next image every SLIDESHOW_INTERVAL seconds when conditions are met
-   * Waits for final text animation to complete before starting
-   */
   useEffect(() => {
-    if (
-      !mounted ||
-      !criticalContentLoaded ||
-      !finalTextAnimationComplete ||
-      !isPreviewComplete ||
-      !isInViewport ||
-      isVideoModalOpen ||
-      isSlideshowPaused
-    )
-      return;
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (isVideoModalOpen) {
+          setIsVideoModalOpen(false);
+        } else if (isAboutModalOpen) {
+          setIsAboutModalOpen(false);
+        }
+        return;
+      }
 
-    const slideshowInterval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, SLIDESHOW_INTERVAL);
+      if (isVideoModalOpen) return;
 
-    return () => clearInterval(slideshowInterval);
-  }, [
-    mounted,
-    criticalContentLoaded,
-    finalTextAnimationComplete,
-    isPreviewComplete,
-    isInViewport,
-    isVideoModalOpen,
-    isSlideshowPaused,
-    images.length,
-  ]);
-
-  /**
-   * Enhanced image preloader with retry logic and connection awareness
-   * Implements progressive loading based on connection quality
-   */
-  const preloadImage = (src: string, retryCount: number = 0): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const img = new window.Image();
-      const timeoutId = setTimeout(() => {
-        console.warn(`Image load timeout: ${src}`);
-        reject(new Error(`Timeout loading ${src}`));
-      }, loadingConfig.timeout);
-
-      img.onload = () => {
-        clearTimeout(timeoutId);
-        handleImageLoad(src);
-        resolve();
-      };
-
-      img.onerror = () => {
-        clearTimeout(timeoutId);
-        console.warn(
-          `Failed to load image: ${src} (attempt ${retryCount + 1})`
-        );
-
-        if (retryCount < loadingConfig.retryAttempts) {
-          // Exponential backoff for retries
-          const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
-          setTimeout(() => {
-            preloadImage(src, retryCount + 1)
-              .then(resolve)
-              .catch(reject);
-          }, delay);
+      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+        setIsSlideshowPaused(true);
+        if (event.key === "ArrowRight") {
+          navigateBy(1);
         } else {
-          // Mark as loaded anyway to prevent blocking
-          handleImageLoad(src);
-          reject(
-            new Error(
-              `Failed to load ${src} after ${loadingConfig.retryAttempts} attempts`
-            )
-          );
-        }
-      };
-
-      // Add connection-aware loading hints
-      if (connectionType === "slow-2g" || connectionType === "2g") {
-        // For very slow connections, add loading priority hints
-        img.loading = "lazy";
-      }
-
-      img.src = getOptimizedImageSrc(src);
-    });
-  };
-
-  /**
-   * Intelligent viewport-based preloading
-   * Preloads images that are likely to be viewed soon
-   */
-  const preloadViewportImages = () => {
-    if (imageLoadingStrategy === "minimal") return;
-
-    // Preload next few images in slideshow sequence
-    const nextImages = [];
-    for (let i = 1; i <= 3; i++) {
-      const nextIndex = (currentImageIndex + i) % images.length;
-      if (!loadedImages[images[nextIndex]]) {
-        nextImages.push(images[nextIndex]);
-      }
-    }
-
-    nextImages.forEach((src) => {
-      preloadImage(src).catch(() => {
-        // Silently handle preload failures
-      });
-    });
-  };
-
-  /**
-   * Connection-aware image preloading strategy
-   * Loads images progressively based on connection quality
-   */
-  useEffect(() => {
-    if (mounted && isMobileReady) {
-      console.log(
-        `Starting image preload with ${imageLoadingStrategy} strategy`
-      );
-
-      // Phase 1: Load critical images immediately
-      const criticalPromises = initialImages.map((src) => preloadImage(src));
-
-      Promise.allSettled(criticalPromises).then(() => {
-        console.log("Critical images loaded");
-
-        // Phase 2: Load preload images after a delay
-        setTimeout(
-          () => {
-            const preloadPromises = preloadImages.map((src) =>
-              preloadImage(src)
-            );
-            Promise.allSettled(preloadPromises).then(() => {
-              console.log("Preload images loaded");
-            });
-          },
-          imageLoadingStrategy === "minimal" ? 2000 : 1000
-        );
-      });
-    }
-  }, [mounted, isMobileReady, imageLoadingStrategy]);
-
-  /**
-   * Preload images when slideshow advances
-   */
-  useEffect(() => {
-    if (mounted && criticalContentLoaded) {
-      preloadViewportImages();
-    }
-  }, [currentImageIndex, criticalContentLoaded, mounted]);
-
-  /**
-   * Handles image loading completion
-   * Updates loading state and triggers slideshow when appropriate
-   * @param {string} src - Source path of the loaded image
-   */
-  const handleImageLoad = (src: string) => {
-    setLoadedImages((prev) => {
-      const newState = { ...prev, [src]: true };
-
-      // Prevent multiple critical content triggers
-      if (criticalContentLoaded) {
-        return newState;
-      }
-
-      // Both mobile and desktop: gate on first image only for faster loading
-      if (isMobileReady && isMobile !== null) {
-        if (src === images[0]) {
-          console.log("First image loaded, setting critical content");
-          setCriticalContentLoaded(true);
-        }
-      } else {
-        // Fallback: if mobile detection isn't ready, use first image as critical
-        if (src === images[0]) {
-          console.log("Fallback: First image loaded, setting critical content");
-          setCriticalContentLoaded(true);
+          navigateBy(-1);
         }
       }
-
-      // Check if all images are loaded
-      return newState;
-    });
-  };
-
-  const fadeInAnimation = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    transition: {
-      duration: 2,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  };
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.3,
-        delayChildren: 0.2,
-        duration: 1.2,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-  };
-
-  /**
-   * Cleanup effect for modal state
-   * Ensures scrolling is re-enabled when component unmounts
-   */
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = "";
     };
-  }, []);
 
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [isAboutModalOpen, isVideoModalOpen]);
+
+  const navigateToIndex = useCallback(
+    (computeNext: (prev: number) => number) => {
+      setCurrentImageIndex((prev) => {
+        const next = computeNext(prev);
+        setPreviousImageIndex(prev);
+        return next;
+      });
+    },
+    []
+  );
+
+  // Top-level: track active panel and compute distance-based blur during scroll (mobile only)
   useEffect(() => {
-    if (isVideoModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-  }, [isVideoModalOpen]);
+    if (!mounted || !isMobile) return;
+    const container = mobileScrollRef.current;
+    if (!container) return;
+
+    let rafId: number | null = null;
+    let scrollEndTimeout: number | undefined;
+
+    const compute = () => {
+      const sections = Array.from(
+        container.querySelectorAll<HTMLElement>("section[data-panel]")
+      );
+      if (sections.length === 0) return;
+      const viewportMid = window.innerHeight / 2;
+      let closestIndex = 0;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      const nextBlur: number[] = new Array(sections.length).fill(0);
+      sections.forEach((sec, i) => {
+        const rect = sec.getBoundingClientRect();
+        const center = rect.top + rect.height / 2;
+        const dist = Math.abs(center - viewportMid);
+        if (dist < bestDistance) {
+          bestDistance = dist;
+          closestIndex = i;
+        }
+        const normalized = Math.min(1, dist / (window.innerHeight * 0.5));
+        nextBlur[i] = isScrolling ? normalized * 8 : 0;
+      });
+      setActivePanelIndex(closestIndex);
+      setBlurByIndex((prev) => {
+        // Avoid excessive state churn
+        if (
+          prev.length === nextBlur.length &&
+          prev.every((v, i) => v === nextBlur[i])
+        ) {
+          return prev;
+        }
+        return nextBlur;
+      });
+    };
+
+    const onScroll = () => {
+      if (rafId != null) return;
+      setIsScrolling(true);
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        compute();
+        if (scrollEndTimeout !== undefined)
+          window.clearTimeout(scrollEndTimeout);
+        scrollEndTimeout = window.setTimeout(() => {
+          setIsScrolling(false);
+          setBlurByIndex((arr) =>
+            arr.length ? new Array(arr.length).fill(0) : arr
+          );
+        }, 120);
+      });
+    };
+
+    compute();
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", onScroll);
+      if (rafId != null) window.cancelAnimationFrame(rafId);
+      if (scrollEndTimeout !== undefined) window.clearTimeout(scrollEndTimeout);
+    };
+  }, [mounted, isMobile, isScrolling]);
+
+  // Reveal footer links after the first user scroll on mobile
+  useEffect(() => {
+    if (!mounted || !isMobile || footerRevealReady) return;
+    const container = mobileScrollRef.current;
+    if (!container) return;
+
+    const onFirstScroll = () => {
+      if (container.scrollTop > 6) {
+        setFooterRevealReady(true);
+        container.removeEventListener("scroll", onFirstScroll);
+      }
+    };
+    container.addEventListener("scroll", onFirstScroll, { passive: true });
+    return () => container.removeEventListener("scroll", onFirstScroll);
+  }, [mounted, isMobile, footerRevealReady]);
+
+  // Fallback: if scroll event is not captured, reveal after a short delay
+  useEffect(() => {
+    if (!mounted || !isMobile || footerRevealReady) return;
+    const timer = window.setTimeout(() => {
+      setFooterRevealReady(true);
+    }, 3500);
+    return () => window.clearTimeout(timer);
+  }, [mounted, isMobile, footerRevealReady]);
+
+  const navigateBy = useCallback(
+    (delta: number) => {
+      const dir: 1 | -1 = delta >= 0 ? 1 : -1;
+      lastDirectionRef.current = dir;
+      setLastDirection(dir);
+      navigateToIndex((prev) => {
+        const length = IMAGE_SOURCES.length;
+        return (prev + delta + length) % length;
+      });
+    },
+    [navigateToIndex]
+  );
 
   useEffect(() => {
     if (isVideoModalOpen) {
       previouslyFocusedElementRef.current =
         (document.activeElement as HTMLElement) ?? null;
-      requestAnimationFrame(() => {
-        videoModalCloseButtonRef.current?.focus();
-      });
-    } else {
-      previouslyFocusedElementRef.current?.focus?.();
+      return;
     }
-  }, [isVideoModalOpen]);
 
-  /**
-   * Toggles weather effect display
-   * Centers effect at top of page when enabled
-   * @param {React.MouseEvent} e - Mouse event from toggle action
-   */
-  const toggleWeatherEffect = (e: React.MouseEvent) => {
-    setWeatherState((prev) => ({
-      ...prev,
-      showWeatherEffect: !prev.showWeatherEffect,
-      clickPosition: { x: window.innerWidth / 2, y: 0 },
-    }));
-  };
+    if (isAboutModalOpen) {
+      previouslyFocusedElementRef.current =
+        (document.activeElement as HTMLElement) ?? null;
+      return;
+    }
 
-  /**
-   * Returns color value based on current weather condition
-   * @returns {string} RGBA color value for weather effect
-   */
-  const getWeatherColor = () => {
-    if (!weatherState.condition) return "rgba(125, 125, 125, 0.2)";
+    previouslyFocusedElementRef.current?.focus?.();
+  }, [isAboutModalOpen, isVideoModalOpen]);
 
-    const conditions: { [key: string]: string } = {
-      Clear: "rgba(255, 200, 0, 0.3)",
-      "Partly Cloudy": "rgba(230, 230, 230, 0.3)",
-      Clouds: "rgba(200, 200, 200, 0.3)",
-      Rain: "rgba(0, 125, 255, 0.3)",
-      Drizzle: "rgba(100, 150, 255, 0.3)",
-      "Freezing Drizzle": "rgba(180, 200, 255, 0.3)",
-      "Freezing Rain": "rgba(150, 180, 255, 0.3)",
-      Thunderstorm: "rgba(100, 100, 255, 0.4)",
-      Snow: "rgba(220, 240, 255, 0.3)",
-      Mist: "rgba(200, 200, 220, 0.3)",
-      Fog: "rgba(180, 180, 200, 0.3)",
-      Haze: "rgba(200, 180, 150, 0.3)",
+  useEffect(() => {
+    if (carouselAnimationComplete && !finalTextAnimationComplete) {
+      const timer = window.setTimeout(() => {
+        setFinalTextAnimationComplete(true);
+      }, 300);
+
+      return () => window.clearTimeout(timer);
+    }
+  }, [carouselAnimationComplete, finalTextAnimationComplete]);
+
+  const previewPrerequisitesMet = useMemo(
+    () =>
+      !shouldReduceMotion &&
+      !isPreviewComplete &&
+      mounted &&
+      criticalContentLoaded &&
+      finalTextAnimationComplete &&
+      initialLoadComplete &&
+      isInViewport &&
+      !isVideoModalOpen &&
+      !isSlideshowPaused,
+    [
+      criticalContentLoaded,
+      finalTextAnimationComplete,
+      initialLoadComplete,
+      isInViewport,
+      isPreviewComplete,
+      isSlideshowPaused,
+      isVideoModalOpen,
+      mounted,
+      shouldReduceMotion,
+    ]
+  );
+
+  useEffect(() => {
+    if (!previewPrerequisitesMet) return;
+
+    setIsPreviewRunning(true);
+
+    let previewSteps = 0;
+    const totalSteps = IMAGE_SOURCES.length * PREVIEW_LOOPS;
+    let settleTimeout: number | undefined;
+
+    const previewInterval = window.setInterval(() => {
+      previewSteps += 1;
+      setCurrentImageIndex((prev) => (prev + 1) % IMAGE_SOURCES.length);
+
+      if (previewSteps >= totalSteps) {
+        window.clearInterval(previewInterval);
+        settleTimeout = window.setTimeout(() => {
+          setIsPreviewRunning(false);
+          setIsPreviewComplete(true);
+        }, PREVIEW_SETTLE_DELAY);
+      }
+    }, PREVIEW_SPEED);
+
+    return () => {
+      window.clearInterval(previewInterval);
+      if (settleTimeout !== undefined) {
+        window.clearTimeout(settleTimeout);
+      }
+      setIsPreviewRunning(false);
     };
+  }, [previewPrerequisitesMet]);
 
-    return conditions[weatherState.condition] || "rgba(125, 125, 125, 0.2)";
+  useEffect(() => {
+    if (
+      !mounted ||
+      !criticalContentLoaded ||
+      !isInViewport ||
+      isVideoModalOpen ||
+      isSlideshowPaused ||
+      initialLoadComplete
+    ) {
+      return;
+    }
+
+    setCurrentImageIndex(0);
+    setInitialLoadComplete(true);
+  }, [
+    criticalContentLoaded,
+    initialLoadComplete,
+    isInViewport,
+    isSlideshowPaused,
+    isVideoModalOpen,
+    mounted,
+  ]);
+
+  const handleOpenVideoModal = (imageSrc: string) => {
+    const videoUrl = getVideoForSrc(imageSrc);
+    if (videoUrl) {
+      setCurrentVideoUrl(videoUrl);
+      setIsVideoModalOpen(true);
+    }
   };
 
-  // Get scrollbar color based on weather condition
-  const updateScrollbarColor = () => {
-    // Removed entire function
+  const handleCloseVideoModal = () => {
+    setIsVideoModalOpen(false);
+    setCurrentVideoUrl(null);
   };
 
-  // Get weather icon based on condition
-  const getWeatherIcon = (condition: string | null) => {
-    if (!condition) return null;
-
-    const icons: { [key: string]: JSX.Element } = {
-      Clear: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
-        </svg>
-      ),
-      "Partly Cloudy": (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path d="M4.5 10.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-          <path d="M17.5 6.5c0-2.76-2.24-5-5-5s-5 2.24-5 5c0 .34.04.67.09 1h-.09c-1.66 0-3 1.34-3 3s1.34 3 3 3h10c1.66 0 3-1.34 3-3s-1.34-3-3-3h-.09c.05-.33.09-.66.09-1z" />
-        </svg>
-      ),
-      Clouds: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M4.5 9.75a6 6 0 0111.573-2.226 3.75 3.75 0 014.133 4.303A4.5 4.5 0 0118 20.25H6.75a5.25 5.25 0 01-2.23-10.004 6.072 6.072 0 01-.02-.496z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-      Rain: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M12 5.25a6.75 6.75 0 00-6.75 6.75c0 3.296 2.114 6.258 5.25 7.31V22.5a.75.75 0 001.5 0v-3.19c3.136-1.052 5.25-4.014 5.25-7.31A6.75 6.75 0 0012 5.25zM15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-      Drizzle: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path d="M13.5 6.379V3.75a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 10.125a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.746ZM4.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 0 20.625 3.75 3.75 0 0 0 3.75 24.375 3.75 3.75 0 0 0 7.5 20.625a3.75 3.75 0 0 0-3-3.746ZM13.5 16.879V14.25a.75.75 0 0 0-1.5 0v2.629A3.75 3.75 0 0 0 9 20.625a3.75 3.75 0 0 0 3.75 3.75 3.75 3.75 0 0 0 3.75-3.75 3.75 3.75 0 0 0-3-3.746Z" />
-        </svg>
-      ),
-      "Freezing Drizzle": (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H10a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0zm6.22 6.22a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H16a.75.75 0 010-1.5h7.19l-6.22-6.22a.75.75 0 010-1.06z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-      "Freezing Rain": (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H10a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0zm6.22 6.22a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H16a.75.75 0 010-1.5h7.19l-6.22-6.22a.75.75 0 010-1.06z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-      Thunderstorm: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-      Snow: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M6.75 9a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H6.75zM6 12.75a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H6.75a.75.75 0 01-.75-.75zM6.75 16.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H6.75z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-      Mist: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M3 9a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 9zm0 6.75a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-      Fog: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M3 9a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 9zm0 6.75a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-      Haze: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M3 9a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 9zm0 6.75a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-    };
-
-    return (
-      icons[condition] || (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-3 h-3 inline-block align-middle"
-        >
-          <path
-            fillRule="evenodd"
-            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z"
-            clipRule="evenodd"
-          />
-        </svg>
-      )
-    );
+  const handleCloseAboutModal = () => {
+    setIsAboutModalOpen(false);
   };
-
-  const backgroundElements = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delay: 0.2,
-        duration: 2.5,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-  };
-
-  const slideInFromBottom = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 0.6,
-      y: 0,
-      transition: {
-        duration: 1.2,
-        delay: 1.2,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-  };
-
-  const focusableElementSelector =
-    'a[href]:not([tabindex="-1"]), button:not([disabled]):not([tabindex="-1"]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [role="button"]:not([tabindex="-1"])';
 
   const handleFocusTrapKeyDown = (
     event: React.KeyboardEvent,
@@ -1219,16 +838,16 @@ export default function Page() {
     }
 
     const focusableElements = Array.from(
-      container.querySelectorAll<HTMLElement>(focusableElementSelector)
+      container.querySelectorAll<HTMLElement>(
+        'a[href]:not([tabindex="-1"]), button:not([disabled]):not([tabindex="-1"]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [role="button"]:not([tabindex="-1"])'
+      )
     ).filter(
       (element) => !element.hasAttribute("disabled") && element.tabIndex !== -1
     );
 
     if (focusableElements.length === 0) {
       event.preventDefault();
-      if (typeof container.focus === "function") {
-        container.focus();
-      }
+      container.focus();
       return;
     }
 
@@ -1248,168 +867,44 @@ export default function Page() {
     }
   };
 
-  // Optimized: Simplified video modal opening
-  const handleOpenVideoModal = (imageSrc: string) => {
-    const videoUrl = workVideos[imageSrc];
-    if (videoUrl) {
-      setCurrentVideoUrl(videoUrl);
-      setIsVideoModalOpen(true);
-    }
-  };
+  const images = IMAGE_SOURCES;
+  const initialImages = INITIAL_IMAGES;
+  const lazyImages = LAZY_IMAGES;
+  const isEmailReady = loadingSequence.textLoaded && secondLineComplete;
+  const isFooterReady = footerRevealReady;
 
-  // Optimized: Simplified video modal closing
-  const handleCloseVideoModal = () => {
-    setIsVideoModalOpen(false);
-    setCurrentVideoUrl(null);
-  };
-
-  // Add a state to track the last time the image changed
-  const [lastImageChangeTime, setLastImageChangeTime] = useState<number>(
-    Date.now()
-  );
-
-  useEffect(() => {
+  const panelVariants = useMemo(() => {
     if (shouldReduceMotion) {
-      setIsPreviewComplete(true);
-      setIsPreviewRunning(false);
+      // Provide a minimal variant to satisfy typing; animate prop will still use keys
+      return {
+        active: { opacity: 1 },
+        inactive: { opacity: 1 },
+      } as const;
     }
+    return {
+      active: {
+        opacity: 1,
+        scale: 1,
+        transition: { duration: 0.4, ease: EASING.tertiary },
+      },
+      inactive: {
+        opacity: 0.98,
+        scale: 0.992,
+        transition: { duration: 0.4, ease: EASING.tertiary },
+      },
+    } as const;
   }, [shouldReduceMotion]);
 
-  const previewPrerequisitesMet =
-    !shouldReduceMotion &&
-    !isPreviewComplete &&
-    mounted &&
-    criticalContentLoaded &&
-    finalTextAnimationComplete &&
-    initialLoadComplete &&
-    isInViewport &&
-    !isVideoModalOpen &&
-    !isSlideshowPaused;
-
-  useEffect(() => {
-    if (!previewPrerequisitesMet) {
-      return;
-    }
-
-    setIsPreviewRunning(true);
-
-    let previewSteps = 0;
-    const totalSteps = images.length * SLIDESHOW_PREVIEW_LOOPS;
-    let settleTimeout: number | undefined;
-
-    const previewInterval = window.setInterval(() => {
-      previewSteps += 1;
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
-
-      if (previewSteps >= totalSteps) {
-        window.clearInterval(previewInterval);
-        settleTimeout = window.setTimeout(() => {
-          setIsPreviewRunning(false);
-          setIsPreviewComplete(true);
-        }, SLIDESHOW_PREVIEW_SETTLE_DELAY);
-      }
-    }, SLIDESHOW_PREVIEW_SPEED);
-
-    return () => {
-      window.clearInterval(previewInterval);
-      if (settleTimeout !== undefined) {
-        window.clearTimeout(settleTimeout);
-      }
-      setIsPreviewRunning(false);
-    };
-  }, [previewPrerequisitesMet, images.length]);
-
-  // Add a fallback mechanism to restart the slideshow if it gets stuck
-  useEffect(() => {
-    // Skip only if a modal is open
-    if (isVideoModalOpen || !mounted) return;
-
-    // Check if the slideshow is stuck (no image change for more than the threshold)
-    const checkInterval = setInterval(() => {
-      const currentTime = Date.now();
-      const timeSinceLastChange = currentTime - lastImageChangeTime;
-
-      // If no image change for more than the stuck threshold, restart the slideshow
-      if (timeSinceLastChange > SLIDESHOW_STUCK_THRESHOLD) {
-        console.log("Slideshow appears stuck, restarting...");
-        // Force the next image in sequence
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
-        // Reset progress
-        setLastImageChangeTime(currentTime);
-      }
-    }, SLIDESHOW_CHECK_INTERVAL);
-
-    return () => clearInterval(checkInterval);
-  }, [isVideoModalOpen, lastImageChangeTime, mounted, images.length]);
-
-  // Update lastImageChangeTime whenever the image changes
-  useEffect(() => {
-    setLastImageChangeTime(Date.now());
-  }, [currentImageIndex]);
-
-  // Set finalTextAnimationComplete when carousel animation is complete
-  useEffect(() => {
-    if (carouselAnimationComplete && !finalTextAnimationComplete) {
-      const timer = setTimeout(() => {
-        setFinalTextAnimationComplete(true);
-      }, 300); // Minimal delay for immediate slideshow start
-      return () => clearTimeout(timer);
-    }
-  }, [carouselAnimationComplete, finalTextAnimationComplete]);
-
-  // Add an effect to ensure the slideshow starts immediately when the page loads
-  useEffect(() => {
-    if (mounted) {
-      // Start with the first image
-      setCurrentImageIndex(0);
-      setLastImageChangeTime(Date.now());
-
-      // Log that the slideshow is starting
-      console.log("Slideshow starting with first image");
-    }
-  }, [mounted]);
-
-  // Add effect to track scroll position
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Change weather location (simplified to just show Toronto)
-  const changeWeatherLocation = () => {
-    fetchWeatherData("Toronto");
-    // Show the weather effect
-    setWeatherState((prev) => ({
-      ...prev,
-      showWeatherEffect: true,
-      clickPosition: { x: window.innerWidth / 2, y: 0 },
-    }));
-  };
-
-  const isSecondaryTextReady = loadingSequence.textLoaded && firstLineComplete;
-  const isEmailReady = loadingSequence.textLoaded && secondLineComplete;
-
   if (!mounted) {
-    // Show nothing until mounted
     return null;
   }
 
   if (!criticalContentLoaded) {
-    // Progressive loading: Show content immediately with skeleton screens
     return (
       <ErrorBoundary>
         <div className="min-h-screen bg-background">
-          <div className="px-6 sm:px-10 py-16 pb-32 md:px-28">
+          <div className="sm:px-10 py-16 pb-32 md:px-28">
             <div className="w-full max-w-screen-xl mx-auto">
-              {/* Header - Clean, no Raf */}
-
-              {/* Loading state - Clean, no duplicate text */}
-
-              {/* Enhanced Loading Skeleton Section */}
               {!loadingSequence.imagesLoaded && (
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
@@ -1421,105 +916,95 @@ export default function Page() {
                   }}
                   className="space-y-20 md:space-y-12"
                 >
-                  <div className="w-full">
-                    <div className="space-y-8">
-                      {/* Skeleton for slideshow */}
-                      <div className="w-full mb-0 overflow-hidden relative">
-                        <div className="relative w-full h-full">
-                          {/* Mobile skeleton */}
-                          <div className="block sm:hidden space-y-4">
-                            {[1, 2, 3].map((i) => (
-                              <BreathingSkeleton key={i} className="w-full">
-                                <motion.div
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{
-                                    duration: 1.8,
-                                    delay: 1.5 + i * 0.3,
-                                    ease: [0.16, 1, 0.3, 1],
-                                  }}
-                                >
-                                  <div className="w-full h-[350px] md:h-[300px] bg-foreground/5 rounded-lg" />
-                                </motion.div>
-                              </BreathingSkeleton>
-                            ))}
-                          </div>
-
-                          {/* Desktop skeleton */}
-                          <div className="hidden sm:block relative w-full h-full">
-                            <BreathingSkeleton>
+                  <div className="space-y-8">
+                    <div className="w-full mb-0 overflow-hidden relative">
+                      <div className="relative w-full h-full">
+                        <div className="block sm:hidden space-y-4">
+                          {[1, 2, 3].map((i) => (
+                            <BreathingSkeleton key={i} className="w-full">
                               <motion.div
-                                initial={{ opacity: 0, y: 30 }}
+                                initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{
-                                  duration: 2.4,
-                                  delay: 1.8,
+                                  duration: 1.8,
+                                  delay: 1.5 + i * 0.3,
                                   ease: [0.16, 1, 0.3, 1],
                                 }}
-                                className="w-full h-[600px] md:h-[400px] bg-foreground/5 rounded-lg"
-                              />
+                              >
+                                <div className="w-full h-[350px] md:h-[300px] bg-foreground/5 rounded-lg" />
+                              </motion.div>
                             </BreathingSkeleton>
-                          </div>
+                          ))}
+                        </div>
+
+                        <div className="hidden sm:block relative w-full h-full">
+                          <BreathingSkeleton>
+                            <motion.div
+                              initial={{ opacity: 0, y: 30 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{
+                                duration: 2.4,
+                                delay: 1.8,
+                                ease: [0.16, 1, 0.3, 1],
+                              }}
+                              className="w-full h-[600px] md:h-[400px] bg-foreground/5 rounded-lg"
+                            />
+                          </BreathingSkeleton>
                         </div>
                       </div>
-
-                      {/* Enhanced loading progress indicator */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{
-                          duration: 1.2,
-                          delay: 1.5,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        className="flex flex-col items-center justify-center mt-12 space-y-4"
-                      >
-                        <LoadingProgress
-                          progress={loadingSequence.loadingProgress}
-                          isAdaptive={loadingSequence.isAdaptive}
-                          estimatedTimeRemaining={
-                            loadingSequence.estimatedTimeRemaining
-                          }
-                          className="w-32"
-                        />
-
-                        {/* Connection quality indicator */}
-                        {loadingSequence.isAdaptive && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8 }}
-                            className="text-xs text-foreground/30"
-                          >
-                            Optimizing for your connection
-                          </motion.div>
-                        )}
-
-                        {/* Progressive loading states */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 1.0 }}
-                          className="mt-6"
-                        >
-                          <ProgressiveLoadingStates
-                            currentStage={currentLoadingStage}
-                            stages={loadingStages}
-                            className="text-center"
-                          />
-                        </motion.div>
-                      </motion.div>
-
-                      {/* Skeleton for other sections */}
-                      <div className="space-y-4 md:space-y-3">
-                        <BreathingSkeleton>
-                          <div className="w-full h-[120px] md:h-[100px] bg-foreground/5 rounded" />
-                        </BreathingSkeleton>
-                        <BreathingSkeleton>
-                          <div className="w-full h-[150px] md:h-[120px] bg-foreground/5 rounded" />
-                        </BreathingSkeleton>
-                      </div>
                     </div>
+                  </div>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{
+                      duration: 1.2,
+                      delay: 1.5,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="flex flex-col items-center justify-center mt-12 space-y-4"
+                  >
+                    <LoadingProgress
+                      progress={loadingSequence.loadingProgress}
+                      isAdaptive={loadingSequence.isAdaptive}
+                      estimatedTimeRemaining={
+                        loadingSequence.estimatedTimeRemaining
+                      }
+                      className="w-32"
+                    />
+
+                    {loadingSequence.isAdaptive && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 }}
+                        className="text-xs text-foreground/30"
+                      >
+                        Optimizing for your connection
+                      </motion.div>
+                    )}
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.0 }}
+                      className="mt-6"
+                    >
+                      <ProgressiveLoadingStates
+                        currentStage={currentLoadingStage}
+                        stages={LOADING_STAGES}
+                        className="text-center"
+                      />
+                    </motion.div>
+                  </motion.div>
+
+                  <div className="space-y-4 md:space-y-3">
+                    <BreathingSkeleton>
+                      <div className="w-full h-[120px] md:h-[100px] bg-foreground/5 rounded" />
+                    </BreathingSkeleton>
+                    <BreathingSkeleton>
+                      <div className="w-full h-[150px] md:h-[120px] bg-foreground/5 rounded" />
+                    </BreathingSkeleton>
                   </div>
                 </motion.div>
               )}
@@ -1529,7 +1014,6 @@ export default function Page() {
       </ErrorBoundary>
     );
   }
-
   return (
     <ErrorBoundary>
       <a
@@ -1545,71 +1029,10 @@ export default function Page() {
       <div
         style={{
           filter: blurAmount > 0 ? `blur(${blurAmount}px)` : "none",
-          transition: "filter 3s cubic-bezier(0.22, 1, 0.36, 1)", // Restored to original 3s duration
+          transition: "filter 3s cubic-bezier(0.22, 1, 0.36, 1)",
           position: "relative",
         }}
       >
-        {/* Natural progressive bottom blur effect - disabled on desktop since page is non-scrollable */}
-        <motion.div
-          className="fixed left-0 right-0 bottom-0 w-screen overflow-hidden z-50 pointer-events-none hidden"
-          style={{
-            height: Math.max(40, Math.min(scrollY / 400, 80)),
-            transition: "height 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-        >
-          {/* Base gradient layer - creates the foundation */}
-          <motion.div
-            className="absolute inset-x-0 bottom-0 h-full w-full"
-            style={{
-              background: `linear-gradient(to top, 
-                rgba(var(--background-rgb), 0.95) 0%, 
-                rgba(var(--background-rgb), 0.7) 20%, 
-                rgba(var(--background-rgb), 0.3) 50%, 
-                rgba(var(--background-rgb), 0.05) 80%, 
-                transparent 100%)`,
-              opacity: Math.min(scrollY / 500, 0.95),
-              transition: "all 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
-          />
-
-          {/* Progressive blur layer - responds to scroll with natural easing */}
-          <motion.div
-            className="absolute inset-x-0 bottom-0 h-full w-full"
-            style={{
-              backdropFilter: `blur(${Math.min(scrollY / 250, 2.5)}px)`,
-              opacity: Math.min(scrollY / 800, 0.7),
-              transition: "all 1.5s cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
-          />
-
-          {/* Subtle edge enhancement - for extra smoothness at the very bottom */}
-          <motion.div
-            className="absolute inset-x-0 bottom-0 h-[20px] w-full"
-            style={{
-              background: `linear-gradient(to top, 
-                rgba(var(--background-rgb), 0.98) 0%, 
-                rgba(var(--background-rgb), 0.8) 40%, 
-                rgba(var(--background-rgb), 0.4) 80%, 
-                transparent 100%)`,
-              backdropFilter: `blur(${Math.min(scrollY / 150, 4)}px)`,
-              opacity: Math.min(scrollY / 300, 0.9),
-              transition: "all 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
-          />
-
-          {/* Ambient glow layer - adds depth and natural feel */}
-          <motion.div
-            className="absolute inset-x-0 bottom-0 h-full w-full"
-            style={{
-              background: `radial-gradient(ellipse at center bottom, 
-                rgba(var(--background-rgb), 0.1) 0%, 
-                transparent 70%)`,
-              opacity: Math.min(scrollY / 1000, 0.4),
-              transition: "all 2s cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
-          />
-        </motion.div>
-
         <motion.main
           id="main-content"
           ref={mainContentRef}
@@ -1624,7 +1047,7 @@ export default function Page() {
                   ease: EASING.primary,
                 }
           }
-          className="px-6 sm:px-10 py-4 md:py-0 pb-4 md:px-28 bg-background relative overflow-x-hidden md:min-h-screen md:flex md:flex-col md:justify-center md:overflow-hidden"
+          className="sm:px-10 py-4 md:py-0 pb-4 md:px-28 bg-background relative overflow-x-hidden md:min-h-screen md:flex md:flex-col md:justify-center md:overflow-hidden"
           style={{
             minHeight: "100vh",
             willChange: "auto",
@@ -1632,30 +1055,20 @@ export default function Page() {
           }}
         >
           <div className="w-full max-w-screen-xl mx-auto relative z-10 md:flex md:flex-col md:justify-center md:h-full">
-            {/* Navigation completely removed - Clean interface */}
-
-            {/* Enhanced Content Section - Only show when fully loaded */}
             {criticalContentLoaded && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                animate={{
-                  opacity: criticalContentLoaded ? 1 : 0,
-                  y: criticalContentLoaded ? 0 : 20,
-                }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{
                   duration: 1.2,
                   ease: EASING.primary,
                 }}
                 className="space-y-3 md:space-y-0 md:flex md:flex-col md:items-center md:justify-center md:py-0 md:h-full md:flex-1 md:gap-6"
                 style={{
-                  transform: animationsComplete ? "none" : undefined,
-                  willChange: animationsComplete
-                    ? "auto"
-                    : "transform, opacity",
-                  gap: isMobile ? undefined : "clamp(2vh, 3vh, 4vh)",
+                  willChange: "transform, opacity",
+                  gap: isMobile ? undefined : "clamp(1vh, 1.5vh, 2vh)",
                 }}
               >
-                {/* Desktop Layout - Text First */}
                 <motion.div
                   className="w-full hidden md:block md:flex-shrink-0"
                   initial={{ opacity: 0 }}
@@ -1673,165 +1086,271 @@ export default function Page() {
                           ease: [0.22, 1, 0.36, 1],
                         }}
                         onAnimationComplete={() => {
-                          // Main text complete - trigger subtext after consistent pause
                           setTimeout(() => {
                             setFirstLineComplete(true);
+                            setTimeout(() => {
+                              setSecondLineComplete(true);
+                            }, 500);
                           }, 1000);
                         }}
                       >
                         <div className="tracking-tight text-xl md:whitespace-nowrap">
                           <WordReveal
-                            text="Raf leads as a Senior Designer and Design Engineer"
+                            text="Raf leads design, crafts narratives and ships code."
                             className="text-foreground/70"
                             interactiveWord={{
                               word: "Raf",
-                              onActivate: () => router.push("/raf"),
-                              ariaLabel: "Navigate to Raf",
+                              onActivate: () => setIsAboutModalOpen(true),
+                              ariaLabel: "About Raf",
                             }}
+                            interactiveHintVisible={true}
                           />
                         </div>
                       </motion.div>
                     )}
                   </div>
-
-                  {/* Secondary text for desktop */}
-                  <div className="text-center mb-3">
-                    <div className="space-y-3">
-                      <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
-                        {isSecondaryTextReady && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{
-                              duration: 0.8,
-                              delay: 0.1,
-                              ease: [0.22, 1, 0.36, 1],
-                            }}
-                          >
-                            <WordReveal
-                              text="Reflecting on what's next. Past at Coinbase, Voiceflow, Theoriq & more."
-                              className="text-foreground/70"
-                              delay={0.1}
-                              onAnimationComplete={() =>
-                                setSecondLineComplete(true)
-                              }
-                            />
-                          </motion.div>
-                        )}
-                      </div>
-                      <div className="min-h-[1.25em]">
-                        <a
-                          href={emailContactLink}
-                          className="text-sm text-foreground/70 hover:text-foreground transition-colors inline-block"
-                        >
-                          {isEmailReady && (
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{
-                                duration: 0.8,
-                                delay: 0.2,
-                                ease: [0.22, 1, 0.36, 1],
-                              }}
-                            >
-                              <WordReveal
-                                text="raf@raf.works"
-                                className="text-foreground/70"
-                                delay={0.2}
-                              />
-                            </motion.div>
-                          )}
-                        </a>
-                      </div>
-                    </div>
-                  </div>
                 </motion.div>
 
-                {/* Mobile Layout - Text First */}
+                {/* Mobile-only: top hero, center snap panels, bottom contact */}
                 <motion.div
                   className="w-full block md:hidden"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
-                  <div
-                    className="flex min-h-screen min-h-[100svh] flex-col justify-end"
-                    style={{ paddingBottom: mobileHeroBottomPadding }}
-                  >
-                    <div className="space-y-4">
-                      <div className="text-left">
-                        {loadingSequence.textLoaded && (
-                          <motion.div
-                            initial={{
-                              opacity: 0,
-                              y: 20,
-                              filter: "blur(10px)",
+                  <div className="relative h-[100svh]">
+                    {/* Fixed top header */}
+                    <header
+                      ref={headerRef as React.RefObject<HTMLElement>}
+                      className="fixed top-0 left-0 right-0 z-20 pb-4 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                      style={{
+                        paddingTop:
+                          "calc(env(safe-area-inset-top, 0px) + 20px)",
+                      }}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        transition={{
+                          duration: 1.0,
+                          delay: 0.2,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        onAnimationComplete={() => {
+                          setTimeout(() => {
+                            setFirstLineComplete(true);
+                            setTimeout(() => setSecondLineComplete(true), 400);
+                          }, 600);
+                        }}
+                      >
+                        <div className="tracking-tight text-lg">
+                          <WordReveal
+                            text="Raf leads design, crafts narratives and ships code."
+                            className="text-foreground/70"
+                            interactiveWord={{
+                              word: "Raf",
+                              onActivate: () => setIsAboutModalOpen(true),
+                              ariaLabel: "About Raf",
                             }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                            transition={{
-                              duration: 1.5,
-                              delay: 0.3,
-                              ease: [0.22, 1, 0.36, 1],
-                            }}
-                            onAnimationComplete={() => {
-                              // Main text complete - trigger subtext after consistent pause
-                              setTimeout(() => {
-                                setFirstLineComplete(true);
-                              }, 1000);
-                            }}
-                          >
-                            <div className="tracking-tight text-lg md:whitespace-nowrap">
-                              <WordReveal
-                                text="Raf leads as a Senior Designer and Design Engineer."
-                                className="text-foreground/70"
-                              />
-                            </div>
-                          </motion.div>
-                        )}
-                      </div>
+                            interactiveHintVisible={isFooterReady}
+                          />
+                        </div>
+                      </motion.div>
+                    </header>
 
-                      {/* Secondary text for mobile */}
-                      <div className="text-left">
-                        <div className="space-y-3">
-                          <div className="text-foreground/70 tracking-tight text-base md:text-sm md:whitespace-nowrap min-h-[1.5em]">
-                            {!isSecondaryTextReady && (
-                              <span
-                                className="block opacity-0 select-none"
-                                aria-hidden="true"
-                              >
-                                Reflecting on what&apos;s next. Past at
-                                Coinbase, Voiceflow, Theoriq & more.
-                              </span>
-                            )}
-                            {isSecondaryTextReady && (
+                    {/* Scroll container with padding to account for fixed header/footer */}
+                    <main
+                      ref={mobileScrollRef as React.RefObject<HTMLElement>}
+                      className="h-[100svh] overflow-y-auto overscroll-contain snap-y snap-mandatory"
+                      style={{}}
+                    >
+                      {images.map((src, index) => (
+                        <motion.section
+                          variants={panelVariants}
+                          animate={
+                            index === activePanelIndex ? "active" : "inactive"
+                          }
+                          key={`panel-${src}`}
+                          id={index === 0 ? "panel-0" : undefined}
+                          data-panel
+                          className="snap-center snap-always flex items-center justify-center px-4 sm:px-3"
+                          style={{
+                            minHeight: panelMinH,
+                            filter:
+                              blurByIndex[index] && !shouldReduceMotion
+                                ? `blur(${blurByIndex[index]}px)`
+                                : undefined,
+                          }}
+                        >
+                          <figure className="w-full max-w-screen-sm">
+                            <div className="w-full max-h-[78svh] flex flex-col items-center justify-center relative pb-6 gap-3">
                               <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{
-                                  duration: 0.8,
-                                  delay: 0.1,
-                                  ease: [0.22, 1, 0.36, 1],
+                                initial={{
+                                  opacity: 0,
+                                  y: shouldReduceMotion ? 0 : 14,
+                                  filter: shouldReduceMotion
+                                    ? undefined
+                                    : "blur(12px)",
+                                  scale: shouldReduceMotion ? 1 : 0.98,
+                                }}
+                                animate={
+                                  loadingSequence.textLoaded &&
+                                  !!loadedImages[src] &&
+                                  secondLineComplete
+                                    ? {
+                                        opacity: 1,
+                                        y: 0,
+                                        filter: "blur(0px)",
+                                        scale: 1,
+                                        transition: {
+                                          duration: 1.1,
+                                          ease: EASING.primary,
+                                          // Image follows header by a modest delay
+                                          delay: 0.55,
+                                        },
+                                      }
+                                    : {}
+                                }
+                                style={{
+                                  filter:
+                                    blurByIndex[index] && !shouldReduceMotion
+                                      ? `blur(${blurByIndex[index]}px)`
+                                      : undefined,
                                 }}
                               >
-                                <WordReveal
-                                  text="Reflecting on what's next. Past at Coinbase, Voiceflow, Theoriq & more."
-                                  className="text-foreground/70"
-                                  delay={0.1}
-                                  onAnimationComplete={() =>
-                                    setSecondLineComplete(true)
+                                <WorkImageContainer
+                                  src={src}
+                                  alt={`Work preview ${index + 1}`}
+                                  width={600}
+                                  height={450}
+                                  hasVideo={!!getVideoForSrc(src)}
+                                  onVideoClick={() => handleOpenVideoModal(src)}
+                                  onMouseEnter={() =>
+                                    setIsSlideshowPaused(true)
                                   }
+                                  onMouseLeave={() =>
+                                    setIsSlideshowPaused(false)
+                                  }
+                                  onLoad={() => handleImageLoad(src)}
+                                  variant="mobile"
+                                  className="w-full"
+                                  priority={index < INITIAL_IMAGE_COUNT}
+                                  loading={
+                                    index < INITIAL_IMAGE_COUNT
+                                      ? "eager"
+                                      : "lazy"
+                                  }
+                                  placeholder="blur"
+                                  blurDataURL={generatePlaceholder(900, 700)}
+                                  sizes="100vw"
+                                  quality={IMAGE_QUALITY}
+                                  isLoaded={!!loadedImages[src]}
                                 />
                               </motion.div>
-                            )}
-                          </div>
-                        </div>
+                              {(() => {
+                                const project = getProjectFromSrc(src);
+                                if (!project) return null;
+                                const caption = getProjectCaption(project);
+                                if (!caption) return null;
+                                const parsed = parseCaption(caption);
+                                return (
+                                  <motion.figcaption
+                                    className="text-center text-sm leading-snug text-foreground/70 dark:text-foreground/80"
+                                    initial={{
+                                      opacity: 0,
+                                      y: 8,
+                                      filter: "blur(6px)",
+                                    }}
+                                    animate={
+                                      loadedImages[src] && secondLineComplete
+                                        ? {
+                                            opacity: 1,
+                                            y: 0,
+                                            filter: "blur(0px)",
+                                          }
+                                        : {}
+                                    }
+                                    transition={{
+                                      duration: 0.6,
+                                      ease: EASING.tertiary,
+                                      // Caption follows image
+                                      delay: 0.85,
+                                    }}
+                                    onAnimationComplete={() => {
+                                      if (index === 0) {
+                                        // First caption signals footer can reveal next, with a subtle offset
+                                        window.setTimeout(
+                                          () => setFooterRevealReady(true),
+                                          220
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    {parsed.year ? (
+                                      <>
+                                        <span className="text-foreground/50">
+                                          {renderYearWithRolling(parsed.year)}
+                                        </span>
+                                        <span className="text-foreground/80">{` ${parsed.description}`}</span>
+                                      </>
+                                    ) : (
+                                      parsed.description
+                                    )}
+                                  </motion.figcaption>
+                                );
+                              })()}
+                            </div>
+                          </figure>
+                        </motion.section>
+                      ))}
+                    </main>
+
+                    {/* Fixed bottom footer */}
+                    <footer
+                      ref={footerRef as React.RefObject<HTMLElement>}
+                      className="fixed bottom-0 left-0 right-0 z-30 pt-4 bg-gradient-to-t from-background/85 to-transparent backdrop-blur"
+                      style={{ paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING }}
+                      aria-label="Mobile contact links"
+                    >
+                      <div className="mobile-gutter">
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, filter: "blur(6px)" }}
+                          animate={
+                            isFooterReady
+                              ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                              : { opacity: 0, y: 8, filter: "blur(6px)" }
+                          }
+                          transition={{
+                            duration: 0.55,
+                            ease: EASING.tertiary,
+                            delay: 0.1,
+                          }}
+                          className="flex items-center justify-center gap-4 text-sm"
+                        >
+                          {MOBILE_CONTACT_LINKS.map((link) => (
+                            <a
+                              key={link.href}
+                              href={link.href}
+                              target={link.openInNewTab ? "_blank" : undefined}
+                              rel={
+                                link.openInNewTab
+                                  ? "noopener noreferrer"
+                                  : undefined
+                              }
+                              aria-label={link.ariaLabel}
+                              className="text-foreground/75 hover:text-foreground transition-colors"
+                            >
+                              {link.label}
+                            </a>
+                          ))}
+                        </motion.div>
                       </div>
-                    </div>
+                    </footer>
                   </div>
                 </motion.div>
 
                 <motion.div
-                  className="w-full mt-3 md:mt-0"
+                  className="w-full mt-0 md:mt-0"
                   initial={{
                     opacity: 0,
                     y: 40,
@@ -1854,265 +1373,121 @@ export default function Page() {
                         }
                   }
                   transition={{
-                    duration: 2.0,
+                    duration: 2,
                     delay: 0.3,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   onAnimationComplete={() => {
-                    // Carousel complete - trigger slideshow start immediately after first image loads
                     setTimeout(() => {
                       setCarouselAnimationComplete(true);
-                    }, 200); // Minimal delay for immediate transition
+                    }, 200);
                   }}
                 >
-                  <div className="space-y-2 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto md:flex-1">
-                    {/* Desktop Slideshow - now used for all screen sizes */}
+                  <div className="space-y-2 md:space-y-0 md:flex md:flex-col md:justify-center md:items-center md:h-full md:max-w-4xl md:mx-auto md:flex-1 md:py-2">
                     <div
                       ref={slideshowRef}
-                      className="w-full mb-0 overflow-hidden relative md:flex-1 md:flex md:items-center md:justify-center md:max-h-[75vh]"
-                      onMouseEnter={() => {
-                        setIsSlideshowPaused(true);
-                      }}
-                      onMouseLeave={() => {
-                        setIsSlideshowPaused(false);
-                      }}
+                      className="w-full mb-0 overflow-hidden relative md:flex-1 md:flex md:items-center md:justify-center md:max-h-[90vh]"
+                      onMouseEnter={() => setIsSlideshowPaused(true)}
+                      onMouseLeave={() => setIsSlideshowPaused(false)}
                       onTouchStart={() => setIsSlideshowPaused(true)}
                       onTouchEnd={() => {
-                        // Add a small delay before resuming on touch end
-                        setTimeout(() => {
+                        window.setTimeout(() => {
                           setIsSlideshowPaused(false);
                         }, 1000);
                       }}
                     >
-                      {/* Replace the AnimatePresence with a crossfade effect */}
                       <div className="relative w-full h-full">
-                        {/* Enhanced Mobile Feed View */}
-                        <div className="block sm:hidden space-y-2">
-                          {initialImages.map((src: string, index: number) => (
-                            <ImageCarouselItem
-                              key={`mobile-${src}`}
-                              className="w-full"
-                              delay={index * 0.3}
-                            >
-                              <WorkImageContainer
-                                src={getOptimizedImageSrc(src)}
-                                alt={`Work preview ${index + 1}`}
-                                width={900}
-                                height={700}
-                                hasVideo={!!workVideos[src]}
-                                onVideoClick={() => handleOpenVideoModal(src)}
-                                onMouseEnter={() => setIsSlideshowPaused(true)}
-                                onMouseLeave={() => setIsSlideshowPaused(false)}
-                                onLoad={() => handleImageLoad(src)}
-                                variant="mobile"
-                                priority={index < loadingConfig.initialCount}
-                                loading={
-                                  index < loadingConfig.initialCount
-                                    ? "eager"
-                                    : "lazy"
-                                }
-                                placeholder="blur"
-                                blurDataURL={generatePlaceholder(900, 700)}
-                                sizes={isMobile ? "100vw" : "50vw"}
-                                quality={
-                                  imageLoadingStrategy === "minimal"
-                                    ? 60
-                                    : imageLoadingStrategy === "conservative"
-                                    ? 75
-                                    : 85
-                                }
-                                isLoaded={!!loadedImages[src]}
-                              />
-                            </ImageCarouselItem>
-                          ))}
-
-                          {/* Lazy load remaining images */}
-                          {lazyImages.length > 0 && (
-                            <div className="space-y-2">
-                              {lazyImages.map((src: string, index: number) => (
-                                <motion.div
-                                  key={`mobile-lazy-${src}`}
-                                  className="w-full"
-                                  initial={{ opacity: 0 }}
-                                  whileInView={{ opacity: 1 }}
-                                  viewport={{ once: true, margin: "100px" }}
-                                  transition={{
-                                    duration: 0.6,
-                                    ease: [0.22, 1, 0.36, 1],
-                                  }}
-                                >
-                                  <WorkImageContainer
-                                    src={getOptimizedImageSrc(src)}
-                                    alt={`Work preview ${
-                                      initialImages.length + index + 1
-                                    }`}
-                                    width={900}
-                                    height={700}
-                                    hasVideo={!!workVideos[src]}
-                                    onVideoClick={() =>
-                                      handleOpenVideoModal(src)
-                                    }
-                                    onMouseEnter={() =>
-                                      setIsSlideshowPaused(true)
-                                    }
-                                    onMouseLeave={() =>
-                                      setIsSlideshowPaused(false)
-                                    }
-                                    onLoad={() => handleImageLoad(src)}
-                                    variant="mobile"
-                                    loading="lazy"
-                                    placeholder="blur"
-                                    blurDataURL={generatePlaceholder(900, 700)}
-                                    sizes={isMobile ? "100vw" : "50vw"}
-                                    quality={
-                                      imageLoadingStrategy === "minimal"
-                                        ? 60
-                                        : imageLoadingStrategy ===
-                                          "conservative"
-                                        ? 75
-                                        : 85
-                                    }
-                                    isLoaded={!!loadedImages[src]}
-                                  />
-                                </motion.div>
-                              ))}
-                            </div>
-                          )}
-
-                          <div
-                            className="pt-6"
-                            style={{
-                              paddingBottom: mobileContactBottomPadding,
-                            }}
-                          >
-                            <div className="flex items-center gap-3 text-sm">
-                              {mobileContactLinks.map((link, index) => (
-                                <React.Fragment key={link.href}>
-                                  {index > 0 && (
-                                    <span
-                                      aria-hidden="true"
-                                      className="text-foreground/20"
-                                    >
-                                      •
-                                    </span>
-                                  )}
-                                  <a
-                                    href={link.href}
-                                    target={
-                                      link.openInNewTab ? "_blank" : undefined
-                                    }
-                                    rel={
-                                      link.openInNewTab
-                                        ? "noopener noreferrer"
-                                        : undefined
-                                    }
-                                    aria-label={link.ariaLabel}
-                                    className={`inline-flex items-center text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground/20 rounded-sm ${
-                                      isEmailReady ? "" : "pointer-events-none"
-                                    }`}
-                                    aria-disabled={!isEmailReady}
-                                    tabIndex={isEmailReady ? undefined : -1}
-                                  >
-                                    {!isEmailReady ? (
-                                      <span
-                                        className="block opacity-0 select-none"
-                                        aria-hidden="true"
-                                      >
-                                        {link.label}
-                                      </span>
-                                    ) : (
-                                      <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{
-                                          duration: 0.8,
-                                          delay: 0.2 + index * 0.05,
-                                          ease: [0.22, 1, 0.36, 1],
-                                        }}
-                                      >
-                                        <WordReveal
-                                          text={link.label}
-                                          className="text-foreground/70"
-                                          delay={0.2 + index * 0.05}
-                                        />
-                                      </motion.div>
-                                    )}
-                                  </a>
-                                </React.Fragment>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Enhanced Desktop Slideshow View */}
-                        <div className="hidden sm:flex relative w-full min-h-[45vh] md:max-h-[72vh] lg:max-h-[76vh] items-center justify-center">
+                        <div
+                          className="hidden sm:flex relative w-full min-h-[45vh] md:max-h-[85vh] lg:max-h-[90vh] items-center justify-center"
+                          style={{ perspective: "1200px" }}
+                        >
                           {images.map((src, index) => (
                             <motion.div
                               key={src}
-                              className="absolute inset-0 w-full h-full"
-                              initial={{
-                                opacity: 0,
-                                filter: "blur(5px)",
-                                y: 10,
-                              }}
-                              animate={{
-                                opacity: index === currentImageIndex ? 1 : 0,
-                                filter:
-                                  index === currentImageIndex
-                                    ? "blur(0px)"
-                                    : "blur(8px)",
-                                y: index === currentImageIndex ? 0 : 15,
-                              }}
-                              transition={
-                                isPreviewRunning
-                                  ? {
-                                      duration: 0.25,
-                                      ease: "linear",
-                                      delay: 0,
-                                    }
-                                  : {
-                                      duration: 2.2,
-                                      ease: [0.22, 1, 0.36, 1],
-                                      delay: 0,
-                                    }
+                              className="absolute top-0 left-0 right-0 w-full min-h-full"
+                              variants={pageTurnVariants(
+                                animationLevel,
+                                lastDirection
+                              )}
+                              initial="initial"
+                              animate={
+                                index === currentImageIndex ? "animate" : "exit"
                               }
+                              exit="exit"
                               style={{
                                 zIndex: index === currentImageIndex ? 2 : 1,
+                                pointerEvents:
+                                  index === currentImageIndex ? "auto" : "none",
                               }}
                             >
-                              <WorkImageContainer
-                                src={getOptimizedImageSrc(src)}
-                                alt={`Work preview ${index + 1}`}
-                                width={1400}
-                                height={900}
-                                hasVideo={!!workVideos[src]}
-                                onVideoClick={() => handleOpenVideoModal(src)}
-                                onMouseEnter={() => setIsSlideshowPaused(true)}
-                                onMouseLeave={() => setIsSlideshowPaused(false)}
-                                onLoad={() => handleImageLoad(src)}
-                                variant="desktop"
-                                loading={
-                                  index < loadingConfig.initialCount
-                                    ? "eager"
-                                    : "lazy"
-                                }
-                                priority={index < loadingConfig.initialCount}
-                                placeholder="blur"
-                                blurDataURL={generatePlaceholder(1400, 900)}
-                                sizes="100vw"
-                                quality={
-                                  imageLoadingStrategy === "minimal"
-                                    ? 60
-                                    : imageLoadingStrategy === "conservative"
-                                    ? 75
-                                    : 85
-                                }
-                                isLoaded={!!loadedImages[src]}
-                              />
+                              {index === currentImageIndex && (
+                                <>
+                                  <div
+                                    className="absolute left-0 top-0 h-full w-[28%] z-[60] cursor-w-resize"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      if (isNavigating) return;
+                                      setIsNavigating(true);
+                                      navigateBy(-1);
+                                      window.setTimeout(
+                                        () => setIsNavigating(false),
+                                        NAVIGATION_DEBOUNCE
+                                      );
+                                    }}
+                                  />
+                                  <div
+                                    className="absolute right-0 top-0 h-full w-[28%] z-[60] cursor-e-resize"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      if (isNavigating) return;
+                                      setIsNavigating(true);
+                                      navigateBy(1);
+                                      window.setTimeout(
+                                        () => setIsNavigating(false),
+                                        NAVIGATION_DEBOUNCE
+                                      );
+                                    }}
+                                  />
+                                  <div className="absolute left-[28%] top-0 h-full w-[44%] z-[95] pointer-events-none" />
+                                </>
+                              )}
+                              <div className="flex flex-col items-center">
+                                <WorkImageContainer
+                                  src={src}
+                                  alt={`Work preview ${index + 1}`}
+                                  width={800}
+                                  height={600}
+                                  hasVideo={!!getVideoForSrc(src)}
+                                  onVideoClick={() => handleOpenVideoModal(src)}
+                                  onMouseEnter={() =>
+                                    setIsSlideshowPaused(true)
+                                  }
+                                  onMouseLeave={() =>
+                                    setIsSlideshowPaused(false)
+                                  }
+                                  onLoad={() => handleImageLoad(src)}
+                                  priority={index < INITIAL_IMAGE_COUNT}
+                                  loading={
+                                    index < INITIAL_IMAGE_COUNT
+                                      ? "eager"
+                                      : "lazy"
+                                  }
+                                  placeholder="blur"
+                                  blurDataURL={generatePlaceholder(1200, 900)}
+                                  sizes="(min-width: 1280px) 60vw, 100vw"
+                                  quality={IMAGE_QUALITY}
+                                  isLoaded={!!loadedImages[src]}
+                                />
+                                {index === currentImageIndex && (
+                                  <div
+                                    ref={imageMeasureRef}
+                                    className="w-full max-w-[800px] hidden"
+                                  />
+                                )}
+                              </div>
                             </motion.div>
                           ))}
-
-                          {/* Placeholder for sizing (to maintain layout) */}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={images[0]}
                             alt="Layout placeholder"
@@ -2122,307 +1497,88 @@ export default function Page() {
                       </div>
                     </div>
 
-                    {/* Open works button removed */}
-                  </div>
-                </motion.div>
-
-                {/* Experience, Notes, and About sections are currently disabled */}
-              </motion.div>
-            )}
-
-            {/* Weather effect overlay */}
-            <AnimatePresence>
-              {weatherState.showWeatherEffect && weatherState.clickPosition && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{
-                    opacity: scrollY > 80 ? 0 : 1,
-                    y: 0,
-                    translateY:
-                      scrollY > 10 ? `-${Math.min(scrollY / 2, 50)}%` : 0,
-                  }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{
-                    duration: 0.6,
-                    ease: [0.22, 1, 0.36, 1],
-                    opacity: { duration: 0.3 },
-                  }}
-                  className="fixed inset-x-0 top-0 pointer-events-auto z-50 overflow-hidden"
-                  style={{
-                    height: "auto",
-                  }}
-                >
-                  {/* Weather banner */}
-                  <div
-                    className="w-full backdrop-blur-sm relative overflow-hidden"
-                    style={{
-                      background: `${getWeatherColor()}`,
-                      boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-                      animation: "weatherBannerGlow 3s infinite ease-in-out",
-                      transition:
-                        "background-color 0.6s ease-in-out, transform 0.6s ease-in-out",
-                    }}
-                    aria-live="polite"
-                    role="status"
-                  >
-                    <motion.main className="px-6 sm:px-10 md:px-28 relative overflow-x-hidden">
-                      <div className="w-full max-w-screen-xl mx-auto relative">
-                        <div className="md:grid md:grid-cols-[180px,minmax(0,1fr)] md:gap-20 w-full">
-                          <div className="hidden md:block" />
-                          <div className="flex items-center justify-between py-3 w-full">
-                            <div className="flex items-center space-x-3">
-                              {weatherState.condition && (
-                                <motion.span
-                                  className="mr-2 text-xs flex items-center justify-center"
-                                  animate={{
-                                    rotate:
-                                      weatherState.condition === "Snow"
-                                        ? [0, 10, -10, 0]
-                                        : 0,
-                                    scale:
-                                      weatherState.condition === "Thunderstorm"
-                                        ? [1, 1.1, 1]
-                                        : 1,
-                                  }}
-                                  transition={{
-                                    duration:
-                                      weatherState.condition === "Snow"
-                                        ? 4
-                                        : 0.3,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                  }}
-                                >
-                                  {getWeatherIcon(weatherState.condition)}
-                                </motion.span>
-                              )}
-                              <motion.span
-                                className="font-light text-xs flex items-center"
-                                animate={{
-                                  opacity: [0.8, 1, 0.8],
-                                }}
-                                transition={{
-                                  duration: 3,
-                                  repeat: Infinity,
-                                  ease: "easeInOut",
-                                }}
-                              >
-                                <span className="font-raf">Raf</span> is in{" "}
-                                {weatherState.location} - where it&apos;s{" "}
-                                {weatherState.condition?.toLowerCase() ||
-                                  "clear"}{" "}
-                                and {weatherState.temperature}°C
-                              </motion.span>
-                            </div>
-                            <button
-                              onClick={() =>
-                                setWeatherState((prev) => ({
-                                  ...prev,
-                                  showWeatherEffect: false,
-                                }))
-                              }
-                              className="text-foreground/60 hover:text-foreground/80 transition-colors relative z-10"
-                              aria-label="Close weather banner"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                              </svg>
-                            </button>
+                    <div
+                      className="min-h-[1.5rem] hidden sm:block"
+                      style={{ marginTop: "clamp(2rem, 3.2vh, 3rem)" }}
+                    >
+                      <motion.div
+                        key={
+                          getProjectFromSrc(images[currentImageIndex]) ??
+                          currentImageIndex
+                        }
+                        initial={{
+                          opacity: 0,
+                          filter: "blur(10px) saturate(0.96)",
+                        }}
+                        animate={{
+                          opacity: 1,
+                          filter: "blur(0px) saturate(1)",
+                        }}
+                        transition={{
+                          duration: 0.6,
+                          ease: [0.16, 1, 0.3, 1],
+                          delay: 0.08,
+                        }}
+                      >
+                        <div
+                          className="mx-auto w-full"
+                          style={{
+                            maxWidth: imageWidth
+                              ? `${imageWidth}px`
+                              : "min(92vw, 1200px)",
+                          }}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
+                            {(() => {
+                              const currentSrc = images[currentImageIndex];
+                              const caption = getCaptionForSrc(currentSrc);
+                              if (!caption) return null;
+                              const parsed = parseCaption(caption);
+                              const currentProject =
+                                getProjectFromSrc(currentSrc);
+                              return (
+                                <>
+                                  {parsed.year && (
+                                    <span className="text-foreground/50 text-sm font-medium">
+                                      {renderYearWithRolling(parsed.year)}
+                                    </span>
+                                  )}
+                                  <motion.span
+                                    key={currentProject ?? "caption"}
+                                    initial={{
+                                      opacity: 0,
+                                      filter: "blur(10px) saturate(0.96)",
+                                    }}
+                                    animate={{
+                                      opacity: 1,
+                                      filter: "blur(0px) saturate(1)",
+                                    }}
+                                    transition={{
+                                      duration: 0.55,
+                                      ease: [0.16, 1, 0.3, 1],
+                                      delay: 0.02,
+                                    }}
+                                    className="text-foreground/80 text-sm font-medium sm:text-right"
+                                  >
+                                    {parsed.description}
+                                  </motion.span>
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
-                      </div>
-                    </motion.main>
+                      </motion.div>
+                    </div>
                   </div>
-
-                  {/* Background effect */}
-                  <div
-                    className="absolute w-full h-[300px] blur-[100px] -z-10"
-                    style={{
-                      background: getWeatherColor(),
-                      opacity: 0.6,
-                      top: "-150px",
-                    }}
-                  ></div>
-
-                  {/* Optimized: Reduced weather animation effects */}
-                  {(weatherState.condition === "Rain" ||
-                    weatherState.condition === "Drizzle") && (
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {[...Array(10)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute w-[1px] h-[8px] bg-blue-200/40"
-                          style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `-8px`,
-                            animationDuration: `${0.8 + Math.random() * 0.4}s`,
-                            animationDelay: `${Math.random() * 0.3}s`,
-                            animationIterationCount: "infinite",
-                            animationName: "rainDrop",
-                            animationTimingFunction: "ease-in-out",
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-
-                  {weatherState.condition === "Snow" && (
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {[...Array(15)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute rounded-full bg-white/60"
-                          style={{
-                            width: `${2 + Math.random() * 2}px`,
-                            height: `${2 + Math.random() * 2}px`,
-                            left: `${Math.random() * 100}%`,
-                            top: `-5px`,
-                            animationDuration: `${3 + Math.random() * 2}s`,
-                            animationDelay: `${Math.random() * 0.5}s`,
-                            animationIterationCount: "infinite",
-                            animationName: "snowfall",
-                            animationTimingFunction: "ease-in-out",
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-
-                  {weatherState.condition === "Thunderstorm" && (
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      <div
-                        className="absolute inset-0 bg-blue-900/10"
-                        style={{
-                          animationDuration: "4s",
-                          animationIterationCount: "infinite",
-                          animationName: "lightning",
-                          animationTimingFunction: "ease-out",
-                        }}
-                      ></div>
-                      {/* Add rain drops for thunderstorm too */}
-                      {[...Array(20)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute w-[1px] h-[15px] bg-blue-200/40"
-                          style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `-15px`,
-                            animationDuration: `${0.3 + Math.random() * 0.5}s`,
-                            animationDelay: `${Math.random() * 0.5}s`,
-                            animationIterationCount: "infinite",
-                            animationName: "rainDrop",
-                            animationTimingFunction: "linear",
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-
-                  {(weatherState.condition === "Fog" ||
-                    weatherState.condition === "Mist" ||
-                    weatherState.condition === "Haze") && (
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {[...Array(6)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute h-[40px] w-full bg-gray-200/15 rounded-full blur-xl"
-                          style={{
-                            top: `${5 + i * 12}px`,
-                            left: `${i % 2 === 0 ? -10 : 10}%`,
-                            animationDuration: `${15 + Math.random() * 10}s`,
-                            animationDelay: `${i * 1.5}s`,
-                            animationIterationCount: "infinite",
-                            animationName: "fogMove",
-                            animationTimingFunction: "ease-in-out",
-                            animationDirection:
-                              i % 2 === 0 ? "normal" : "reverse",
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-
-                  {weatherState.condition === "Clear" && (
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {[...Array(5)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute rounded-full"
-                          style={{
-                            background: "rgba(255, 200, 0, 0.2)",
-                            width: `${30 + i * 10}px`,
-                            height: `${30 + i * 10}px`,
-                            left: `${20 + i * 15}%`,
-                            top: `${10 + i * 5}px`,
-                            filter: "blur(8px)",
-                            opacity: 0.6 - i * 0.1,
-                            transform: `scale(${1 + i * 0.1})`,
-                            animation: `pulse ${
-                              3 + i
-                            }s infinite alternate ease-in-out`,
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-
-                  {weatherState.condition === "Partly Cloudy" && (
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      <div
-                        className="absolute rounded-full"
-                        style={{
-                          background: "rgba(255, 200, 0, 0.2)",
-                          width: "50px",
-                          height: "50px",
-                          left: "30%",
-                          top: "15px",
-                          filter: "blur(8px)",
-                          opacity: 0.6,
-                          animation: "pulse 4s infinite alternate ease-in-out",
-                        }}
-                      ></div>
-                      {[...Array(3)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute rounded-full bg-gray-200/30"
-                          style={{
-                            width: `${40 + i * 15}px`,
-                            height: `${20 + i * 8}px`,
-                            left: `${40 + i * 15}%`,
-                            top: `${15 + i * 5}px`,
-                            filter: "blur(8px)",
-                            opacity: 0.5 - i * 0.1,
-                            animation: `fogMove ${
-                              10 + i * 5
-                            }s infinite alternate ease-in-out`,
-                            animationDelay: `${i * 2}s`,
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
                 </motion.div>
-              )}
-            </AnimatePresence>
+              </motion.div>
+            )}
           </div>
         </motion.main>
 
-        {/* Video Modal */}
         <AnimatePresence>
-          {isVideoModalOpen && currentVideoUrl && (
+          {isVideoModalOpen && (
             <>
-              {/* Fixed backdrop */}
               <motion.div
                 initial={shouldReduceMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -2432,21 +1588,21 @@ export default function Page() {
                     ? { duration: 0 }
                     : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
                 }
-                className="fixed inset-0 backdrop-blur-md bg-black/85 z-50"
+                className="fixed inset-0 bg-black/60 backdrop-blur-md z-50"
                 onClick={handleCloseVideoModal}
               />
-
-              {/* Modal container */}
               <motion.div
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+                initial={
+                  shouldReduceMotion ? false : { opacity: 0, scale: 0.98 }
+                }
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.98 }}
                 transition={
                   shouldReduceMotion
                     ? { duration: 0 }
                     : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
                 }
-                className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+                className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6"
                 onClick={handleCloseVideoModal}
                 role="dialog"
                 aria-modal="true"
@@ -2457,65 +1613,141 @@ export default function Page() {
                   handleFocusTrapKeyDown(event, videoModalRef)
                 }
               >
-                {/* Content container */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.98 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
                   transition={
                     shouldReduceMotion
                       ? { duration: 0 }
                       : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
                   }
-                  className="relative w-full h-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 flex items-center justify-center"
-                  onClick={(e) => e.stopPropagation()}
+                  className="relative w-full max-w-5xl"
+                  onClick={(event) => event.stopPropagation()}
                 >
                   <h2 id="video-modal-title" className="sr-only">
                     Project video
                   </h2>
-                  {/* Sticky close button */}
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ delay: 0.2, duration: 0.3 }}
-                    className="absolute top-6 right-6 z-10 rounded-full bg-black/10 backdrop-blur-md p-2.5 hover:bg-black/20 transition-all duration-300 shadow-lg"
-                    onClick={handleCloseVideoModal}
-                    ref={videoModalCloseButtonRef}
-                    aria-label="Close video"
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="transition-transform duration-300 hover:scale-110 text-white/70 hover:text-white"
-                    >
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  </motion.button>
-
-                  {/* Video embed */}
-                  <div
-                    className="aspect-video w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[80vw] rounded-lg overflow-hidden shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="aspect-video w-full rounded-lg overflow-hidden shadow-2xl">
                     <iframe
-                      src={currentVideoUrl || ""}
+                      src={currentVideoUrl ?? ""}
                       className="w-full h-full"
                       frameBorder="0"
                       allow="autoplay; fullscreen; picture-in-picture"
                       allowFullScreen
                       title="Project Video"
-                      onEnded={() => handleCloseVideoModal()}
-                      style={{
-                        background: "#000000",
-                        borderRadius: "8px",
-                      }}
-                    ></iframe>
+                      style={{ background: "#000000" }}
+                    />
                   </div>
+                </motion.div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isAboutModalOpen && (
+            <>
+              <motion.div
+                variants={
+                  shouldReduceMotion ? modalReduced : modalOverlayVariants
+                }
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="fixed inset-0 z-50 backdrop-blur-[48px] backdrop-saturate-0 bg-white/95 dark:bg-neutral-950/85"
+                onClick={handleCloseAboutModal}
+              />
+              <motion.div
+                variants={
+                  shouldReduceMotion ? modalReduced : modalContainerVariants
+                }
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden p-4 sm:p-6"
+                onClick={handleCloseAboutModal}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="about-modal-title"
+                tabIndex={-1}
+              >
+                <motion.div
+                  variants={
+                    shouldReduceMotion ? modalReduced : modalPanelVariants
+                  }
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="relative w-full max-w-2xl"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <h2 id="about-modal-title" className="sr-only">
+                    About Raf
+                  </h2>
+                  <motion.div
+                    variants={modalTextStagger.container}
+                    initial="hidden"
+                    animate="visible"
+                    className="text-left space-y-3 text-foreground"
+                  >
+                    <motion.p
+                      variants={modalTextStagger.item}
+                      className="leading-[1.45] text-[0.95rem] text-foreground/90"
+                    >
+                      From the Amalfi Coast to Toronto, often in Lisbon.
+                    </motion.p>
+                    <motion.p
+                      variants={modalTextStagger.item}
+                      className="leading-[1.45] text-[0.95rem] text-foreground/90"
+                    >
+                      Over the past eight years, I’ve designed and engineered
+                      products across industries: from AI platforms and
+                      marketplaces to B2B tools in fintech, from crypto to
+                      consumer brands.
+                    </motion.p>
+                    <motion.p
+                      variants={modalTextStagger.item}
+                      className="leading-[1.45] text-[0.95rem] text-foreground/90"
+                    >
+                      I believe good design and storytelling travel across
+                      industries. Clarity, and kindness guide my work.
+                    </motion.p>
+                    <motion.p
+                      variants={modalTextStagger.item}
+                      className="leading-[1.45] text-[0.95rem] text-foreground/90"
+                    >
+                      Usually found on a yoga mat or chasing light through
+                      beautiful spaces.
+                    </motion.p>
+                    <div
+                      className="space-y-1.5"
+                      style={{ marginTop: "2.5rem" }}
+                    >
+                      <a
+                        href="mailto:raf@raf.works"
+                        className="text-sm text-foreground/70 hover:text-foreground transition-colors font-medium block"
+                      >
+                        raf@raf.works
+                      </a>
+                      <a
+                        href="https://www.linkedin.com/in/raffaelevitaledesign"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-foreground/70 hover:text-foreground transition-colors font-medium block"
+                      >
+                        LinkedIn
+                      </a>
+                      <a
+                        href="https://x.com/lfgraf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-foreground/70 hover:text-foreground transition-colors font-medium block"
+                      >
+                        X
+                      </a>
+                    </div>
+                  </motion.div>
                 </motion.div>
               </motion.div>
             </>

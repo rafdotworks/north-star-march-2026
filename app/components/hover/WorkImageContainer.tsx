@@ -94,7 +94,7 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
   // Localized image styling based on variant
   const imageClasses =
     variant === "mobile"
-      ? `w-full object-contain bg-transparent max-w-full`
+      ? `w-full max-h-full object-contain bg-transparent max-w-full`
       : `w-full h-full object-contain bg-transparent max-w-full`;
 
   const imageStyle =

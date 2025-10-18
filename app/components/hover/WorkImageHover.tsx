@@ -80,8 +80,10 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
 
   return (
     <motion.div
-      className={`${baseClasses} ${hasVideo ? "cursor-pointer" : ""} ${shadowClasses} ${className}`}
-      onClick={onClick}
+      className={`${baseClasses} ${
+        hasVideo ? "cursor-pointer" : ""
+      } ${shadowClasses} ${className}`}
+      onClick={hasVideo ? onClick : undefined}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       whileHover={hoverConfig[variant]}

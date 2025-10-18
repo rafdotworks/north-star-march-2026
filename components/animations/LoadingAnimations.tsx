@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ComponentProps, ReactNode, KeyboardEvent } from "react";
+import { ComponentProps, ReactNode, KeyboardEvent, useId } from "react";
 
 type MotionDivProps = ComponentProps<typeof motion.div>;
 
@@ -179,6 +179,46 @@ export const phraseRevealAnimation = {
       },
     },
   },
+};
+
+// Modal animation variants (reusable)
+export const modalOverlayVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+export const modalContainerVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+export const modalPanelVariants = {
+  initial: { opacity: 0, scale: 0.985, y: 6, filter: "blur(8px)" },
+  animate: { opacity: 1, scale: 1, y: 0, filter: "blur(0px)" },
+  exit: { opacity: 0, scale: 0.985, y: 8, filter: "blur(6px)" },
+};
+
+export const modalTextStagger = {
+  container: {
+    hidden: { opacity: 1 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05, delayChildren: 0.06 },
+    },
+  },
+  item: {
+    hidden: { opacity: 0, y: 6, filter: "blur(4px)" },
+    visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+    transition: { duration: 0.35, ease: EASING.smooth },
+  },
+};
+
+export const modalReduced = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 // Image carousel loading animation
@@ -380,6 +420,7 @@ interface WordRevealProps extends MotionDivProps {
   text: string;
   delay?: number;
   interactiveWord?: WordRevealInteractiveWord;
+  interactiveHintVisible?: boolean;
 }
 
 export function WordReveal({
@@ -387,9 +428,11 @@ export function WordReveal({
   className = "",
   delay = 0,
   interactiveWord,
+  interactiveHintVisible = false,
   ...props
 }: WordRevealProps) {
   const words = text.split(" ");
+  const patternIdBase = useId();
 
   return (
     <motion.div
@@ -423,12 +466,47 @@ export function WordReveal({
           <motion.span
             key={index}
             variants={wordRevealAnimation.word}
-            className={`inline-block mr-1 ${
-              word === "Raf" ? "font-raf" : ""
+            className={`inline-block mr-1 relative ${
+              word === "Raf" ? "font-raf " : ""
+            }${
+              isInteractive
+                ? "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:rounded-sm"
+                : ""
             }`}
+            whileTap={
+              isInteractive
+                ? {
+                    scale: 0.98,
+                    y: 1,
+                    filter: "brightness(0.98)",
+                    transition: { duration: 0.12, ease: [0.12, 1, 0.25, 1] },
+                  }
+                : undefined
+            }
+            whileHover={
+              isInteractive
+                ? {
+                    scale: 1.02,
+                    filter: "brightness(1.05) saturate(1.02)",
+                    transition: { duration: 0.2, ease: EASING.smooth },
+                  }
+                : undefined
+            }
             {...interactiveProps}
           >
             {word}
+            {isInteractive && (
+              <motion.div
+                className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
+                style={{ bottom: 0, background: "currentColor", originX: 0 }}
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{
+                  scaleX: interactiveHintVisible ? 1 : 0,
+                  opacity: interactiveHintVisible ? 0.18 : 0,
+                }}
+                transition={{ duration: 0.25, ease: EASING.smooth }}
+              />
+            )}
           </motion.span>
         );
       })}
@@ -471,8 +549,7 @@ export function PhraseReveal({
 }
 
 // Enhanced Staggered Text Container with better timing
-interface EnhancedStaggeredTextContainerProps
-  extends MotionDivWithChildren {
+interface EnhancedStaggeredTextContainerProps extends MotionDivWithChildren {
   staggerDelay?: number;
 }
 

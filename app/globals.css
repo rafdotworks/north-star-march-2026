@@ -18,148 +18,6 @@
   letter-spacing: -0.02em;
 }
 
-/* Noise animation keyframes */
-@keyframes noise {
-  0% {
-    transform: translate(0, 0);
-  }
-  10% {
-    transform: translate(-5%, -5%);
-  }
-  20% {
-    transform: translate(-10%, 5%);
-  }
-  30% {
-    transform: translate(5%, -10%);
-  }
-  40% {
-    transform: translate(-5%, 15%);
-  }
-  50% {
-    transform: translate(-10%, 5%);
-  }
-  60% {
-    transform: translate(15%, 0);
-  }
-  70% {
-    transform: translate(0, 10%);
-  }
-  80% {
-    transform: translate(-15%, 0);
-  }
-  90% {
-    transform: translate(10%, 5%);
-  }
-  100% {
-    transform: translate(5%, 0);
-  }
-}
-
-/* Weather animations */
-@keyframes rainDrop {
-  0% {
-    transform: translateY(0) translateX(0);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateY(50vh) translateX(5px);
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateY(100vh) translateX(0);
-    opacity: 0;
-  }
-}
-
-@keyframes snowfall {
-  0% {
-    transform: translateY(0) rotate(0deg) translateX(0);
-    opacity: 0.8;
-  }
-  25% {
-    transform: translateY(25vh) rotate(90deg) translateX(10px);
-  }
-  50% {
-    transform: translateY(50vh) rotate(180deg) translateX(-10px);
-    opacity: 0.6;
-  }
-  75% {
-    transform: translateY(75vh) rotate(270deg) translateX(10px);
-  }
-  100% {
-    transform: translateY(100vh) rotate(360deg) translateX(0);
-    opacity: 0;
-  }
-}
-
-@keyframes lightning {
-  0%,
-  92%,
-  98% {
-    opacity: 0;
-  }
-  93%,
-  97% {
-    opacity: 1;
-  }
-}
-
-@keyframes fogMove {
-  0% {
-    transform: translateX(-10%) translateY(0);
-    opacity: 0.15;
-  }
-  50% {
-    opacity: 0.25;
-  }
-  100% {
-    transform: translateX(10%) translateY(5%);
-    opacity: 0.15;
-  }
-}
-
-/* Weather banner animation */
-@keyframes weatherBannerGlow {
-  0%,
-  100% {
-    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
-  }
-  50% {
-    box-shadow: 0 4px 30px rgba(255, 255, 255, 0.2);
-  }
-}
-
-/* Pulse animation for sun/clear weather */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-}
-
-/* Add shimmer animation for video loading */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s ease-in-out infinite;
-  background-size: 200% 100%;
-}
-
 @layer base {
   :root {
     /* — Core hue anchors (adjust these to nudge the vibe) */
@@ -460,6 +318,46 @@ pre {
 
   .nav-contact {
     color: var(--nav-contact);
+  }
+
+  /* Site-wide mobile gutter matching modal spacing (16px + safe-area) */
+  .mobile-gutter {
+    padding-left: max(16px, calc(env(safe-area-inset-left, 0px) + 16px));
+    padding-right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
+  }
+  @media (min-width: 640px) {
+    .mobile-gutter {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+}
+
+/* Frosted, full-bleed mobile header with soft bottom fade */
+.frosted-header {
+  background: transparent;
+  -webkit-backdrop-filter: blur(14px) saturate(1.02);
+  backdrop-filter: blur(14px) saturate(1.02);
+}
+.frosted-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 18px;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--background-rgb), 0.85),
+    rgba(var(--background-rgb), 0)
+  );
+}
+@supports not (
+  (-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))
+) {
+  .frosted-header {
+    background: rgba(var(--background-rgb), 0.86);
   }
 }
 

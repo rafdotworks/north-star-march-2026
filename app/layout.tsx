@@ -17,14 +17,26 @@ const eduMarist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Raf",
-  description: "Senior Designer and Design Engineer based in Toronto",
+  title: "Raf V. - AI Product Designer & Design Engineer",
+  description:
+    "Blending design, code, and systems thinking to craft interfaces where people and intelligent agents collaborate  with clarity, taste, and intent.",
+  keywords: [
+    "design systems",
+    "AI/agent UX",
+    "product design",
+    "design engineering",
+    "interface design",
+    "brand design",
+    "systems thinking",
+    "fintech UX",
+  ],
   metadataBase: new URL("https://raf.works"),
   openGraph: {
-    title: "Raf",
-    description: "Senior Designer and Design Engineer based in Toronto",
+    title: "Raf V. - AI Product Designer & Design Engineer",
+    description:
+      "Blending design, code, and systems thinking to craft interfaces where people and intelligent agents collaborate  with clarity, taste, and intent.",
     url: "https://raf.works",
-    siteName: "Raf",
+    siteName: "Raf Works",
     images: [
       {
         url: "/og-image.png",
@@ -37,8 +49,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Raf",
-    description: "Senior Designer and Design Engineer based in Toronto",
+    title: "Raf V. - AI Product Designer & Design Engineer",
+    description:
+      "Blending design, code, and systems thinking to craft interfaces where people and intelligent agents collaborate  with clarity, taste, and intent.",
     creator: "@lfgraf",
     images: ["/og-image.png"],
   },
@@ -55,19 +68,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${ronzino.variable} ${eduMarist.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${ronzino.variable} ${eduMarist.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
         {/* Preload critical images for faster loading */}
-        <link rel="preload" as="image" href="/work/cb-d.png" />
-        <link rel="preload" as="image" href="/work/voiceflow-landing.png" />
-        <link rel="preload" as="image" href="/work/theoriq-prod-hero.png" />
+        <link rel="preload" as="image" href="/work/new-work/cb-0.png" />
+        <link rel="preload" as="image" href="/work/new-work/vf-0.png" />
+        <link rel="preload" as="image" href="/work/new-work/atlas-1.png" />
       </head>
       <body className={ronzino.className} suppressHydrationWarning>
-        {children}
+        <div className="mobile-gutter">{children}</div>
         <Analytics />
         <ConsoleEasterEgg />
       </body>
