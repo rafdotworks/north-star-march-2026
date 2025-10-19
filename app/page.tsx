@@ -1978,7 +1978,7 @@ export default function Page() {
                       variants={modalTextStagger.item}
                       className="leading-[1.55] text-base md:text-lg text-foreground/85"
                     >
-                      Over the past eight years, I've designed and engineered
+                      Over the past eight years, I&apos;ve designed and engineered
                       products across industries: from AI platforms and
                       marketplaces to B2B tools in fintech, from crypto to
                       consumer brands.
