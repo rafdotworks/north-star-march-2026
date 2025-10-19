@@ -1345,9 +1345,11 @@ export default function Page() {
                           paddingBottom: "env(safe-area-inset-bottom, 0px)",
                         }}
                       >
-                        <div className="tracking-tight text-lg">
-                          {/* Natural text flow with word-by-word animation for mobile */}
-                          <span className="text-foreground/70">
+                        {/* Constrain width to match About modal's visual padding */}
+                        <div className="w-full max-w-2xl">
+                          <div className="tracking-tight text-lg text-center">
+                            {/* Natural text flow with word-by-word animation for mobile */}
+                            <span className="text-foreground/70">
                             {/* Part 1: "Raf leads design," */}
                             <motion.span
                               initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
@@ -1413,8 +1415,11 @@ export default function Page() {
                                 }, 720);  // 20% slower pause
                               }}
                             >
-                              crafts narratives{" "}
+                              crafts narratives
                             </motion.span>
+
+                            {/* Line break before "and ships code." on mobile */}
+                            <br />
 
                             {/* Part 3: "and ships code." */}
                             <motion.span
@@ -1435,6 +1440,7 @@ export default function Page() {
                               and ships code.
                             </motion.span>
                           </span>
+                          </div>
                         </div>
                       </section>
 
