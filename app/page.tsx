@@ -172,7 +172,7 @@ const PROJECTS: Record<string, { images: string[] }> = {
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools
   zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
-  artscapy: { images: ["/work/artscapy.png"] }, // Early brand work
+  artscapy: { images: ["/work/early-works.webp"] }, // Early brand work
   nationalArchives: { images: ["/work/us.png"] }, // Early brand work
 };
 
@@ -247,7 +247,7 @@ function getProjectFromSrc(src: string): string | null {
   }
   if (src.includes("curbcut")) return "curbcut";
   if (src.includes("zalando")) return "zalando";
-  if (src.includes("artscapy")) return "artscapy";
+  if (src.includes("artscapy") || src.includes("early-works")) return "artscapy";
   if (src.endsWith("/us.png") || src.includes("/us.png"))
     return "nationalArchives";
   return null;
@@ -308,50 +308,6 @@ function getCaptionForSrc(src: string): string | null {
   const project = getProjectFromSrc(src);
   if (!project) return null;
   return PROJECT_CAPTIONS[project] ?? null;
-}
-
-/**
- * WORK_CAPTIONS: Legacy per-image captions (deprecated in favor of PROJECT_CAPTIONS)
- * Kept for backwards compatibility
- */
-const WORK_CAPTIONS: Record<string, string> = {
-  "/work/cb-1.png":
-    "2025 — Designed SQL Playground and Embedded Wallets — making developer tools feel effortless",
-  "/work/vf-01.png":
-    "2025 — Refined activation and onboarding, aligning product flow with clarity and conversion.",
-  "/work/voiceflow-landing.png":
-    "2025 — Refined activation and onboarding, aligning product flow with clarity and conversion.",
-  "/work/brand 01.png":
-    "2024 — Built brand, system, and product from 0 → 140k users in six months.",
-  "/work/studio 01.png":
-    "2024 — Built brand, system, and product from 0 → 140k users in six months.",
-  "/work/hub and build 01.png":
-    "2024 — Built brand, system, and product from 0 → 140k users in six months.",
-  "/work/atlas.png":
-    "2020 — Led design for an early crypto marketplace at the start of the NFT era.",
-  "/work/atlas-1.png":
-    "2020 — Led design for an early crypto marketplace at the start of the NFT era.",
-  "/work/defi.png":
-    "2020 — Led design and engineering for an experimental DeFi protocol.",
-  "/work/curbcutos.png":
-    "2021 — Designed and led accessibility data tools at CurbCutOS — calm, legible, and human.",
-  "/work/zalando-dodont.png":
-    "2022 — Unified SE (B2B) division at Zalando under one shared design system.",
-  "/work/zalando-spread.png":
-    "2022 — Unified SE (B2B) division at Zalando under one shared design system.",
-  "/work/artscapy.png":
-    "2017–2019 — Built brands, launch sites, and interfaces that taught restraint and speed.",
-  "/work/us.png":
-    "2017–2019 — Built brands, launch sites, and interfaces that taught restraint and speed.",
-};
-
-/**
- * Gets caption for mobile view (prefers specific over project-level)
- * @param src - Image source path
- * @returns Caption string or null
- */
-function getMobileCaptionForSrc(src: string): string | null {
-  return WORK_CAPTIONS[src] ?? getCaptionForSrc(src);
 }
 
 /**

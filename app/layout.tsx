@@ -11,7 +11,6 @@
  * - SEO metadata (Open Graph, Twitter Cards)
  * - Vercel Analytics integration
  * - Console easter egg for developers
- * - Critical image preloading
  * - Mobile-safe viewport configuration
  *
  * FONTS:
@@ -111,11 +110,6 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-        {/* Preload critical images for faster loading */}
-        <link rel="preload" as="image" href="/work/new-work/cb-0.png" />
-        <link rel="preload" as="image" href="/work/new-work/vf-0.png" />
-        <link rel="preload" as="image" href="/work/new-work/atlas-1.png" />
       </head>
       <body className={ronzino.className} suppressHydrationWarning>
         <div className="mobile-gutter">{children}</div>
