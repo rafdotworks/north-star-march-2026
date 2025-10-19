@@ -580,6 +580,18 @@ html {
   scrollbar-width: none;
 }
 
+/* Hide all scrollbars on mobile devices */
+@media (max-width: 768px) {
+  * {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  *::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
+
 /* Dark mode specific shadow adjustments */
 @media (prefers-color-scheme: dark) {
   .shadow-lg,

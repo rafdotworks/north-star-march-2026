@@ -187,11 +187,11 @@ const PROJECTS: Record<string, { images: string[] }> = {
  */
 const PROJECT_VIDEOS: Record<string, string> = {
   atlas:
-    "https://player.vimeo.com/video/1034334194?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
-  theo: "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
-  defi: "https://player.vimeo.com/video/1034767734?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+    "https://player.vimeo.com/video/1034334194?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=0&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p&badge=0&sidedock=0",
+  theo: "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=0&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p&badge=0&sidedock=0",
+  defi: "https://player.vimeo.com/video/1034767734?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=0&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p&badge=0&sidedock=0",
   curbcut:
-    "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=1&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p",
+    "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=0&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p&badge=0&sidedock=0",
 };
 
 /**
@@ -1418,26 +1418,26 @@ export default function Page() {
                       }}
                     >
                       <div className="tracking-tight text-lg">
-                        {/* Three-line text reveal with sequential animation matching desktop timing */}
-                        <motion.div className="space-y-0 text-foreground/70">
-                          {/* Line 1: "Raf leads design," */}
-                          <motion.div
+                        {/* Natural text flow with word-by-word animation for mobile */}
+                        <span className="text-foreground/70">
+                          {/* Part 1: "Raf leads design," */}
+                          <motion.span
                             initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
                             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                             transition={{
-                              duration: 1.8,  // Match desktop WordReveal duration
-                              delay: 0.3,      // Match desktop initial delay
-                              ease: EASING.textReveal,  // Use same easing as desktop
+                              duration: 2.16,  // 20% slower (1.8 * 1.2)
+                              delay: 0.36,      // 20% slower delay (0.3 * 1.2)
+                              ease: EASING.textReveal,
                             }}
                             onAnimationComplete={() => {
-                              // After first line completes, trigger second line with pause
+                              // After first part completes, trigger second part
                               setTimeout(() => {
                                 setFirstLineComplete(true);
-                              }, 600);  // Pause between lines
+                              }, 720);  // 20% slower pause (600 * 1.2)
                             }}
                           >
                             <span
-                              className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block mr-1 relative"
+                              className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block relative mr-1"
                               onClick={() => setIsAboutModalOpen(true)}
                               role="link"
                               tabIndex={0}
@@ -1466,47 +1466,47 @@ export default function Page() {
                                 }}
                               />
                             </span>
-                            <span>leads design,</span>
-                          </motion.div>
+                            <span>leads design, </span>
+                          </motion.span>
 
-                          {/* Line 2: "crafts narratives," */}
-                          <motion.div
+                          {/* Part 2: "crafts narratives" */}
+                          <motion.span
                             initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
                             animate={firstLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
                             transition={{
-                              duration: 1.8,  // Match desktop WordReveal duration
+                              duration: 2.16,  // 20% slower
                               delay: 0,
-                              ease: EASING.textReveal,  // Use same easing as desktop
+                              ease: EASING.textReveal,
                             }}
                             onAnimationComplete={() => {
-                              // After second line completes, trigger third line with pause
+                              // After second part completes, trigger third part
                               setTimeout(() => {
                                 setSecondLineComplete(true);
-                              }, 600);  // Pause between lines
+                              }, 720);  // 20% slower pause
                             }}
                           >
-                            crafts narratives,
-                          </motion.div>
+                            crafts narratives{" "}
+                          </motion.span>
 
-                          {/* Line 3: "and ships code." */}
-                          <motion.div
+                          {/* Part 3: "and ships code." */}
+                          <motion.span
                             initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
                             animate={secondLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
                             transition={{
-                              duration: 1.8,  // Match desktop WordReveal duration
+                              duration: 2.16,  // 20% slower
                               delay: 0,
-                              ease: EASING.textReveal,  // Use same easing as desktop
+                              ease: EASING.textReveal,
                             }}
                             onAnimationComplete={() => {
                               // Third line complete - trigger image and caption reveals with deliberate delay
                               setTimeout(() => {
                                 // Images and captions can now animate in
-                              }, 1500);  // Let text fully settle before images appear
+                              }, 1800);  // 20% slower pause before images (1500 * 1.2)
                             }}
                           >
                             and ships code.
-                          </motion.div>
-                        </motion.div>
+                          </motion.span>
+                        </span>
                       </div>
                     </header>
 
@@ -1516,7 +1516,7 @@ export default function Page() {
                       className="h-[100svh] overflow-y-auto overscroll-contain snap-y snap-mandatory"
                       style={{
                         paddingTop: `${headerH + 48}px`,
-                        paddingBottom: `${footerH + 48}px`,
+                        paddingBottom: `${footerH + 16}px`,
                       }}
                     >
                       {images.map((src, index) => (
@@ -1532,7 +1532,7 @@ export default function Page() {
                           // This aligns images with header text and About modal content
                           className={`snap-center snap-always flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
                           style={{
-                            height: `calc(100svh - ${headerH + footerH + 96}px)`,
+                            height: `calc(100svh - ${headerH + footerH + 64}px)`,
                             // CRITICAL FIX: Removed blurByIndex - was causing scroll blur issue
                             // panelVariants now handles all transitions via filter property
                           }}
