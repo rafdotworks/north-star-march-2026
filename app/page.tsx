@@ -132,8 +132,8 @@ const MOBILE_HERO_BOTTOM_PADDING =
 /** iOS safe area padding for mobile contact footer */
 const MOBILE_CONTACT_BOTTOM_PADDING =
   "calc(env(safe-area-inset-bottom, 0px) + 20px)";
-/** Unified horizontal padding for mobile content (matches About modal: px-4 sm:px-6) */
-const MOBILE_CONTENT_PADDING = "px-4 sm:px-6";
+/** Unified horizontal padding for mobile content (matches About modal: px-4) */
+const MOBILE_CONTENT_PADDING = "px-4";
 
 /** Loading stage messages shown during initial page load */
 const LOADING_STAGES: string[] = [
@@ -237,6 +237,15 @@ const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
  * @returns Project key (e.g., "cb") or null if not found
  */
 function getProjectFromSrc(src: string): string | null {
+  // Check specific cases first before generic hyphen parsing
+  if (src.includes("early-works")) return "artscapy";
+  if (src.includes("curbcut")) return "curbcut";
+  if (src.includes("zalando")) return "zalando";
+  if (src.includes("artscapy")) return "artscapy";
+  if (src.endsWith("/us.png") || src.includes("/us.png"))
+    return "nationalArchives";
+
+  // Generic hyphen-based extraction for standard project images
   if (src.includes("/work/")) {
     const filename = src.split("/").pop() || "";
     const hasHyphen = filename.includes("-");
@@ -245,11 +254,7 @@ function getProjectFromSrc(src: string): string | null {
       if (prefix) return prefix;
     }
   }
-  if (src.includes("curbcut")) return "curbcut";
-  if (src.includes("zalando")) return "zalando";
-  if (src.includes("artscapy") || src.includes("early-works")) return "artscapy";
-  if (src.endsWith("/us.png") || src.includes("/us.png"))
-    return "nationalArchives";
+
   return null;
 }
 
@@ -402,8 +407,6 @@ export default function Page() {
   const slideshowRef = useRef<HTMLDivElement | null>(null); // Slideshow container for intersection observer
   const mobileScrollRef = useRef<HTMLElement | null>(null); // Mobile scroll container
   const scrollRafIdRef = useRef<number | null>(null); // RAF ID for scroll performance
-  const headerRef = useRef<HTMLElement | null>(null); // Mobile header for height measurement
-  const footerRef = useRef<HTMLElement | null>(null); // Mobile footer for height measurement
   const lastDirectionRef = useRef<1 | -1>(1); // Carousel navigation direction (persistent)
   const hasAutoScrolledRef = useRef(false); // Prevents multiple auto-scrolls
 
@@ -460,8 +463,6 @@ export default function Page() {
 
   // Mobile-specific state
   const [activePanelIndex, setActivePanelIndex] = useState(0); // Active mobile scroll panel
-  const [headerH, setHeaderH] = useState<number>(0); // Mobile header height
-  const [footerH, setFooterH] = useState<number>(0); // Mobile footer height
   const [blurByIndex, setBlurByIndex] = useState<number[]>([]); // Per-panel blur amounts
   const [isScrolling, setIsScrolling] = useState(false); // Mobile scroll in progress
   const [footerRevealReady, setFooterRevealReady] = useState(false); // Mobile footer ready to show
@@ -473,11 +474,6 @@ export default function Page() {
   // COMPUTED VALUES
   // ============================================================================
 
-  /** Minimum panel height accounting for fixed mobile header/footer */
-  const panelMinH = useMemo(
-    () => `calc(100svh - ${headerH + footerH}px)`,
-    [headerH, footerH]
-  );
 
   // ============================================================================
   // EFFECTS - Lifecycle and side effects
@@ -566,30 +562,6 @@ export default function Page() {
     };
   }, [criticalContentLoaded, mounted]);
 
-  // Measure header/footer heights for fixed layout padding (mobile)
-  useEffect(() => {
-    if (!isMobile) return;
-    const h = headerRef.current;
-    const f = footerRef.current;
-    const ro = new ResizeObserver(() => {
-      setHeaderH(h?.offsetHeight ?? 0);
-      setFooterH(f?.offsetHeight ?? 0);
-    });
-    if (h) ro.observe(h as Element);
-    if (f) ro.observe(f as Element);
-    const onResize = () => {
-      setHeaderH(h?.offsetHeight ?? 0);
-      setFooterH(f?.offsetHeight ?? 0);
-    };
-    window.addEventListener("resize", onResize);
-    // Initialize once
-    setHeaderH(h?.offsetHeight ?? 0);
-    setFooterH(f?.offsetHeight ?? 0);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", onResize);
-    };
-  }, [isMobile]);
 
   // Initialize blur array when images list changes
   useEffect(() => {
@@ -1360,121 +1332,113 @@ export default function Page() {
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
                   <div className="relative h-[100svh]">
-                    {/*
-                      Fixed top header - Mobile only
-                      PADDING: Uses MOBILE_CONTENT_PADDING (px-4 sm:px-6) for consistent
-                      horizontal alignment with About modal and image panels
-                    */}
-                    <header
-                      ref={headerRef as React.RefObject<HTMLElement>}
-                      className={`fixed top-0 left-0 right-0 z-20 pb-4 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${MOBILE_CONTENT_PADDING}`}
-                      style={{
-                        paddingTop:
-                          "calc(env(safe-area-inset-top, 0px) + 20px)",
-                      }}
-                    >
-                      <div className="tracking-tight text-lg">
-                        {/* Natural text flow with word-by-word animation for mobile */}
-                        <span className="text-foreground/70">
-                          {/* Part 1: "Raf leads design," */}
-                          <motion.span
-                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                            transition={{
-                              duration: 2.16,  // 20% slower (1.8 * 1.2)
-                              delay: 0.36,      // 20% slower delay (0.3 * 1.2)
-                              ease: EASING.textReveal,
-                            }}
-                            onAnimationComplete={() => {
-                              // After first part completes, trigger second part
-                              setTimeout(() => {
-                                setFirstLineComplete(true);
-                              }, 720);  // 20% slower pause (600 * 1.2)
-                            }}
-                          >
-                            <span
-                              className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block relative mr-1"
-                              onClick={() => setIsAboutModalOpen(true)}
-                              role="link"
-                              tabIndex={0}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                  event.preventDefault();
-                                  setIsAboutModalOpen(true);
-                                }
-                              }}
-                              aria-label="About Raf"
-                            >
-                              Raf
-                              {/* Interactive hint underline */}
-                              <motion.div
-                                className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
-                                style={{ bottom: 0, background: "currentColor", originX: 0 }}
-                                initial={{ scaleX: 0, opacity: 0 }}
-                                animate={{
-                                  scaleX: isFooterReady ? 1 : 0,
-                                  opacity: isFooterReady ? 0.18 : 0,
-                                }}
-                                transition={{
-                                  duration: 0.35,
-                                  ease: [0.22, 1, 0.36, 1],
-                                  delay: 0.1,
-                                }}
-                              />
-                            </span>
-                            <span>leads design, </span>
-                          </motion.span>
-
-                          {/* Part 2: "crafts narratives" */}
-                          <motion.span
-                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
-                            animate={firstLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
-                            transition={{
-                              duration: 2.16,  // 20% slower
-                              delay: 0,
-                              ease: EASING.textReveal,
-                            }}
-                            onAnimationComplete={() => {
-                              // After second part completes, trigger third part
-                              setTimeout(() => {
-                                setSecondLineComplete(true);
-                              }, 720);  // 20% slower pause
-                            }}
-                          >
-                            crafts narratives{" "}
-                          </motion.span>
-
-                          {/* Part 3: "and ships code." */}
-                          <motion.span
-                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
-                            animate={secondLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
-                            transition={{
-                              duration: 2.16,  // 20% slower
-                              delay: 0,
-                              ease: EASING.textReveal,
-                            }}
-                            onAnimationComplete={() => {
-                              // Third line complete - trigger image and caption reveals with deliberate delay
-                              setTimeout(() => {
-                                // Images and captions can now animate in
-                              }, 1800);  // 20% slower pause before images (1500 * 1.2)
-                            }}
-                          >
-                            and ships code.
-                          </motion.span>
-                        </span>
-                      </div>
-                    </header>
-
-                    {/* Scroll container with padding to account for fixed header/footer */}
+                    {/* Scroll container - no padding needed as header/footer are now panels */}
                     <main
                       ref={mobileScrollRef as React.RefObject<HTMLElement>}
                       className="h-[100svh] overflow-y-auto overscroll-contain snap-y snap-mandatory"
-                      style={{
-                        paddingTop: `${headerH + 48}px`,
-                        paddingBottom: `${footerH + 16}px`,
-                      }}
                     >
+                      {/* Header as first panel - vertically centered like images */}
+                      <section
+                        className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
+                        style={{
+                          paddingTop: "env(safe-area-inset-top, 0px)",
+                          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                        }}
+                      >
+                        <div className="tracking-tight text-lg">
+                          {/* Natural text flow with word-by-word animation for mobile */}
+                          <span className="text-foreground/70">
+                            {/* Part 1: "Raf leads design," */}
+                            <motion.span
+                              initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                              transition={{
+                                duration: 2.16,  // 20% slower (1.8 * 1.2)
+                                delay: 0.36,      // 20% slower delay (0.3 * 1.2)
+                                ease: EASING.textReveal,
+                              }}
+                              onAnimationComplete={() => {
+                                // After first part completes, trigger second part
+                                setTimeout(() => {
+                                  setFirstLineComplete(true);
+                                }, 720);  // 20% slower pause (600 * 1.2)
+                              }}
+                            >
+                              <span
+                                className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block relative mr-1"
+                                onClick={() => setIsAboutModalOpen(true)}
+                                role="link"
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    setIsAboutModalOpen(true);
+                                  }
+                                }}
+                                aria-label="About Raf"
+                              >
+                                Raf
+                                {/* Interactive hint underline */}
+                                <motion.div
+                                  className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
+                                  style={{ bottom: 0, background: "currentColor", originX: 0 }}
+                                  initial={{ scaleX: 0, opacity: 0 }}
+                                  animate={{
+                                    scaleX: isFooterReady ? 1 : 0,
+                                    opacity: isFooterReady ? 0.18 : 0,
+                                  }}
+                                  transition={{
+                                    duration: 0.35,
+                                    ease: [0.22, 1, 0.36, 1],
+                                    delay: 0.1,
+                                  }}
+                                />
+                              </span>
+                              <span>leads design, </span>
+                            </motion.span>
+
+                            {/* Part 2: "crafts narratives" */}
+                            <motion.span
+                              initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                              animate={firstLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                              transition={{
+                                duration: 2.16,  // 20% slower
+                                delay: 0,
+                                ease: EASING.textReveal,
+                              }}
+                              onAnimationComplete={() => {
+                                // After second part completes, trigger third part
+                                setTimeout(() => {
+                                  setSecondLineComplete(true);
+                                }, 720);  // 20% slower pause
+                              }}
+                            >
+                              crafts narratives{" "}
+                            </motion.span>
+
+                            {/* Part 3: "and ships code." */}
+                            <motion.span
+                              initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                              animate={secondLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                              transition={{
+                                duration: 2.16,  // 20% slower
+                                delay: 0,
+                                ease: EASING.textReveal,
+                              }}
+                              onAnimationComplete={() => {
+                                // Third line complete - trigger image and caption reveals with deliberate delay
+                                setTimeout(() => {
+                                  // Images and captions can now animate in
+                                }, 1800);  // 20% slower pause before images (1500 * 1.2)
+                              }}
+                            >
+                              and ships code.
+                            </motion.span>
+                          </span>
+                        </div>
+                      </section>
+
+                      {/* Image panels */}
                       {images.map((src, index) => (
                         <motion.section
                           variants={panelVariants}
@@ -1486,12 +1450,7 @@ export default function Page() {
                           data-panel
                           // PADDING: Changed from px-4 sm:px-3 to unified MOBILE_CONTENT_PADDING (px-4 sm:px-6)
                           // This aligns images with header text and About modal content
-                          className={`snap-center snap-always flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
-                          style={{
-                            height: `calc(100svh - ${headerH + footerH + 64}px)`,
-                            // CRITICAL FIX: Removed blurByIndex - was causing scroll blur issue
-                            // panelVariants now handles all transitions via filter property
-                          }}
+                          className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
                         >
                           <figure className="w-full max-w-screen-sm">
                             <div className="w-full max-h-[78svh] flex flex-col items-center justify-center relative pb-6 gap-3">
@@ -1612,53 +1571,50 @@ export default function Page() {
                           </figure>
                         </motion.section>
                       ))}
-                    </main>
 
-                    {/*
-                      Fixed bottom footer - Mobile only
-                      PADDING: Uses MOBILE_CONTENT_PADDING for horizontal alignment
-                      Note: mobile-gutter class removed in favor of unified padding
-                    */}
-                    <footer
-                      ref={footerRef as React.RefObject<HTMLElement>}
-                      className={`fixed bottom-0 left-0 right-0 z-30 pt-4 bg-gradient-to-t from-background/95 via-background/90 to-transparent backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-md ${MOBILE_CONTENT_PADDING}`}
-                      style={{ paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING }}
-                      aria-label="Mobile contact links"
-                    >
-                      <div>
-                        <motion.div
-                          initial={{ opacity: 0, y: 8, filter: "blur(6px)" }}
-                          animate={
-                            isFooterReady
-                              ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                              : { opacity: 0, y: 8, filter: "blur(6px)" }
-                          }
-                          transition={{
-                            duration: 0.55,
-                            ease: EASING.tertiary,
-                            delay: 0.1,
-                          }}
-                          className="flex items-center justify-center gap-4 text-sm"
-                        >
-                          {MOBILE_CONTACT_LINKS.map((link) => (
-                            <a
-                              key={link.href}
-                              href={link.href}
-                              target={link.openInNewTab ? "_blank" : undefined}
-                              rel={
-                                link.openInNewTab
-                                  ? "noopener noreferrer"
-                                  : undefined
-                              }
-                              aria-label={link.ariaLabel}
-                              className="text-foreground/85 hover:text-foreground font-medium transition-colors"
-                            >
-                              {link.label}
-                            </a>
-                          ))}
-                        </motion.div>
-                      </div>
-                    </footer>
+                      {/* Footer as final panel - appears after last project */}
+                      <section
+                        className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
+                        style={{
+                          paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING,
+                        }}
+                        aria-label="Contact links"
+                      >
+                        <div>
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, filter: "blur(6px)" }}
+                            animate={
+                              isFooterReady
+                                ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                                : { opacity: 0, y: 8, filter: "blur(6px)" }
+                            }
+                            transition={{
+                              duration: 0.55,
+                              ease: EASING.tertiary,
+                              delay: 0.1,
+                            }}
+                            className="flex items-center justify-center gap-4 text-sm"
+                          >
+                            {MOBILE_CONTACT_LINKS.map((link) => (
+                              <a
+                                key={link.href}
+                                href={link.href}
+                                target={link.openInNewTab ? "_blank" : undefined}
+                                rel={
+                                  link.openInNewTab
+                                    ? "noopener noreferrer"
+                                    : undefined
+                                }
+                                aria-label={link.ariaLabel}
+                                className="text-foreground/85 hover:text-foreground font-medium transition-colors"
+                              >
+                                {link.label}
+                              </a>
+                            ))}
+                          </motion.div>
+                        </div>
+                      </section>
+                    </main>
                   </div>
                 </motion.div>
 
