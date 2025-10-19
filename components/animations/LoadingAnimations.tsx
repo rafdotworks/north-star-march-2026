@@ -213,20 +213,51 @@ export const phraseRevealAnimation = {
 // Modal animation variants (reusable)
 export const modalOverlayVariants = {
   initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: { duration: 0.8, ease: EASING.primary }
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.6, ease: EASING.primary }
+  },
 };
 
 export const modalContainerVariants = {
   initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: { duration: 0.8, ease: EASING.primary }
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.6, ease: EASING.primary }
+  },
 };
 
 export const modalPanelVariants = {
-  initial: { opacity: 0, scale: 0.985, y: 6, filter: "blur(8px)" },
-  animate: { opacity: 1, scale: 1, y: 0, filter: "blur(0px)" },
-  exit: { opacity: 0, scale: 0.985, y: 8, filter: "blur(6px)" },
+  initial: { opacity: 0, scale: 0.97, y: 20, filter: "blur(12px)" },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      duration: 1.2,
+      ease: EASING.textReveal,
+      delay: 0.1
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.97,
+    y: 15,
+    filter: "blur(8px)",
+    transition: {
+      duration: 0.6,
+      ease: EASING.primary
+    }
+  },
 };
 
 export const modalTextStagger = {
@@ -234,13 +265,17 @@ export const modalTextStagger = {
     hidden: { opacity: 1 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: 0.06 },
+      transition: { staggerChildren: 0.08, delayChildren: 0.2 },
     },
   },
   item: {
-    hidden: { opacity: 0, y: 6, filter: "blur(4px)" },
-    visible: { opacity: 1, y: 0, filter: "blur(0px)" },
-    transition: { duration: 0.35, ease: EASING.smooth },
+    hidden: { opacity: 0, y: 12, filter: "blur(6px)" },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: "blur(0px)",
+      transition: { duration: 0.8, ease: EASING.textReveal }
+    },
   },
 };
 

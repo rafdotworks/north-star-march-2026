@@ -1166,6 +1166,7 @@ export default function Page() {
       </ErrorBoundary>
     );
   }
+
   return (
     <ErrorBoundary>
       <a
@@ -1940,7 +1941,7 @@ export default function Page() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden p-4 sm:p-6"
+                className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden p-4 sm:p-6 pt-[25vh] md:pt-[30vh]"
                 onClick={handleCloseAboutModal}
                 role="dialog"
                 aria-modal="true"
@@ -1965,33 +1966,33 @@ export default function Page() {
                     variants={modalTextStagger.container}
                     initial="hidden"
                     animate="visible"
-                    className="text-left space-y-3 text-foreground"
+                    className="text-left space-y-4 text-foreground"
                   >
                     <motion.p
                       variants={modalTextStagger.item}
-                      className="leading-[1.45] text-[0.95rem] text-foreground/90"
+                      className="leading-[1.55] text-base md:text-lg text-foreground/85"
                     >
                       From the Amalfi Coast to Toronto, often in Lisbon.
                     </motion.p>
                     <motion.p
                       variants={modalTextStagger.item}
-                      className="leading-[1.45] text-[0.95rem] text-foreground/90"
+                      className="leading-[1.55] text-base md:text-lg text-foreground/85"
                     >
-                      Over the past eight years, I’ve designed and engineered
+                      Over the past eight years, I've designed and engineered
                       products across industries: from AI platforms and
                       marketplaces to B2B tools in fintech, from crypto to
                       consumer brands.
                     </motion.p>
                     <motion.p
                       variants={modalTextStagger.item}
-                      className="leading-[1.45] text-[0.95rem] text-foreground/90"
+                      className="leading-[1.55] text-base md:text-lg text-foreground/85"
                     >
                       I believe good design and storytelling travel across
                       industries. Clarity, and kindness guide my work.
                     </motion.p>
                     <motion.p
                       variants={modalTextStagger.item}
-                      className="leading-[1.45] text-[0.95rem] text-foreground/90"
+                      className="leading-[1.55] text-base md:text-lg text-foreground/85"
                     >
                       Usually found on a yoga mat or chasing light through
                       beautiful spaces.
