@@ -474,7 +474,6 @@ export default function Page() {
   // COMPUTED VALUES
   // ============================================================================
 
-
   // ============================================================================
   // EFFECTS - Lifecycle and side effects
   // ============================================================================
@@ -561,7 +560,6 @@ export default function Page() {
       window.clearTimeout(fallback);
     };
   }, [criticalContentLoaded, mounted]);
-
 
   // Initialize blur array when images list changes
   useEffect(() => {
@@ -784,7 +782,8 @@ export default function Page() {
         } else if (relativePos > bottomBlurZone) {
           // Bottom zone: Images entering viewport
           // Linear interpolation from 0 at zone boundary to maxBlur at bottom edge
-          const zoneProgress = (relativePos - bottomBlurZone) / (1 - bottomBlurZone);
+          const zoneProgress =
+            (relativePos - bottomBlurZone) / (1 - bottomBlurZone);
           blurAmount = maxBlur * zoneProgress;
         } else {
           // Middle zone: No blur (clear focus)
@@ -1063,17 +1062,17 @@ export default function Page() {
         scale: 1,
         // No blur - keep it simple and clean
         transition: {
-          duration: 1.2,  // Slower, more deliberate transition
-          ease: EASING.secondary,  // Use smoother easing for scroll
+          duration: 1.2, // Slower, more deliberate transition
+          ease: EASING.secondary, // Use smoother easing for scroll
         },
       },
       inactive: {
         opacity: 0.88, // Simple fade effect only
-        scale: 0.98,  // Subtle scale for depth
+        scale: 0.98, // Subtle scale for depth
         // No blur - simplified animation
         transition: {
-          duration: 1.2,  // Match active duration for smooth scroll
-          ease: EASING.secondary,  // Consistent easing
+          duration: 1.2, // Match active duration for smooth scroll
+          ease: EASING.secondary, // Consistent easing
         },
       },
     } as const;
@@ -1267,7 +1266,11 @@ export default function Page() {
                         <span className="text-foreground/70">
                           {/* Part 1: "Raf leads design," */}
                           <motion.span
-                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
+                            initial={{
+                              opacity: 0,
+                              y: 25,
+                              filter: "blur(25px)",
+                            }}
                             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                             transition={{
                               duration: 1.8,
@@ -1287,7 +1290,10 @@ export default function Page() {
                               role="link"
                               tabIndex={0}
                               onKeyDown={(event) => {
-                                if (event.key === "Enter" || event.key === " ") {
+                                if (
+                                  event.key === "Enter" ||
+                                  event.key === " "
+                                ) {
                                   event.preventDefault();
                                   setIsAboutModalOpen(true);
                                 }
@@ -1298,7 +1304,11 @@ export default function Page() {
                               {/* Interactive hint underline */}
                               <motion.div
                                 className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
-                                style={{ bottom: 0, background: "currentColor", originX: 0 }}
+                                style={{
+                                  bottom: 0,
+                                  background: "currentColor",
+                                  originX: 0,
+                                }}
                                 initial={{ scaleX: 0, opacity: 0 }}
                                 animate={{
                                   scaleX: isFooterReady ? 1 : 0,
@@ -1316,8 +1326,16 @@ export default function Page() {
 
                           {/* Part 2: "crafts narratives" */}
                           <motion.span
-                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
-                            animate={firstLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                            initial={{
+                              opacity: 0,
+                              y: 25,
+                              filter: "blur(25px)",
+                            }}
+                            animate={
+                              firstLineComplete
+                                ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                                : {}
+                            }
                             transition={{
                               duration: 1.8,
                               delay: 0,
@@ -1335,8 +1353,16 @@ export default function Page() {
 
                           {/* Part 3: "and ships code." */}
                           <motion.span
-                            initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
-                            animate={secondLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                            initial={{
+                              opacity: 0,
+                              y: 25,
+                              filter: "blur(25px)",
+                            }}
+                            animate={
+                              secondLineComplete
+                                ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                                : {}
+                            }
                             transition={{
                               duration: 1.8,
                               delay: 0,
@@ -1383,96 +1409,127 @@ export default function Page() {
                           <div className="tracking-tight text-lg text-center">
                             {/* Natural text flow with word-by-word animation for mobile */}
                             <span className="text-foreground/70">
-                            {/* Part 1: "Raf leads design," */}
-                            <motion.span
-                              initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
-                              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                              transition={{
-                                duration: 2.16,  // 20% slower (1.8 * 1.2)
-                                delay: 0.36,      // 20% slower delay (0.3 * 1.2)
-                                ease: EASING.textReveal,
-                              }}
-                              onAnimationComplete={() => {
-                                // After first part completes, trigger second part
-                                setTimeout(() => {
-                                  setFirstLineComplete(true);
-                                }, 720);  // 20% slower pause (600 * 1.2)
-                              }}
-                            >
-                              <span
-                                className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block relative mr-1"
-                                onClick={() => setIsAboutModalOpen(true)}
-                                role="link"
-                                tabIndex={0}
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter" || event.key === " ") {
-                                    event.preventDefault();
-                                    setIsAboutModalOpen(true);
-                                  }
+                              {/* Part 1: "Raf leads design," */}
+                              <motion.span
+                                initial={{
+                                  opacity: 0,
+                                  y: 25,
+                                  filter: "blur(25px)",
                                 }}
-                                aria-label="About Raf"
+                                animate={{
+                                  opacity: 1,
+                                  y: 0,
+                                  filter: "blur(0px)",
+                                }}
+                                transition={{
+                                  duration: 2.16, // 20% slower (1.8 * 1.2)
+                                  delay: 0.36, // 20% slower delay (0.3 * 1.2)
+                                  ease: EASING.textReveal,
+                                }}
+                                onAnimationComplete={() => {
+                                  // After first part completes, trigger second part
+                                  setTimeout(() => {
+                                    setFirstLineComplete(true);
+                                  }, 720); // 20% slower pause (600 * 1.2)
+                                }}
                               >
-                                Raf
-                                {/* Interactive hint underline */}
-                                <motion.div
-                                  className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
-                                  style={{ bottom: 0, background: "currentColor", originX: 0 }}
-                                  initial={{ scaleX: 0, opacity: 0 }}
-                                  animate={{
-                                    scaleX: isFooterReady ? 1 : 0,
-                                    opacity: isFooterReady ? 0.18 : 0,
+                                <span
+                                  className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block relative mr-1"
+                                  onClick={() => setIsAboutModalOpen(true)}
+                                  role="link"
+                                  tabIndex={0}
+                                  onKeyDown={(event) => {
+                                    if (
+                                      event.key === "Enter" ||
+                                      event.key === " "
+                                    ) {
+                                      event.preventDefault();
+                                      setIsAboutModalOpen(true);
+                                    }
                                   }}
-                                  transition={{
-                                    duration: 0.35,
-                                    ease: [0.22, 1, 0.36, 1],
-                                    delay: 0.1,
-                                  }}
-                                />
-                              </span>
-                              <span>leads design, </span>
-                            </motion.span>
+                                  aria-label="About Raf"
+                                >
+                                  Raf
+                                  {/* Interactive hint underline */}
+                                  <motion.div
+                                    className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
+                                    style={{
+                                      bottom: 0,
+                                      background: "currentColor",
+                                      originX: 0,
+                                    }}
+                                    initial={{ scaleX: 0, opacity: 0 }}
+                                    animate={{
+                                      scaleX: isFooterReady ? 1 : 0,
+                                      opacity: isFooterReady ? 0.18 : 0,
+                                    }}
+                                    transition={{
+                                      duration: 0.35,
+                                      ease: [0.22, 1, 0.36, 1],
+                                      delay: 0.1,
+                                    }}
+                                  />
+                                </span>
+                                <span>leads design, </span>
+                              </motion.span>
 
-                            {/* Part 2: "crafts narratives" */}
-                            <motion.span
-                              initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
-                              animate={firstLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
-                              transition={{
-                                duration: 2.16,  // 20% slower
-                                delay: 0,
-                                ease: EASING.textReveal,
-                              }}
-                              onAnimationComplete={() => {
-                                // After second part completes, trigger third part
-                                setTimeout(() => {
-                                  setSecondLineComplete(true);
-                                }, 720);  // 20% slower pause
-                              }}
-                            >
-                              crafts narratives
-                            </motion.span>
+                              {/* Part 2: "crafts narratives" */}
+                              <motion.span
+                                initial={{
+                                  opacity: 0,
+                                  y: 25,
+                                  filter: "blur(25px)",
+                                }}
+                                animate={
+                                  firstLineComplete
+                                    ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                                    : {}
+                                }
+                                transition={{
+                                  duration: 2.16, // 20% slower
+                                  delay: 0,
+                                  ease: EASING.textReveal,
+                                }}
+                                onAnimationComplete={() => {
+                                  // After second part completes, trigger third part
+                                  setTimeout(() => {
+                                    setSecondLineComplete(true);
+                                  }, 720); // 20% slower pause
+                                }}
+                              >
+                                crafts narratives
+                              </motion.span>
 
-                            {/* Line break before "and ships code." on mobile */}
-                            <br />
+                              {/* Line break before "and ships code." on mobile */}
+                              <br />
 
-                            {/* Part 3: "and ships code." */}
-                            <motion.span
-                              initial={{ opacity: 0, y: 25, filter: "blur(25px)" }}
-                              animate={secondLineComplete ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
-                              transition={{
-                                duration: 2.16,  // 20% slower
-                                delay: 0,
-                                ease: EASING.textReveal,
-                              }}
-                              onAnimationComplete={() => {
-                                // Third line complete - trigger image and caption reveals with deliberate delay
-                                setTimeout(() => {
-                                  // Images and captions can now animate in
-                                }, 1800);  // 20% slower pause before images (1500 * 1.2)
-                              }}
-                            >
-                              and ships code.
-                            </motion.span>
-                          </span>
+                              {/* Part 3: "and ships code." */}
+                              <motion.span
+                                initial={{
+                                  opacity: 0,
+                                  y: 25,
+                                  filter: "blur(25px)",
+                                }}
+                                animate={
+                                  secondLineComplete
+                                    ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                                    : {}
+                                }
+                                transition={{
+                                  duration: 2.16, // 20% slower
+                                  delay: 0,
+                                  ease: EASING.textReveal,
+                                }}
+                                onAnimationComplete={() => {
+                                  // Third line complete - trigger image and caption reveals with deliberate delay
+                                  setTimeout(() => {
+                                    // Images and captions can now animate in
+                                  }, 1800); // 20% slower pause before images (1500 * 1.2)
+                                }}
+                              >
+                                and ships code.
+                              </motion.span>
+                            </span>
                           </div>
                         </div>
                       </section>
@@ -1498,8 +1555,9 @@ export default function Page() {
                                 className="w-full"
                                 style={{
                                   filter: `blur(${blurByIndex[index] || 0}px)`,
-                                  transition: 'filter 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
-                                  willChange: 'filter',
+                                  transition:
+                                    "filter 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                                  willChange: "filter",
                                 }}
                               >
                                 <motion.div
@@ -1510,9 +1568,12 @@ export default function Page() {
                                   }}
                                   animate={
                                     // Only animate after all text lines are complete for first image
-                                    (index === 0
-                                      ? loadedImages[src] && secondLineComplete
-                                      : loadedImages[src])
+                                    (
+                                      index === 0
+                                        ? loadedImages[src] &&
+                                          secondLineComplete
+                                        : loadedImages[src]
+                                    )
                                       ? {
                                           opacity: 1,
                                           y: 0,
@@ -1521,40 +1582,42 @@ export default function Page() {
                                             duration: 2.6, // Match desktop image reveal duration
                                             ease: EASING.secondary, // Use same easing as desktop
                                             // First image appears after text completes with much longer delay
-                                            delay: index === 0 ? 2.5 : 0,  // Increased from 1.0 to 2.5 seconds
+                                            delay: index === 0 ? 2.5 : 0, // Increased from 1.0 to 2.5 seconds
                                           },
                                         }
                                       : {}
                                   }
                                 >
                                   <WorkImageContainer
-                                  src={src}
-                                  alt={`Work preview ${index + 1}`}
-                                  width={600}
-                                  height={450}
-                                  hasVideo={!!getVideoForSrc(src)}
-                                  onVideoClick={() => handleOpenVideoModal(src)}
-                                  onMouseEnter={() =>
-                                    setIsSlideshowPaused(true)
-                                  }
-                                  onMouseLeave={() =>
-                                    setIsSlideshowPaused(false)
-                                  }
-                                  onLoad={() => handleImageLoad(src)}
-                                  variant="mobile"
-                                  className="w-full"
-                                  priority={index < INITIAL_IMAGE_COUNT}
-                                  loading={
-                                    index < INITIAL_IMAGE_COUNT
-                                      ? "eager"
-                                      : "lazy"
-                                  }
-                                  placeholder="blur"
-                                  blurDataURL={generatePlaceholder(900, 700)}
-                                  sizes="100vw"
-                                  quality={IMAGE_QUALITY}
-                                  isLoaded={!!loadedImages[src]}
-                                />
+                                    src={src}
+                                    alt={`Work preview ${index + 1}`}
+                                    width={600}
+                                    height={450}
+                                    hasVideo={!!getVideoForSrc(src)}
+                                    onVideoClick={() =>
+                                      handleOpenVideoModal(src)
+                                    }
+                                    onMouseEnter={() =>
+                                      setIsSlideshowPaused(true)
+                                    }
+                                    onMouseLeave={() =>
+                                      setIsSlideshowPaused(false)
+                                    }
+                                    onLoad={() => handleImageLoad(src)}
+                                    variant="mobile"
+                                    className="w-full"
+                                    priority={index < INITIAL_IMAGE_COUNT}
+                                    loading={
+                                      index < INITIAL_IMAGE_COUNT
+                                        ? "eager"
+                                        : "lazy"
+                                    }
+                                    placeholder="blur"
+                                    blurDataURL={generatePlaceholder(900, 700)}
+                                    sizes="100vw"
+                                    quality={IMAGE_QUALITY}
+                                    isLoaded={!!loadedImages[src]}
+                                  />
                                 </motion.div>
                               </div>
                               {(() => {
@@ -1582,10 +1645,10 @@ export default function Page() {
                                         : {}
                                     }
                                     transition={{
-                                      duration: 1.2,  // Increased for slower caption reveal (match desktop)
-                                      ease: [0.16, 1, 0.3, 1],  // Match desktop caption easing
+                                      duration: 1.2, // Increased for slower caption reveal (match desktop)
+                                      ease: [0.16, 1, 0.3, 1], // Match desktop caption easing
                                       // Caption follows image with more deliberate delay
-                                      delay: index === 0 ? 3.0 : 0.3,  // Much longer delay for first caption after text
+                                      delay: index === 0 ? 3.0 : 0.3, // Much longer delay for first caption after text
                                     }}
                                     onAnimationComplete={() => {
                                       if (index === 0) {
@@ -1642,7 +1705,9 @@ export default function Page() {
                               <a
                                 key={link.href}
                                 href={link.href}
-                                target={link.openInNewTab ? "_blank" : undefined}
+                                target={
+                                  link.openInNewTab ? "_blank" : undefined
+                                }
                                 rel={
                                   link.openInNewTab
                                     ? "noopener noreferrer"
@@ -2014,9 +2079,9 @@ export default function Page() {
                       variants={modalTextStagger.item}
                       className="leading-[1.55] text-base md:text-lg text-foreground/85"
                     >
-                      Over the past eight years, I&apos;ve designed and engineered
-                      products across industries: from AI platforms and
-                      marketplaces to B2B tools in fintech, from crypto to
+                      Over the past eight years, I&apos;ve designed and
+                      engineered products across industries: from AI platforms
+                      and marketplaces to B2B tools in fintech, from crypto to
                       consumer brands.
                     </motion.p>
                     <motion.p
@@ -2024,7 +2089,7 @@ export default function Page() {
                       className="leading-[1.55] text-base md:text-lg text-foreground/85"
                     >
                       I believe good design and storytelling travel across
-                      industries. Clarity, and kindness guide my work.
+                      industries. Clarity and kindness guide my work.
                     </motion.p>
                     <motion.p
                       variants={modalTextStagger.item}
