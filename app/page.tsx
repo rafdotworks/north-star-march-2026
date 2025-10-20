@@ -761,8 +761,41 @@ export default function Page() {
           bestDistance = dist;
           closestIndex = i;
         }
-        const normalized = Math.min(1, dist / (window.innerHeight * 0.5));
-        nextBlur[i] = isScrolling ? normalized * 8 : 0;
+
+        // Calculate position relative to viewport
+        const viewportHeight = window.innerHeight;
+        const relativePos = center / viewportHeight;
+
+        // Define blur zones:
+        // Top 25% of viewport: Progressive blur for exiting images
+        // Middle 50%: Clear focus zone
+        // Bottom 25%: Progressive blur for entering images
+        const topBlurZone = 0.25;
+        const bottomBlurZone = 0.75;
+        const maxBlur = 20; // Increased for more dramatic effect
+
+        let blurAmount = 0;
+
+        if (relativePos < topBlurZone) {
+          // Top zone: Images exiting viewport
+          // Linear interpolation from maxBlur at top edge to 0 at zone boundary
+          const zoneProgress = relativePos / topBlurZone;
+          blurAmount = maxBlur * (1 - zoneProgress);
+        } else if (relativePos > bottomBlurZone) {
+          // Bottom zone: Images entering viewport
+          // Linear interpolation from 0 at zone boundary to maxBlur at bottom edge
+          const zoneProgress = (relativePos - bottomBlurZone) / (1 - bottomBlurZone);
+          blurAmount = maxBlur * zoneProgress;
+        } else {
+          // Middle zone: No blur (clear focus)
+          blurAmount = 0;
+        }
+
+        // Apply easing curve for smoother transitions
+        // Use cubic easing for more natural progression
+        const easedBlur = blurAmount * Math.pow(blurAmount / maxBlur, 0.5);
+
+        nextBlur[i] = Math.max(0, Math.min(maxBlur, easedBlur));
       });
       setActivePanelIndex(closestIndex);
       setBlurByIndex((prev) => {
@@ -787,9 +820,8 @@ export default function Page() {
           window.clearTimeout(scrollEndTimeout);
         scrollEndTimeout = window.setTimeout(() => {
           setIsScrolling(false);
-          setBlurByIndex((arr) =>
-            arr.length ? new Array(arr.length).fill(0) : arr
-          );
+          // Don't completely remove blur - recalculate for static depth effect
+          compute();
         }, 120);
       });
     };
@@ -1461,38 +1493,41 @@ export default function Page() {
                         >
                           <figure className="w-full max-w-screen-sm">
                             <div className="w-full max-h-[78svh] flex flex-col items-center justify-center relative pb-6 gap-3">
-                              <motion.div
-                                initial={{
-                                  opacity: 0,
-                                  y: shouldReduceMotion ? 0 : 40,
-                                  filter: shouldReduceMotion
-                                    ? undefined
-                                    : "blur(20px)", // Match desktop blur amount
-                                  scale: shouldReduceMotion ? 1 : 0.95,
+                              {/* Scroll blur wrapper - separate from animation layer */}
+                              <div
+                                className="w-full"
+                                style={{
+                                  filter: `blur(${blurByIndex[index] || 0}px)`,
+                                  transition: 'filter 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+                                  willChange: 'filter',
                                 }}
-                                animate={
-                                  // Only animate after all text lines are complete for first image
-                                  (index === 0
-                                    ? loadedImages[src] && secondLineComplete
-                                    : loadedImages[src])
-                                    ? {
-                                        opacity: 1,
-                                        y: 0,
-                                        filter: "blur(0px)",
-                                        scale: 1,
-                                        transition: {
-                                          duration: 2.6, // Match desktop image reveal duration
-                                          ease: EASING.secondary, // Use same easing as desktop
-                                          // First image appears after text completes with much longer delay
-                                          delay: index === 0 ? 2.5 : 0,  // Increased from 1.0 to 2.5 seconds
-                                        },
-                                      }
-                                    : {}
-                                }
-                                // CRITICAL FIX: Removed blurByIndex style - was causing images to stay blurred on scroll
-                                // The panelVariants now handles all blur transitions
                               >
-                                <WorkImageContainer
+                                <motion.div
+                                  initial={{
+                                    opacity: 0,
+                                    y: shouldReduceMotion ? 0 : 40,
+                                    scale: shouldReduceMotion ? 1 : 0.95,
+                                  }}
+                                  animate={
+                                    // Only animate after all text lines are complete for first image
+                                    (index === 0
+                                      ? loadedImages[src] && secondLineComplete
+                                      : loadedImages[src])
+                                      ? {
+                                          opacity: 1,
+                                          y: 0,
+                                          scale: 1,
+                                          transition: {
+                                            duration: 2.6, // Match desktop image reveal duration
+                                            ease: EASING.secondary, // Use same easing as desktop
+                                            // First image appears after text completes with much longer delay
+                                            delay: index === 0 ? 2.5 : 0,  // Increased from 1.0 to 2.5 seconds
+                                          },
+                                        }
+                                      : {}
+                                  }
+                                >
+                                  <WorkImageContainer
                                   src={src}
                                   alt={`Work preview ${index + 1}`}
                                   width={600}
@@ -1520,7 +1555,8 @@ export default function Page() {
                                   quality={IMAGE_QUALITY}
                                   isLoaded={!!loadedImages[src]}
                                 />
-                              </motion.div>
+                                </motion.div>
+                              </div>
                               {(() => {
                                 const project = getProjectFromSrc(src);
                                 if (!project) return null;
