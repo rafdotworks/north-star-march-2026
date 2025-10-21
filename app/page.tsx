@@ -213,8 +213,8 @@ const PROJECT_ALIAS: Record<string, string> = {
  */
 const PROJECT_ORDER: string[] = [
   "cb", // Coinbase (2025)
-  "vf", // Voiceflow (2025)
   "theo", // Theoriq (2024)
+  "vf", // Voiceflow (2025)
   "atlas", // Atlas (2020)
   "defituna", // DeFi Tuna (2021)
   "curbcut", // CurbCut (2021)
