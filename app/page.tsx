@@ -1273,15 +1273,15 @@ export default function Page() {
                             }}
                             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                             transition={{
-                              duration: 1.8,
-                              delay: 0.3,
+                              duration: 1.5,
+                              delay: 0.2,
                               ease: EASING.textReveal,
                             }}
                             onAnimationComplete={() => {
                               // After first part completes, trigger second part
                               setTimeout(() => {
                                 setFirstLineComplete(true);
-                              }, 600);
+                              }, 450);
                             }}
                           >
                             <span
@@ -1337,7 +1337,7 @@ export default function Page() {
                                 : {}
                             }
                             transition={{
-                              duration: 1.8,
+                              duration: 1.5,
                               delay: 0,
                               ease: EASING.textReveal,
                             }}
@@ -1345,7 +1345,7 @@ export default function Page() {
                               // After second part completes, trigger third part
                               setTimeout(() => {
                                 setSecondLineComplete(true);
-                              }, 600);
+                              }, 450);
                             }}
                           >
                             crafts narratives{" "}
@@ -1364,7 +1364,7 @@ export default function Page() {
                                 : {}
                             }
                             transition={{
-                              duration: 1.8,
+                              duration: 1.5,
                               delay: 0,
                               ease: EASING.textReveal,
                             }}
@@ -1422,15 +1422,15 @@ export default function Page() {
                                   filter: "blur(0px)",
                                 }}
                                 transition={{
-                                  duration: 2.16, // 20% slower (1.8 * 1.2)
-                                  delay: 0.36, // 20% slower delay (0.3 * 1.2)
+                                  duration: 1.8, // 20% slower (1.5 * 1.2)
+                                  delay: 0.24, // 20% slower delay (0.2 * 1.2)
                                   ease: EASING.textReveal,
                                 }}
                                 onAnimationComplete={() => {
                                   // After first part completes, trigger second part
                                   setTimeout(() => {
                                     setFirstLineComplete(true);
-                                  }, 720); // 20% slower pause (600 * 1.2)
+                                  }, 550); // 20% slower pause (450 * 1.2 ≈ 540, rounded to 550)
                                 }}
                               >
                                 <span
@@ -1486,7 +1486,7 @@ export default function Page() {
                                     : {}
                                 }
                                 transition={{
-                                  duration: 2.16, // 20% slower
+                                  duration: 1.8, // 20% slower (1.5 * 1.2)
                                   delay: 0,
                                   ease: EASING.textReveal,
                                 }}
@@ -1494,7 +1494,7 @@ export default function Page() {
                                   // After second part completes, trigger third part
                                   setTimeout(() => {
                                     setSecondLineComplete(true);
-                                  }, 720); // 20% slower pause
+                                  }, 550); // 20% slower pause (450 * 1.2 ≈ 540, rounded to 550)
                                 }}
                               >
                                 crafts narratives
@@ -1516,7 +1516,7 @@ export default function Page() {
                                     : {}
                                 }
                                 transition={{
-                                  duration: 2.16, // 20% slower
+                                  duration: 1.8, // 20% slower (1.5 * 1.2)
                                   delay: 0,
                                   ease: EASING.textReveal,
                                 }}

@@ -149,7 +149,7 @@ export const wordRevealAnimation = {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.12,
+        staggerChildren: 0.10,
         delayChildren: 0.2,
         duration: 0.8,
         ease: EASING.staggeredText,
@@ -169,7 +169,7 @@ export const wordRevealAnimation = {
       y: 0,
       scale: 1,
       transition: {
-        duration: 1.8,
+        duration: 1.5,
         ease: EASING.textReveal,
       },
     },
