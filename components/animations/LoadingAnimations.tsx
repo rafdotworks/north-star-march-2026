@@ -219,7 +219,7 @@ export const modalOverlayVariants = {
   },
   exit: {
     opacity: 0,
-    transition: { duration: 0.6, ease: EASING.primary }
+    transition: { duration: 0.8, ease: EASING.primary, delay: 0.1 }
   },
 };
 
@@ -231,7 +231,7 @@ export const modalContainerVariants = {
   },
   exit: {
     opacity: 0,
-    transition: { duration: 0.6, ease: EASING.primary }
+    transition: { duration: 0.8, ease: EASING.primary, delay: 0.1 }
   },
 };
 
@@ -250,12 +250,12 @@ export const modalPanelVariants = {
   },
   exit: {
     opacity: 0,
-    scale: 0.97,
-    y: 15,
-    filter: "blur(8px)",
+    scale: 0.98,
+    y: -10,
+    filter: "blur(10px)",
     transition: {
-      duration: 0.6,
-      ease: EASING.primary
+      duration: 0.7,
+      ease: EASING.textReveal
     }
   },
 };
@@ -265,16 +265,26 @@ export const modalTextStagger = {
     hidden: { opacity: 1 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.08, delayChildren: 0.2 },
+      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+    },
+    exit: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05, staggerDirection: -1 },
     },
   },
   item: {
-    hidden: { opacity: 0, y: 12, filter: "blur(6px)" },
+    hidden: { opacity: 0, y: 12, filter: "blur(12px)" },
     visible: {
       opacity: 1,
       y: 0,
       filter: "blur(0px)",
-      transition: { duration: 0.8, ease: EASING.textReveal }
+      transition: { duration: 1.2, ease: EASING.textReveal }
+    },
+    exit: {
+      opacity: 0,
+      y: -8,
+      filter: "blur(8px)",
+      transition: { duration: 0.4, ease: EASING.textReveal }
     },
   },
 };

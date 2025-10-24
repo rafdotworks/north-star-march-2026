@@ -1285,7 +1285,7 @@ export default function Page() {
                             }}
                           >
                             <span
-                              className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block relative"
+                              className="font-raf cursor-pointer hover:opacity-90 transition-opacity inline-block relative text-foreground/95"
                               onClick={() => setIsAboutModalOpen(true)}
                               role="link"
                               tabIndex={0}
@@ -1312,7 +1312,7 @@ export default function Page() {
                                 initial={{ scaleX: 0, opacity: 0 }}
                                 animate={{
                                   scaleX: isFooterReady ? 1 : 0,
-                                  opacity: isFooterReady ? 0.18 : 0,
+                                  opacity: isFooterReady ? 0.35 : 0,
                                 }}
                                 transition={{
                                   duration: 0.35,
@@ -1434,7 +1434,7 @@ export default function Page() {
                                 }}
                               >
                                 <span
-                                  className="font-raf cursor-pointer hover:opacity-80 transition-opacity inline-block relative mr-1"
+                                  className="font-raf cursor-pointer hover:opacity-90 transition-opacity inline-block relative mr-1 text-foreground/95"
                                   onClick={() => setIsAboutModalOpen(true)}
                                   role="link"
                                   tabIndex={0}
@@ -1461,7 +1461,7 @@ export default function Page() {
                                     initial={{ scaleX: 0, opacity: 0 }}
                                     animate={{
                                       scaleX: isFooterReady ? 1 : 0,
-                                      opacity: isFooterReady ? 0.18 : 0,
+                                      opacity: isFooterReady ? 0.35 : 0,
                                     }}
                                     transition={{
                                       duration: 0.35,
@@ -2032,7 +2032,7 @@ export default function Page() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="fixed inset-0 z-50 backdrop-blur-[48px] backdrop-saturate-0 bg-white/95 dark:bg-neutral-950/85"
+                className="fixed inset-0 z-50 backdrop-blur-[64px] backdrop-saturate-50 bg-white/80 dark:bg-neutral-950/75"
                 onClick={handleCloseAboutModal}
               />
               <motion.div
@@ -2042,7 +2042,7 @@ export default function Page() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden p-4 sm:p-6 pt-[25vh] md:pt-[30vh]"
+                className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6 pt-[25vh] md:pt-[15vh]"
                 onClick={handleCloseAboutModal}
                 role="dialog"
                 aria-modal="true"
@@ -2056,75 +2056,217 @@ export default function Page() {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  className="relative w-full max-w-2xl"
+                  className="relative w-full max-w-7xl"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <h2 id="about-modal-title" className="sr-only">
                     About Raf
                   </h2>
-                  {/* MOBILE PADDING ONLY: On mobile (px-4), matches header/images. Desktop keeps centered layout with p-4 sm:p-6 */}
+                  {/* Modal content: 4 columns on desktop, stacked on mobile */}
                   <motion.div
                     variants={modalTextStagger.container}
                     initial="hidden"
                     animate="visible"
-                    className="text-left space-y-4 text-foreground"
+                    exit="exit"
+                    className="text-left text-foreground flex flex-col md:flex-row md:gap-6 space-y-6 md:space-y-0"
                   >
-                    <motion.p
+                    {/* Section 1: Introduction */}
+                    <motion.div
                       variants={modalTextStagger.item}
-                      className="leading-[1.55] text-base md:text-lg text-foreground/85"
+                      className="flex-1 space-y-5"
                     >
-                      From the Amalfi Coast to Toronto, often in Lisbon.
-                    </motion.p>
-                    <motion.p
+                      <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
+                        Origins
+                      </h3>
+                      <div className="space-y-3">
+                        <p className="leading-[1.6] text-base text-foreground/80 font-medium">
+                          I&apos;m a designer who codes and a photographer from
+                          the Amalfi Coast, Italy, now between Toronto and Lisbon.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          I care about clarity, systems, and the stories products
+                          tell.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          I started in design from hospitality excellence through
+                          curiosity and obligation; what makes things feel
+                          &quot;right&quot;? That question still drives me.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                        You can find me on{" "}
+                        <a
+                          href="https://www.linkedin.com/in/raffaelevitaledesign"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground/70 underline hover:text-foreground transition-colors"
+                        >
+                          LinkedIn
+                        </a>
+                        , on{" "}
+                        <a
+                          href="https://x.com/lfgraf"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground/70 underline hover:text-foreground transition-colors"
+                        >
+                          X
+                        </a>
+                        , and via email at{" "}
+                        <a
+                          href="mailto:raf@raf.works"
+                          className="text-foreground/70 underline hover:text-foreground transition-colors"
+                        >
+                          raf@raf.works
+                        </a>
+                        .
+                      </p>
+                      </div>
+                    </motion.div>
+
+                    {/* Divider 1 */}
+                    <motion.div
                       variants={modalTextStagger.item}
-                      className="leading-[1.55] text-base md:text-lg text-foreground/85"
-                    >
-                      Over the past eight years, I&apos;ve designed and
-                      engineered products across industries: from AI platforms
-                      and marketplaces to B2B tools in fintech, from crypto to
-                      consumer brands.
-                    </motion.p>
-                    <motion.p
+                      className="md:w-px md:h-auto h-px w-full bg-foreground/10"
+                    />
+
+                    {/* Section 2: Professional Journey */}
+                    <motion.div
                       variants={modalTextStagger.item}
-                      className="leading-[1.55] text-base md:text-lg text-foreground/85"
+                      className="flex-1 space-y-5"
                     >
-                      I believe good design and storytelling travel across
-                      industries. Clarity and kindness guide my work.
-                    </motion.p>
-                    <motion.p
+                      <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
+                        Craft
+                      </h3>
+                      <div className="space-y-3">
+                        <p className="leading-[1.6] text-base text-foreground/80 font-medium">
+                          Over the past eight years, I&apos;ve designed and
+                          engineered brands, experiences, and products across AI,
+                          crypto, fintech, tech and more.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          I&apos;ve built onboarding systems, shaped design
+                          languages, and helped products grow from zero to scale.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          I interned at Apple and worked at Coinbase, Voiceflow,
+                          Theoriq, Zalando and many more startups, blending craft
+                          with code, and care with speed.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          I bring a mix of precision and warmth to every surface I
+                          touch, and to every person I collaborate with, through
+                          direct kindness.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          This path taught me that good design isn&apos;t
+                          decoration. Good design is presence and intentionality.
+                        </p>
+                      </div>
+                    </motion.div>
+
+                    {/* Divider 2 */}
+                    <motion.div
                       variants={modalTextStagger.item}
-                      className="leading-[1.55] text-base md:text-lg text-foreground/85"
+                      className="md:w-px md:h-auto h-px w-full bg-foreground/10"
+                    />
+
+                    {/* Section 3: Lifestyle */}
+                    <motion.div
+                      variants={modalTextStagger.item}
+                      className="flex-1 space-y-5"
                     >
-                      Usually found on a yoga mat or chasing light through
-                      beautiful spaces.
-                    </motion.p>
-                    <div
-                      className="space-y-1.5"
-                      style={{ marginTop: "2.5rem" }}
+                      <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
+                        Presence
+                      </h3>
+                      <div className="space-y-3">
+                        <p className="leading-[1.6] text-base text-foreground/80 font-medium">
+                          I split my time between Toronto and Lisbon, two cities
+                          that couldn&apos;t be more different. That contrast
+                          keeps me balanced.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          I have a thing for offices and thoughtful workspaces.
+                          How they influence focus, energy, and flow. The details
+                          of a desk can say more about someone&apos;s process than
+                          any résumé ever could.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          I&apos;m usually on a yoga mat, cycling, or chasing
+                          light through quiet spaces.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          I live for mornings that feel like beginnings and work
+                          that feels meaningful.
+                        </p>
+                      </div>
+                    </motion.div>
+
+                    {/* Divider 3 */}
+                    <motion.div
+                      variants={modalTextStagger.item}
+                      className="md:w-px md:h-auto h-px w-full bg-foreground/10"
+                    />
+
+                    {/* Section 4: Principles */}
+                    <motion.div
+                      variants={modalTextStagger.item}
+                      className="flex-1 space-y-5"
                     >
-                      <a
-                        href="mailto:raf@raf.works"
-                        className="text-sm text-foreground/70 hover:text-foreground transition-colors font-medium block"
-                      >
-                        raf@raf.works
-                      </a>
-                      <a
-                        href="https://www.linkedin.com/in/raffaelevitaledesign"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-foreground/70 hover:text-foreground transition-colors font-medium block"
-                      >
-                        LinkedIn
-                      </a>
-                      <a
-                        href="https://x.com/lfgraf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-foreground/70 hover:text-foreground transition-colors font-medium block"
-                      >
-                        X
-                      </a>
-                    </div>
+                      <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
+                        Principles
+                      </h3>
+                      <div className="space-y-3">
+                        <p className="leading-[1.6] text-base text-foreground/80 font-medium">
+                          Principles I try to live and build by:
+                        </p>
+                        <ul className="space-y-2 text-base text-foreground/70 leading-[1.6]">
+                        <li className="flex items-start">
+                          <span className="mr-2 text-foreground/40 select-none">
+                            •
+                          </span>
+                          <span>Work hard, be kind, spread joy</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 text-foreground/40 select-none">
+                            •
+                          </span>
+                          <span>
+                            How you do anything is how you do everything
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 text-foreground/40 select-none">
+                            •
+                          </span>
+                          <span>What feels right &gt; what charts well</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 text-foreground/40 select-none">
+                            •
+                          </span>
+                          <span>Start before you think you&apos;re ready</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 text-foreground/40 select-none">
+                            •
+                          </span>
+                          <span>Clarity over cleverness</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 text-foreground/40 select-none">
+                            •
+                          </span>
+                          <span>Beauty is function with empathy</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 text-foreground/40 select-none">
+                            •
+                          </span>
+                          <span>Slow is smooth, smooth is fast</span>
+                        </li>
+                      </ul>
+                      </div>
+                    </motion.div>
                   </motion.div>
                 </motion.div>
               </motion.div>
