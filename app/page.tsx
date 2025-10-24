@@ -2079,7 +2079,7 @@ export default function Page() {
                         Origins
                       </h3>
                       <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/80 font-medium md:h-24">
+                        <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
                           Designer. Builder. Photographer. Writer.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
@@ -2087,9 +2087,12 @@ export default function Page() {
                           products tell.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
-                          I started in design from hospitality excellence
-                          through curiosity and obligation; what makes things
-                          feel &quot;right&quot;? That question still drives me.
+                          I started in design from software engineer +
+                          hospitality excellence through curiosity and
+                          obligation.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          <em>What makes things feel right?</em>
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
                           You can find me on{" "}
@@ -2137,7 +2140,7 @@ export default function Page() {
                         Craft
                       </h3>
                       <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/80 font-medium md:h-24">
+                        <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
                           Over the past eight years, I&apos;ve designed and
                           engineered products, systems and experiences.
                         </p>
@@ -2179,7 +2182,7 @@ export default function Page() {
                         Presence
                       </h3>
                       <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/80 font-medium md:h-24">
+                        <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
                           I split my time mainly between Toronto and Lisbon.
                           This contrast keeps me balanced.
                         </p>
@@ -2220,7 +2223,7 @@ export default function Page() {
                         Principles
                       </h3>
                       <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/80 font-medium md:h-24">
+                        <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
                           Principles I try to live and build by:
                         </p>
                         <ul className="space-y-2 text-base text-foreground/70 leading-[1.6]">
