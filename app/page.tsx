@@ -2042,7 +2042,7 @@ export default function Page() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6 pt-[25vh] md:pt-[15vh]"
+                className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6 pt-[25vh] md:pt-[15vh] pb-20"
                 onClick={handleCloseAboutModal}
                 role="dialog"
                 aria-modal="true"
@@ -2079,47 +2079,46 @@ export default function Page() {
                         Origins
                       </h3>
                       <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/80 font-medium">
-                          I&apos;m a designer who codes and a photographer from
-                          the Amalfi Coast, Italy, now between Toronto and Lisbon.
+                        <p className="leading-[1.6] text-base text-foreground/80 font-medium md:h-24">
+                          Designer. Builder. Photographer. Writer.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
-                          I care about clarity, systems, and the stories products
-                          tell.
+                          I care about clarity, systems, and the stories
+                          products tell.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
-                          I started in design from hospitality excellence through
-                          curiosity and obligation; what makes things feel
-                          &quot;right&quot;? That question still drives me.
+                          I started in design from hospitality excellence
+                          through curiosity and obligation; what makes things
+                          feel &quot;right&quot;? That question still drives me.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
-                        You can find me on{" "}
-                        <a
-                          href="https://www.linkedin.com/in/raffaelevitaledesign"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-foreground/70 underline hover:text-foreground transition-colors"
-                        >
-                          LinkedIn
-                        </a>
-                        , on{" "}
-                        <a
-                          href="https://x.com/lfgraf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-foreground/70 underline hover:text-foreground transition-colors"
-                        >
-                          X
-                        </a>
-                        , and via email at{" "}
-                        <a
-                          href="mailto:raf@raf.works"
-                          className="text-foreground/70 underline hover:text-foreground transition-colors"
-                        >
-                          raf@raf.works
-                        </a>
-                        .
-                      </p>
+                          You can find me on{" "}
+                          <a
+                            href="https://www.linkedin.com/in/raffaelevitaledesign"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-foreground/70 underline hover:text-foreground transition-colors"
+                          >
+                            LinkedIn
+                          </a>
+                          , on{" "}
+                          <a
+                            href="https://x.com/lfgraf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-foreground/70 underline hover:text-foreground transition-colors"
+                          >
+                            X
+                          </a>
+                          , and via email at{" "}
+                          <a
+                            href="mailto:raf@raf.works"
+                            className="text-foreground/70 underline hover:text-foreground transition-colors"
+                          >
+                            raf@raf.works
+                          </a>
+                          .
+                        </p>
                       </div>
                     </motion.div>
 
@@ -2138,28 +2137,29 @@ export default function Page() {
                         Craft
                       </h3>
                       <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/80 font-medium">
+                        <p className="leading-[1.6] text-base text-foreground/80 font-medium md:h-24">
                           Over the past eight years, I&apos;ve designed and
-                          engineered brands, experiences, and products across AI,
-                          crypto, fintech, tech and more.
+                          engineered products, systems and experiences.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
                           I&apos;ve built onboarding systems, shaped design
-                          languages, and helped products grow from zero to scale.
+                          languages, and helped products grow from zero to
+                          scale.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
                           I interned at Apple and worked at Coinbase, Voiceflow,
-                          Theoriq, Zalando and many more startups, blending craft
-                          with code, and care with speed.
+                          Theoriq, Zalando and many more startups, blending
+                          craft with code, and care with speed.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
-                          I bring a mix of precision and warmth to every surface I
-                          touch, and to every person I collaborate with, through
-                          direct kindness.
+                          I bring a mix of precision and warmth to every surface
+                          I touch, and to every person I collaborate with,
+                          through direct kindness.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
                           This path taught me that good design isn&apos;t
-                          decoration. Good design is presence and intentionality.
+                          decoration. Good design is presence and
+                          intentionality.
                         </p>
                       </div>
                     </motion.div>
@@ -2179,16 +2179,15 @@ export default function Page() {
                         Presence
                       </h3>
                       <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/80 font-medium">
-                          I split my time between Toronto and Lisbon, two cities
-                          that couldn&apos;t be more different. That contrast
-                          keeps me balanced.
+                        <p className="leading-[1.6] text-base text-foreground/80 font-medium md:h-24">
+                          I split my time mainly between Toronto and Lisbon.
+                          This contrast keeps me balanced.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
                           I have a thing for offices and thoughtful workspaces.
-                          How they influence focus, energy, and flow. The details
-                          of a desk can say more about someone&apos;s process than
-                          any résumé ever could.
+                          How they influence focus, energy, and flow. The
+                          details of a desk can say more about someone&apos;s
+                          process than any résumé ever could.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
                           I&apos;m usually on a yoga mat, cycling, or chasing
@@ -2216,55 +2215,57 @@ export default function Page() {
                         Principles
                       </h3>
                       <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/80 font-medium">
+                        <p className="leading-[1.6] text-base text-foreground/80 font-medium md:h-24">
                           Principles I try to live and build by:
                         </p>
                         <ul className="space-y-2 text-base text-foreground/70 leading-[1.6]">
-                        <li className="flex items-start">
-                          <span className="mr-2 text-foreground/40 select-none">
-                            •
-                          </span>
-                          <span>Work hard, be kind, spread joy</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2 text-foreground/40 select-none">
-                            •
-                          </span>
-                          <span>
-                            How you do anything is how you do everything
-                          </span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2 text-foreground/40 select-none">
-                            •
-                          </span>
-                          <span>What feels right &gt; what charts well</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2 text-foreground/40 select-none">
-                            •
-                          </span>
-                          <span>Start before you think you&apos;re ready</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2 text-foreground/40 select-none">
-                            •
-                          </span>
-                          <span>Clarity over cleverness</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2 text-foreground/40 select-none">
-                            •
-                          </span>
-                          <span>Beauty is function with empathy</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2 text-foreground/40 select-none">
-                            •
-                          </span>
-                          <span>Slow is smooth, smooth is fast</span>
-                        </li>
-                      </ul>
+                          <li className="flex items-start">
+                            <span className="mr-2 text-foreground/40 select-none">
+                              •
+                            </span>
+                            <span>Work hard, be kind, spread joy</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2 text-foreground/40 select-none">
+                              •
+                            </span>
+                            <span>
+                              How you do anything is how you do everything
+                            </span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2 text-foreground/40 select-none">
+                              •
+                            </span>
+                            <span>What feels right &gt; what charts well</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2 text-foreground/40 select-none">
+                              •
+                            </span>
+                            <span>
+                              Start before you think you&apos;re ready
+                            </span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2 text-foreground/40 select-none">
+                              •
+                            </span>
+                            <span>Clarity over cleverness</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2 text-foreground/40 select-none">
+                              •
+                            </span>
+                            <span>Beauty is function with empathy</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2 text-foreground/40 select-none">
+                              •
+                            </span>
+                            <span>Slow is smooth, smooth is fast</span>
+                          </li>
+                        </ul>
                       </div>
                     </motion.div>
                   </motion.div>
