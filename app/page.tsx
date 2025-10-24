@@ -2194,8 +2194,13 @@ export default function Page() {
                           light through quiet spaces.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
-                          I live for mornings that feel like beginnings and work
-                          that feels meaningful.
+                          I&apos;ve been vegetarian for as long as I can
+                          remember.
+                        </p>
+                        <p className="leading-[1.6] text-base text-foreground/70">
+                          Personality-wise, I&apos;m an ENTJ, a Red–Yellow on
+                          the Color Code, and an Enneagram 8. I value clarity,
+                          integrity, and energy that feels aligned.
                         </p>
                       </div>
                     </motion.div>
