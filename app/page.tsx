@@ -2080,7 +2080,8 @@ export default function Page() {
                       </h3>
                       <div className="space-y-3">
                         <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
-                          Designer. Builder. Photographer. Writer.
+                          I spent the first 20 years of my life in the Amalfi
+                          Coast, Italy.
                         </p>
                         <p className="leading-[1.6] text-base text-foreground/70">
                           I care about clarity, systems, and the stories
@@ -2259,7 +2260,7 @@ export default function Page() {
                             <span className="mr-2 text-foreground/40 select-none">
                               •
                             </span>
-                            <span>Clarity over cleverness</span>
+                            <span>Always happy, never satisfied.</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2 text-foreground/40 select-none">
