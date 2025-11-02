@@ -208,8 +208,8 @@ const PROJECT_ALIAS: Record<string, string> = {
  * This determines both desktop carousel and mobile scroll panel order
  */
 const PROJECT_ORDER: string[] = [
-  "cb", // Coinbase (2025)
   "theo", // Theoriq (2024)
+  "cb", // Coinbase (2025)
   "vf", // Voiceflow (2025)
   "atlas", // Atlas (2020)
   "defituna", // DeFi Tuna (2021)

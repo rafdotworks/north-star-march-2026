@@ -95,30 +95,32 @@ export default function NewMinimalPage() {
         {/* Column 3 - Links */}
         <div className="pt-[1.875rem] md:pt-[1.625rem]">
           {/* Navigation links */}
-          <nav className="flex flex-col md:inline-flex md:flex-row md:flex-wrap md:gap-x-2 gap-y-2 md:gap-y-1 group/nav">
+          <nav className="space-y-2 md:space-y-1 group/nav">
             <a
               href="https://linkedin.com/in/raffaelevitaledesign"
               target="_blank"
               rel="noopener noreferrer"
-              className="group/link flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 active:text-white active:scale-[0.98] md:active:scale-100 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-all duration-200"
+              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200"
               aria-label="Visit Raf on LinkedIn"
             >
               LinkedIn
               <ExternalLink size={12} className="w-[12px] h-[12px] md:w-[10px] md:h-[10px] opacity-100 md:opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
             </a>
+            <br className="hidden md:block" />
             <a
               href="mailto:raf@raf.works"
-              className="group/link flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 active:text-white active:scale-[0.98] md:active:scale-100 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-all duration-200"
+              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200"
               aria-label="Send email to Raf"
             >
               Email
               <Mail size={12} className="w-[12px] h-[12px] md:w-[10px] md:h-[10px] opacity-100 md:opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
             </a>
+            <br className="hidden md:block" />
             <a
               href="/documents/CV.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="group/link flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 active:text-white active:scale-[0.98] md:active:scale-100 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-all duration-200"
+              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200"
               aria-label="Download CV"
             >
               CV
