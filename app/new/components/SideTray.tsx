@@ -601,10 +601,8 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                         <div className="space-y-1.5">
                           <p className="text-xs text-neutral-500">— Work hard, be kind, spread joy</p>
                           <p className="text-xs text-neutral-500">— How you do anything is how you do everything</p>
-                          <p className="text-xs text-neutral-500">— What feels right &gt; what charts well</p>
                           <p className="text-xs text-neutral-500">— Start before you think you&apos;re ready</p>
                           <p className="text-xs text-neutral-500">— Always happy, never satisfied</p>
-                          <p className="text-xs text-neutral-500">— Beauty is function with empathy</p>
                           <p className="text-xs text-neutral-500">— Slow is smooth, smooth is fast</p>
                         </div>
                       </div>
