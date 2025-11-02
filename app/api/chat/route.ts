@@ -2,10 +2,30 @@ import { openai } from '@ai-sdk/openai'
 import { streamText } from 'ai'
 import { systemPrompt } from '@/app/agent/context/raf-knowledge'
 
+// Validate environment variables at module load
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY is not configured')
+}
+
 // Rate limiting: Track messages per session (IP-based, simple in-memory store)
+// NOTE: This resets on server restarts and can be bypassed. For production at scale,
+// consider using Vercel KV, Upstash Redis, or similar persistent rate limiting.
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const MAX_MESSAGES_PER_SESSION = 10
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000 // 1 hour in milliseconds
+const CLEANUP_INTERVAL = 5 * 60 * 1000 // Clean up every 5 minutes
+
+// Periodic cleanup to prevent memory leaks
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now()
+    for (const [key, record] of rateLimitMap.entries()) {
+      if (now > record.resetAt) {
+        rateLimitMap.delete(key)
+      }
+    }
+  }, CLEANUP_INTERVAL)
+}
 
 function checkRateLimit(identifier: string): { allowed: boolean; remaining: number } {
   const now = Date.now()
@@ -33,10 +53,22 @@ function checkRateLimit(identifier: string): { allowed: boolean; remaining: numb
 
 export async function POST(req: Request) {
   try {
+    // Check environment configuration
+    if (!process.env.OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({
+          error: 'Chat service is not configured. Please contact raf@raf.works'
+        }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { messages } = await req.json()
 
-    // Simple rate limiting based on session (in production, use proper rate limiting)
-    const identifier = req.headers.get('x-forwarded-for') || 'anonymous'
+    // Get identifier from x-forwarded-for header (Vercel provides this)
+    // Note: Take only the first IP to prevent spoofing via comma-separated list
+    const forwardedFor = req.headers.get('x-forwarded-for')
+    const identifier = forwardedFor?.split(',')[0]?.trim() || 'anonymous'
     const rateLimit = checkRateLimit(identifier)
 
     if (!rateLimit.allowed) {

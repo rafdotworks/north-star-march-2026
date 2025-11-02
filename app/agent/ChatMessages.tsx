@@ -16,7 +16,12 @@ interface ChatMessagesProps {
 export function ChatMessages({ messages, isLoading, onPromptSelect }: ChatMessagesProps) {
   return (
     <div className="px-6 md:px-12 py-12">
-      <div className="max-w-3xl mx-auto space-y-16 md:space-y-24">
+      <div
+        className="max-w-3xl mx-auto space-y-16 md:space-y-24"
+        role="log"
+        aria-live="polite"
+        aria-label="Chat messages"
+      >
         {/* Empty state hero */}
         {messages.length === 0 && !isLoading && (
           <EmptyStateHero onPromptSelect={onPromptSelect} />

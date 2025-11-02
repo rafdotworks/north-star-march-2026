@@ -67,6 +67,8 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
             placeholder={placeholder || placeholders[currentPlaceholder]}
             disabled={disabled}
             rows={1}
+            aria-label="Chat message input"
+            aria-describedby="input-hint"
             className="flex-1 bg-white/80 backdrop-blur-[8px] text-[hsl(220,15%,10%)] placeholder:text-[hsl(220,10%,50%)] rounded-2xl px-6 py-4 text-base md:text-lg leading-relaxed resize-none outline-none border border-[hsl(220,12%,86%)] focus:border-[hsl(226,92%,66%)] focus:bg-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ maxHeight: '120px' }}
           />
@@ -90,6 +92,7 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
         </div>
 
         <motion.p
+          id="input-hint"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.6 }}

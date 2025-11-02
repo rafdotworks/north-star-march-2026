@@ -1,6 +1,9 @@
 /**
  * Raf's Knowledge Base
  * Static context for AI agent to understand Raf's work, philosophy, and expertise
+ *
+ * NOTE: This file is SERVER-SIDE ONLY and should only be imported in API routes.
+ * Do NOT import this in client components as it will increase bundle size.
  */
 
 export const rafKnowledge = {

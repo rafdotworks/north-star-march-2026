@@ -8,6 +8,19 @@ import Link from 'next/link'
 import { ChatMessages } from './ChatMessages'
 import { ChatInput } from './ChatInput'
 
+// Helper function to safely extract text from message parts
+function getMessageText(message: UIMessage): string {
+  return message.parts
+    .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+    .map(part => part.text)
+    .join('')
+}
+
+// Helper function to check if message has non-empty text content
+function hasTextContent(message: UIMessage): boolean {
+  return message.role !== 'assistant' || getMessageText(message).length > 0
+}
+
 export default function AgentPage() {
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -92,8 +105,8 @@ export default function AgentPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
-      // Remove the assistant placeholder if it exists
-      setMessages(prev => prev.filter(m => m.role !== 'assistant' || m.parts[0].type === 'text' && (m.parts[0] as { text: string }).text))
+      // Remove empty assistant messages
+      setMessages(prev => prev.filter(hasTextContent))
     } finally {
       setIsLoading(false)
     }
