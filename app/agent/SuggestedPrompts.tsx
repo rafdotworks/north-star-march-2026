@@ -46,11 +46,11 @@ const staggeredTextReveal = {
       scale: 1,
       transition: {
         duration: 1.2,
-        ease: [0.25, 0.46, 0.45, 0.94]
+        ease: [0.25, 0.46, 0.45, 0.94] as const
       }
     }
   }
-}
+} as const
 
 export function SuggestedPrompts({ onSelect, show }: SuggestedPromptsProps) {
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>([])

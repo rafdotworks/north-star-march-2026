@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, KeyboardEvent, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUp } from 'lucide-react'
 
@@ -17,7 +17,7 @@ const placeholders = [
   "What's your question?"
 ]
 
-export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
+export const ChatInput = memo(function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
   const [input, setInput] = useState('')
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -103,4 +103,4 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
       </div>
     </div>
   )
-}
+})

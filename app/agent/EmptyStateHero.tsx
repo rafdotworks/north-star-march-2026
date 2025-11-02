@@ -32,11 +32,11 @@ const staggeredTextReveal = {
       scale: 1,
       transition: {
         duration: 2.2,
-        ease: [0.25, 0.46, 0.45, 0.94] // EASING.textReveal
+        ease: [0.25, 0.46, 0.45, 0.94] as const // EASING.textReveal
       }
     }
   }
-}
+} as const
 
 export function EmptyStateHero({ onPromptSelect }: EmptyStateHeroProps) {
   return (

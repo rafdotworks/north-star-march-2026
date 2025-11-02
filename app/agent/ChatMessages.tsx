@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { type UIMessage } from 'ai'
 import ReactMarkdown from 'react-markdown'
@@ -13,7 +14,7 @@ interface ChatMessagesProps {
   onPromptSelect: (prompt: string) => void
 }
 
-export function ChatMessages({ messages, isLoading, onPromptSelect }: ChatMessagesProps) {
+export const ChatMessages = memo(function ChatMessages({ messages, isLoading, onPromptSelect }: ChatMessagesProps) {
   return (
     <div className="px-6 md:px-12 py-12">
       <div
@@ -119,4 +120,4 @@ export function ChatMessages({ messages, isLoading, onPromptSelect }: ChatMessag
       </div>
     </div>
   )
-}
+})

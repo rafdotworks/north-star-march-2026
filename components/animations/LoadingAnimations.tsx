@@ -21,7 +21,7 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ComponentProps, ReactNode, KeyboardEvent, useId } from "react";
+import { ComponentProps, ReactNode, KeyboardEvent } from "react";
 
 type MotionDivProps = ComponentProps<typeof motion.div>;
 
@@ -506,7 +506,6 @@ export function WordReveal({
   ...props
 }: WordRevealProps) {
   const words = text.split(" ");
-  const patternIdBase = useId();
 
   return (
     <motion.div

@@ -1,8 +1,9 @@
 'use client'
 
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 
-export function TypingIndicator() {
+export const TypingIndicator = memo(function TypingIndicator() {
   return (
     <motion.div
       initial={{ opacity: 0, filter: 'blur(25px)', y: 30 }}
@@ -38,4 +39,4 @@ export function TypingIndicator() {
       </div>
     </motion.div>
   )
-}
+})

@@ -39,7 +39,6 @@ import { useIsMobile } from "@/hooks/use-mobile"; // Mobile breakpoint detection
 import {
   BreathingSkeleton,
   EASING,
-  ImageCarouselItem,
   LoadingProgress,
   ProgressiveLoadingStates,
 } from "@/components/animations/LoadingAnimations";
@@ -126,9 +125,6 @@ const MOBILE_CONTACT_LINKS = [
   },
 ] as const;
 
-/** iOS safe area padding for mobile hero section (accounts for notch/home indicator) */
-const MOBILE_HERO_BOTTOM_PADDING =
-  "max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))";
 /** iOS safe area padding for mobile contact footer */
 const MOBILE_CONTACT_BOTTOM_PADDING =
   "calc(env(safe-area-inset-bottom, 0px) + 20px)";
@@ -227,6 +223,32 @@ const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
   (key) => PROJECTS[key]?.images ?? []
 );
 
+/**
+ * IMAGE_ALT_TEXT: Descriptive alt text for each carousel image
+ * Provides meaningful descriptions for screen readers and accessibility
+ */
+const IMAGE_ALT_TEXT: Record<string, string> = {
+  "/work/cb-1.png": "Coinbase Developer Platform interface showing API documentation and developer tools",
+  "/work/theo-1.png": "Theoriq AI platform dashboard with agent management and workflow visualization",
+  "/work/vf-0.png": "Voiceflow conversation design interface with flowchart-style dialog editor",
+  "/work/atlas-2.png": "Atlas crypto marketplace featuring NFT collections and digital asset trading interface",
+  "/work/defituna-1.png": "DeFi Tuna decentralized finance platform with yield farming and staking features",
+  "/work/curbcutos.png": "CurbCut accessibility data visualization tool showing urban mobility metrics",
+  "/work/zalando-dodont.png": "Zalando B2B design system documentation with component guidelines and patterns",
+  "/work/early-works.webp": "Early design work portfolio showcasing brand identity and visual design projects",
+  "/work/us.png": "National Archives project featuring historical document digitization and archival interface",
+};
+
+/**
+ * Helper function to get descriptive alt text for an image
+ * @param src - Image source path
+ * @param index - Fallback index number
+ * @returns Descriptive alt text string
+ */
+function getAltText(src: string, index: number): string {
+  return IMAGE_ALT_TEXT[src] || `Work preview ${index + 1}`;
+}
+
 // ============================================================================
 // HELPER FUNCTIONS - Project identification and data retrieval
 // ============================================================================
@@ -324,20 +346,6 @@ function getProjectCaption(project: string): string | null {
   return PROJECT_CAPTIONS[project] ?? null;
 }
 
-/**
- * Determines if a caption should be rendered for grouped mobile panels
- * Only shows caption on the last image of each project group
- * @param images - Array of all image sources
- * @param index - Current image index
- * @returns true if caption should be shown
- */
-function shouldRenderGroupCaption(images: string[], index: number): boolean {
-  const current = getProjectFromSrc(images[index]);
-  const next =
-    index + 1 < images.length ? getProjectFromSrc(images[index + 1]) : null;
-  return current !== null && current !== next;
-}
-
 // ============================================================================
 // IMAGE LOADING BUCKETS - Prioritized loading strategy
 // ============================================================================
@@ -349,8 +357,6 @@ const PRELOAD_IMAGES = IMAGE_SOURCES.slice(
   INITIAL_IMAGE_COUNT,
   PRELOAD_IMAGE_COUNT
 );
-/** Remaining images - loaded on demand (lazy) */
-const LAZY_IMAGES = IMAGE_SOURCES.slice(PRELOAD_IMAGE_COUNT);
 
 /**
  * Generates SVG placeholder for images during loading
@@ -406,9 +412,7 @@ export default function Page() {
   const imageMeasureRef = useRef<HTMLDivElement | null>(null); // Measures image width for caption alignment
   const slideshowRef = useRef<HTMLDivElement | null>(null); // Slideshow container for intersection observer
   const mobileScrollRef = useRef<HTMLElement | null>(null); // Mobile scroll container
-  const scrollRafIdRef = useRef<number | null>(null); // RAF ID for scroll performance
   const lastDirectionRef = useRef<1 | -1>(1); // Carousel navigation direction (persistent)
-  const hasAutoScrolledRef = useRef(false); // Prevents multiple auto-scrolls
 
   // ============================================================================
   // HOOKS - External state and utilities
@@ -434,7 +438,6 @@ export default function Page() {
 
   // Carousel state
   const [currentImageIndex, setCurrentImageIndex] = useState(0); // Active carousel image
-  const [previousImageIndex, setPreviousImageIndex] = useState(0); // Previous image for transitions
   const [lastDirection, setLastDirection] = useState<1 | -1>(1); // Carousel direction (1=forward, -1=back)
   const [isNavigating, setIsNavigating] = useState(false); // Navigation debounce flag
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false); // Pause auto-preview
@@ -452,7 +455,6 @@ export default function Page() {
     useState(false); // All text visible
 
   // Preview/auto-play
-  const [isPreviewRunning, setIsPreviewRunning] = useState(false); // Auto-preview in progress
   const [isPreviewComplete, setIsPreviewComplete] = useState(false); // Auto-preview finished
   const [isInViewport, setIsInViewport] = useState(false); // Slideshow in viewport
 
@@ -695,38 +697,10 @@ export default function Page() {
     return () => observer.disconnect();
   }, [mounted]);
 
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (isVideoModalOpen) {
-          setIsVideoModalOpen(false);
-        } else if (isAboutModalOpen) {
-          setIsAboutModalOpen(false);
-        }
-        return;
-      }
-
-      if (isVideoModalOpen) return;
-
-      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-        setIsSlideshowPaused(true);
-        if (event.key === "ArrowRight") {
-          navigateBy(1);
-        } else {
-          navigateBy(-1);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [isAboutModalOpen, isVideoModalOpen]);
-
   const navigateToIndex = useCallback(
     (computeNext: (prev: number) => number) => {
       setCurrentImageIndex((prev) => {
         const next = computeNext(prev);
-        setPreviousImageIndex(prev);
         return next;
       });
     },
@@ -872,6 +846,34 @@ export default function Page() {
     [navigateToIndex]
   );
 
+  // Keyboard handling for Escape and Arrow keys
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (isVideoModalOpen) {
+          setIsVideoModalOpen(false);
+        } else if (isAboutModalOpen) {
+          setIsAboutModalOpen(false);
+        }
+        return;
+      }
+
+      if (isVideoModalOpen) return;
+
+      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+        setIsSlideshowPaused(true);
+        if (event.key === "ArrowRight") {
+          navigateBy(1);
+        } else {
+          navigateBy(-1);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [isAboutModalOpen, isVideoModalOpen, navigateBy]);
+
   useEffect(() => {
     if (isVideoModalOpen) {
       previouslyFocusedElementRef.current =
@@ -887,6 +889,55 @@ export default function Page() {
 
     previouslyFocusedElementRef.current?.focus?.();
   }, [isAboutModalOpen, isVideoModalOpen]);
+
+  // ============================================================================
+  // KEYBOARD NAVIGATION - Arrow keys for carousel control
+  // ============================================================================
+  useEffect(() => {
+    // Don't intercept keyboard if modal is open or on mobile
+    if (isVideoModalOpen || isAboutModalOpen || isMobile || !mounted) {
+      return;
+    }
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Only handle arrow keys when not in an input field
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case "ArrowLeft":
+        case "ArrowUp":
+          e.preventDefault();
+          navigateBy(-1);
+          break;
+        case "ArrowRight":
+        case "ArrowDown":
+          e.preventDefault();
+          navigateBy(1);
+          break;
+        case "Escape":
+          // Escape key could be used for future features (e.g., pause slideshow)
+          if (!isSlideshowPaused) {
+            setIsSlideshowPaused(true);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [
+    isVideoModalOpen,
+    isAboutModalOpen,
+    isMobile,
+    mounted,
+    navigateBy,
+    isSlideshowPaused,
+  ]);
 
   useEffect(() => {
     if (carouselAnimationComplete && !finalTextAnimationComplete) {
@@ -925,7 +976,6 @@ export default function Page() {
   useEffect(() => {
     if (!previewPrerequisitesMet) return;
 
-    setIsPreviewRunning(true);
 
     let previewSteps = 0;
     const totalSteps = IMAGE_SOURCES.length * PREVIEW_LOOPS;
@@ -938,7 +988,6 @@ export default function Page() {
       if (previewSteps >= totalSteps) {
         window.clearInterval(previewInterval);
         settleTimeout = window.setTimeout(() => {
-          setIsPreviewRunning(false);
           setIsPreviewComplete(true);
         }, PREVIEW_SETTLE_DELAY);
       }
@@ -949,7 +998,6 @@ export default function Page() {
       if (settleTimeout !== undefined) {
         window.clearTimeout(settleTimeout);
       }
-      setIsPreviewRunning(false);
     };
   }, [previewPrerequisitesMet]);
 
@@ -1037,9 +1085,6 @@ export default function Page() {
   };
 
   const images = IMAGE_SOURCES;
-  const initialImages = INITIAL_IMAGES;
-  const lazyImages = LAZY_IMAGES;
-  const isEmailReady = loadingSequence.textLoaded && secondLineComplete;
   const isFooterReady = footerRevealReady;
 
   /**
@@ -1590,7 +1635,7 @@ export default function Page() {
                                 >
                                   <WorkImageContainer
                                     src={src}
-                                    alt={`Work preview ${index + 1}`}
+                                    alt={getAltText(src, index)}
                                     width={600}
                                     height={450}
                                     hasVideo={!!getVideoForSrc(src)}
@@ -1831,7 +1876,7 @@ export default function Page() {
                               <div className="flex flex-col items-center">
                                 <WorkImageContainer
                                   src={src}
-                                  alt={`Work preview ${index + 1}`}
+                                  alt={getAltText(src, index)}
                                   width={800}
                                   height={600}
                                   hasVideo={!!getVideoForSrc(src)}

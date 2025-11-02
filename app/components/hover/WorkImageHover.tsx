@@ -33,7 +33,7 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
       y: -1,
       transition: {
         duration: 0.8,
-        ease: [0.12, 1, 0.25, 1],
+        ease: [0.12, 1, 0.25, 1] as const,
       },
     },
     desktop: {
@@ -41,27 +41,27 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
       y: -1,
       transition: {
         duration: 0.9,
-        ease: [0.12, 1, 0.25, 1],
+        ease: [0.12, 1, 0.25, 1] as const,
       },
     },
-  };
+  } as const;
 
   const tapConfig = {
     mobile: {
       scale: 0.998,
       transition: {
         duration: 0.2,
-        ease: [0.12, 1, 0.25, 1],
+        ease: [0.12, 1, 0.25, 1] as const,
       },
     },
     desktop: {
       scale: 0.999,
       transition: {
         duration: 0.2,
-        ease: [0.12, 1, 0.25, 1],
+        ease: [0.12, 1, 0.25, 1] as const,
       },
     },
-  };
+  } as const;
 
   const shadowClasses =
     variant === "mobile"

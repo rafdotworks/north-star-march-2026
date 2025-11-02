@@ -31,12 +31,12 @@ interface ArticleContent {
 
 // Custom easing curves for beautiful animations
 const EASING = {
-  smooth: [0.4, 0.0, 0.2, 1],
-  spring: [0.16, 1, 0.3, 1],
-  gentle: [0.25, 0.1, 0.25, 1.0],
-  elastic: [0.12, 1, 0.28, 1],
-  stagger: [0.19, 1, 0.22, 1]
-}
+  smooth: [0.4, 0.0, 0.2, 1] as const,
+  spring: [0.16, 1, 0.3, 1] as const,
+  gentle: [0.25, 0.1, 0.25, 1.0] as const,
+  elastic: [0.12, 1, 0.28, 1] as const,
+  stagger: [0.19, 1, 0.22, 1] as const
+} as const
 
 // Enhanced multi-stage animation variants
 const backdropVariants = {
@@ -55,7 +55,7 @@ const backdropVariants = {
       ease: EASING.smooth
     }
   }
-}
+} as const
 
 const trayVariants = {
   hidden: {
@@ -69,7 +69,7 @@ const trayVariants = {
     rotateY: 0,
     transition: {
       x: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 35,
         duration: 0.5
@@ -95,7 +95,7 @@ const trayVariants = {
       ease: EASING.smooth
     }
   }
-}
+} as const
 
 const contentVariants = {
   hidden: {
@@ -134,7 +134,7 @@ const contentVariants = {
       ease: EASING.smooth
     }
   }
-}
+} as const
 
 const listItemVariants = {
   hidden: {
@@ -256,7 +256,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
     visible: {
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 350,
         damping: 40,
         duration: 0.4
@@ -269,11 +269,11 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
         ease: EASING.smooth
       }
     }
-  }
+  } as const
 
   // Choose animation variants based on device
   const activeTrayVariants = isMobile ? mobileTrayVariants : trayVariants
-  const activeContentVariants = shouldReduceMotion ? {} : (isMobile ? {
+  const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? {
     hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
@@ -284,8 +284,8 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
         delay: 0.1
       }
     }
-  } : contentVariants)
-  const activeViewTransitionVariants = shouldReduceMotion ? {} : (isMobile ? {
+  } as const : contentVariants)
+  const activeViewTransitionVariants = shouldReduceMotion ? undefined : (isMobile ? {
     initial: { opacity: 0, y: 15 },
     animate: {
       opacity: 1,
@@ -302,7 +302,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
         duration: 0.2
       }
     }
-  } : viewTransitionVariants)
+  } as const : viewTransitionVariants)
 
   useEffect(() => {
     if (!articleId) {
@@ -420,9 +420,9 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
           >
             <motion.div
               className="h-full flex flex-col"
-              variants={activeContentVariants}
-              initial="hidden"
-              animate="visible"
+              variants={shouldReduceMotion ? undefined : activeContentVariants}
+              initial={shouldReduceMotion ? undefined : "hidden"}
+              animate={shouldReduceMotion ? undefined : "visible"}
             >
               {/* Mobile drag handle */}
               {isMobile && (
@@ -567,7 +567,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                         <h3 className="text-[10px] uppercase tracking-wider text-neutral-500">Craft</h3>
                         <div className="space-y-2">
                           <p className="text-xs text-neutral-400 leading-relaxed">
-                            Over the past eight years, I've designed and engineered products, systems and experiences. I've built onboarding systems, shaped design languages, and helped products grow from zero to scale.
+                            Over the past eight years, I&apos;ve designed and engineered products, systems and experiences. I&apos;ve built onboarding systems, shaped design languages, and helped products grow from zero to scale.
                           </p>
                           <p className="text-xs text-neutral-400 leading-relaxed">
                             I interned at Apple and worked at Coinbase, Voiceflow, Theoriq, Zalando and many more startups, blending craft with code, and care with speed.
@@ -585,10 +585,10 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                             I split my time mainly between Toronto and Lisbon. This contrast keeps me balanced.
                           </p>
                           <p className="text-xs text-neutral-400 leading-relaxed">
-                            I have a thing for offices and thoughtful workspaces. How they influence focus, energy, and flow. I'm usually on a yoga mat, cycling, or chasing light through quiet spaces.
+                            I have a thing for offices and thoughtful workspaces. How they influence focus, energy, and flow. I&apos;m usually on a yoga mat, cycling, or chasing light through quiet spaces.
                           </p>
                           <p className="text-xs text-neutral-400 leading-relaxed">
-                            Personality-wise, I'm an ENTJ, a Red–Yellow on the Color Code, and an Enneagram 8. I value clarity, integrity, and energy that feels aligned.
+                            Personality-wise, I&apos;m an ENTJ, a Red–Yellow on the Color Code, and an Enneagram 8. I value clarity, integrity, and energy that feels aligned.
                           </p>
                         </div>
                       </div>
@@ -602,7 +602,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                           <p className="text-xs text-neutral-500">— Work hard, be kind, spread joy</p>
                           <p className="text-xs text-neutral-500">— How you do anything is how you do everything</p>
                           <p className="text-xs text-neutral-500">— What feels right &gt; what charts well</p>
-                          <p className="text-xs text-neutral-500">— Start before you think you're ready</p>
+                          <p className="text-xs text-neutral-500">— Start before you think you&apos;re ready</p>
                           <p className="text-xs text-neutral-500">— Always happy, never satisfied</p>
                           <p className="text-xs text-neutral-500">— Beauty is function with empathy</p>
                           <p className="text-xs text-neutral-500">— Slow is smooth, smooth is fast</p>
