@@ -1330,7 +1330,7 @@ export default function Page() {
                             }}
                           >
                             <span
-                              className="font-raf cursor-pointer hover:opacity-90 transition-opacity inline-block relative text-foreground/95"
+                              className="font-raf cursor-pointer hover:bg-foreground/5 hover:text-foreground hover:scale-[1.01] transition-all duration-300 inline-block relative text-foreground/95 rounded-sm px-1.5 -mx-1.5"
                               onClick={() => setIsAboutModalOpen(true)}
                               role="link"
                               tabIndex={0}
@@ -1348,7 +1348,7 @@ export default function Page() {
                               Raf
                               {/* Interactive hint underline */}
                               <motion.div
-                                className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
+                                className="absolute left-1.5 right-1.5 pointer-events-none h-px rounded-full"
                                 style={{
                                   bottom: 0,
                                   background: "currentColor",
@@ -1357,7 +1357,7 @@ export default function Page() {
                                 initial={{ scaleX: 0, opacity: 0 }}
                                 animate={{
                                   scaleX: isFooterReady ? 1 : 0,
-                                  opacity: isFooterReady ? 0.35 : 0,
+                                  opacity: isFooterReady ? 0.5 : 0,
                                 }}
                                 transition={{
                                   duration: 0.35,
@@ -1479,7 +1479,7 @@ export default function Page() {
                                 }}
                               >
                                 <span
-                                  className="font-raf cursor-pointer hover:opacity-90 transition-opacity inline-block relative mr-1 text-foreground/95"
+                                  className="font-raf cursor-pointer hover:bg-foreground/5 hover:text-foreground hover:scale-[1.01] transition-all duration-300 inline-block relative mr-1 text-foreground/95 rounded-sm px-1.5 -mx-1.5"
                                   onClick={() => setIsAboutModalOpen(true)}
                                   role="link"
                                   tabIndex={0}
@@ -1497,7 +1497,7 @@ export default function Page() {
                                   Raf
                                   {/* Interactive hint underline */}
                                   <motion.div
-                                    className="absolute left-0 right-0 pointer-events-none h-px rounded-full"
+                                    className="absolute left-1.5 right-1.5 pointer-events-none h-px rounded-full"
                                     style={{
                                       bottom: 0,
                                       background: "currentColor",
@@ -1506,7 +1506,7 @@ export default function Page() {
                                     initial={{ scaleX: 0, opacity: 0 }}
                                     animate={{
                                       scaleX: isFooterReady ? 1 : 0,
-                                      opacity: isFooterReady ? 0.35 : 0,
+                                      opacity: isFooterReady ? 0.5 : 0,
                                     }}
                                     transition={{
                                       duration: 0.35,
