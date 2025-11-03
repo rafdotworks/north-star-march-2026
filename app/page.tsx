@@ -472,12 +472,10 @@ export default function Page() {
 
   // Mobile-specific state
   const [activePanelIndex, setActivePanelIndex] = useState(0); // Active mobile scroll panel
-  const [blurByIndex, setBlurByIndex] = useState<number[]>([]); // Per-panel blur amounts (deprecated, using opacity instead)
-  const [opacityByIndex, setOpacityByIndex] = useState<number[]>([]); // Per-panel opacity for fade effect
+  const [blurByIndex, setBlurByIndex] = useState<number[]>([]); // Per-panel blur amounts
   const [isScrolling, setIsScrolling] = useState(false); // Mobile scroll in progress
   const [hasUserScrolled, setHasUserScrolled] = useState(false); // Track if user has actively scrolled
   const [footerRevealReady, setFooterRevealReady] = useState(false); // Footer links visibility (reveals after first scroll)
-  const [showScrollHint, setShowScrollHint] = useState(false); // Scroll hint visibility (appears after load, fades on scroll)
 
   // Loading stage tracking
   const [currentLoadingStage, setCurrentLoadingStage] = useState(0); // Current loading stage (0-4)
@@ -610,32 +608,13 @@ export default function Page() {
     };
   }, [criticalContentLoaded, mounted]);
 
-  // EFFECT: Show scroll hint after critical content loads (with 0.4s delay)
-  useEffect(() => {
-    if (!mounted || !criticalContentLoaded || !isMobile) {
-      return;
-    }
-
-    const hintTimer = window.setTimeout(() => {
-      setShowScrollHint(true);
-    }, 400);
-
-    return () => {
-      window.clearTimeout(hintTimer);
-    };
-  }, [mounted, criticalContentLoaded, isMobile]);
-
-  // Initialize blur and opacity arrays for all panels (header + images + end panel)
+  // Initialize blur array for all panels (header + images + end panel)
   useEffect(() => {
     // Total panels = 1 (header) + IMAGE_SOURCES.length + 1 (end) = IMAGE_SOURCES.length + 2
     const totalPanels = IMAGE_SOURCES.length + 2;
     setBlurByIndex((prev) => {
       if (prev.length === totalPanels) return prev;
       return new Array(totalPanels).fill(0);
-    });
-    setOpacityByIndex((prev) => {
-      if (prev.length === totalPanels) return prev;
-      return new Array(totalPanels).fill(1);
     });
   }, []);
 
@@ -841,7 +820,6 @@ export default function Page() {
         let closestIndex = 0;
         let bestDistance = Number.POSITIVE_INFINITY;
         const nextBlur: number[] = new Array(sections.length).fill(0);
-        const nextOpacity: number[] = new Array(sections.length).fill(1);
         
         sections.forEach((sec, i) => {
           const rect = sec.getBoundingClientRect();
@@ -857,38 +835,37 @@ export default function Page() {
           const viewportHeight = window.innerHeight;
           const relativePos = center / viewportHeight;
 
-          // Define fade zones:
-          // Top 25% of viewport: Progressive fade for exiting images
-          // Middle 50%: Clear focus zone (full opacity)
-          // Bottom 25%: Progressive fade for entering images
-          const topFadeZone = 0.25;
-          const bottomFadeZone = 0.75;
-          const minOpacity = 0.4; // Minimum opacity when fully out of focus
+          // Define blur zones:
+          // Top 25% of viewport: Progressive blur for exiting images
+          // Middle 50%: Clear focus zone
+          // Bottom 25%: Progressive blur for entering images
+          const topBlurZone = 0.25;
+          const bottomBlurZone = 0.75;
+          const maxBlur = 20; // Increased for more dramatic effect
 
-          let opacity = 1;
+          let blurAmount = 0;
 
-          if (relativePos < topFadeZone) {
+          if (relativePos < topBlurZone) {
             // Top zone: Images exiting viewport
-            // Linear interpolation from minOpacity at top edge to 1 at zone boundary
-            const zoneProgress = relativePos / topFadeZone;
-            opacity = minOpacity + (1 - minOpacity) * zoneProgress;
-          } else if (relativePos > bottomFadeZone) {
+            // Linear interpolation from maxBlur at top edge to 0 at zone boundary
+            const zoneProgress = relativePos / topBlurZone;
+            blurAmount = maxBlur * (1 - zoneProgress);
+          } else if (relativePos > bottomBlurZone) {
             // Bottom zone: Images entering viewport
-            // Linear interpolation from 1 at zone boundary to minOpacity at bottom edge
+            // Linear interpolation from 0 at zone boundary to maxBlur at bottom edge
             const zoneProgress =
-              (relativePos - bottomFadeZone) / (1 - bottomFadeZone);
-            opacity = 1 - (1 - minOpacity) * zoneProgress;
+              (relativePos - bottomBlurZone) / (1 - bottomBlurZone);
+            blurAmount = maxBlur * zoneProgress;
           } else {
-            // Middle zone: Full opacity (clear focus)
-            opacity = 1;
+            // Middle zone: No blur (clear focus)
+            blurAmount = 0;
           }
 
           // Apply easing curve for smoother transitions
           // Use cubic easing for more natural progression
-          const easedOpacity = 1 - (1 - opacity) * Math.pow((1 - opacity) / (1 - minOpacity), 0.5);
+          const easedBlur = blurAmount * Math.pow(blurAmount / maxBlur, 0.5);
 
-          nextOpacity[i] = Math.max(minOpacity, Math.min(1, easedOpacity));
-          nextBlur[i] = 0; // No blur, using opacity fade instead
+          nextBlur[i] = Math.max(0, Math.min(maxBlur, easedBlur));
         });
         
         setActivePanelIndex((prev) => {
@@ -916,17 +893,6 @@ export default function Page() {
             return prev;
           }
           return nextBlur;
-        });
-        
-        setOpacityByIndex((prev) => {
-          // Avoid excessive state churn
-          if (
-            prev.length === nextOpacity.length &&
-            prev.every((v, i) => Math.abs(v - nextOpacity[i]) < 0.01)
-          ) {
-            return prev;
-          }
-          return nextOpacity;
         });
       };
 
@@ -1588,61 +1554,6 @@ export default function Page() {
                       minWidth: '100vw',
                     }}
                   />
-                  {/* Scroll hint - pulsing gradient at bottom, positioned outside container for full width */}
-                  <AnimatePresence>
-                    {showScrollHint && !hasUserScrolled && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ 
-                          opacity: shouldReduceMotion ? 0.5 : [0.3, 0.6, 0.3],
-                        }}
-                        exit={{ 
-                          opacity: 0,
-                          transition: {
-                            duration: shouldReduceMotion ? 0 : 0.6,
-                            ease: [0.22, 1, 0.36, 1],
-                          },
-                        }}
-                        transition={{
-                          opacity: {
-                            duration: shouldReduceMotion ? 0 : 2.5,
-                            repeat: shouldReduceMotion ? 0 : Infinity,
-                            ease: "easeInOut",
-                          },
-                        }}
-                        className="fixed bottom-0 left-0 right-0 pointer-events-none"
-                        style={{
-                          height: "90px",
-                          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-                          zIndex: 10,
-                          width: "100vw",
-                        }}
-                      >
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            background: `linear-gradient(to top, 
-                              rgba(255, 255, 255, 0.3) 0%, 
-                              rgba(255, 255, 255, 0.18) 30%, 
-                              rgba(255, 255, 255, 0.06) 60%, 
-                              transparent 100%)`,
-                            backdropFilter: "blur(10px)",
-                            WebkitBackdropFilter: "blur(10px)",
-                          }}
-                        />
-                        {/* Subtle additional glow for depth */}
-                        <div
-                          className="absolute inset-0 opacity-60"
-                          style={{
-                            background: `linear-gradient(to top, 
-                              rgba(255, 255, 255, 0.15) 0%, 
-                              transparent 50%)`,
-                            filter: "blur(4px)",
-                          }}
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                   <div className="relative h-[100svh]">
                     {/* Scroll container */}
                     <main
@@ -1750,14 +1661,14 @@ export default function Page() {
                         >
                           <figure className="w-full max-w-screen-sm">
                             <div className="w-full max-h-[78svh] flex flex-col items-center justify-center relative pb-6 gap-3">
-                              {/* Scroll fade wrapper - using opacity instead of blur */}
+                              {/* Scroll blur wrapper - separate from animation layer */}
                               <div
                                 className="w-full"
                                 style={{
-                                  opacity: opacityByIndex[panelIndex] ?? 1,
+                                  filter: `blur(${blurByIndex[panelIndex] || 0}px)`,
                                   transition:
-                                    "opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
-                                  willChange: "opacity",
+                                    "filter 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                                  willChange: "filter",
                                 }}
                               >
                                 <motion.div
@@ -1892,15 +1803,16 @@ export default function Page() {
                                           return {};
                                         }
                                         
-                                        // Scroll-based animation: sync with image opacity fade and panel state
-                                        const panelOpacity = opacityByIndex[panelIndex] ?? 1;
+                                        // Scroll-based animation: sync with image blur and panel state
+                                        const isActive = activePanelIndex === panelIndex;
+                                        const blurAmount = blurByIndex[panelIndex] || 0;
                                         return {
-                                          opacity: panelOpacity,
+                                          opacity: isActive ? 1 : 0.88,
                                           y: 0,
-                                          filter: "blur(0px)", // No blur, using opacity fade
+                                          filter: `blur(${blurAmount}px)`,
                                           transition: {
-                                            duration: 0.4, // Match image opacity transition
-                                            ease: [0.22, 1, 0.36, 1], // Match image opacity easing
+                                            duration: 0.4, // Match image blur transition
+                                            ease: [0.22, 1, 0.36, 1], // Match image blur easing
                                           },
                                         };
                                       })()
