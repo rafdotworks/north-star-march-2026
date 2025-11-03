@@ -482,6 +482,10 @@ export default function Page() {
   // Timezone message
   const [timezoneMessage, setTimezoneMessage] = useState(""); // Timezone difference message
 
+  // Click freeze for final project
+  const [isClickFrozen, setIsClickFrozen] = useState(false); // Freeze clicks when final project is active
+  const freezeTimerRef = useRef<number | null>(null); // Ref to track freeze timer
+
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
@@ -1094,6 +1098,52 @@ export default function Page() {
     return () => clearInterval(interval);
   }, []);
 
+  // EFFECT: Freeze clicks when final project (earlyworks) appears
+  useEffect(() => {
+    // Final project "earlyworks" is at index 7 (last in IMAGE_SOURCES)
+    const FINAL_PROJECT_INDEX = IMAGE_SOURCES.length - 1; // 7
+    
+    if (currentImageIndex === FINAL_PROJECT_INDEX && !isClickFrozen) {
+      // Clear any existing timer
+      if (freezeTimerRef.current !== null) {
+        window.clearTimeout(freezeTimerRef.current);
+      }
+      
+      // Start freeze
+      setIsClickFrozen(true);
+      
+      // Freeze timer: 4 seconds
+      const freezeTimeout = window.setTimeout(() => {
+        setIsClickFrozen(false);
+        freezeTimerRef.current = null;
+      }, 4000);
+      
+      freezeTimerRef.current = freezeTimeout as any;
+      
+      return () => {
+        window.clearTimeout(freezeTimeout);
+        freezeTimerRef.current = null;
+      };
+    } else if (currentImageIndex !== FINAL_PROJECT_INDEX && isClickFrozen) {
+      // Reset freeze if we navigate away from final project
+      if (freezeTimerRef.current !== null) {
+        window.clearTimeout(freezeTimerRef.current);
+        freezeTimerRef.current = null;
+      }
+      setIsClickFrozen(false);
+    }
+  }, [currentImageIndex, isClickFrozen]);
+
+  // EFFECT: Apply cursor style when frozen
+  useEffect(() => {
+    if (isClickFrozen) {
+      document.body.style.cursor = "default";
+      return () => {
+        document.body.style.cursor = "";
+      };
+    }
+  }, [isClickFrozen]);
+
   const previewPrerequisitesMet = useMemo(
     () =>
       !shouldReduceMotion &&
@@ -1170,6 +1220,9 @@ export default function Page() {
   ]);
 
   const handleOpenVideoModal = (imageSrc: string) => {
+    // Prevent clicks during freeze period (GIF continues playing)
+    if (isClickFrozen) return;
+    
     const videoUrl = getVideoForSrc(imageSrc);
     if (videoUrl) {
       setCurrentVideoUrl(videoUrl);
@@ -2028,11 +2081,11 @@ export default function Page() {
                               {index === currentImageIndex && (
                                 <>
                                   <div
-                                    className="absolute left-0 top-0 h-full w-[38%] z-[60] cursor-w-resize"
-                                    style={{ pointerEvents: "auto" }}
+                                    className={`absolute left-0 top-0 h-full w-[38%] z-[60] ${carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "cursor-w-resize" : ""}`}
+                                    style={{ pointerEvents: carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "auto" : "none" }}
                                     onClick={(event) => {
                                       event.stopPropagation();
-                                      if (isNavigating) return;
+                                      if (isNavigating || !carouselAnimationComplete || !loadedImages[src] || isClickFrozen) return;
                                       setIsNavigating(true);
                                       navigateBy(-1);
                                       window.setTimeout(
@@ -2042,11 +2095,11 @@ export default function Page() {
                                     }}
                                   />
                                   <div
-                                    className="absolute right-0 top-0 h-full w-[38%] z-[60] cursor-e-resize"
-                                    style={{ pointerEvents: "auto" }}
+                                    className={`absolute right-0 top-0 h-full w-[38%] z-[60] ${carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "cursor-e-resize" : ""}`}
+                                    style={{ pointerEvents: carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "auto" : "none" }}
                                     onClick={(event) => {
                                       event.stopPropagation();
-                                      if (isNavigating) return;
+                                      if (isNavigating || !carouselAnimationComplete || !loadedImages[src] || isClickFrozen) return;
                                       setIsNavigating(true);
                                       navigateBy(1);
                                       window.setTimeout(
