@@ -316,17 +316,17 @@ function getVideoForSrc(src: string): string | null {
  * Used on both desktop and mobile views
  */
 const PROJECT_CAPTIONS: Record<string, string> = {
-  cb: "2025 — Led the SQL Playground and Embedded Wallets launch for Coinbase Developer Platform.",
-  vf: "2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion from first interaction.",
-  theo: "2024 — Founding designer at Theoriq, scaling from PDF to 140k users in six months.",
+  cb: "Q3 2025 — Shipped SQL AI Playground and Embedded Wallets launch for the Coinbase Developer Platform.",
+  vf: "Q2 2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion.",
+  theo: "2024 — Founding designer at Theoriq, scaled from PDF to 140k active users in six months across product, brand and marketing.",
   atlas:
-    "2020 — Led design for an early crypto marketplace during the first wave of NFTs.",
+    "2020 — Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products.",
   defituna:
-    "2021 — Designed and built for a decentralized finance project, allowing traders to borrow, lend and more.",
+    "2021 — Designed and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
   curbcut:
     "2021 — Designed calm, legible data tools that made accessibility insights usable for everyone.",
   zalando:
-    "2022 — Helped establish the first unified B2B design system at Zalando, connecting multiple teams under one shared language.",
+    "2022 — Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.",
   artscapy:
     "From 2017 — Built brands, interfaces, and launch sites that taught the value of clarity and restraint.",
   nationalArchives:
@@ -489,21 +489,31 @@ export default function Page() {
   // ============================================================================
 
   /**
-   * Mobile background variant: switches to opposite theme at panel 3 (project 3 "vf")
-   * Panel structure: Header (0) → Images (1-8) → End panel (9)
-   * Panels 0-2: default background (header + first 2 images)
-   * Panels 3-8: opposite theme background (images 3-8, project 3 "vf" through last image)
-   * Panel 9: default background (end panel with links)
+   * Background variant: switches to opposite theme after third project
+   * Mobile: Panel structure: Header (0) → Images (1-8) → End panel (9)
+   *   - Panels 0-2: default background (header + first 2 images)
+   *   - Panels 3-8: opposite theme background (images 3-8, project 3 "vf" through last image)
+   *   - Panel 9: default background (end panel with links)
+   * Desktop: Based on carousel image index
+   *   - Images 0-2: default background (projects 1-3: "theo", "cb", "vf")
+   *   - Images 3-6: opposite theme background (projects 4-7: "atlas", "defituna", "curbcut", "zalando")
+   *   - Image 7: default background (last project: "artscapy")
    * Uses CSS variables to match system theme (light/dark)
    */
-  const mobileBackgroundStyle = useMemo(() => {
-    if (!isMobile) return {};
-    
+  const backgroundStyle = useMemo(() => {
     // Detect current theme preference
     const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    // Panel logic: default (0-2, 9) vs opposite theme (3-8)
-    const useOppositeTheme = activePanelIndex >= 3 && activePanelIndex < 9;
+    // Determine if we should use opposite theme
+    let useOppositeTheme = false;
+    if (isMobile) {
+      // Mobile: Panel logic: default (0-2, 9) vs opposite theme (3-8)
+      useOppositeTheme = activePanelIndex >= 3 && activePanelIndex < 9;
+    } else {
+      // Desktop: Switch for projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando")
+      // Only the last project (index 7: "artscapy") returns to original theme
+      useOppositeTheme = currentImageIndex >= 3 && currentImageIndex <= 6;
+    }
     
     if (useOppositeTheme) {
       // Use opposite theme colors
@@ -521,7 +531,7 @@ export default function Page() {
         ? 'hsl(var(--neutral-h) 14% 8%)' // Dark mode background
         : 'hsl(var(--neutral-h) var(--neutral-s) 99%)', // Light mode background
     };
-  }, [isMobile, activePanelIndex]);
+  }, [isMobile, activePanelIndex, currentImageIndex]);
 
   const mobileBackgroundClass = useMemo(() => {
     if (!isMobile) return "bg-background";
@@ -755,33 +765,9 @@ export default function Page() {
     []
   );
 
-  // Apply background directly to body element for mobile (highest priority)
+  // Apply background directly to body element for both mobile and desktop
   useEffect(() => {
-    if (!isMobile) {
-      // Reset body background on desktop
-      document.body.style.backgroundColor = '';
-      document.body.style.transition = '';
-      return;
-    }
-    
-    // Detect current theme preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Panel logic: default (0-2, 9) vs opposite theme (3-8)
-    const useOppositeTheme = activePanelIndex >= 3 && activePanelIndex < 9;
-    
-    let bgColor: string;
-    if (useOppositeTheme) {
-      // Use opposite theme colors
-      bgColor = prefersDark 
-        ? 'hsl(var(--neutral-h) var(--neutral-s) 99%)' // Light mode background
-        : 'hsl(var(--neutral-h) 14% 8%)'; // Dark mode background
-    } else {
-      // Default theme - use system theme
-      bgColor = prefersDark
-        ? 'hsl(var(--neutral-h) 14% 8%)' // Dark mode background
-        : 'hsl(var(--neutral-h) var(--neutral-s) 99%)'; // Light mode background
-    }
+    const bgColor = backgroundStyle.backgroundColor;
     
     document.body.style.setProperty('background-color', bgColor, 'important');
     document.body.style.setProperty('transition', shouldReduceMotion 
@@ -792,7 +778,7 @@ export default function Page() {
       document.body.style.removeProperty('background-color');
       document.body.style.removeProperty('transition');
     };
-  }, [isMobile, activePanelIndex, shouldReduceMotion]);
+  }, [backgroundStyle, shouldReduceMotion]);
 
   // Top-level: track active panel and compute distance-based blur during scroll (mobile only)
   useEffect(() => {
@@ -1423,7 +1409,7 @@ export default function Page() {
           className="fixed inset-0 transition-colors"
           style={{
             zIndex: -5,
-            ...(mobileBackgroundStyle as { backgroundColor?: string }),
+            ...(backgroundStyle as { backgroundColor?: string }),
             transition: shouldReduceMotion 
               ? 'none' 
               : 'background-color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
@@ -1459,6 +1445,14 @@ export default function Page() {
             minHeight: "100vh",
             willChange: "auto",
             scrollMarginTop: "var(--header-offset, 4rem)",
+            // Apply dynamic background on desktop to override bg-background class
+            ...(isMobile ? {} : backgroundStyle),
+            // Add transition for desktop background changes
+            ...(isMobile ? {} : {
+              transition: shouldReduceMotion 
+                ? undefined 
+                : 'background-color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+            }),
           }}
         >
           <div className="w-full max-w-screen-xl mx-auto relative z-10 md:flex md:flex-col md:justify-center md:h-full">
@@ -1483,53 +1477,102 @@ export default function Page() {
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
                   <div className="text-center mb-2 md:mb-4">
-                    {loadingSequence.textLoaded && (
-                      <div className="tracking-tight text-xl md:whitespace-nowrap">
-                        <span className="text-foreground/70">
-                          <span
-                            className="font-raf text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
-                            onClick={() => setIsAboutModalOpen(true)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(event) => {
-                              if (
-                                event.key === "Enter" ||
-                                event.key === " "
-                              ) {
-                                event.preventDefault();
-                                setIsAboutModalOpen(true);
-                              }
+                    {loadingSequence.textLoaded && (() => {
+                      // Desktop main text color adjustment based on background theme
+                      // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
+                      // Only the last project (index 7: "artscapy") uses default theme
+                      const useOppositeTheme = !isMobile && currentImageIndex >= 3 && currentImageIndex <= 6;
+                      const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                      
+                      let mainTextColor: string;
+                      let nameTextColor: string;
+                      
+                      if (useOppositeTheme) {
+                        // Opposite theme colors
+                        mainTextColor = prefersDark
+                          ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
+                          : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
+                        nameTextColor = prefersDark
+                          ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
+                          : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
+                      } else {
+                        // Default theme colors (use system colors)
+                        mainTextColor = prefersDark
+                          ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
+                          : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
+                        nameTextColor = prefersDark
+                          ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
+                          : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
+                      }
+                      
+                      return (
+                        <div className="tracking-tight text-xl md:whitespace-nowrap">
+                          <motion.span 
+                            className="inline-block"
+                            style={{
+                              color: mainTextColor,
+                              transition: shouldReduceMotion 
+                                ? 'none' 
+                                : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
                             }}
-                            aria-label="About Raf"
                           >
-                            Raf V.
-                          </span>
-                          {" "}
-                          {["is", "a", "Senior", "AI", "Product", "Designer", "blending", "design,", "code", "and", "craft."].map((word, index) => (
-                            <React.Fragment key={index}>
-                              <motion.span
-                                className="inline-block"
-                                initial={{ filter: "blur(25px)" }}
-                                animate={{ filter: "blur(0px)" }}
-                                transition={{
-                                  duration: 1.4,
-                                  delay: 0.18 * (index + 1),
-                                  ease: EASING.textReveal,
-                                }}
-                                onAnimationComplete={() => {
-                                  if (index === 10) {
-                                    setTextRevealComplete(true);
-                                  }
-                                }}
-                              >
-                                {word}
-                              </motion.span>
-                              {index < 10 && " "}
-                            </React.Fragment>
-                          ))}
-                        </span>
-                      </div>
-                    )}
+                            <span
+                              className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
+                              style={{
+                                color: nameTextColor,
+                                transition: shouldReduceMotion 
+                                  ? 'none' 
+                                  : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                              }}
+                              onClick={() => setIsAboutModalOpen(true)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(event) => {
+                                if (
+                                  event.key === "Enter" ||
+                                  event.key === " "
+                                ) {
+                                  event.preventDefault();
+                                  setIsAboutModalOpen(true);
+                                }
+                              }}
+                              aria-label="About Raf"
+                            >
+                              Raf V.
+                            </span>
+                            {" "}
+                            {["is", "a", "Senior", "AI", "Product", "Designer", "blending", "design,", "code", "and", "craft."].map((word, index) => (
+                              <React.Fragment key={index}>
+                                <motion.span
+                                  className="inline-block"
+                                  style={{
+                                    color: mainTextColor,
+                                    transition: shouldReduceMotion 
+                                      ? 'none' 
+                                      : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                                  }}
+                                  initial={{ filter: "blur(25px)" }}
+                                  animate={{ filter: "blur(0px)" }}
+                                  transition={{
+                                    duration: 1.4,
+                                    delay: 0.18 * (index + 1),
+                                    ease: EASING.textReveal,
+                                  }}
+                                  onAnimationComplete={() => {
+                                    if (index === 10) {
+                                      setTextRevealComplete(true);
+                                    }
+                                  }}
+                                >
+                                  {word}
+                                </motion.span>
+                                {index < 10 && " "}
+                              </React.Fragment>
+                            ))}
+                          </motion.span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </motion.div>
 
@@ -1546,7 +1589,7 @@ export default function Page() {
                     className="fixed inset-0 transition-colors"
                     style={{
                       zIndex: -5, // Higher than -10 but still behind content
-                      ...(mobileBackgroundStyle as { backgroundColor?: string }),
+                      ...(backgroundStyle as { backgroundColor?: string }),
                       transition: shouldReduceMotion 
                         ? 'none' 
                         : 'background-color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
@@ -2098,12 +2141,62 @@ export default function Page() {
                               const parsed = parseCaption(caption);
                               const currentProject =
                                 getProjectFromSrc(currentSrc);
+                              
+                              // Desktop caption color adjustment based on background theme
+                              // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
+                              // Only the last project (index 7: "artscapy") uses default theme
+                              const useOppositeTheme = !isMobile && currentImageIndex >= 3 && currentImageIndex <= 6;
+                              const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                              
+                              let yearColor: string;
+                              let descriptionColor: string;
+                              
+                              if (useOppositeTheme) {
+                                // Opposite theme colors
+                                yearColor = prefersDark
+                                  ? 'hsl(var(--neutral-h) 15% 25%)' // Light theme muted text
+                                  : 'hsl(var(--neutral-h) 10% 70%)'; // Dark theme muted text
+                                descriptionColor = prefersDark
+                                  ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
+                                  : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
+                              } else {
+                                // Default theme colors (use system colors)
+                                yearColor = prefersDark
+                                  ? 'hsl(var(--neutral-h) 10% 70%)' // Dark theme muted text
+                                  : 'hsl(var(--neutral-h) 15% 35%)'; // Light theme muted text
+                                descriptionColor = prefersDark
+                                  ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
+                                  : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
+                              }
+                              
                               return (
                                 <>
                                   {parsed.year && (
-                                    <span className="text-foreground/50 text-sm leading-snug">
+                                    <motion.span
+                                      key={`year-${currentProject ?? currentImageIndex}`}
+                                      className="text-sm leading-snug"
+                                      style={{
+                                        color: yearColor,
+                                        transition: shouldReduceMotion 
+                                          ? 'none' 
+                                          : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                                      }}
+                                      initial={{
+                                        opacity: 0,
+                                        filter: "blur(12px) saturate(0.96)",
+                                      }}
+                                      animate={{
+                                        opacity: 1,
+                                        filter: "blur(0px) saturate(1)",
+                                      }}
+                                      transition={{
+                                        duration: 2.2, // Synced with image transition duration
+                                        ease: [0.16, 1, 0.3, 1],
+                                        delay: 0.25, // Synced with container start time
+                                      }}
+                                    >
                                       {renderYearWithRolling(parsed.year)}
-                                    </span>
+                                    </motion.span>
                                   )}
                                   <motion.span
                                     key={currentProject ?? "caption"}
@@ -2120,7 +2213,13 @@ export default function Page() {
                                       ease: [0.16, 1, 0.3, 1],
                                       delay: 0.25, // Synced with container start time
                                     }}
-                                    className="text-foreground/80 text-sm leading-snug sm:text-right"
+                                    className="text-sm leading-snug sm:text-right"
+                                    style={{
+                                      color: descriptionColor,
+                                      transition: shouldReduceMotion 
+                                        ? 'none' 
+                                        : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                                    }}
                                   >
                                     {parsed.description}
                                   </motion.span>
@@ -2247,6 +2346,59 @@ export default function Page() {
                   <h2 id="about-modal-title" className="sr-only">
                     About Raf
                   </h2>
+                  {/* Close button - Subtle X icon - Fixed to viewport */}
+                  {false && (
+                    <motion.button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCloseAboutModal();
+                      }}
+                      className="fixed top-5 right-5 md:top-6 md:right-6 z-[60] p-3 md:p-2 group"
+                      whileHover={
+                        shouldReduceMotion
+                          ? {}
+                          : { scale: 1.02, rotate: 15 }
+                      }
+                      whileTap={
+                        shouldReduceMotion ? {} : { scale: 0.98 }
+                      }
+                      transition={{
+                        duration: shouldReduceMotion ? 0 : 0.4,
+                        ease: EASING.tertiary,
+                      }}
+                      aria-label="Close about modal"
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        outline: "none",
+                        boxShadow: "none",
+                        color: "rgb(115, 115, 115)",
+                        WebkitTapHighlightColor: "transparent",
+                        cursor: "pointer",
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.outline = "none";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      {/* X icon with thin strokes */}
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{ pointerEvents: "none" }}
+                      >
+                        <path
+                          d="M1 1L11 11M11 1L1 11"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </motion.button>
+                  )}
                   {/* Modal content: 4 columns on desktop, stacked on mobile */}
                   <AboutModalContent shouldReduceMotion={shouldReduceMotion ?? false} />
                 </motion.div>
