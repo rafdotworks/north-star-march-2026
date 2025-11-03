@@ -53,6 +53,7 @@ import {
 import { WorkImageContainer } from "./components/hover"; // Work image with hover effects
 import useAnimationLevel from "@/hooks/useAnimationLevel"; // Animation preference detection
 import { pageTurnVariants } from "@/components/animations/imageTransitions"; // Blur-to-focus animation variants
+import { AboutModalContent } from "./components/AboutModalContent"; // Localized About modal content
 
 // ============================================================================
 // TIMING & INTERACTION CONSTANTS
@@ -2226,7 +2227,7 @@ export default function Page() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6 pt-[25vh] md:pt-[15vh] pb-20"
+                className="fixed inset-0 z-50 flex items-start md:items-center justify-center overflow-y-auto p-4 sm:p-6 pt-[25vh] md:pt-0 pb-20"
                 onClick={handleCloseAboutModal}
                 role="dialog"
                 aria-modal="true"
@@ -2247,221 +2248,7 @@ export default function Page() {
                     About Raf
                   </h2>
                   {/* Modal content: 4 columns on desktop, stacked on mobile */}
-                  <motion.div
-                    variants={modalTextStagger.container}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="text-left text-foreground flex flex-col md:flex-row md:gap-6 space-y-6 md:space-y-0"
-                  >
-                    {/* Section 1: Introduction */}
-                    <motion.div
-                      variants={modalTextStagger.item}
-                      className="flex-1 space-y-5"
-                    >
-                      <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
-                        Origins
-                      </h3>
-                      <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
-                          I spent the first 20 years of my life in the Amalfi
-                          Coast, Italy.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          I care about clarity, systems, and the stories
-                          products tell.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          I started in design from software engineer +
-                          hospitality excellence through curiosity and
-                          obligation.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          <em>What makes things feel right?</em>
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/85">
-                          You can find me on{" "}
-                          <a
-                            href="https://www.linkedin.com/in/raffaelevitaledesign"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-foreground/85 underline hover:text-foreground transition-colors"
-                          >
-                            LinkedIn
-                          </a>
-                          , on{" "}
-                          <a
-                            href="https://x.com/lfgraf"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-foreground/85 underline hover:text-foreground transition-colors"
-                          >
-                            X
-                          </a>
-                          , and via email at{" "}
-                          <a
-                            href="mailto:raf@raf.works"
-                            className="text-foreground/85 underline hover:text-foreground transition-colors"
-                          >
-                            raf@raf.works
-                          </a>
-                          .
-                        </p>
-                      </div>
-                    </motion.div>
-
-                    {/* Divider 1 */}
-                    <motion.div
-                      variants={modalTextStagger.item}
-                      className="md:w-px md:h-auto h-px w-full bg-foreground/10"
-                    />
-
-                    {/* Section 2: Professional Journey */}
-                    <motion.div
-                      variants={modalTextStagger.item}
-                      className="flex-1 space-y-5"
-                    >
-                      <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
-                        Craft
-                      </h3>
-                      <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
-                          Over the past eight years, I&apos;ve designed and
-                          engineered products, systems and experiences.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          I&apos;ve built onboarding systems, shaped design
-                          languages, and helped products grow from zero to
-                          scale.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          I interned at Apple and worked at Coinbase, Voiceflow,
-                          Theoriq, Zalando and many more startups, blending
-                          craft with code, and care with speed.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          I bring a mix of precision and warmth to every surface
-                          I touch, and to every person I collaborate with,
-                          through direct kindness.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          This path taught me that good design isn&apos;t
-                          decoration. Good design is presence and
-                          intentionality.
-                        </p>
-                      </div>
-                    </motion.div>
-
-                    {/* Divider 2 */}
-                    <motion.div
-                      variants={modalTextStagger.item}
-                      className="md:w-px md:h-auto h-px w-full bg-foreground/10"
-                    />
-
-                    {/* Section 3: Lifestyle */}
-                    <motion.div
-                      variants={modalTextStagger.item}
-                      className="flex-1 space-y-5"
-                    >
-                      <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
-                        Presence
-                      </h3>
-                      <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
-                          I split my time mainly between Toronto and Lisbon.
-                          This contrast keeps me balanced.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          I have a thing for offices and thoughtful workspaces.
-                          How they influence focus, energy, and flow. The
-                          details of a desk can say more about someone&apos;s
-                          process than any résumé ever could.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          I&apos;m usually on a yoga mat, cycling, or chasing
-                          light through quiet spaces.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          I&apos;ve been vegetarian for as long as I can
-                          remember.
-                        </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
-                          Personality-wise, I&apos;m an ENTJ, a Red–Yellow on
-                          the Color Code, and an Enneagram 8. I value clarity,
-                          integrity, and energy that feels aligned.
-                        </p>
-                      </div>
-                    </motion.div>
-
-                    {/* Divider 3 */}
-                    <motion.div
-                      variants={modalTextStagger.item}
-                      className="md:w-px md:h-auto h-px w-full bg-foreground/10"
-                    />
-
-                    {/* Section 4: Principles */}
-                    <motion.div
-                      variants={modalTextStagger.item}
-                      className="flex-1 space-y-5"
-                    >
-                      <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
-                        Principles
-                      </h3>
-                      <div className="space-y-3">
-                        <p className="leading-[1.6] text-base text-foreground/85 font-medium md:h-24">
-                          Principles I try to live and build by:
-                        </p>
-                        <ul className="space-y-2 text-base text-foreground/70 leading-[1.6]">
-                          <li className="flex items-start">
-                            <span className="mr-2 text-foreground/40 select-none">
-                              •
-                            </span>
-                            <span>Work hard, be kind, spread joy</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2 text-foreground/40 select-none">
-                              •
-                            </span>
-                            <span>
-                              How you do anything is how you do everything
-                            </span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2 text-foreground/40 select-none">
-                              •
-                            </span>
-                            <span>What feels right &gt; what charts well</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2 text-foreground/40 select-none">
-                              •
-                            </span>
-                            <span>
-                              Start before you think you&apos;re ready
-                            </span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2 text-foreground/40 select-none">
-                              •
-                            </span>
-                            <span>Always happy, never satisfied.</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2 text-foreground/40 select-none">
-                              •
-                            </span>
-                            <span>Beauty is function with empathy</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2 text-foreground/40 select-none">
-                              •
-                            </span>
-                            <span>Slow is smooth, smooth is fast</span>
-                          </li>
-                        </ul>
-                      </div>
-                    </motion.div>
-                  </motion.div>
+                  <AboutModalContent shouldReduceMotion={shouldReduceMotion ?? false} />
                 </motion.div>
               </motion.div>
             </>
