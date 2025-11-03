@@ -52,7 +52,7 @@ import {
 } from "@/components/animations/LoadingAnimations";
 import { WorkImageContainer } from "./components/hover"; // Work image with hover effects
 import useAnimationLevel from "@/hooks/useAnimationLevel"; // Animation preference detection
-import { pageTurnVariants } from "@/components/animations/imageTransitions"; // Page-turn animation variants
+import { pageTurnVariants } from "@/components/animations/imageTransitions"; // Blur-to-focus animation variants
 
 // ============================================================================
 // TIMING & INTERACTION CONSTANTS
@@ -84,7 +84,7 @@ const PREVIEW_SETTLE_DELAY = 200;
 // ============================================================================
 
 /** Number of images to load immediately on initial page load (critical content) */
-const INITIAL_IMAGE_COUNT = 2;
+const INITIAL_IMAGE_COUNT = 4;
 /** Total number of images to preload eagerly after initial load */
 const PRELOAD_IMAGE_COUNT = 4;
 /** How many images ahead to preload during carousel navigation (adaptive lookahead) */
@@ -121,6 +121,12 @@ const MOBILE_CONTACT_LINKS = [
     href: "https://x.com/lfgraf",
     label: "X",
     ariaLabel: "Raf on X",
+    openInNewTab: true,
+  },
+  {
+    href: "/documents/CV.pdf",
+    label: "CV",
+    ariaLabel: "View Raf's CV",
     openInNewTab: true,
   },
 ] as const;
@@ -447,8 +453,7 @@ export default function Page() {
   const [imageWidth, setImageWidth] = useState<number | null>(null); // Current image width for layout
 
   // Animation sequence flags
-  const [firstLineComplete, setFirstLineComplete] = useState(false); // First text line animated
-  const [secondLineComplete, setSecondLineComplete] = useState(false); // Second text line animated
+  const [textRevealComplete, setTextRevealComplete] = useState(false); // Text animation complete
   const [carouselAnimationComplete, setCarouselAnimationComplete] =
     useState(false); // Carousel visible
   const [finalTextAnimationComplete, setFinalTextAnimationComplete] =
@@ -467,7 +472,7 @@ export default function Page() {
   const [activePanelIndex, setActivePanelIndex] = useState(0); // Active mobile scroll panel
   const [blurByIndex, setBlurByIndex] = useState<number[]>([]); // Per-panel blur amounts
   const [isScrolling, setIsScrolling] = useState(false); // Mobile scroll in progress
-  const [footerRevealReady, setFooterRevealReady] = useState(false); // Mobile footer ready to show
+  const [footerRevealReady, setFooterRevealReady] = useState(true); // Footer links visibility (instant on)
 
   // Loading stage tracking
   const [currentLoadingStage, setCurrentLoadingStage] = useState(0); // Current loading stage (0-4)
@@ -506,12 +511,6 @@ export default function Page() {
     loadingSequence.textLoaded,
   ]);
 
-  // EFFECT: Skip second line animation if reduced motion enabled
-  useEffect(() => {
-    if (shouldReduceMotion && firstLineComplete) {
-      setSecondLineComplete(true);
-    }
-  }, [shouldReduceMotion, firstLineComplete]);
 
   // EFFECT: Initial page blur-to-focus animation (entrance effect)
   // Animates from 15px blur to 0px over 1.5s with cubic easing
@@ -808,30 +807,8 @@ export default function Page() {
     };
   }, [mounted, isMobile, isScrolling]);
 
-  // Reveal footer links after the first user scroll on mobile
-  useEffect(() => {
-    if (!mounted || !isMobile || footerRevealReady) return;
-    const container = mobileScrollRef.current;
-    if (!container) return;
-
-    const onFirstScroll = () => {
-      if (container.scrollTop > 6) {
-        setFooterRevealReady(true);
-        container.removeEventListener("scroll", onFirstScroll);
-      }
-    };
-    container.addEventListener("scroll", onFirstScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onFirstScroll);
-  }, [mounted, isMobile, footerRevealReady]);
-
-  // Fallback: if scroll event is not captured, reveal after a short delay
-  useEffect(() => {
-    if (!mounted || !isMobile || footerRevealReady) return;
-    const timer = window.setTimeout(() => {
-      setFooterRevealReady(true);
-    }, 3500);
-    return () => window.clearTimeout(timer);
-  }, [mounted, isMobile, footerRevealReady]);
+  // Footer is visible immediately (footerRevealReady defaults to true)
+  // Scroll-based reveal logic removed - footer is always visible on mobile
 
   const navigateBy = useCallback(
     (delta: number) => {
@@ -1307,121 +1284,48 @@ export default function Page() {
                   <div className="text-center mb-2 md:mb-4">
                     {loadingSequence.textLoaded && (
                       <div className="tracking-tight text-xl md:whitespace-nowrap">
-                        {/* Three-part text reveal on single line - matching mobile timing */}
                         <span className="text-foreground/70">
-                          {/* Part 1: "Raf leads design," */}
-                          <motion.span
-                            initial={{
-                              opacity: 0,
-                              y: 25,
-                              filter: "blur(25px)",
+                          <span
+                            className="font-raf text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
+                            onClick={() => setIsAboutModalOpen(true)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                              if (
+                                event.key === "Enter" ||
+                                event.key === " "
+                              ) {
+                                event.preventDefault();
+                                setIsAboutModalOpen(true);
+                              }
                             }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                            transition={{
-                              duration: 1.5,
-                              delay: 0.2,
-                              ease: EASING.textReveal,
-                            }}
-                            onAnimationComplete={() => {
-                              // After first part completes, trigger second part
-                              setTimeout(() => {
-                                setFirstLineComplete(true);
-                              }, 450);
-                            }}
+                            aria-label="About Raf"
                           >
-                            <span
-                              className="font-raf cursor-pointer hover:bg-foreground/5 hover:text-foreground hover:scale-[1.01] transition-all duration-300 inline-block relative text-foreground/95 rounded-sm px-1.5 -mx-1.5"
-                              onClick={() => setIsAboutModalOpen(true)}
-                              role="link"
-                              tabIndex={0}
-                              onKeyDown={(event) => {
-                                if (
-                                  event.key === "Enter" ||
-                                  event.key === " "
-                                ) {
-                                  event.preventDefault();
-                                  setIsAboutModalOpen(true);
-                                }
-                              }}
-                              aria-label="About Raf"
-                            >
-                              Raf
-                              {/* Interactive hint underline */}
-                              <motion.div
-                                className="absolute left-1.5 right-1.5 pointer-events-none h-px rounded-full"
-                                style={{
-                                  bottom: 0,
-                                  background: "currentColor",
-                                  originX: 0,
-                                }}
-                                initial={{ scaleX: 0, opacity: 0 }}
-                                animate={{
-                                  scaleX: isFooterReady ? 1 : 0,
-                                  opacity: isFooterReady ? 0.5 : 0,
-                                }}
+                            Raf
+                          </span>
+                          {" "}
+                          {["blends", "design,", "code", "and", "craft", "to", "shape", "AI", "experiences."].map((word, index) => (
+                            <React.Fragment key={index}>
+                              <motion.span
+                                className="inline-block"
+                                initial={{ filter: "blur(25px)" }}
+                                animate={{ filter: "blur(0px)" }}
                                 transition={{
-                                  duration: 0.35,
-                                  ease: [0.22, 1, 0.36, 1],
-                                  delay: 0.1,
+                                  duration: 1.4,
+                                  delay: 0.18 * (index + 1),
+                                  ease: EASING.textReveal,
                                 }}
-                              />
-                            </span>
-                            {" leads design, "}
-                          </motion.span>
-
-                          {/* Part 2: "crafts narratives" */}
-                          <motion.span
-                            initial={{
-                              opacity: 0,
-                              y: 25,
-                              filter: "blur(25px)",
-                            }}
-                            animate={
-                              firstLineComplete
-                                ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                                : {}
-                            }
-                            transition={{
-                              duration: 1.5,
-                              delay: 0,
-                              ease: EASING.textReveal,
-                            }}
-                            onAnimationComplete={() => {
-                              // After second part completes, trigger third part
-                              setTimeout(() => {
-                                setSecondLineComplete(true);
-                              }, 450);
-                            }}
-                          >
-                            crafts narratives{" "}
-                          </motion.span>
-
-                          {/* Part 3: "and ships code." */}
-                          <motion.span
-                            initial={{
-                              opacity: 0,
-                              y: 25,
-                              filter: "blur(25px)",
-                            }}
-                            animate={
-                              secondLineComplete
-                                ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                                : {}
-                            }
-                            transition={{
-                              duration: 1.5,
-                              delay: 0,
-                              ease: EASING.textReveal,
-                            }}
-                            onAnimationComplete={() => {
-                              // Third part complete - images can now animate with delay
-                              setTimeout(() => {
-                                // Signal for images to appear
-                              }, 1500);
-                            }}
-                          >
-                            and ships code.
-                          </motion.span>
+                                onAnimationComplete={() => {
+                                  if (index === 8) {
+                                    setTextRevealComplete(true);
+                                  }
+                                }}
+                              >
+                                {word}
+                              </motion.span>
+                              {index < 8 && " "}
+                            </React.Fragment>
+                          ))}
                         </span>
                       </div>
                     )}
@@ -1452,36 +1356,13 @@ export default function Page() {
                         {/* Constrain width to match About modal's visual padding */}
                         <div className="w-full max-w-2xl">
                           <div className="tracking-tight text-lg text-center">
-                            {/* Natural text flow with word-by-word animation for mobile */}
-                            <span className="text-foreground/70">
-                              {/* Part 1: "Raf leads design," */}
-                              <motion.span
-                                initial={{
-                                  opacity: 0,
-                                  y: 25,
-                                  filter: "blur(25px)",
-                                }}
-                                animate={{
-                                  opacity: 1,
-                                  y: 0,
-                                  filter: "blur(0px)",
-                                }}
-                                transition={{
-                                  duration: 1.8, // 20% slower (1.5 * 1.2)
-                                  delay: 0.24, // 20% slower delay (0.2 * 1.2)
-                                  ease: EASING.textReveal,
-                                }}
-                                onAnimationComplete={() => {
-                                  // After first part completes, trigger second part
-                                  setTimeout(() => {
-                                    setFirstLineComplete(true);
-                                  }, 550); // 20% slower pause (450 * 1.2 ≈ 540, rounded to 550)
-                                }}
-                              >
+                            <div className="text-foreground/70">
+                              {/* Line 1: "Raf blends design, code and craft" */}
+                              <div>
                                 <span
-                                  className="font-raf cursor-pointer hover:bg-foreground/5 hover:text-foreground hover:scale-[1.01] transition-all duration-300 inline-block relative mr-1 text-foreground/95 rounded-sm px-1.5 -mx-1.5"
+                                  className="font-raf text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 pointer-events-auto inline-block"
                                   onClick={() => setIsAboutModalOpen(true)}
-                                  role="link"
+                                  role="button"
                                   tabIndex={0}
                                   onKeyDown={(event) => {
                                     if (
@@ -1495,86 +1376,52 @@ export default function Page() {
                                   aria-label="About Raf"
                                 >
                                   Raf
-                                  {/* Interactive hint underline */}
-                                  <motion.div
-                                    className="absolute left-1.5 right-1.5 pointer-events-none h-px rounded-full"
-                                    style={{
-                                      bottom: 0,
-                                      background: "currentColor",
-                                      originX: 0,
-                                    }}
-                                    initial={{ scaleX: 0, opacity: 0 }}
-                                    animate={{
-                                      scaleX: isFooterReady ? 1 : 0,
-                                      opacity: isFooterReady ? 0.5 : 0,
-                                    }}
-                                    transition={{
-                                      duration: 0.35,
-                                      ease: [0.22, 1, 0.36, 1],
-                                      delay: 0.1,
-                                    }}
-                                  />
                                 </span>
-                                <span>leads design, </span>
-                              </motion.span>
-
-                              {/* Part 2: "crafts narratives" */}
-                              <motion.span
-                                initial={{
-                                  opacity: 0,
-                                  y: 25,
-                                  filter: "blur(25px)",
-                                }}
-                                animate={
-                                  firstLineComplete
-                                    ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                                    : {}
-                                }
-                                transition={{
-                                  duration: 1.8, // 20% slower (1.5 * 1.2)
-                                  delay: 0,
-                                  ease: EASING.textReveal,
-                                }}
-                                onAnimationComplete={() => {
-                                  // After second part completes, trigger third part
-                                  setTimeout(() => {
-                                    setSecondLineComplete(true);
-                                  }, 550); // 20% slower pause (450 * 1.2 ≈ 540, rounded to 550)
-                                }}
-                              >
-                                crafts narratives
-                              </motion.span>
-
-                              {/* Line break before "and ships code." on mobile */}
-                              <br />
-
-                              {/* Part 3: "and ships code." */}
-                              <motion.span
-                                initial={{
-                                  opacity: 0,
-                                  y: 25,
-                                  filter: "blur(25px)",
-                                }}
-                                animate={
-                                  secondLineComplete
-                                    ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                                    : {}
-                                }
-                                transition={{
-                                  duration: 1.8, // 20% slower (1.5 * 1.2)
-                                  delay: 0,
-                                  ease: EASING.textReveal,
-                                }}
-                                onAnimationComplete={() => {
-                                  // Third line complete - trigger image and caption reveals with deliberate delay
-                                  setTimeout(() => {
-                                    // Images and captions can now animate in
-                                  }, 1800); // 20% slower pause before images (1500 * 1.2)
-                                }}
-                              >
-                                and ships code.
-                              </motion.span>
-                            </span>
+                                {" "}
+                                {["blends", "design,", "code", "and", "craft"].map((word, index) => (
+                                  <React.Fragment key={index}>
+                                    <motion.span
+                                      className="inline-block"
+                                      initial={{ filter: "blur(25px)" }}
+                                      animate={{ filter: "blur(0px)" }}
+                                      transition={{
+                                        duration: 1.4,
+                                        delay: 0.18 * (index + 1),
+                                        ease: EASING.textReveal,
+                                      }}
+                                    >
+                                      {word}
+                                    </motion.span>
+                                    {index < 4 && " "}
+                                  </React.Fragment>
+                                ))}
+                              </div>
+                              {/* Line 2: "to shape AI experiences." */}
+                              <div>
+                                {["to", "shape", "AI", "experiences."].map((word, index) => (
+                                  <React.Fragment key={index}>
+                                    <motion.span
+                                      className="inline-block"
+                                      initial={{ filter: "blur(25px)" }}
+                                      animate={{ filter: "blur(0px)" }}
+                                      transition={{
+                                        duration: 1.4,
+                                        delay: 0.18 * 6 + 0.4 + 0.18 * index, // Line 1 completes + brief pause + continue word by word
+                                        ease: EASING.textReveal,
+                                      }}
+                                      onAnimationComplete={() => {
+                                        if (index === 3) {
+                                          setTextRevealComplete(true);
+                                        }
+                                      }}
+                                    >
+                                      {word}
+                                    </motion.span>
+                                    {index < 3 && " "}
+                                  </React.Fragment>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </section>
@@ -1612,11 +1459,11 @@ export default function Page() {
                                     scale: shouldReduceMotion ? 1 : 0.95,
                                   }}
                                   animate={
-                                    // Only animate after all text lines are complete for first image
+                                    // Only animate after text is complete for first image
                                     (
                                       index === 0
                                         ? loadedImages[src] &&
-                                          secondLineComplete
+                                          textRevealComplete
                                         : loadedImages[src]
                                     )
                                       ? {
@@ -1626,8 +1473,8 @@ export default function Page() {
                                           transition: {
                                             duration: 2.6, // Match desktop image reveal duration
                                             ease: EASING.secondary, // Use same easing as desktop
-                                            // First image appears after text completes with much longer delay
-                                            delay: index === 0 ? 2.5 : 0, // Increased from 1.0 to 2.5 seconds
+                                            // First image appears after text completes with slower transition
+                                            delay: index === 0 ? 1.8 : 0,
                                           },
                                         }
                                       : {}
@@ -1681,7 +1528,7 @@ export default function Page() {
                                       filter: "blur(10px)",
                                     }}
                                     animate={
-                                      loadedImages[src] && secondLineComplete
+                                      loadedImages[src] && textRevealComplete
                                         ? {
                                             opacity: 1,
                                             y: 0,
@@ -1693,7 +1540,7 @@ export default function Page() {
                                       duration: 1.2, // Increased for slower caption reveal (match desktop)
                                       ease: [0.16, 1, 0.3, 1], // Match desktop caption easing
                                       // Caption follows image with more deliberate delay
-                                      delay: index === 0 ? 3.0 : 0.3, // Much longer delay for first caption after text
+                                      delay: index === 0 ? 0.5 : 0.3, // Caption appears after image
                                     }}
                                     onAnimationComplete={() => {
                                       if (index === 0) {
@@ -1723,53 +1570,55 @@ export default function Page() {
                         </motion.section>
                       ))}
 
-                      {/* Footer as final panel - appears after last project */}
-                      <section
-                        className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
-                        style={{
-                          paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING,
-                        }}
-                        aria-label="Contact links"
-                      >
-                        <div>
-                          <motion.div
-                            initial={{ opacity: 0, y: 8, filter: "blur(6px)" }}
-                            animate={
-                              isFooterReady
-                                ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                                : { opacity: 0, y: 8, filter: "blur(6px)" }
-                            }
-                            transition={{
-                              duration: 0.55,
-                              ease: EASING.tertiary,
-                              delay: 0.1,
-                            }}
-                            className="flex items-center justify-center gap-4 text-sm"
-                          >
-                            {MOBILE_CONTACT_LINKS.map((link) => (
-                              <a
-                                key={link.href}
-                                href={link.href}
-                                target={
-                                  link.openInNewTab ? "_blank" : undefined
-                                }
-                                rel={
-                                  link.openInNewTab
-                                    ? "noopener noreferrer"
-                                    : undefined
-                                }
-                                aria-label={link.ariaLabel}
-                                className="text-foreground/85 hover:text-foreground font-medium transition-colors"
-                              >
-                                {link.label}
-                              </a>
-                            ))}
-                          </motion.div>
-                        </div>
-                      </section>
                     </main>
                   </div>
                 </motion.div>
+
+                {/* Fixed footer at bottom - always visible on mobile */}
+                <div
+                  className="fixed bottom-0 left-0 right-0 z-50 block md:hidden"
+                  style={{
+                    paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING,
+                    paddingTop: "12px",
+                    paddingLeft: "env(safe-area-inset-left, 0px)",
+                    paddingRight: "env(safe-area-inset-right, 0px)",
+                  }}
+                  aria-label="Contact links"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, filter: "blur(6px)" }}
+                    animate={
+                      isFooterReady
+                        ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                        : { opacity: 0, y: 8, filter: "blur(6px)" }
+                    }
+                    transition={{
+                      duration: 0.55,
+                      ease: EASING.tertiary,
+                      delay: 0.1,
+                    }}
+                    className="flex items-center justify-center gap-4 text-sm px-4"
+                  >
+                    {MOBILE_CONTACT_LINKS.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        target={
+                          link.openInNewTab ? "_blank" : undefined
+                        }
+                        rel={
+                          link.openInNewTab
+                            ? "noopener noreferrer"
+                            : undefined
+                        }
+                        aria-label={link.ariaLabel}
+                        className="text-foreground/85 hover:text-foreground font-medium transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </motion.div>
+                </div>
 
                 <motion.div
                   className="w-full mt-0 md:mt-0"
@@ -1780,7 +1629,7 @@ export default function Page() {
                     scale: 0.98,
                   }}
                   animate={
-                    secondLineComplete
+                    textRevealComplete
                       ? {
                           opacity: 1,
                           y: 0,
@@ -1796,7 +1645,7 @@ export default function Page() {
                   }
                   transition={{
                     duration: 2.8, // Slower reveal matching mobile polish
-                    delay: 2.5, // Match mobile timing - significant pause after text completes
+                    delay: 1.8, // Carousel appears after text with slower transition
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   onAnimationComplete={() => {
@@ -1845,7 +1694,8 @@ export default function Page() {
                               {index === currentImageIndex && (
                                 <>
                                   <div
-                                    className="absolute left-0 top-0 h-full w-[28%] z-[60] cursor-w-resize"
+                                    className="absolute left-0 top-0 h-full w-[38%] z-[60] cursor-w-resize"
+                                    style={{ pointerEvents: "auto" }}
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       if (isNavigating) return;
@@ -1858,7 +1708,8 @@ export default function Page() {
                                     }}
                                   />
                                   <div
-                                    className="absolute right-0 top-0 h-full w-[28%] z-[60] cursor-e-resize"
+                                    className="absolute right-0 top-0 h-full w-[38%] z-[60] cursor-e-resize"
+                                    style={{ pointerEvents: "auto" }}
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       if (isNavigating) return;
@@ -1870,7 +1721,7 @@ export default function Page() {
                                       );
                                     }}
                                   />
-                                  <div className="absolute left-[28%] top-0 h-full w-[44%] z-[95] pointer-events-none" />
+                                  <div className="absolute left-[38%] top-0 h-full w-[24%] z-[95] pointer-events-none" />
                                 </>
                               )}
                               <div className="flex flex-col items-center">
@@ -1961,7 +1812,7 @@ export default function Page() {
                               return (
                                 <>
                                   {parsed.year && (
-                                    <span className="text-foreground/50 text-sm font-medium">
+                                    <span className="text-foreground/50 text-sm leading-snug">
                                       {renderYearWithRolling(parsed.year)}
                                     </span>
                                   )}
@@ -1980,7 +1831,7 @@ export default function Page() {
                                       ease: [0.16, 1, 0.3, 1],
                                       delay: 0.15, // Increased from 0.02s for staged appearance after year
                                     }}
-                                    className="text-foreground/80 text-sm font-medium sm:text-right"
+                                    className="text-foreground/80 text-sm leading-snug sm:text-right"
                                   >
                                     {parsed.description}
                                   </motion.span>
