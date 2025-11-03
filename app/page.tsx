@@ -419,6 +419,8 @@ export default function Page() {
   const slideshowRef = useRef<HTMLDivElement | null>(null); // Slideshow container for intersection observer
   const mobileScrollRef = useRef<HTMLElement | null>(null); // Mobile scroll container
   const lastDirectionRef = useRef<1 | -1>(1); // Carousel navigation direction (persistent)
+  const hasUserScrolledRef = useRef(false); // Track scroll interaction for footer reveal
+  const footerRevealReadyRef = useRef(false); // Ref for footer reveal state to avoid stale closures
 
   // ============================================================================
   // HOOKS - External state and utilities
@@ -472,10 +474,14 @@ export default function Page() {
   const [activePanelIndex, setActivePanelIndex] = useState(0); // Active mobile scroll panel
   const [blurByIndex, setBlurByIndex] = useState<number[]>([]); // Per-panel blur amounts
   const [isScrolling, setIsScrolling] = useState(false); // Mobile scroll in progress
-  const [footerRevealReady, setFooterRevealReady] = useState(true); // Footer links visibility (instant on)
+  const [hasUserScrolled, setHasUserScrolled] = useState(false); // Track if user has actively scrolled
+  const [footerRevealReady, setFooterRevealReady] = useState(false); // Footer links visibility (reveals after first scroll)
 
   // Loading stage tracking
   const [currentLoadingStage, setCurrentLoadingStage] = useState(0); // Current loading stage (0-4)
+
+  // Timezone message
+  const [timezoneMessage, setTimezoneMessage] = useState(""); // Timezone difference message
 
   // ============================================================================
   // COMPUTED VALUES
@@ -770,6 +776,16 @@ export default function Page() {
         nextBlur[i] = Math.max(0, Math.min(maxBlur, easedBlur));
       });
       setActivePanelIndex(closestIndex);
+      
+      // Check footer reveal condition directly after calculating panel index
+      // This ensures we catch the moment when user scrolls past header (index 0 -> 1)
+      if (closestIndex >= 1 && hasUserScrolledRef.current && !footerRevealReadyRef.current) {
+        footerRevealReadyRef.current = true;
+        window.setTimeout(() => {
+          setFooterRevealReady(true);
+        }, 600);
+      }
+      
       setBlurByIndex((prev) => {
         // Avoid excessive state churn
         if (
@@ -784,6 +800,9 @@ export default function Page() {
 
     const onScroll = () => {
       if (rafId != null) return;
+      // Mark that user has actively scrolled (both state and ref for synchronous access)
+      hasUserScrolledRef.current = true;
+      setHasUserScrolled(true);
       setIsScrolling(true);
       rafId = window.requestAnimationFrame(() => {
         rafId = null;
@@ -807,8 +826,10 @@ export default function Page() {
     };
   }, [mounted, isMobile, isScrolling]);
 
-  // Footer is visible immediately (footerRevealReady defaults to true)
-  // Scroll-based reveal logic removed - footer is always visible on mobile
+  // Keep ref in sync with state for footer reveal check in compute function
+  useEffect(() => {
+    footerRevealReadyRef.current = footerRevealReady;
+  }, [footerRevealReady]);
 
   const navigateBy = useCallback(
     (delta: number) => {
@@ -925,6 +946,60 @@ export default function Page() {
       return () => window.clearTimeout(timer);
     }
   }, [carouselAnimationComplete, finalTextAnimationComplete]);
+
+  // EFFECT: Timezone difference calculation
+  useEffect(() => {
+    const updateTimezoneMessage = () => {
+      const now = new Date();
+
+      // Get Toronto time using proper timezone-aware formatting
+      const torontoFormatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Toronto",
+        hour: "2-digit",
+        hour12: false,
+        minute: "2-digit",
+      });
+      
+      const torontoParts = torontoFormatter.formatToParts(now);
+      const torontoHour = parseInt(torontoParts.find(p => p.type === "hour")?.value || "0", 10);
+      const torontoMinute = parseInt(torontoParts.find(p => p.type === "minute")?.value || "0", 10);
+      const torontoTotalMinutes = torontoHour * 60 + torontoMinute;
+
+      // Get user's local time
+      const userTotalMinutes = now.getHours() * 60 + now.getMinutes();
+
+      // Calculate difference in minutes
+      let differenceMinutes = torontoTotalMinutes - userTotalMinutes;
+
+      // Handle day boundary crossing (normalize to -12 to +12 hours range)
+      if (differenceMinutes > 12 * 60) {
+        differenceMinutes -= 24 * 60;
+      } else if (differenceMinutes < -12 * 60) {
+        differenceMinutes += 24 * 60;
+      }
+
+      // Convert to hours (round to nearest hour)
+      const differenceHours = Math.round(differenceMinutes / 60);
+
+      // Generate message
+      let message = "";
+      if (differenceHours === 0) {
+        message = "Raf is in your timezone";
+      } else if (differenceHours > 0) {
+        message = `Raf is ${differenceHours} hour${differenceHours !== 1 ? 's' : ''} ahead of you`;
+      } else {
+        message = `Raf is ${Math.abs(differenceHours)} hour${Math.abs(differenceHours) !== 1 ? 's' : ''} behind you`;
+      }
+
+      setTimezoneMessage(message);
+    };
+
+    updateTimezoneMessage();
+    // Update every minute (timezone difference won't change more frequently)
+    const interval = setInterval(updateTimezoneMessage, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const previewPrerequisitesMet = useMemo(
     () =>
@@ -1528,26 +1603,49 @@ export default function Page() {
                                       filter: "blur(10px)",
                                     }}
                                     animate={
-                                      loadedImages[src] && textRevealComplete
-                                        ? {
+                                      (() => {
+                                        // Initial load animation for first image
+                                        if (index === 0 && loadedImages[src] && textRevealComplete) {
+                                          return {
                                             opacity: 1,
                                             y: 0,
                                             filter: "blur(0px)",
-                                          }
-                                        : {}
+                                            transition: {
+                                              duration: 1.2,
+                                              ease: [0.16, 1, 0.3, 1],
+                                              delay: 0.5,
+                                            },
+                                          };
+                                        }
+                                        
+                                        // Only animate if image is loaded
+                                        if (!loadedImages[src]) {
+                                          return {};
+                                        }
+                                        
+                                        // Scroll-based animation: sync with image blur and panel state
+                                        const isActive = activePanelIndex === index;
+                                        const blurAmount = blurByIndex[index] || 0;
+                                        return {
+                                          opacity: isActive ? 1 : 0.88,
+                                          y: 0,
+                                          filter: `blur(${blurAmount}px)`,
+                                          transition: {
+                                            duration: 0.4, // Match image blur transition
+                                            ease: [0.22, 1, 0.36, 1], // Match image blur easing
+                                          },
+                                        };
+                                      })()
                                     }
-                                    transition={{
-                                      duration: 1.2, // Increased for slower caption reveal (match desktop)
-                                      ease: [0.16, 1, 0.3, 1], // Match desktop caption easing
-                                      // Caption follows image with more deliberate delay
-                                      delay: index === 0 ? 0.5 : 0.3, // Caption appears after image
-                                    }}
                                     onAnimationComplete={() => {
-                                      if (index === 0) {
-                                        // First caption signals footer can reveal next, with a subtle offset
+                                      // Reveal footer when first project caption completes (backup trigger)
+                                      // Only trigger if user has actively scrolled to prevent premature reveal
+                                      if (index === 0 && !footerRevealReadyRef.current && hasUserScrolledRef.current) {
+                                        // Caption animation complete - smooth reveal after a brief moment
+                                        footerRevealReadyRef.current = true;
                                         window.setTimeout(
                                           () => setFooterRevealReady(true),
-                                          220
+                                          400
                                         );
                                       }
                                     }}
@@ -1573,52 +1671,6 @@ export default function Page() {
                     </main>
                   </div>
                 </motion.div>
-
-                {/* Fixed footer at bottom - always visible on mobile */}
-                <div
-                  className="fixed bottom-0 left-0 right-0 z-50 block md:hidden"
-                  style={{
-                    paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING,
-                    paddingTop: "12px",
-                    paddingLeft: "env(safe-area-inset-left, 0px)",
-                    paddingRight: "env(safe-area-inset-right, 0px)",
-                  }}
-                  aria-label="Contact links"
-                >
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, filter: "blur(6px)" }}
-                    animate={
-                      isFooterReady
-                        ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                        : { opacity: 0, y: 8, filter: "blur(6px)" }
-                    }
-                    transition={{
-                      duration: 0.55,
-                      ease: EASING.tertiary,
-                      delay: 0.1,
-                    }}
-                    className="flex items-center justify-center gap-4 text-sm px-4"
-                  >
-                    {MOBILE_CONTACT_LINKS.map((link) => (
-                      <a
-                        key={link.href}
-                        href={link.href}
-                        target={
-                          link.openInNewTab ? "_blank" : undefined
-                        }
-                        rel={
-                          link.openInNewTab
-                            ? "noopener noreferrer"
-                            : undefined
-                        }
-                        aria-label={link.ariaLabel}
-                        className="text-foreground/85 hover:text-foreground font-medium transition-colors"
-                      >
-                        {link.label}
-                      </a>
-                    ))}
-                  </motion.div>
-                </div>
 
                 <motion.div
                   className="w-full mt-0 md:mt-0"
@@ -1781,16 +1833,16 @@ export default function Page() {
                         }
                         initial={{
                           opacity: 0,
-                          filter: "blur(10px) saturate(0.96)",
+                          filter: "blur(12px) saturate(0.96)",
                         }}
                         animate={{
                           opacity: 1,
                           filter: "blur(0px) saturate(1)",
                         }}
                         transition={{
-                          duration: 1.2, // Increased from 0.6s for slower caption reveal
+                          duration: 2.2, // Synced with image transition duration
                           ease: [0.16, 1, 0.3, 1],
-                          delay: 0.3, // Increased from 0.08s for more deliberate appearance
+                          delay: 0.25, // Starts slightly after image transition begins
                         }}
                       >
                         <div
@@ -1820,16 +1872,16 @@ export default function Page() {
                                     key={currentProject ?? "caption"}
                                     initial={{
                                       opacity: 0,
-                                      filter: "blur(10px) saturate(0.96)",
+                                      filter: "blur(12px) saturate(0.96)",
                                     }}
                                     animate={{
                                       opacity: 1,
                                       filter: "blur(0px) saturate(1)",
                                     }}
                                     transition={{
-                                      duration: 1.0, // Increased from 0.55s for slower text reveal
+                                      duration: 2.2, // Synced with image transition duration
                                       ease: [0.16, 1, 0.3, 1],
-                                      delay: 0.15, // Increased from 0.02s for staged appearance after year
+                                      delay: 0.25, // Synced with container start time
                                     }}
                                     className="text-foreground/80 text-sm leading-snug sm:text-right"
                                   >
@@ -2177,6 +2229,53 @@ export default function Page() {
                 </motion.div>
               </motion.div>
             </>
+          )}
+        </AnimatePresence>
+      </div>
+      {/* Fixed footer at bottom - always visible on mobile, outside filter div */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-[100] block md:hidden"
+        style={{
+          paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING,
+          paddingTop: "12px",
+          paddingLeft: "env(safe-area-inset-left, 0px)",
+          paddingRight: "env(safe-area-inset-right, 0px)",
+        }}
+        aria-label="Contact links"
+      >
+        <AnimatePresence>
+          {isFooterReady && (
+            <motion.div
+              key="footer-links"
+              initial={{ opacity: 0, y: 12, filter: "blur(10px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: 12, filter: "blur(10px)" }}
+              transition={{
+                duration: 1.2,
+                ease: EASING.secondary,
+                delay: 0.2,
+              }}
+              className="flex items-center justify-center gap-4 text-sm px-4"
+            >
+          {MOBILE_CONTACT_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target={
+                link.openInNewTab ? "_blank" : undefined
+              }
+              rel={
+                link.openInNewTab
+                  ? "noopener noreferrer"
+                  : undefined
+              }
+              aria-label={link.ariaLabel}
+              className="text-foreground/85 hover:text-foreground font-medium transition-colors"
+            >
+              {link.label}
+            </a>
+          ))}
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
