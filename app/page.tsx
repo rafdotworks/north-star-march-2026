@@ -487,6 +487,23 @@ export default function Page() {
   // COMPUTED VALUES
   // ============================================================================
 
+  /**
+   * Mobile background variant: switches to muted variant at panel 3 (project 3 "vf")
+   * Panel structure: Header (0) → Images (1-8) → End panel (9)
+   * Panels 0-2: default background (header + first 2 images)
+   * Panels 3-8: muted variant background (images 3-8, project 3 "vf" through last image)
+   * Panel 9: default background (end panel with links)
+   */
+  const mobileBackgroundVariant = useMemo(() => {
+    if (!isMobile) return "bg-background";
+    // Panel 0-2: default, Panel 3-8: variant, Panel 9: default
+    // Note: activePanelIndex 0 = header, 1-8 = images, 9 = end panel
+    if (activePanelIndex >= 3 && activePanelIndex < 9) {
+      return "bg-muted";
+    }
+    return "bg-background";
+  }, [isMobile, activePanelIndex]);
+
   // ============================================================================
   // EFFECTS - Lifecycle and side effects
   // ============================================================================
@@ -568,11 +585,13 @@ export default function Page() {
     };
   }, [criticalContentLoaded, mounted]);
 
-  // Initialize blur array when images list changes
+  // Initialize blur array for all panels (header + images + end panel)
   useEffect(() => {
+    // Total panels = 1 (header) + IMAGE_SOURCES.length + 1 (end) = IMAGE_SOURCES.length + 2
+    const totalPanels = IMAGE_SOURCES.length + 2;
     setBlurByIndex((prev) => {
-      if (prev.length === IMAGE_SOURCES.length) return prev;
-      return new Array(IMAGE_SOURCES.length).fill(0);
+      if (prev.length === totalPanels) return prev;
+      return new Array(totalPanels).fill(0);
     });
   }, []);
 
@@ -1328,7 +1347,7 @@ export default function Page() {
                   ease: EASING.primary,
                 }
           }
-          className="sm:px-10 py-4 md:py-0 pb-4 md:px-28 bg-background relative overflow-x-hidden md:min-h-screen md:flex md:flex-col md:justify-center md:overflow-hidden"
+          className={`sm:px-10 py-4 md:py-0 pb-4 md:px-28 ${mobileBackgroundVariant} relative overflow-x-hidden md:min-h-screen md:flex md:flex-col md:justify-center md:overflow-hidden transition-colors ${shouldReduceMotion ? "duration-0" : "duration-[1500ms]"} ease-[cubic-bezier(0.22,1,0.36,1)]`}
           style={{
             minHeight: "100vh",
             willChange: "auto",
@@ -1422,6 +1441,7 @@ export default function Page() {
                     >
                       {/* Header as first panel - vertically centered like images */}
                       <section
+                        data-panel
                         className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
                         style={{
                           paddingTop: "env(safe-area-inset-top, 0px)",
@@ -1502,11 +1522,14 @@ export default function Page() {
                       </section>
 
                       {/* Image panels */}
-                      {images.map((src, index) => (
+                      {images.map((src, index) => {
+                        // Image panel index = map index + 1 (since header is panel 0)
+                        const panelIndex = index + 1;
+                        return (
                         <motion.section
                           variants={panelVariants}
                           animate={
-                            index === activePanelIndex ? "active" : "inactive"
+                            panelIndex === activePanelIndex ? "active" : "inactive"
                           }
                           key={`panel-${src}`}
                           id={index === 0 ? "panel-0" : undefined}
@@ -1521,7 +1544,7 @@ export default function Page() {
                               <div
                                 className="w-full"
                                 style={{
-                                  filter: `blur(${blurByIndex[index] || 0}px)`,
+                                  filter: `blur(${blurByIndex[panelIndex] || 0}px)`,
                                   transition:
                                     "filter 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
                                   willChange: "filter",
@@ -1624,8 +1647,8 @@ export default function Page() {
                                         }
                                         
                                         // Scroll-based animation: sync with image blur and panel state
-                                        const isActive = activePanelIndex === index;
-                                        const blurAmount = blurByIndex[index] || 0;
+                                        const isActive = activePanelIndex === panelIndex;
+                                        const blurAmount = blurByIndex[panelIndex] || 0;
                                         return {
                                           opacity: isActive ? 1 : 0.88,
                                           y: 0,
@@ -1666,7 +1689,63 @@ export default function Page() {
                             </div>
                           </figure>
                         </motion.section>
-                      ))}
+                      );
+                      })}
+
+                      {/* End panel with contact links */}
+                      <motion.section
+                        variants={panelVariants}
+                        animate={
+                          images.length + 1 === activePanelIndex ? "active" : "inactive"
+                        }
+                        key="end-panel"
+                        data-panel
+                        className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
+                        style={{
+                          paddingTop: "env(safe-area-inset-top, 0px)",
+                          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                        }}
+                      >
+                        <div className="w-full max-w-2xl flex flex-col items-center justify-center">
+                          <motion.div
+                            initial={{
+                              opacity: 0,
+                              y: shouldReduceMotion ? 0 : 20,
+                              filter: shouldReduceMotion ? "none" : "blur(10px)",
+                            }}
+                            animate={{
+                              opacity: 1,
+                              y: 0,
+                              filter: "blur(0px)",
+                            }}
+                            transition={{
+                              duration: shouldReduceMotion ? 0 : 1.2,
+                              ease: EASING.secondary,
+                              delay: shouldReduceMotion ? 0 : 0.2,
+                            }}
+                            className="flex items-center justify-center gap-4 text-sm flex-wrap"
+                          >
+                            {MOBILE_CONTACT_LINKS.map((link) => (
+                              <a
+                                key={link.href}
+                                href={link.href}
+                                target={
+                                  link.openInNewTab ? "_blank" : undefined
+                                }
+                                rel={
+                                  link.openInNewTab
+                                    ? "noopener noreferrer"
+                                    : undefined
+                                }
+                                aria-label={link.ariaLabel}
+                                className="text-foreground/85 hover:text-foreground font-medium transition-colors"
+                              >
+                                {link.label}
+                              </a>
+                            ))}
+                          </motion.div>
+                        </div>
+                      </motion.section>
 
                     </main>
                   </div>
@@ -2229,53 +2308,6 @@ export default function Page() {
                 </motion.div>
               </motion.div>
             </>
-          )}
-        </AnimatePresence>
-      </div>
-      {/* Fixed footer at bottom - always visible on mobile, outside filter div */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-[100] block md:hidden"
-        style={{
-          paddingBottom: MOBILE_CONTACT_BOTTOM_PADDING,
-          paddingTop: "12px",
-          paddingLeft: "env(safe-area-inset-left, 0px)",
-          paddingRight: "env(safe-area-inset-right, 0px)",
-        }}
-        aria-label="Contact links"
-      >
-        <AnimatePresence>
-          {isFooterReady && (
-            <motion.div
-              key="footer-links"
-              initial={{ opacity: 0, y: 12, filter: "blur(10px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: 12, filter: "blur(10px)" }}
-              transition={{
-                duration: 1.2,
-                ease: EASING.secondary,
-                delay: 0.2,
-              }}
-              className="flex items-center justify-center gap-4 text-sm px-4"
-            >
-          {MOBILE_CONTACT_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              target={
-                link.openInNewTab ? "_blank" : undefined
-              }
-              rel={
-                link.openInNewTab
-                  ? "noopener noreferrer"
-                  : undefined
-              }
-              aria-label={link.ariaLabel}
-              className="text-foreground/85 hover:text-foreground font-medium transition-colors"
-            >
-              {link.label}
-            </a>
-          ))}
-            </motion.div>
           )}
         </AnimatePresence>
       </div>
