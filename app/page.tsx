@@ -175,7 +175,7 @@ const PROJECTS: Record<string, { images: string[] }> = {
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools
   zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
-  artscapy: { images: ["/work/early-works.webp"] }, // Early brand work
+  earlyworks: { images: ["/work/early-works.webp"] }, // Early brand work
   nationalArchives: { images: ["/work/us.png"] }, // Early brand work
 };
 
@@ -222,7 +222,7 @@ const PROJECT_ORDER: string[] = [
   "defituna", // DeFi Tuna (2021)
   "curbcut", // CurbCut (2021)
   "zalando", // Zalando (2022)
-  "artscapy", // Early work (2017-2019)
+  "earlyworks", // Early work (2017-2019)
 ];
 
 /** Flattened array of all image sources in display order */
@@ -267,10 +267,10 @@ function getAltText(src: string, index: number): string {
  */
 function getProjectFromSrc(src: string): string | null {
   // Check specific cases first before generic hyphen parsing
-  if (src.includes("early-works")) return "artscapy";
+  if (src.includes("early-works")) return "earlyworks";
   if (src.includes("curbcut")) return "curbcut";
   if (src.includes("zalando")) return "zalando";
-  if (src.includes("artscapy")) return "artscapy";
+  if (src.includes("earlyworks")) return "earlyworks";
   if (src.endsWith("/us.png") || src.includes("/us.png"))
     return "nationalArchives";
 
@@ -327,9 +327,7 @@ const PROJECT_CAPTIONS: Record<string, string> = {
     "2021 — Designed calm, legible data tools that made accessibility insights usable for everyone.",
   zalando:
     "2022 — Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.",
-  artscapy:
-    "From 2017 — Built brands, interfaces, and launch sites that taught the value of clarity and restraint.",
-  nationalArchives:
+  earlyworks:
     "From 2017 — Built brands, interfaces, and launch sites that taught the value of clarity and restraint.",
 };
 
@@ -496,8 +494,8 @@ export default function Page() {
    *   - Panel 9: default background (end panel with links)
    * Desktop: Based on carousel image index
    *   - Images 0-2: default background (projects 1-3: "theo", "cb", "vf")
-   *   - Images 3-6: opposite theme background (projects 4-7: "atlas", "defituna", "curbcut", "zalando")
-   *   - Image 7: default background (last project: "artscapy")
+   *   - Images 3-5: opposite theme background (projects 4-6: "atlas", "defituna", "curbcut")
+   *   - Images 6-7: default background (projects 7-8: "zalando", "earlyworks")
    * Uses CSS variables to match system theme (light/dark)
    */
   const backgroundStyle = useMemo(() => {
@@ -511,7 +509,7 @@ export default function Page() {
       useOppositeTheme = activePanelIndex >= 3 && activePanelIndex < 9;
     } else {
       // Desktop: Switch for projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando")
-      // Only the last project (index 7: "artscapy") returns to original theme
+      // Only the last project (index 7: "earlyworks") returns to original theme
       useOppositeTheme = currentImageIndex >= 3 && currentImageIndex <= 6;
     }
     
@@ -1480,7 +1478,7 @@ export default function Page() {
                     {loadingSequence.textLoaded && (() => {
                       // Desktop main text color adjustment based on background theme
                       // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
-                      // Only the last project (index 7: "artscapy") uses default theme
+                      // Only the last project (index 7: "earlyworks") uses default theme
                       const useOppositeTheme = !isMobile && currentImageIndex >= 3 && currentImageIndex <= 6;
                       const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
                       
@@ -2144,7 +2142,7 @@ export default function Page() {
                               
                               // Desktop caption color adjustment based on background theme
                               // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
-                              // Only the last project (index 7: "artscapy") uses default theme
+                              // Only the last project (index 7: "earlyworks") uses default theme
                               const useOppositeTheme = !isMobile && currentImageIndex >= 3 && currentImageIndex <= 6;
                               const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
                               
