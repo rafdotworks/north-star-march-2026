@@ -15,15 +15,23 @@
  * - About modal with bio information
  * - Accessibility-first with keyboard navigation & focus management
  *
+ * CONFIGURATION & UTILITIES:
+ * - Constants and project data: @/app/config/portfolioConfig.ts
+ * - Helper functions: @/app/utils/portfolioUtils.ts
+ *
  * FILE STRUCTURE:
- * 1. CONSTANTS & CONFIGURATION (lines 60-100)
- * 2. PROJECT DATA & MAPPINGS (lines 102-250)
- * 3. HELPER FUNCTIONS (lines 252-290)
- * 4. MAIN COMPONENT (lines 292+)
- * 5. STATE MANAGEMENT (lines 300-340)
- * 6. EFFECTS & LIFECYCLE (lines 350-720)
- * 7. EVENT HANDLERS (lines 722-900)
- * 8. RENDER LOGIC (lines 920+)
+ * 1. IMPORTS (constants, utilities, components, hooks)
+ * 2. MAIN COMPONENT (orchestrates all functionality)
+ *    - REFS: DOM element references and persistent values
+ *    - HOOKS: External state and utilities
+ *    - STATE: Component state management
+ *    - COMPUTED VALUES: Derived state and memoized values
+ *    - EFFECTS: Lifecycle and side effects
+ *    - EVENT HANDLERS: User interaction handlers
+ *    - RENDER LOGIC: JSX composition
+ *
+ * NOTE: This component is being incrementally refactored into smaller,
+ * well-commented components and hooks for better maintainability.
  */
 
 import React, {
@@ -54,18 +62,35 @@ import useAnimationLevel from "@/hooks/useAnimationLevel"; // Animation preferen
 import { pageTurnVariants } from "@/components/animations/imageTransitions"; // Blur-to-focus animation variants
 import { AboutModalContent } from "./components/AboutModalContent"; // Localized About modal content
 
-// ============================================================================
-// TIMING & INTERACTION CONSTANTS
-// ============================================================================
-
-/** Debounce time for carousel navigation clicks to prevent rapid clicking (ms) */
-const NAVIGATION_DEBOUNCE = 300;
-/** Speed of auto-preview animation - time per image transition (ms) */
-const PREVIEW_SPEED = 120;
-/** Number of complete loops through all images in the preview sequence */
-const PREVIEW_LOOPS = 1;
-/** Delay before settling after preview animation completes (ms) */
-const PREVIEW_SETTLE_DELAY = 200;
+// Import portfolio configuration and utilities
+import {
+  NAVIGATION_DEBOUNCE,
+  PREVIEW_SPEED,
+  PREVIEW_LOOPS,
+  PREVIEW_SETTLE_DELAY,
+  INITIAL_IMAGE_COUNT,
+  PRELOAD_IMAGE_COUNT,
+  PRELOAD_LOOKAHEAD,
+  IMAGE_LOAD_TIMEOUT,
+  IMAGE_RETRY_ATTEMPTS,
+  IMAGE_QUALITY,
+  MOBILE_CONTACT_LINKS,
+  MOBILE_CONTENT_PADDING,
+  LOADING_STAGES,
+  IMAGE_SOURCES,
+  INITIAL_IMAGES,
+  PRELOAD_IMAGES,
+} from "@/app/config/portfolioConfig";
+import {
+  getProjectFromSrc,
+  getVideoForSrc,
+  getCaptionForSrc,
+  getProjectCaption,
+  getAltText,
+  parseCaption,
+  renderYearWithRolling,
+  generatePlaceholder,
+} from "@/app/utils/portfolioUtils";
 
 // ============================================================================
 // MOBILE IMAGE REVEAL ANIMATION - SIMPLIFIED
@@ -78,328 +103,6 @@ const PREVIEW_SETTLE_DELAY = 200;
  * - No complex staging - just smooth fade + blur
  * Note: Desktop animations remain separate (will refine later)
  */
-
-// ============================================================================
-// IMAGE LOADING STRATEGY CONSTANTS
-// ============================================================================
-
-/** Number of images to load immediately on initial page load (critical content) */
-const INITIAL_IMAGE_COUNT = 4;
-/** Total number of images to preload eagerly after initial load */
-const PRELOAD_IMAGE_COUNT = 4;
-/** How many images ahead to preload during carousel navigation (adaptive lookahead) */
-const PRELOAD_LOOKAHEAD = 3;
-/** Maximum time to wait for individual image loads before timeout (ms) */
-const IMAGE_LOAD_TIMEOUT = 8000;
-/** Number of retry attempts for failed image loads with exponential backoff */
-const IMAGE_RETRY_ATTEMPTS = 2;
-/** Image quality for Next.js Image optimization (1-100, higher = better quality) */
-const IMAGE_QUALITY = 85;
-
-// ============================================================================
-// CONTACT & UI CONSTANTS
-// ============================================================================
-
-/** Primary email contact link */
-const EMAIL_CONTACT_LINK = "mailto:raf@raf.works";
-
-/** Mobile footer contact links (visible at bottom of mobile view) */
-const MOBILE_CONTACT_LINKS = [
-  {
-    href: EMAIL_CONTACT_LINK,
-    label: "raf@raf.works",
-    ariaLabel: "Email Raf",
-    openInNewTab: false,
-  },
-  {
-    href: "https://www.linkedin.com/in/raffaelevitaledesign/",
-    label: "LinkedIn",
-    ariaLabel: "Raf on LinkedIn",
-    openInNewTab: true,
-  },
-  {
-    href: "https://x.com/lfgraf",
-    label: "X",
-    ariaLabel: "Raf on X",
-    openInNewTab: true,
-  },
-  {
-    href: "/documents/CV.pdf",
-    label: "CV",
-    ariaLabel: "View Raf's CV",
-    openInNewTab: true,
-  },
-] as const;
-
-/** iOS safe area padding for mobile contact footer */
-const _MOBILE_CONTACT_BOTTOM_PADDING =
-  "calc(env(safe-area-inset-bottom, 0px) + 20px)";
-/** Unified horizontal padding for mobile content (matches About modal: px-4) */
-const MOBILE_CONTENT_PADDING = "px-4";
-
-/** Loading stage messages shown during initial page load */
-const LOADING_STAGES: string[] = [
-  "Initializing...",
-  "Loading content...",
-  "Preparing images...",
-  "Finalizing experience...",
-];
-
-// ============================================================================
-// PROJECT DATA - Image paths grouped by project
-// ============================================================================
-
-/**
- * PROJECTS: Maps project keys to their image paths
- * Each project has one representative image for the carousel
- * All images are stored in /public/work/
- */
-const PROJECTS: Record<string, { images: string[] }> = {
-  // Current/recent work (2024-2025)
-  atlas: {
-    images: ["/work/atlas-2.png"], // Crypto marketplace, NFT era
-  },
-  cb: {
-    images: ["/work/cb-1.png"], // Coinbase Developer Platform
-  },
-  vf: {
-    images: ["/work/vf-0.png"], // Voiceflow product redesign
-  },
-  defituna: {
-    images: ["/work/defituna-1.png"], // DeFi project
-  },
-  theo: {
-    images: ["/work/theo-1.png"], // Theoriq - AI platform, founding designer
-  },
-  // Legacy/early works (2017-2022)
-  curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools
-  zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
-  earlyworks: { images: ["/work/early-works.webp"] }, // Early brand work
-  nationalArchives: { images: ["/work/us.png"] }, // Early brand work
-};
-
-// ============================================================================
-// VIDEO MAPPINGS - Vimeo URLs for project case studies
-// ============================================================================
-
-/**
- * PROJECT_VIDEOS: Maps project keys to Vimeo embed URLs
- * Videos open in modal overlay when user clicks play button on image
- * Only projects with videos appear in this map
- */
-const PROJECT_VIDEOS: Record<string, string> = {
-  atlas:
-    "https://player.vimeo.com/video/1034334194?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=0&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p&badge=0&sidedock=0",
-  theo: "https://player.vimeo.com/video/1033459034?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=0&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p&badge=0&sidedock=0",
-  defi: "https://player.vimeo.com/video/1034767734?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=0&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p&badge=0&sidedock=0",
-  curbcut:
-    "https://player.vimeo.com/video/1033156436?autoplay=1&loop=0&title=0&byline=0&portrait=0&background=0&controls=0&color=ffffff&transparent=1&dnt=1&pip=0&autopause=0&quality=1080p&badge=0&sidedock=0",
-};
-
-/**
- * PROJECT_ALIAS: Maps new project identifiers to legacy video keys
- * Used when project naming differs between PROJECTS and PROJECT_VIDEOS
- */
-const PROJECT_ALIAS: Record<string, string> = {
-  defituna: "defi", // defituna project uses 'defi' video key
-};
-
-// ============================================================================
-// CAROUSEL CONFIGURATION
-// ============================================================================
-
-/**
- * PROJECT_ORDER: Defines the sequence of projects in the carousel
- * Order: Recent work → Legacy work (chronological reverse)
- * This determines both desktop carousel and mobile scroll panel order
- */
-const PROJECT_ORDER: string[] = [
-  "theo", // Theoriq (2024)
-  "cb", // Coinbase (2025)
-  "vf", // Voiceflow (2025)
-  "atlas", // Atlas (2020)
-  "defituna", // DeFi Tuna (2021)
-  "curbcut", // CurbCut (2021)
-  "zalando", // Zalando (2022)
-  "earlyworks", // Early work (2017-2019)
-];
-
-/** Flattened array of all image sources in display order */
-const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
-  (key) => PROJECTS[key]?.images ?? []
-);
-
-/**
- * IMAGE_ALT_TEXT: Descriptive alt text for each carousel image
- * Provides meaningful descriptions for screen readers and accessibility
- */
-const IMAGE_ALT_TEXT: Record<string, string> = {
-  "/work/cb-1.png": "Coinbase Developer Platform interface showing API documentation and developer tools",
-  "/work/theo-1.png": "Theoriq AI platform dashboard with agent management and workflow visualization",
-  "/work/vf-0.png": "Voiceflow conversation design interface with flowchart-style dialog editor",
-  "/work/atlas-2.png": "Atlas crypto marketplace featuring NFT collections and digital asset trading interface",
-  "/work/defituna-1.png": "DeFi Tuna decentralized finance platform with yield farming and staking features",
-  "/work/curbcutos.png": "CurbCut accessibility data visualization tool showing urban mobility metrics",
-  "/work/zalando-dodont.png": "Zalando B2B design system documentation with component guidelines and patterns",
-  "/work/early-works.webp": "Early design work portfolio showcasing brand identity and visual design projects",
-  "/work/us.png": "National Archives project featuring historical document digitization and archival interface",
-};
-
-/**
- * Helper function to get descriptive alt text for an image
- * @param src - Image source path
- * @param index - Fallback index number
- * @returns Descriptive alt text string
- */
-function getAltText(src: string, index: number): string {
-  return IMAGE_ALT_TEXT[src] || `Work preview ${index + 1}`;
-}
-
-// ============================================================================
-// HELPER FUNCTIONS - Project identification and data retrieval
-// ============================================================================
-
-/**
- * Derives project key from image source path
- * @param src - Image source path (e.g., "/work/cb-1.png")
- * @returns Project key (e.g., "cb") or null if not found
- */
-function getProjectFromSrc(src: string): string | null {
-  // Check specific cases first before generic hyphen parsing
-  if (src.includes("early-works")) return "earlyworks";
-  if (src.includes("curbcut")) return "curbcut";
-  if (src.includes("zalando")) return "zalando";
-  if (src.includes("earlyworks")) return "earlyworks";
-  if (src.endsWith("/us.png") || src.includes("/us.png"))
-    return "nationalArchives";
-
-  // Generic hyphen-based extraction for standard project images
-  if (src.includes("/work/")) {
-    const filename = src.split("/").pop() || "";
-    const hasHyphen = filename.includes("-");
-    if (hasHyphen) {
-      const prefix = filename.split("-")[0];
-      if (prefix) return prefix;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Gets Vimeo video URL for a given image source
- * @param src - Image source path
- * @returns Vimeo embed URL or null if no video exists
- *
- * Special rules:
- * - Atlas video only shows on atlas-2.png (not atlas-1.png)
- */
-function getVideoForSrc(src: string): string | null {
-  const project = getProjectFromSrc(src);
-  if (!project) return null;
-  // Special rule: atlas video only on second image
-  if (project === "atlas" && !src.endsWith("atlas-2.png")) {
-    return null;
-  }
-  const key = PROJECT_ALIAS[project] ?? project;
-  return PROJECT_VIDEOS[key] ?? null;
-}
-
-// ============================================================================
-// CAPTION DATA - Project descriptions shown below images
-// ============================================================================
-
-/**
- * PROJECT_CAPTIONS: Text descriptions for each project
- * Format: "YEAR — Description"
- * Used on both desktop and mobile views
- */
-const PROJECT_CAPTIONS: Record<string, string> = {
-  cb: "Q3 2025 — Shipped SQL AI Playground and Embedded Wallets launch for the Coinbase Developer Platform.",
-  vf: "Q2 2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion.",
-  theo: "2024 — Founding designer at Theoriq, scaled from PDF to 140k active users in six months across product, brand and marketing.",
-  atlas:
-    "2020 — Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products.",
-  defituna:
-    "2021 — Designed and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
-  curbcut:
-    "2021 — Designed calm, legible data tools that made accessibility insights usable for everyone.",
-  zalando:
-    "2022 — Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.",
-  earlyworks:
-    "From 2017 — Built brands, interfaces, and launch sites for 10+ backed startups and award-winning agencies.",
-};
-
-/**
- * Gets project-level caption for an image source
- * @param src - Image source path
- * @returns Caption string or null
- */
-function getCaptionForSrc(src: string): string | null {
-  const project = getProjectFromSrc(src);
-  if (!project) return null;
-  return PROJECT_CAPTIONS[project] ?? null;
-}
-
-/**
- * Gets caption for a specific project key
- * @param project - Project key (e.g., "cb", "vf")
- * @returns Caption string or null
- */
-function getProjectCaption(project: string): string | null {
-  return PROJECT_CAPTIONS[project] ?? null;
-}
-
-// ============================================================================
-// IMAGE LOADING BUCKETS - Prioritized loading strategy
-// ============================================================================
-
-/** First 2 images - loaded immediately (critical) */
-const INITIAL_IMAGES = IMAGE_SOURCES.slice(0, INITIAL_IMAGE_COUNT);
-/** Next 2 images - preloaded after initial (eager) */
-const PRELOAD_IMAGES = IMAGE_SOURCES.slice(
-  INITIAL_IMAGE_COUNT,
-  PRELOAD_IMAGE_COUNT
-);
-
-/**
- * Generates SVG placeholder for images during loading
- * @param width - Placeholder width in pixels
- * @param height - Placeholder height in pixels
- * @returns Base64-encoded SVG data URL
- */
-const generatePlaceholder = (width = 400, height = 300) =>
-  `data:image/svg+xml;base64,${btoa(`
-      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#f3f4f6"/>
-        <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="system-ui" font-size="14" fill="#9ca3af">Loading...</text>
-      </svg>
-    `)}`;
-
-/**
- * Parses caption string into year and description parts
- * @param caption - Full caption string (e.g., "2025 — Description text")
- * @returns Object with year and description properties
- */
-const parseCaption = (caption: string) => {
-  // Split on the first occurrence of " — " only, preserving additional dashes in description
-  const parts = caption.split(" — ", 2);
-  if (parts.length === 2) {
-    return { year: parts[0], description: parts[1] };
-  }
-  return { year: "", description: caption };
-};
-
-/**
- * Renders year text (placeholder for potential rolling animation)
- * @param year - Year string to render
- * @returns Year string or null
- */
-function renderYearWithRolling(year: string | undefined | null) {
-  if (!year) return null;
-  // Keep it simple: return raw text for both single years and ranges
-  return year;
-}
 
 // ============================================================================
 // MAIN COMPONENT
@@ -490,6 +193,14 @@ export default function Page() {
   // ============================================================================
 
   /**
+   * Memoized theme preference check for consistent use across components
+   */
+  const prefersDark = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }, []);
+
+  /**
    * Background variant: switches to opposite theme after third project
    * Mobile: Panel structure: Header (0) → Images (1-8) → End panel (9)
    *   - Panels 0-2: default background (header + first 2 images)
@@ -502,9 +213,6 @@ export default function Page() {
    * Uses CSS variables to match system theme (light/dark)
    */
   const backgroundStyle = useMemo(() => {
-    // Detect current theme preference
-    const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
     // Determine if we should use opposite theme
     let useOppositeTheme = false;
     if (isMobile) {
@@ -532,7 +240,7 @@ export default function Page() {
         ? 'hsl(var(--neutral-h) 14% 8%)' // Dark mode background
         : 'hsl(var(--neutral-h) var(--neutral-s) 99%)', // Light mode background
     };
-  }, [isMobile, activePanelIndex, currentImageIndex]);
+      }, [isMobile, activePanelIndex, currentImageIndex, prefersDark]);
 
   const _mobileBackgroundClass = useMemo(() => {
     if (!isMobile) return "bg-background";
@@ -1532,7 +1240,6 @@ export default function Page() {
                       // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
                       // Only the last project (index 7: "earlyworks") uses default theme
                       const useOppositeTheme = !isMobile && currentImageIndex >= 3 && currentImageIndex <= 6;
-                      const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
                       
                       let mainTextColor: string;
                       let nameTextColor: string;
@@ -1556,7 +1263,7 @@ export default function Page() {
                       }
                       
                       return (
-                        <div className="tracking-tighter text-lg md:whitespace-nowrap">
+                        <div key={`text-${currentImageIndex}`} className="tracking-tighter text-lg md:whitespace-nowrap">
                           {/* Static "Raf V." - no animation */}
                           <span
                             className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
@@ -1839,7 +1546,6 @@ export default function Page() {
                                 // Determine theme-aware text colors based on panel
                                 // Panel 3-8: opposite theme, Panel 0-2,9: default theme
                                 const useOppositeTheme = panelIndex >= 3 && panelIndex < 9;
-                                const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
                                 
                                 // Calculate text colors
                                 // If opposite theme: when dark system -> light text, when light system -> dark text
@@ -2200,7 +1906,6 @@ export default function Page() {
                               // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
                               // Only the last project (index 7: "earlyworks") uses default theme
                               const useOppositeTheme = !isMobile && currentImageIndex >= 3 && currentImageIndex <= 6;
-                              const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
                               
                               let yearColor: string;
                               let descriptionColor: string;
