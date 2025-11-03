@@ -1263,7 +1263,7 @@ export default function Page() {
                       }
                       
                       return (
-                        <div key={`text-${currentImageIndex}`} className="tracking-tighter text-lg md:whitespace-nowrap">
+                        <div className="tracking-tighter text-lg md:whitespace-nowrap">
                           {/* Static "Raf V." - no animation */}
                           <span
                             className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
