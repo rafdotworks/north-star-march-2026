@@ -488,21 +488,44 @@ export default function Page() {
   // ============================================================================
 
   /**
-   * Mobile background variant: switches to muted variant at panel 3 (project 3 "vf")
+   * Mobile background variant: switches to opposite theme at panel 3 (project 3 "vf")
    * Panel structure: Header (0) → Images (1-8) → End panel (9)
    * Panels 0-2: default background (header + first 2 images)
-   * Panels 3-8: muted variant background (images 3-8, project 3 "vf" through last image)
+   * Panels 3-8: opposite theme background (images 3-8, project 3 "vf" through last image)
    * Panel 9: default background (end panel with links)
+   * Uses CSS variables to match system theme (light/dark)
    */
-  const mobileBackgroundVariant = useMemo(() => {
-    if (!isMobile) return "bg-background";
-    // Panel 0-2: default, Panel 3-8: variant, Panel 9: default
-    // Note: activePanelIndex 0 = header, 1-8 = images, 9 = end panel
-    if (activePanelIndex >= 3 && activePanelIndex < 9) {
-      return "bg-muted";
+  const mobileBackgroundStyle = useMemo(() => {
+    if (!isMobile) return {};
+    
+    // Detect current theme preference
+    const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Panel logic: default (0-2, 9) vs opposite theme (3-8)
+    const useOppositeTheme = activePanelIndex >= 3 && activePanelIndex < 9;
+    
+    if (useOppositeTheme) {
+      // Use opposite theme colors
+      // If system is dark, use light; if system is light, use dark
+      return {
+        backgroundColor: prefersDark 
+          ? 'hsl(var(--neutral-h) var(--neutral-s) 99%)' // Light mode background
+          : 'hsl(var(--neutral-h) 14% 8%)', // Dark mode background
+      };
     }
-    return "bg-background";
+    
+    // Default theme - use system theme
+    return {
+      backgroundColor: prefersDark
+        ? 'hsl(var(--neutral-h) 14% 8%)' // Dark mode background
+        : 'hsl(var(--neutral-h) var(--neutral-s) 99%)', // Light mode background
+    };
   }, [isMobile, activePanelIndex]);
+
+  const mobileBackgroundClass = useMemo(() => {
+    if (!isMobile) return "bg-background";
+    return "bg-background";
+  }, [isMobile]);
 
   // ============================================================================
   // EFFECTS - Lifecycle and side effects
@@ -731,119 +754,185 @@ export default function Page() {
     []
   );
 
+  // Apply background directly to body element for mobile (highest priority)
+  useEffect(() => {
+    if (!isMobile) {
+      // Reset body background on desktop
+      document.body.style.backgroundColor = '';
+      document.body.style.transition = '';
+      return;
+    }
+    
+    // Detect current theme preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Panel logic: default (0-2, 9) vs opposite theme (3-8)
+    const useOppositeTheme = activePanelIndex >= 3 && activePanelIndex < 9;
+    
+    let bgColor: string;
+    if (useOppositeTheme) {
+      // Use opposite theme colors
+      bgColor = prefersDark 
+        ? 'hsl(var(--neutral-h) var(--neutral-s) 99%)' // Light mode background
+        : 'hsl(var(--neutral-h) 14% 8%)'; // Dark mode background
+    } else {
+      // Default theme - use system theme
+      bgColor = prefersDark
+        ? 'hsl(var(--neutral-h) 14% 8%)' // Dark mode background
+        : 'hsl(var(--neutral-h) var(--neutral-s) 99%)'; // Light mode background
+    }
+    
+    document.body.style.setProperty('background-color', bgColor, 'important');
+    document.body.style.setProperty('transition', shouldReduceMotion 
+      ? 'none' 
+      : 'background-color 1500ms cubic-bezier(0.22, 1, 0.36, 1)', 'important');
+    
+    return () => {
+      document.body.style.removeProperty('background-color');
+      document.body.style.removeProperty('transition');
+    };
+  }, [isMobile, activePanelIndex, shouldReduceMotion]);
+
   // Top-level: track active panel and compute distance-based blur during scroll (mobile only)
   useEffect(() => {
     if (!mounted || !isMobile) return;
-    const container = mobileScrollRef.current;
-    if (!container) return;
+    
+    let cleanupFn: (() => void) | null = null;
+    
+    // Wait a tick to ensure DOM is fully rendered
+    const setupTimeout = window.setTimeout(() => {
+      const container = mobileScrollRef.current;
+      if (!container) return;
 
-    let rafId: number | null = null;
-    let scrollEndTimeout: number | undefined;
-
-    const compute = () => {
-      const sections = Array.from(
-        container.querySelectorAll<HTMLElement>("section[data-panel]")
-      );
+      // Verify sections exist before proceeding
+      const sections = container.querySelectorAll<HTMLElement>("section[data-panel]");
       if (sections.length === 0) return;
-      const viewportMid = window.innerHeight / 2;
-      let closestIndex = 0;
-      let bestDistance = Number.POSITIVE_INFINITY;
-      const nextBlur: number[] = new Array(sections.length).fill(0);
-      sections.forEach((sec, i) => {
-        const rect = sec.getBoundingClientRect();
-        const center = rect.top + rect.height / 2;
-        const dist = Math.abs(center - viewportMid);
-        if (dist < bestDistance) {
-          bestDistance = dist;
-          closestIndex = i;
+
+      let rafId: number | null = null;
+      let scrollEndTimeout: number | undefined;
+
+      const compute = () => {
+        const sections = Array.from(
+          container.querySelectorAll<HTMLElement>("section[data-panel]")
+        );
+        if (sections.length === 0) return;
+        const viewportMid = window.innerHeight / 2;
+        let closestIndex = 0;
+        let bestDistance = Number.POSITIVE_INFINITY;
+        const nextBlur: number[] = new Array(sections.length).fill(0);
+        
+        sections.forEach((sec, i) => {
+          const rect = sec.getBoundingClientRect();
+          const center = rect.top + rect.height / 2;
+          const dist = Math.abs(center - viewportMid);
+          
+          if (dist < bestDistance) {
+            bestDistance = dist;
+            closestIndex = i;
+          }
+
+          // Calculate position relative to viewport
+          const viewportHeight = window.innerHeight;
+          const relativePos = center / viewportHeight;
+
+          // Define blur zones:
+          // Top 25% of viewport: Progressive blur for exiting images
+          // Middle 50%: Clear focus zone
+          // Bottom 25%: Progressive blur for entering images
+          const topBlurZone = 0.25;
+          const bottomBlurZone = 0.75;
+          const maxBlur = 20; // Increased for more dramatic effect
+
+          let blurAmount = 0;
+
+          if (relativePos < topBlurZone) {
+            // Top zone: Images exiting viewport
+            // Linear interpolation from maxBlur at top edge to 0 at zone boundary
+            const zoneProgress = relativePos / topBlurZone;
+            blurAmount = maxBlur * (1 - zoneProgress);
+          } else if (relativePos > bottomBlurZone) {
+            // Bottom zone: Images entering viewport
+            // Linear interpolation from 0 at zone boundary to maxBlur at bottom edge
+            const zoneProgress =
+              (relativePos - bottomBlurZone) / (1 - bottomBlurZone);
+            blurAmount = maxBlur * zoneProgress;
+          } else {
+            // Middle zone: No blur (clear focus)
+            blurAmount = 0;
+          }
+
+          // Apply easing curve for smoother transitions
+          // Use cubic easing for more natural progression
+          const easedBlur = blurAmount * Math.pow(blurAmount / maxBlur, 0.5);
+
+          nextBlur[i] = Math.max(0, Math.min(maxBlur, easedBlur));
+        });
+        
+        setActivePanelIndex((prev) => {
+          if (prev !== closestIndex) {
+            document.body.setAttribute('data-active-panel', String(closestIndex));
+          }
+          return closestIndex;
+        });
+        
+        // Check footer reveal condition directly after calculating panel index
+        // This ensures we catch the moment when user scrolls past header (index 0 -> 1)
+        if (closestIndex >= 1 && hasUserScrolledRef.current && !footerRevealReadyRef.current) {
+          footerRevealReadyRef.current = true;
+          window.setTimeout(() => {
+            setFooterRevealReady(true);
+          }, 600);
         }
+        
+        setBlurByIndex((prev) => {
+          // Avoid excessive state churn
+          if (
+            prev.length === nextBlur.length &&
+            prev.every((v, i) => v === nextBlur[i])
+          ) {
+            return prev;
+          }
+          return nextBlur;
+        });
+      };
 
-        // Calculate position relative to viewport
-        const viewportHeight = window.innerHeight;
-        const relativePos = center / viewportHeight;
-
-        // Define blur zones:
-        // Top 25% of viewport: Progressive blur for exiting images
-        // Middle 50%: Clear focus zone
-        // Bottom 25%: Progressive blur for entering images
-        const topBlurZone = 0.25;
-        const bottomBlurZone = 0.75;
-        const maxBlur = 20; // Increased for more dramatic effect
-
-        let blurAmount = 0;
-
-        if (relativePos < topBlurZone) {
-          // Top zone: Images exiting viewport
-          // Linear interpolation from maxBlur at top edge to 0 at zone boundary
-          const zoneProgress = relativePos / topBlurZone;
-          blurAmount = maxBlur * (1 - zoneProgress);
-        } else if (relativePos > bottomBlurZone) {
-          // Bottom zone: Images entering viewport
-          // Linear interpolation from 0 at zone boundary to maxBlur at bottom edge
-          const zoneProgress =
-            (relativePos - bottomBlurZone) / (1 - bottomBlurZone);
-          blurAmount = maxBlur * zoneProgress;
-        } else {
-          // Middle zone: No blur (clear focus)
-          blurAmount = 0;
-        }
-
-        // Apply easing curve for smoother transitions
-        // Use cubic easing for more natural progression
-        const easedBlur = blurAmount * Math.pow(blurAmount / maxBlur, 0.5);
-
-        nextBlur[i] = Math.max(0, Math.min(maxBlur, easedBlur));
-      });
-      setActivePanelIndex(closestIndex);
-      
-      // Check footer reveal condition directly after calculating panel index
-      // This ensures we catch the moment when user scrolls past header (index 0 -> 1)
-      if (closestIndex >= 1 && hasUserScrolledRef.current && !footerRevealReadyRef.current) {
-        footerRevealReadyRef.current = true;
-        window.setTimeout(() => {
-          setFooterRevealReady(true);
-        }, 600);
-      }
-      
-      setBlurByIndex((prev) => {
-        // Avoid excessive state churn
-        if (
-          prev.length === nextBlur.length &&
-          prev.every((v, i) => v === nextBlur[i])
-        ) {
-          return prev;
-        }
-        return nextBlur;
-      });
-    };
-
-    const onScroll = () => {
-      if (rafId != null) return;
-      // Mark that user has actively scrolled (both state and ref for synchronous access)
-      hasUserScrolledRef.current = true;
-      setHasUserScrolled(true);
-      setIsScrolling(true);
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        compute();
-        if (scrollEndTimeout !== undefined)
-          window.clearTimeout(scrollEndTimeout);
-        scrollEndTimeout = window.setTimeout(() => {
-          setIsScrolling(false);
-          // Don't completely remove blur - recalculate for static depth effect
+      const onScroll = () => {
+        if (rafId != null) return;
+        // Mark that user has actively scrolled (both state and ref for synchronous access)
+        hasUserScrolledRef.current = true;
+        setHasUserScrolled(true);
+        setIsScrolling(true);
+        
+        rafId = window.requestAnimationFrame(() => {
+          rafId = null;
           compute();
-        }, 120);
-      });
-    };
+          if (scrollEndTimeout !== undefined)
+            window.clearTimeout(scrollEndTimeout);
+          scrollEndTimeout = window.setTimeout(() => {
+            setIsScrolling(false);
+            // Don't completely remove blur - recalculate for static depth effect
+            compute();
+          }, 120);
+        });
+      };
 
-    compute();
-    container.addEventListener("scroll", onScroll, { passive: true });
+      // Initial computation
+      compute();
+      
+      container.addEventListener("scroll", onScroll, { passive: true });
+      
+      cleanupFn = () => {
+        container.removeEventListener("scroll", onScroll);
+        if (rafId != null) window.cancelAnimationFrame(rafId);
+        if (scrollEndTimeout !== undefined) window.clearTimeout(scrollEndTimeout);
+      };
+    }, 50); // Small delay to ensure DOM is ready
+    
     return () => {
-      container.removeEventListener("scroll", onScroll);
-      if (rafId != null) window.cancelAnimationFrame(rafId);
-      if (scrollEndTimeout !== undefined) window.clearTimeout(scrollEndTimeout);
+      window.clearTimeout(setupTimeout);
+      if (cleanupFn) cleanupFn();
     };
-  }, [mounted, isMobile, isScrolling]);
+  }, [mounted, isMobile]);
 
   // Keep ref in sync with state for footer reveal check in compute function
   useEffect(() => {
@@ -1326,6 +1415,23 @@ export default function Page() {
       >
         Skip to content
       </a>
+      {/* Mobile background layer - MUST be outside blur wrapper to be visible */}
+      {isMobile && (
+        <div
+          id="mobile-background-layer-outside-blur"
+          className="fixed inset-0 transition-colors"
+          style={{
+            zIndex: -5,
+            ...(mobileBackgroundStyle as { backgroundColor?: string }),
+            transition: shouldReduceMotion 
+              ? 'none' 
+              : 'background-color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+            pointerEvents: 'none',
+            minHeight: '100vh',
+            minWidth: '100vw',
+          }}
+        />
+      )}
       <div
         style={{
           filter: blurAmount > 0 ? `blur(${blurAmount}px)` : "none",
@@ -1347,7 +1453,7 @@ export default function Page() {
                   ease: EASING.primary,
                 }
           }
-          className={`sm:px-10 py-4 md:py-0 pb-4 md:px-28 ${mobileBackgroundVariant} relative overflow-x-hidden md:min-h-screen md:flex md:flex-col md:justify-center md:overflow-hidden transition-colors ${shouldReduceMotion ? "duration-0" : "duration-[1500ms]"} ease-[cubic-bezier(0.22,1,0.36,1)]`}
+          className={`sm:px-10 py-4 md:py-0 pb-4 md:px-28 ${isMobile ? '' : 'bg-background'} relative overflow-x-hidden md:min-h-screen md:flex md:flex-col md:justify-center md:overflow-hidden`}
           style={{
             minHeight: "100vh",
             willChange: "auto",
@@ -1395,7 +1501,7 @@ export default function Page() {
                             }}
                             aria-label="About Raf"
                           >
-                            Raf
+                            Raf V.
                           </span>
                           {" "}
                           {["is", "a", "Senior", "AI", "Product", "Designer", "blending", "design,", "code", "and", "craft."].map((word, index) => (
@@ -1428,13 +1534,28 @@ export default function Page() {
 
                 {/* Mobile-only: top hero, center snap panels, bottom contact */}
                 <motion.div
-                  className="w-full block md:hidden"
+                  className="w-full block md:hidden relative"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
+                  {/* Fixed background layer that stays behind all content - must be outside blur wrapper */}
+                  <div
+                    id="mobile-background-layer"
+                    className="fixed inset-0 transition-colors"
+                    style={{
+                      zIndex: -5, // Higher than -10 but still behind content
+                      ...(mobileBackgroundStyle as { backgroundColor?: string }),
+                      transition: shouldReduceMotion 
+                        ? 'none' 
+                        : 'background-color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                      pointerEvents: 'none',
+                      minHeight: '100vh',
+                      minWidth: '100vw',
+                    }}
+                  />
                   <div className="relative h-[100svh]">
-                    {/* Scroll container - no padding needed as header/footer are now panels */}
+                    {/* Scroll container */}
                     <main
                       ref={mobileScrollRef as React.RefObject<HTMLElement>}
                       className="h-[100svh] overflow-y-auto overscroll-contain snap-y snap-mandatory"
@@ -1470,7 +1591,7 @@ export default function Page() {
                                   }}
                                   aria-label="About Raf"
                                 >
-                                  Raf
+                                  Raf V.
                                 </span>
                                 {" "}
                                 {["is", "a", "Senior", "AI", "Product", "Designer"].map((word, index) => (
@@ -1616,10 +1737,46 @@ export default function Page() {
                                 const caption = getProjectCaption(project);
                                 if (!caption) return null;
                                 const parsed = parseCaption(caption);
+                                
+                                // Determine theme-aware text colors based on panel
+                                // Panel 3-8: opposite theme, Panel 0-2,9: default theme
+                                const useOppositeTheme = panelIndex >= 3 && panelIndex < 9;
+                                const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                                
+                                // Calculate text colors
+                                // If opposite theme: when dark system -> light text, when light system -> dark text
+                                // If default theme: use system theme colors
+                                let captionTextColor: string;
+                                let yearTextColor: string;
+                                
+                                if (useOppositeTheme) {
+                                  // Opposite theme colors
+                                  captionTextColor = prefersDark 
+                                    ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
+                                    : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
+                                  yearTextColor = prefersDark
+                                    ? 'hsl(var(--neutral-h) 15% 25%)' // Light theme muted text
+                                    : 'hsl(var(--neutral-h) 10% 70%)'; // Dark theme muted text
+                                } else {
+                                  // Default theme colors (use system colors)
+                                  captionTextColor = prefersDark
+                                    ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
+                                    : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
+                                  yearTextColor = prefersDark
+                                    ? 'hsl(var(--neutral-h) 10% 70%)' // Dark theme muted text
+                                    : 'hsl(var(--neutral-h) 15% 35%)'; // Light theme muted text
+                                }
+                                
                                 return (
                                   <motion.figcaption
                                     // ALIGNMENT: Center-aligned to be central to the image (as per requirements)
-                                    className="w-full text-center text-sm leading-snug text-foreground/70 dark:text-foreground/80"
+                                    className="w-full text-center text-sm leading-snug"
+                                    style={{
+                                      color: captionTextColor,
+                                      transition: shouldReduceMotion 
+                                        ? 'none' 
+                                        : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                                    }}
                                     initial={{
                                       opacity: 0,
                                       y: 8,
@@ -1675,10 +1832,10 @@ export default function Page() {
                                   >
                                     {parsed.year ? (
                                       <>
-                                        <span className="text-foreground/50">
+                                        <span style={{ color: yearTextColor }}>
                                           {renderYearWithRolling(parsed.year)}
                                         </span>
-                                        <span className="text-foreground/80">{` ${parsed.description}`}</span>
+                                        <span>{` ${parsed.description}`}</span>
                                       </>
                                     ) : (
                                       parsed.description
