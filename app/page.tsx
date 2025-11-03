@@ -1398,7 +1398,7 @@ export default function Page() {
                             Raf
                           </span>
                           {" "}
-                          {["blends", "design,", "code", "and", "craft", "to", "shape", "AI", "experiences."].map((word, index) => (
+                          {["is", "a", "Senior", "AI", "Product", "Designer", "blending", "design,", "code", "and", "craft."].map((word, index) => (
                             <React.Fragment key={index}>
                               <motion.span
                                 className="inline-block"
@@ -1410,14 +1410,14 @@ export default function Page() {
                                   ease: EASING.textReveal,
                                 }}
                                 onAnimationComplete={() => {
-                                  if (index === 8) {
+                                  if (index === 10) {
                                     setTextRevealComplete(true);
                                   }
                                 }}
                               >
                                 {word}
                               </motion.span>
-                              {index < 8 && " "}
+                              {index < 10 && " "}
                             </React.Fragment>
                           ))}
                         </span>
@@ -1452,7 +1452,7 @@ export default function Page() {
                         <div className="w-full max-w-2xl">
                           <div className="tracking-tight text-lg text-center">
                             <div className="text-foreground/70">
-                              {/* Line 1: "Raf blends design, code and craft" */}
+                              {/* Line 1: "Raf is a Senior AI Product Designer" */}
                               <div>
                                 <span
                                   className="font-raf text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 pointer-events-auto inline-block"
@@ -1473,7 +1473,7 @@ export default function Page() {
                                   Raf
                                 </span>
                                 {" "}
-                                {["blends", "design,", "code", "and", "craft"].map((word, index) => (
+                                {["is", "a", "Senior", "AI", "Product", "Designer"].map((word, index) => (
                                   <React.Fragment key={index}>
                                     <motion.span
                                       className="inline-block"
@@ -1487,13 +1487,13 @@ export default function Page() {
                                     >
                                       {word}
                                     </motion.span>
-                                    {index < 4 && " "}
+                                    {index < 5 && " "}
                                   </React.Fragment>
                                 ))}
                               </div>
-                              {/* Line 2: "to shape AI experiences." */}
+                              {/* Line 2: "blending design, code and craft." */}
                               <div>
-                                {["to", "shape", "AI", "experiences."].map((word, index) => (
+                                {["blending", "design,", "code", "and", "craft."].map((word, index) => (
                                   <React.Fragment key={index}>
                                     <motion.span
                                       className="inline-block"
@@ -1505,14 +1505,14 @@ export default function Page() {
                                         ease: EASING.textReveal,
                                       }}
                                       onAnimationComplete={() => {
-                                        if (index === 3) {
+                                        if (index === 4) {
                                           setTextRevealComplete(true);
                                         }
                                       }}
                                     >
                                       {word}
                                     </motion.span>
-                                    {index < 3 && " "}
+                                    {index < 4 && " "}
                                   </React.Fragment>
                                 ))}
                               </div>
