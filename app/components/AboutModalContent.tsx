@@ -87,7 +87,7 @@ function renderParagraph(
  * Renders all sections of the About Raf modal
  */
 export function AboutModalContent({
-  shouldReduceMotion = false,
+  shouldReduceMotion: _shouldReduceMotion = false,
 }: AboutModalContentProps) {
   return (
     <motion.div

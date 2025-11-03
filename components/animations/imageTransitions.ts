@@ -31,7 +31,7 @@ const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
  */
 export function pageTurnVariants(
   level: AnimationLevel,
-  direction: Direction
+  _direction: Direction
 ): Variants {
   if (level === 0) {
     return {

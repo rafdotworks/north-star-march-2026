@@ -47,7 +47,6 @@ import {
   modalOverlayVariants,
   modalContainerVariants,
   modalPanelVariants,
-  modalTextStagger,
   modalReduced,
 } from "@/components/animations/LoadingAnimations";
 import { WorkImageContainer } from "./components/hover"; // Work image with hover effects
@@ -133,7 +132,7 @@ const MOBILE_CONTACT_LINKS = [
 ] as const;
 
 /** iOS safe area padding for mobile contact footer */
-const MOBILE_CONTACT_BOTTOM_PADDING =
+const _MOBILE_CONTACT_BOTTOM_PADDING =
   "calc(env(safe-area-inset-bottom, 0px) + 20px)";
 /** Unified horizontal padding for mobile content (matches About modal: px-4) */
 const MOBILE_CONTENT_PADDING = "px-4";
@@ -472,15 +471,15 @@ export default function Page() {
   // Mobile-specific state
   const [activePanelIndex, setActivePanelIndex] = useState(0); // Active mobile scroll panel
   const [blurByIndex, setBlurByIndex] = useState<number[]>([]); // Per-panel blur amounts
-  const [isScrolling, setIsScrolling] = useState(false); // Mobile scroll in progress
-  const [hasUserScrolled, setHasUserScrolled] = useState(false); // Track if user has actively scrolled
+  const [_isScrolling, setIsScrolling] = useState(false); // Mobile scroll in progress
+  const [_hasUserScrolled, setHasUserScrolled] = useState(false); // Track if user has actively scrolled
   const [footerRevealReady, setFooterRevealReady] = useState(false); // Footer links visibility (reveals after first scroll)
 
   // Loading stage tracking
   const [currentLoadingStage, setCurrentLoadingStage] = useState(0); // Current loading stage (0-4)
 
   // Timezone message
-  const [timezoneMessage, setTimezoneMessage] = useState(""); // Timezone difference message
+  const [_timezoneMessage, setTimezoneMessage] = useState(""); // Timezone difference message
 
   // Click freeze for final project
   const [isClickFrozen, setIsClickFrozen] = useState(false); // Freeze clicks when final project is active
@@ -535,7 +534,7 @@ export default function Page() {
     };
   }, [isMobile, activePanelIndex, currentImageIndex]);
 
-  const mobileBackgroundClass = useMemo(() => {
+  const _mobileBackgroundClass = useMemo(() => {
     if (!isMobile) return "bg-background";
     return "bg-background";
   }, [isMobile]);
@@ -1118,7 +1117,7 @@ export default function Page() {
         freezeTimerRef.current = null;
       }, 4000);
       
-      freezeTimerRef.current = freezeTimeout as any;
+      freezeTimerRef.current = freezeTimeout;
       
       return () => {
         window.clearTimeout(freezeTimeout);
@@ -1283,7 +1282,7 @@ export default function Page() {
   };
 
   const images = IMAGE_SOURCES;
-  const isFooterReady = footerRevealReady;
+  const _isFooterReady = footerRevealReady;
 
   /**
    * Panel variants for mobile scroll transitions
