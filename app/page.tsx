@@ -328,7 +328,7 @@ const PROJECT_CAPTIONS: Record<string, string> = {
   zalando:
     "2022 — Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.",
   earlyworks:
-    "From 2017 — Built brands, interfaces, and launch sites that taught the value of clarity and restraint.",
+    "From 2017 — Built brands, interfaces, and launch sites for 10+ backed startups and award-winning agencies.",
 };
 
 /**
