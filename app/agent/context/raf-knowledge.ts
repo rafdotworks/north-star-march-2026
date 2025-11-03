@@ -26,8 +26,7 @@ export const rafKnowledge = {
     "Work hard, be kind, spread joy",
     "How you do anything is how you do everything",
     "What feels right > what charts well",
-    "Start before you think you're ready",
-    "Always happy, never satisfied",
+        "Always happy, never satisfied",
     "Beauty is function with empathy",
     "Slow is smooth, smooth is fast",
     "Progress over movement"

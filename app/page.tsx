@@ -1504,7 +1504,34 @@ export default function Page() {
                       }
                       
                       return (
-                        <div className="tracking-tight text-xl md:whitespace-nowrap">
+                        <div className="tracking-tighter text-lg md:whitespace-nowrap">
+                          {/* Static "Raf V." - no animation */}
+                          <span
+                            className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
+                            style={{
+                              color: nameTextColor,
+                              transition: shouldReduceMotion 
+                                ? 'none' 
+                                : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                            }}
+                            onClick={() => setIsAboutModalOpen(true)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                              if (
+                                event.key === "Enter" ||
+                                event.key === " "
+                              ) {
+                                event.preventDefault();
+                                setIsAboutModalOpen(true);
+                              }
+                            }}
+                            aria-label="About Raf"
+                          >
+                            Raf V.
+                          </span>
+                          {" "}
+                          {/* Animated words */}
                           <motion.span 
                             className="inline-block"
                             style={{
@@ -1514,31 +1541,6 @@ export default function Page() {
                                 : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
                             }}
                           >
-                            <span
-                              className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
-                              style={{
-                                color: nameTextColor,
-                                transition: shouldReduceMotion 
-                                  ? 'none' 
-                                  : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
-                              }}
-                              onClick={() => setIsAboutModalOpen(true)}
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(event) => {
-                                if (
-                                  event.key === "Enter" ||
-                                  event.key === " "
-                                ) {
-                                  event.preventDefault();
-                                  setIsAboutModalOpen(true);
-                                }
-                              }}
-                              aria-label="About Raf"
-                            >
-                              Raf V.
-                            </span>
-                            {" "}
                             {["is", "a", "Senior", "AI", "Product", "Designer", "blending", "design,", "code", "and", "craft."].map((word, index) => (
                               <React.Fragment key={index}>
                                 <motion.span
@@ -1549,8 +1551,8 @@ export default function Page() {
                                       ? 'none' 
                                       : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
                                   }}
-                                  initial={{ filter: "blur(25px)" }}
-                                  animate={{ filter: "blur(0px)" }}
+                                  initial={{ opacity: 0, filter: "blur(12px)" }}
+                                  animate={{ opacity: 1, filter: "blur(0px)" }}
                                   transition={{
                                     duration: 1.4,
                                     delay: 0.18 * (index + 1),
@@ -1613,12 +1615,14 @@ export default function Page() {
                       >
                         {/* Constrain width to match About modal's visual padding */}
                         <div className="w-full max-w-2xl">
-                          <div className="tracking-tight text-lg text-center">
+                          <div className="tracking-tighter text-base text-center">
                             <div className="text-foreground/70">
                               {/* Line 1: "Raf is a Senior AI Product Designer" */}
                               <div>
+                                {/* Static "Raf V." - visible immediately, bypasses parent opacity */}
                                 <span
                                   className="font-raf text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 pointer-events-auto inline-block"
+                                  style={{ opacity: 1 }}
                                   onClick={() => setIsAboutModalOpen(true)}
                                   role="button"
                                   tabIndex={0}
@@ -1640,8 +1644,8 @@ export default function Page() {
                                   <React.Fragment key={index}>
                                     <motion.span
                                       className="inline-block"
-                                      initial={{ filter: "blur(25px)" }}
-                                      animate={{ filter: "blur(0px)" }}
+                                      initial={{ opacity: 0, filter: "blur(12px)" }}
+                                      animate={{ opacity: 1, filter: "blur(0px)" }}
                                       transition={{
                                         duration: 1.4,
                                         delay: 0.18 * (index + 1),
@@ -1660,8 +1664,8 @@ export default function Page() {
                                   <React.Fragment key={index}>
                                     <motion.span
                                       className="inline-block"
-                                      initial={{ filter: "blur(25px)" }}
-                                      animate={{ filter: "blur(0px)" }}
+                                      initial={{ opacity: 0, filter: "blur(12px)" }}
+                                      animate={{ opacity: 1, filter: "blur(0px)" }}
                                       transition={{
                                         duration: 1.4,
                                         delay: 0.18 * 6 + 0.4 + 0.18 * index, // Line 1 completes + brief pause + continue word by word
@@ -1734,8 +1738,8 @@ export default function Page() {
                                           transition: {
                                             duration: 2.6, // Match desktop image reveal duration
                                             ease: EASING.secondary, // Use same easing as desktop
-                                            // First image appears after text completes with slower transition
-                                            delay: index === 0 ? 1.8 : 0,
+                                            // First image appears after text completes with reduced delay
+                                            delay: index === 0 ? 0.8 : 0,
                                           },
                                         }
                                       : {}
@@ -1812,7 +1816,7 @@ export default function Page() {
                                 return (
                                   <motion.figcaption
                                     // ALIGNMENT: Center-aligned to be central to the image (as per requirements)
-                                    className="w-full text-center text-sm leading-snug"
+                                    className="w-full text-center text-xs leading-tight"
                                     style={{
                                       color: captionTextColor,
                                       transition: shouldReduceMotion 
@@ -1974,8 +1978,8 @@ export default function Page() {
                         }
                   }
                   transition={{
-                    duration: 2.8, // Slower reveal matching mobile polish
-                    delay: 1.8, // Carousel appears after text with slower transition
+                    duration: 2.2, // Faster reveal for snappier feel
+                    delay: 0.8, // Reduced delay - carousel appears sooner after text completes
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   onAnimationComplete={() => {
@@ -2120,7 +2124,7 @@ export default function Page() {
                         transition={{
                           duration: 2.2, // Synced with image transition duration
                           ease: [0.16, 1, 0.3, 1],
-                          delay: 0.25, // Starts slightly after image transition begins
+                          // No delay - starts simultaneously with image for unified feel
                         }}
                       >
                         <div
@@ -2172,7 +2176,7 @@ export default function Page() {
                                   {parsed.year && (
                                     <motion.span
                                       key={`year-${currentProject ?? currentImageIndex}`}
-                                      className="text-sm leading-snug"
+                                      className="text-xs leading-tight"
                                       style={{
                                         color: yearColor,
                                         transition: shouldReduceMotion 
@@ -2190,7 +2194,7 @@ export default function Page() {
                                       transition={{
                                         duration: 2.2, // Synced with image transition duration
                                         ease: [0.16, 1, 0.3, 1],
-                                        delay: 0.25, // Synced with container start time
+                                        // No delay - starts simultaneously with image
                                       }}
                                     >
                                       {renderYearWithRolling(parsed.year)}
@@ -2209,9 +2213,9 @@ export default function Page() {
                                     transition={{
                                       duration: 2.2, // Synced with image transition duration
                                       ease: [0.16, 1, 0.3, 1],
-                                      delay: 0.25, // Synced with container start time
+                                      // No delay - starts simultaneously with image
                                     }}
-                                    className="text-sm leading-snug sm:text-right"
+                                    className="text-xs leading-tight sm:text-right"
                                     style={{
                                       color: descriptionColor,
                                       transition: shouldReduceMotion 

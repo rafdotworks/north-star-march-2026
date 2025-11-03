@@ -72,8 +72,8 @@ function renderParagraph(
   const content = parts.length > 0 ? parts : text;
 
   const className = isHighlighted
-    ? "leading-[1.6] text-base text-foreground/85 font-medium md:h-24"
-    : "leading-[1.6] text-base text-foreground/70";
+    ? "leading-[1.6] text-sm text-foreground/85 font-medium md:h-24"
+    : "leading-[1.6] text-sm text-foreground/70";
 
   if (isEmphasized) {
     return <em className={className}>{content}</em>;
@@ -113,7 +113,7 @@ export function AboutModalContent({
               className="flex-1 flex flex-col"
             >
               <div className="space-y-5">
-                <h3 className="text-xs uppercase tracking-wider text-foreground/85 font-medium">
+                <h3 className="text-[10px] uppercase tracking-wider text-foreground/85 font-medium">
                   {section.title}
                 </h3>
                 {/* Render highlighted paragraphs at the top */}
@@ -137,7 +137,7 @@ export function AboutModalContent({
 
                 {/* Render principles list for the Principles section */}
                 {section.title === "Principles" && (
-                  <ul className="space-y-2 text-base text-foreground/70 leading-[1.6]">
+                  <ul className="space-y-2 text-sm text-foreground/70 leading-[1.6]">
                     {ABOUT_MODAL_CONTENT.principles.map((principle, index) => (
                       <li key={index} className="flex items-start">
                         <span className="mr-2 text-foreground/40 select-none">
