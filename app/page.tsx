@@ -2279,13 +2279,13 @@ export default function Page() {
                         <p className="leading-[1.6] text-base text-foreground/70">
                           <em>What makes things feel right?</em>
                         </p>
-                        <p className="leading-[1.6] text-base text-foreground/70">
+                        <p className="leading-[1.6] text-base text-foreground/85">
                           You can find me on{" "}
                           <a
                             href="https://www.linkedin.com/in/raffaelevitaledesign"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-foreground/70 underline hover:text-foreground transition-colors"
+                            className="text-foreground/85 underline hover:text-foreground transition-colors"
                           >
                             LinkedIn
                           </a>
@@ -2294,14 +2294,14 @@ export default function Page() {
                             href="https://x.com/lfgraf"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-foreground/70 underline hover:text-foreground transition-colors"
+                            className="text-foreground/85 underline hover:text-foreground transition-colors"
                           >
                             X
                           </a>
                           , and via email at{" "}
                           <a
                             href="mailto:raf@raf.works"
-                            className="text-foreground/70 underline hover:text-foreground transition-colors"
+                            className="text-foreground/85 underline hover:text-foreground transition-colors"
                           >
                             raf@raf.works
                           </a>
