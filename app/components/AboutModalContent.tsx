@@ -22,7 +22,8 @@ interface AboutModalContentProps {
 function renderParagraph(
   paragraph: { text: string; isHighlighted?: boolean; isEmphasized?: boolean },
   links: typeof ABOUT_MODAL_CONTENT.contactLinks,
-  index: number
+  index: number,
+  key: string | number
 ) {
   const { text, isHighlighted, isEmphasized } = paragraph;
 
@@ -76,10 +77,10 @@ function renderParagraph(
     : "leading-[1.6] text-sm text-foreground/70";
 
   if (isEmphasized) {
-    return <em className={className}>{content}</em>;
+    return <em key={key} className={className}>{content}</em>;
   }
 
-  return <p className={className}>{content}</p>;
+  return <p key={key} className={className}>{content}</p>;
 }
 
 /**
@@ -121,7 +122,8 @@ export function AboutModalContent({
                   renderParagraph(
                     paragraph,
                     ABOUT_MODAL_CONTENT.contactLinks,
-                    sectionIndex * 100 + paraIndex
+                    sectionIndex * 100 + paraIndex,
+                    `highlighted-${sectionIndex}-${paraIndex}`
                   )
                 )}
               </div>
@@ -131,7 +133,8 @@ export function AboutModalContent({
                   renderParagraph(
                     paragraph,
                     ABOUT_MODAL_CONTENT.contactLinks,
-                    sectionIndex * 100 + highlightedParagraphs.length + paraIndex
+                    sectionIndex * 100 + highlightedParagraphs.length + paraIndex,
+                    `regular-${sectionIndex}-${paraIndex}`
                   )
                 )}
 
