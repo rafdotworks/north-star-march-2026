@@ -305,3 +305,4 @@ export function generatePlaceholder(width = 400, height = 300): string {
     `)}`;
 }
 
+
