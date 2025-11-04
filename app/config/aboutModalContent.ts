@@ -127,9 +127,9 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
     },
   },
   principles: [
-    "Work hard, be kind, spread joy",
-    "How you do anything is how you do everything",
-    "What feels right > what charts well",
+    "Work hard, be kind, spread joy.",
+    "How you do anything is how you do everything.",
+    "What feels right > what charts well.",
     "Always happy, never satisfied.",
   ],
 };
