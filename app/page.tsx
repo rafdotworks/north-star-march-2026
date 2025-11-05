@@ -2216,23 +2216,24 @@ export default function Page() {
                         variants={{
                           hidden: { 
                             x: shouldReduceMotion ? 0 : (previousModalView === 'blueprint' ? "20%" : "-20%"),
-                            opacity: 1,
+                            opacity: 0,
                             filter: shouldReduceMotion ? "none" : "blur(12px)"
                           },
                           visible: { 
                             x: 0,
+                            opacity: 1,
                             filter: "blur(0px)",
                             transition: { 
-                              duration: shouldReduceMotion ? 0 : 0.9, 
+                              duration: shouldReduceMotion ? 0 : 0.65, 
                               ease: EASING.textReveal 
                             }
                           },
                           exit: { 
                             x: shouldReduceMotion ? 0 : "-20%",
-                            opacity: 1,
+                            opacity: 0,
                             filter: shouldReduceMotion ? "none" : "blur(12px)",
                             transition: { 
-                              duration: shouldReduceMotion ? 0 : 0.9, 
+                              duration: shouldReduceMotion ? 0 : 0.65, 
                               ease: EASING.textReveal 
                             }
                           }
@@ -2255,23 +2256,24 @@ export default function Page() {
                         variants={{
                           hidden: { 
                             x: shouldReduceMotion ? 0 : "20%",
-                            opacity: 1,
+                            opacity: 0,
                             filter: shouldReduceMotion ? "none" : "blur(12px)"
                           },
                           visible: { 
                             x: 0,
+                            opacity: 1,
                             filter: "blur(0px)",
                             transition: { 
-                              duration: shouldReduceMotion ? 0 : 0.9, 
+                              duration: shouldReduceMotion ? 0 : 0.65, 
                               ease: EASING.textReveal 
                             }
                           },
                           exit: { 
                             x: shouldReduceMotion ? 0 : "20%",
-                            opacity: 1,
+                            opacity: 0,
                             filter: shouldReduceMotion ? "none" : "blur(12px)",
                             transition: { 
-                              duration: shouldReduceMotion ? 0 : 0.9, 
+                              duration: shouldReduceMotion ? 0 : 0.65, 
                               ease: EASING.textReveal 
                             }
                           }

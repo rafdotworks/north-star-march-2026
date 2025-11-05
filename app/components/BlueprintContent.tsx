@@ -260,10 +260,10 @@ export function BlueprintContent({
     return (
       <motion.div 
         className="text-center py-16"
-        variants={modalTextStagger.container}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, delay: 0.7 }}
       >
         <p className="text-sm text-foreground/50">Loading blueprint...</p>
       </motion.div>
@@ -274,10 +274,10 @@ export function BlueprintContent({
     return (
       <motion.div 
         className="text-center py-16"
-        variants={modalTextStagger.container}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, delay: 0.7 }}
       >
         <p className="text-sm text-foreground/70 mb-2">Unable to load blueprint</p>
         <p className="text-xs text-foreground/50">{error}</p>
@@ -289,10 +289,10 @@ export function BlueprintContent({
     return (
       <motion.div 
         className="text-center py-16"
-        variants={modalTextStagger.container}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, delay: 0.7 }}
       >
         <p className="text-sm text-foreground/70">No sections found in blueprint</p>
       </motion.div>
@@ -302,10 +302,10 @@ export function BlueprintContent({
   return (
     <motion.div 
       className="text-left text-foreground"
-      variants={modalTextStagger.container}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
     >
       {/* Back button */}
       <motion.span
@@ -321,7 +321,7 @@ export function BlueprintContent({
         className="mb-6 text-xs tracking-wider text-foreground/40 hover:text-foreground/80 cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 font-medium inline-block"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+        transition={{ duration: 0.4, delay: 0.85 }}
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         ← Back
@@ -329,7 +329,20 @@ export function BlueprintContent({
       
       {/* Content */}
       <motion.div
-        variants={modalTextStagger.container}
+        variants={{
+          hidden: { opacity: 1 },
+          visible: {
+            opacity: 1,
+            transition: { 
+              staggerChildren: 0.15, 
+              delayChildren: 0.7 
+            },
+          },
+          exit: {
+            opacity: 1,
+            transition: { staggerChildren: 0.05, staggerDirection: -1 },
+          },
+        }}
         initial="hidden"
         animate="visible"
         exit="exit"
