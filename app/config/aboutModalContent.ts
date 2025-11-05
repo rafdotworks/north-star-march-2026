@@ -28,6 +28,7 @@ export interface AboutModalContent {
     linkedin: AboutModalLink;
     x: AboutModalLink;
     email: AboutModalLink;
+    blueprint: AboutModalLink;
   };
   principles: string[];
 }
@@ -101,12 +102,7 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
     },
     {
       title: "Principles",
-      paragraphs: [
-        {
-          text: "Principles I try to live and build by:",
-          isHighlighted: true,
-        },
-      ],
+      paragraphs: [],
     },
   ],
   contactLinks: {
@@ -124,6 +120,11 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       label: "raf@raf.works",
       href: "mailto:raf@raf.works",
       ariaLabel: "Email Raf",
+    },
+    blueprint: {
+      label: "Blueprint",
+      href: "/blueprint",
+      ariaLabel: "Blueprint",
     },
   },
   principles: [

@@ -14,6 +14,7 @@ import { ABOUT_MODAL_CONTENT } from "@/app/config/aboutModalContent";
 
 interface AboutModalContentProps {
   shouldReduceMotion?: boolean;
+  onBlueprintClick?: () => void;
 }
 
 /**
@@ -30,7 +31,7 @@ function renderParagraph(
   // Handle text with link placeholders
   const parts: (string | React.ReactElement)[] = [];
   let lastIndex = 0;
-  const regex = /\{(linkedin|x|email)\}/g;
+  const regex = /\{(linkedin|x|email|blueprint)\}/g;
   let match;
   let linkCounter = 0;
 
@@ -44,14 +45,15 @@ function renderParagraph(
     }
 
     // Add the link component
-    const linkKey = match[1] as "linkedin" | "x" | "email";
+    const linkKey = match[1] as "linkedin" | "x" | "email" | "blueprint";
     const link = links[linkKey];
+    const isExternalLink = linkKey !== "email" && linkKey !== "blueprint";
     parts.push(
       <a
         key={`link-${index}-${linkCounter++}`}
         href={link.href}
-        target={linkKey !== "email" ? "_blank" : undefined}
-        rel={linkKey !== "email" ? "noopener noreferrer" : undefined}
+        target={isExternalLink ? "_blank" : undefined}
+        rel={isExternalLink ? "noopener noreferrer" : undefined}
         className="text-foreground/85 underline hover:text-foreground transition-colors"
       >
         {link.label}
@@ -89,6 +91,7 @@ function renderParagraph(
  */
 export function AboutModalContent({
   shouldReduceMotion: _shouldReduceMotion = false,
+  onBlueprintClick,
 }: AboutModalContentProps) {
   return (
     <motion.div
@@ -140,16 +143,48 @@ export function AboutModalContent({
 
                 {/* Render principles list for the Principles section */}
                 {section.title === "Principles" && (
-                  <ul className="space-y-2 text-sm text-foreground/70 leading-[1.6]">
-                    {ABOUT_MODAL_CONTENT.principles.map((principle, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="mr-2 text-foreground/40 select-none">
-                          •
+                  <>
+                    <ul className="space-y-2 text-sm text-foreground/70 leading-[1.6]">
+                      {ABOUT_MODAL_CONTENT.principles.map((principle, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="mr-2 text-foreground/40 select-none">
+                            •
+                          </span>
+                          <span>{principle}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-sm text-foreground/70 leading-[1.6] mt-3">
+                      Read my{" "}
+                      {onBlueprintClick ? (
+                        <span
+                          onClick={onBlueprintClick}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              onBlueprintClick();
+                            }
+                          }}
+                          className="text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
+                          style={{ 
+                            WebkitTapHighlightColor: 'transparent'
+                          }}
+                        >
+                          {ABOUT_MODAL_CONTENT.contactLinks.blueprint.label}
                         </span>
-                        <span>{principle}</span>
-                      </li>
-                    ))}
-                  </ul>
+                      ) : (
+                        <a
+                          href={ABOUT_MODAL_CONTENT.contactLinks.blueprint.href}
+                          className="text-foreground/85 underline hover:text-foreground transition-colors"
+                        >
+                          {ABOUT_MODAL_CONTENT.contactLinks.blueprint.label}
+                        </a>
+                      )}
+                      .
+                    </p>
+                  </>
                 )}
               </div>
             </motion.div>

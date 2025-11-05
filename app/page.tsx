@@ -56,11 +56,13 @@ import {
   modalContainerVariants,
   modalPanelVariants,
   modalReduced,
+  modalTextStagger,
 } from "@/components/animations/LoadingAnimations";
 import { WorkImageContainer } from "./components/hover"; // Work image with hover effects
 import useAnimationLevel from "@/hooks/useAnimationLevel"; // Animation preference detection
 import { pageTurnVariants } from "@/components/animations/imageTransitions"; // Blur-to-focus animation variants
 import { AboutModalContent } from "./components/AboutModalContent"; // Localized About modal content
+import { BlueprintContent } from "./components/BlueprintContent"; // Blueprint content for modal
 
 // Import portfolio configuration and utilities
 import {
@@ -170,6 +172,8 @@ export default function Page() {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false); // Video modal visible
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null); // Active video URL
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // About modal visible
+  const [modalView, setModalView] = useState<'about' | 'blueprint'>('about'); // Current view in About modal
+  const [previousModalView, setPreviousModalView] = useState<'about' | 'blueprint'>('about'); // Previous view for direction tracking
 
   // Mobile-specific state
   const [activePanelIndex, setActivePanelIndex] = useState(0); // Active mobile scroll panel
@@ -810,7 +814,7 @@ export default function Page() {
     // Final project "earlyworks" is at index 7 (last in IMAGE_SOURCES)
     const FINAL_PROJECT_INDEX = IMAGE_SOURCES.length - 1; // 7
     
-    if (currentImageIndex === FINAL_PROJECT_INDEX && !isClickFrozen) {
+    if (currentImageIndex === FINAL_PROJECT_INDEX) {
       // Clear any existing timer
       if (freezeTimerRef.current !== null) {
         window.clearTimeout(freezeTimerRef.current);
@@ -831,7 +835,7 @@ export default function Page() {
         window.clearTimeout(freezeTimeout);
         freezeTimerRef.current = null;
       };
-    } else if (currentImageIndex !== FINAL_PROJECT_INDEX && isClickFrozen) {
+    } else {
       // Reset freeze if we navigate away from final project
       if (freezeTimerRef.current !== null) {
         window.clearTimeout(freezeTimerRef.current);
@@ -839,7 +843,7 @@ export default function Page() {
       }
       setIsClickFrozen(false);
     }
-  }, [currentImageIndex, isClickFrozen]);
+  }, [currentImageIndex]);
 
   // EFFECT: Apply cursor style when frozen
   useEffect(() => {
@@ -943,6 +947,7 @@ export default function Page() {
   };
 
   const handleCloseAboutModal = () => {
+    setModalView('about'); // Reset to about view when closing
     setIsAboutModalOpen(false);
   };
 
@@ -1236,6 +1241,10 @@ export default function Page() {
                 >
                   <div className="text-center mb-2 md:mb-4">
                     {loadingSequence.textLoaded && (() => {
+                      // Check if on final project and desktop
+                      const FINAL_PROJECT_INDEX = IMAGE_SOURCES.length - 1;
+                      const isFinalProject = !isMobile && currentImageIndex === FINAL_PROJECT_INDEX;
+                      
                       // Desktop main text color adjustment based on background theme
                       // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
                       // Only the last project (index 7: "earlyworks") uses default theme
@@ -1260,6 +1269,47 @@ export default function Page() {
                         nameTextColor = prefersDark
                           ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
                           : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
+                      }
+                      
+                      // On final project, show email link instead of normal text
+                      if (isFinalProject) {
+                        const emailText = "raf@raf.works";
+                        return (
+                          <div className="tracking-tighter text-lg md:whitespace-nowrap">
+                            <a
+                              href="mailto:raf@raf.works"
+                              className="font-raf cursor-pointer px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
+                              style={{
+                                transition: shouldReduceMotion 
+                                  ? 'none' 
+                                  : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                              }}
+                              aria-label="Send email to Raf"
+                            >
+                              {emailText.split("").map((char, index) => (
+                                <motion.span
+                                  key={index}
+                                  className="inline-block"
+                                  style={{
+                                    color: nameTextColor,
+                                    transition: shouldReduceMotion 
+                                      ? 'none' 
+                                      : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                                  }}
+                                  initial={{ opacity: 0, filter: "blur(12px)" }}
+                                  animate={{ opacity: 1, filter: "blur(0px)" }}
+                                  transition={{
+                                    duration: 1.4,
+                                    delay: 0.18 * (index + 1),
+                                    ease: EASING.textReveal,
+                                  }}
+                                >
+                                  {char}
+                                </motion.span>
+                              ))}
+                            </a>
+                          </div>
+                        );
                       }
                       
                       return (
@@ -2159,7 +2209,87 @@ export default function Page() {
                     </motion.button>
                   )}
                   {/* Modal content: 4 columns on desktop, stacked on mobile */}
-                  <AboutModalContent shouldReduceMotion={shouldReduceMotion ?? false} />
+                  <AnimatePresence mode="wait">
+                    {modalView === 'about' ? (
+                      <motion.div
+                        key="about"
+                        variants={{
+                          hidden: { 
+                            x: shouldReduceMotion ? 0 : (previousModalView === 'blueprint' ? "20%" : "-20%"),
+                            opacity: 1,
+                            filter: shouldReduceMotion ? "none" : "blur(12px)"
+                          },
+                          visible: { 
+                            x: 0,
+                            filter: "blur(0px)",
+                            transition: { 
+                              duration: shouldReduceMotion ? 0 : 0.9, 
+                              ease: EASING.textReveal 
+                            }
+                          },
+                          exit: { 
+                            x: shouldReduceMotion ? 0 : "-20%",
+                            opacity: 1,
+                            filter: shouldReduceMotion ? "none" : "blur(12px)",
+                            transition: { 
+                              duration: shouldReduceMotion ? 0 : 0.9, 
+                              ease: EASING.textReveal 
+                            }
+                          }
+                        }}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                      >
+                        <AboutModalContent 
+                          shouldReduceMotion={shouldReduceMotion ?? false}
+                          onBlueprintClick={() => {
+                            setPreviousModalView('about');
+                            setModalView('blueprint');
+                          }}
+                        />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="blueprint"
+                        variants={{
+                          hidden: { 
+                            x: shouldReduceMotion ? 0 : "20%",
+                            opacity: 1,
+                            filter: shouldReduceMotion ? "none" : "blur(12px)"
+                          },
+                          visible: { 
+                            x: 0,
+                            filter: "blur(0px)",
+                            transition: { 
+                              duration: shouldReduceMotion ? 0 : 0.9, 
+                              ease: EASING.textReveal 
+                            }
+                          },
+                          exit: { 
+                            x: shouldReduceMotion ? 0 : "20%",
+                            opacity: 1,
+                            filter: shouldReduceMotion ? "none" : "blur(12px)",
+                            transition: { 
+                              duration: shouldReduceMotion ? 0 : 0.9, 
+                              ease: EASING.textReveal 
+                            }
+                          }
+                        }}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                      >
+                        <BlueprintContent
+                          shouldReduceMotion={shouldReduceMotion ?? false}
+                          onBack={() => {
+                            setPreviousModalView('blueprint');
+                            setModalView('about');
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               </motion.div>
             </>
