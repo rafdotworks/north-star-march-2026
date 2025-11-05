@@ -348,56 +348,59 @@ export function BlueprintContent({
         exit="exit"
         className="flex flex-col md:flex-row md:gap-6 space-y-6 md:space-y-0"
       >
-        {/* Sections - matching AboutModalContent structure */}
-        {parsedContent.sections.map((section, sectionIndex) => (
-          <React.Fragment key={section.title}>
-            <motion.div
-              variants={modalTextStagger.item}
-              className="flex-1 flex flex-col"
-            >
-              <div className="space-y-5">
-                <h3 className="text-[10px] uppercase tracking-wider text-foreground/85 font-medium">
-                  {section.title}
-                </h3>
-                {/* Content Paragraphs */}
-                {section.content.length > 0 && (
-                  <div className="space-y-4">
-                    {section.content.map((paragraph, paraIndex) => (
+        {/* Sections - reversed order for stagger animation (third, second, first) */}
+        {[...parsedContent.sections].reverse().map((section, reversedIndex) => {
+          const sectionIndex = parsedContent.sections.length - 1 - reversedIndex;
+          return (
+            <React.Fragment key={section.title}>
+              <motion.div
+                variants={modalTextStagger.item}
+                className="flex-1 flex flex-col"
+              >
+                <div className="space-y-5">
+                  <h3 className="text-[10px] uppercase tracking-wider text-foreground/85 font-medium">
+                    {section.title}
+                  </h3>
+                  {/* Content Paragraphs */}
+                  {section.content.length > 0 && (
+                    <div className="space-y-4">
+                      {section.content.map((paragraph, paraIndex) => (
+                        <p
+                          key={paraIndex}
+                          className="leading-[1.6] text-sm text-foreground/70"
+                        >
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* List Items - pushed to bottom, rendered as paragraphs */}
+                {section.items.length > 0 && (
+                  <div className="mt-auto space-y-3 pt-5">
+                    {section.items.map((item, itemIndex) => (
                       <p
-                        key={paraIndex}
+                        key={itemIndex}
                         className="leading-[1.6] text-sm text-foreground/70"
                       >
-                        {paragraph}
+                        {item}
                       </p>
                     ))}
                   </div>
                 )}
-              </div>
+              </motion.div>
               
-              {/* List Items - pushed to bottom, rendered as paragraphs */}
-              {section.items.length > 0 && (
-                <div className="mt-auto space-y-3 pt-5">
-                  {section.items.map((item, itemIndex) => (
-                    <p
-                      key={itemIndex}
-                      className="leading-[1.6] text-sm text-foreground/70"
-                    >
-                      {item}
-                    </p>
-                  ))}
-                </div>
+              {/* Divider between sections (not after last section) */}
+              {reversedIndex < parsedContent.sections.length - 1 && (
+                <motion.div
+                  variants={modalTextStagger.item}
+                  className="md:w-px md:h-auto h-px w-full bg-foreground/10"
+                />
               )}
-            </motion.div>
-            
-            {/* Divider between sections (not after last section) */}
-            {sectionIndex < parsedContent.sections.length - 1 && (
-              <motion.div
-                variants={modalTextStagger.item}
-                className="md:w-px md:h-auto h-px w-full bg-foreground/10"
-              />
-            )}
-          </React.Fragment>
-        ))}
+            </React.Fragment>
+          );
+        })}
       </motion.div>
     </motion.div>
   );
