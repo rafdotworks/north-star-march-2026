@@ -155,6 +155,7 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
           opacity: !isLoaded ? 0.5 : 1,
           transform: transformValue,
           transition: transitionValue,
+          cursor: hasVideo ? "pointer" : undefined,
         }
       : {
           width: "100%",
@@ -163,6 +164,7 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
           opacity: !isLoaded ? 0.5 : 1,
           transform: transformValue,
           transition: transitionValue,
+          cursor: hasVideo ? "pointer" : undefined,
         };
 
   const overlayVariants = hasVideo
