@@ -1264,7 +1264,7 @@ export default function Page() {
               >
                 <motion.div
                   className="w-full hidden md:block md:flex-shrink-0"
-                  initial={{ opacity: 0 }}
+                  initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, ease: EASING.primary }}
                 >
@@ -1345,7 +1345,7 @@ export default function Page() {
                         <div className="tracking-tighter text-lg md:whitespace-nowrap">
                           {/* Static "Raf V." - no animation */}
                           <span
-                            className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 hover:border hover:border-foreground/20 transition-all duration-200 inline-block"
+                            className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
                             style={{
                               color: nameTextColor,
                               transition: shouldReduceMotion 
@@ -1866,7 +1866,10 @@ export default function Page() {
                                 <>
                                   <div
                                     className={`absolute left-0 top-0 h-full w-[38%] z-[60] ${carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "cursor-w-resize" : ""}`}
-                                    style={{ pointerEvents: carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "auto" : "none" }}
+                                    style={{ 
+                                      pointerEvents: carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "auto" : "none",
+                                      cursor: carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "w-resize" : "default"
+                                    }}
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       if (isNavigating || !carouselAnimationComplete || !loadedImages[src] || isClickFrozen) return;
@@ -1880,7 +1883,10 @@ export default function Page() {
                                   />
                                   <div
                                     className={`absolute right-0 top-0 h-full w-[38%] z-[60] ${carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "cursor-e-resize" : ""}`}
-                                    style={{ pointerEvents: carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "auto" : "none" }}
+                                    style={{ 
+                                      pointerEvents: carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "auto" : "none",
+                                      cursor: carouselAnimationComplete && loadedImages[src] && !isClickFrozen ? "e-resize" : "default"
+                                    }}
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       if (isNavigating || !carouselAnimationComplete || !loadedImages[src] || isClickFrozen) return;

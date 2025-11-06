@@ -144,16 +144,11 @@ export function AboutModalContent({
                 {/* Render principles list for the Principles section */}
                 {section.title === "Principles" && (
                   <>
-                    <ul className="space-y-2 text-sm text-foreground/70 leading-[1.6]">
-                      {ABOUT_MODAL_CONTENT.principles.map((principle, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="mr-2 text-foreground/40 select-none">
-                            •
-                          </span>
-                          <span>{principle}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {ABOUT_MODAL_CONTENT.principles.map((principle, index) => (
+                      <p key={index} className="leading-[1.6] text-sm text-foreground/70">
+                        {principle}
+                      </p>
+                    ))}
                     <p className="text-sm text-foreground/70 leading-[1.6] mt-3">
                       Read my{" "}
                       {onBlueprintClick ? (
