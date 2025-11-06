@@ -267,6 +267,90 @@ export function renderYearWithRolling(year: string | undefined | null): string |
 }
 
 // ============================================================================
+// THEME COLOR CALCULATION
+// ============================================================================
+
+/**
+ * Calculates text colors based on theme state (opposite vs default) and system preference.
+ * 
+ * @remarks
+ * Centralizes all text color calculations used throughout the portfolio page.
+ * Handles both opposite theme (when background switches) and default theme states.
+ * 
+ * Color types:
+ * - mainText/nameText/captionText/descriptionText: Primary text colors (same values)
+ * - yearText: Muted text colors for year labels
+ * 
+ * Theme logic:
+ * - Opposite theme: When background is inverted, text colors are also inverted
+ *   - Dark system → Light background → Dark text
+ *   - Light system → Dark background → Light text
+ * - Default theme: Text colors match system theme
+ *   - Dark system → Dark background → Light text
+ *   - Light system → Light background → Dark text
+ * 
+ * @param useOppositeTheme - Whether to use opposite theme colors (background is inverted)
+ * @param prefersDark - Whether system prefers dark mode
+ * @returns Object containing all text color values
+ * 
+ * @example
+ * ```ts
+ * const colors = getTextColors(false, true); // Default theme, dark system
+ * // Returns { mainText: 'hsl(...)', nameText: 'hsl(...)', ... }
+ * 
+ * const colors = getTextColors(true, false); // Opposite theme, light system
+ * // Returns inverted colors
+ * ```
+ */
+export function getTextColors(
+  useOppositeTheme: boolean,
+  prefersDark: boolean
+): {
+  mainText: string;
+  nameText: string;
+  captionText: string;
+  descriptionText: string;
+  yearText: string;
+} {
+  if (useOppositeTheme) {
+    // Opposite theme colors
+    // When background is inverted, text colors are also inverted
+    const primaryText = prefersDark
+      ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
+      : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
+    
+    const mutedText = prefersDark
+      ? 'hsl(var(--neutral-h) 15% 25%)' // Light theme muted text
+      : 'hsl(var(--neutral-h) 10% 70%)'; // Dark theme muted text
+    
+    return {
+      mainText: primaryText,
+      nameText: primaryText,
+      captionText: primaryText,
+      descriptionText: primaryText,
+      yearText: mutedText,
+    };
+  } else {
+    // Default theme colors (use system theme colors)
+    const primaryText = prefersDark
+      ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
+      : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
+    
+    const mutedText = prefersDark
+      ? 'hsl(var(--neutral-h) 10% 70%)' // Dark theme muted text
+      : 'hsl(var(--neutral-h) 15% 35%)'; // Light theme muted text
+    
+    return {
+      mainText: primaryText,
+      nameText: primaryText,
+      captionText: primaryText,
+      descriptionText: primaryText,
+      yearText: mutedText,
+    };
+  }
+}
+
+// ============================================================================
 // PLACEHOLDER GENERATION
 // ============================================================================
 

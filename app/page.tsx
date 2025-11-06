@@ -92,6 +92,7 @@ import {
   parseCaption,
   renderYearWithRolling,
   generatePlaceholder,
+  getTextColors,
 } from "@/app/utils/portfolioUtils";
 
 // ============================================================================
@@ -206,35 +207,39 @@ export default function Page() {
   }, []);
 
   /**
-   * Background variant: switches to opposite theme after third project
+   * Determines if opposite theme should be used based on current view state.
    * Mobile: Panel structure: Header (0) → Images (1-8) → End panel (9)
    *   - Panels 0-2: default background (header + first 2 images)
    *   - Panels 3-8: opposite theme background (images 3-8, project 3 "vf" through last image)
    *   - Panel 9: default background (end panel with links)
    * Desktop: Based on carousel image index
    *   - Images 0-2: default background (projects 1-3: "theo", "cb", "vf")
-   *   - Images 3-5: opposite theme background (projects 4-6: "atlas", "defituna", "curbcut")
-   *   - Images 6-7: default background (projects 7-8: "zalando", "earlyworks")
+   *   - Images 3-6: opposite theme background (projects 4-7: "atlas", "defituna", "curbcut", "zalando")
+   *   - Image 7: default background (project 8: "earlyworks")
    * Uses CSS variables to match system theme (light/dark)
    */
-  const backgroundStyle = useMemo(() => {
-    // Determine if we should use opposite theme
-    let useOppositeTheme = false;
+  const useOppositeTheme = useMemo(() => {
     if (isMobile) {
       // Mobile: Panel logic: default (0-2, 9) vs opposite theme (3-8)
-      useOppositeTheme = activePanelIndex >= 3 && activePanelIndex < 9;
+      return activePanelIndex >= 3 && activePanelIndex < 9;
     } else {
       // Desktop: Switch for projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando")
       // Only the last project (index 7: "earlyworks") returns to original theme
-      useOppositeTheme = currentImageIndex >= 3 && currentImageIndex <= 6;
+      return currentImageIndex >= 3 && currentImageIndex <= 6;
     }
-    
+  }, [isMobile, activePanelIndex, currentImageIndex]);
+
+  /**
+   * Background variant: switches to opposite theme after third project
+   * Reuses useOppositeTheme calculation for consistency
+   */
+  const backgroundStyle = useMemo(() => {
     if (useOppositeTheme) {
       // Use opposite theme colors
       // If system is dark, use light; if system is light, use dark
       return {
         backgroundColor: prefersDark 
-          ? 'hsl(var(--neutral-h) var(--neutral-s) 99%)' // Light mode background
+          ? 'hsl(var(--neutral-h) 10% 99%)' // Light mode background
           : 'hsl(var(--neutral-h) 14% 8%)', // Dark mode background
       };
     }
@@ -243,9 +248,9 @@ export default function Page() {
     return {
       backgroundColor: prefersDark
         ? 'hsl(var(--neutral-h) 14% 8%)' // Dark mode background
-        : 'hsl(var(--neutral-h) var(--neutral-s) 99%)', // Light mode background
+        : 'hsl(var(--neutral-h) 10% 99%)', // Light mode background
     };
-      }, [isMobile, activePanelIndex, currentImageIndex, prefersDark]);
+  }, [useOppositeTheme, prefersDark]);
 
   const _mobileBackgroundClass = useMemo(() => {
     if (!isMobile) return "bg-background";
@@ -878,10 +883,15 @@ export default function Page() {
   useEffect(() => {
     if (isClickFrozen) {
       document.body.style.cursor = "default";
-      return () => {
-        document.body.style.cursor = "";
-      };
+    } else {
+      // Explicitly remove body cursor when not frozen to allow child cursors to show
+      document.body.style.removeProperty("cursor");
     }
+    
+    return () => {
+      // Cleanup: ensure cursor is removed on unmount
+      document.body.style.removeProperty("cursor");
+    };
   }, [isClickFrozen]);
 
   const previewPrerequisitesMet = useMemo(
@@ -1275,30 +1285,10 @@ export default function Page() {
                       const isFinalProject = !isMobile && currentImageIndex === FINAL_PROJECT_INDEX;
                       
                       // Desktop main text color adjustment based on background theme
-                      // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
-                      // Only the last project (index 7: "earlyworks") uses default theme
-                      const useOppositeTheme = !isMobile && currentImageIndex >= 3 && currentImageIndex <= 6;
-                      
-                      let mainTextColor: string;
-                      let nameTextColor: string;
-                      
-                      if (useOppositeTheme) {
-                        // Opposite theme colors
-                        mainTextColor = prefersDark
-                          ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
-                          : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
-                        nameTextColor = prefersDark
-                          ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
-                          : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
-                      } else {
-                        // Default theme colors (use system colors)
-                        mainTextColor = prefersDark
-                          ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
-                          : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
-                        nameTextColor = prefersDark
-                          ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
-                          : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
-                      }
+                      // Reuses centralized useOppositeTheme calculation
+                      const colors = getTextColors(useOppositeTheme, prefersDark);
+                      const mainTextColor = colors.mainText;
+                      const nameTextColor = colors.nameText;
                       
                       // On final project, show email link instead of normal text
                       if (isFinalProject) {
@@ -1625,30 +1615,9 @@ export default function Page() {
                                 // Determine theme-aware text colors based on panel
                                 // Panel 3-8: opposite theme, Panel 0-2,9: default theme
                                 const useOppositeTheme = panelIndex >= 3 && panelIndex < 9;
-                                
-                                // Calculate text colors
-                                // If opposite theme: when dark system -> light text, when light system -> dark text
-                                // If default theme: use system theme colors
-                                let captionTextColor: string;
-                                let yearTextColor: string;
-                                
-                                if (useOppositeTheme) {
-                                  // Opposite theme colors
-                                  captionTextColor = prefersDark 
-                                    ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
-                                    : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
-                                  yearTextColor = prefersDark
-                                    ? 'hsl(var(--neutral-h) 15% 25%)' // Light theme muted text
-                                    : 'hsl(var(--neutral-h) 10% 70%)'; // Dark theme muted text
-                                } else {
-                                  // Default theme colors (use system colors)
-                                  captionTextColor = prefersDark
-                                    ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
-                                    : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
-                                  yearTextColor = prefersDark
-                                    ? 'hsl(var(--neutral-h) 10% 70%)' // Dark theme muted text
-                                    : 'hsl(var(--neutral-h) 15% 35%)'; // Light theme muted text
-                                }
+                                const colors = getTextColors(useOppositeTheme, prefersDark);
+                                const captionTextColor = colors.captionText;
+                                const yearTextColor = colors.yearText;
                                 
                                 return (
                                   <motion.figcaption
@@ -1988,30 +1957,10 @@ export default function Page() {
                                 getProjectFromSrc(currentSrc);
                               
                               // Desktop caption color adjustment based on background theme
-                              // Projects 4-7 (indices 3-6: "atlas", "defituna", "curbcut", "zalando") use opposite theme
-                              // Only the last project (index 7: "earlyworks") uses default theme
-                              const useOppositeTheme = !isMobile && currentImageIndex >= 3 && currentImageIndex <= 6;
-                              
-                              let yearColor: string;
-                              let descriptionColor: string;
-                              
-                              if (useOppositeTheme) {
-                                // Opposite theme colors
-                                yearColor = prefersDark
-                                  ? 'hsl(var(--neutral-h) 15% 25%)' // Light theme muted text
-                                  : 'hsl(var(--neutral-h) 10% 70%)'; // Dark theme muted text
-                                descriptionColor = prefersDark
-                                  ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
-                                  : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
-                              } else {
-                                // Default theme colors (use system colors)
-                                yearColor = prefersDark
-                                  ? 'hsl(var(--neutral-h) 10% 70%)' // Dark theme muted text
-                                  : 'hsl(var(--neutral-h) 15% 35%)'; // Light theme muted text
-                                descriptionColor = prefersDark
-                                  ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
-                                  : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
-                              }
+                              // Reuses centralized useOppositeTheme calculation
+                              const colors = getTextColors(useOppositeTheme, prefersDark);
+                              const yearColor = colors.yearText;
+                              const descriptionColor = colors.descriptionText;
                               
                               return (
                                 <>

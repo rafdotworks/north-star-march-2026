@@ -26,6 +26,7 @@ export const VideoPlayButton: React.FC<VideoPlayButtonProps> = ({
           style={{
             pointerEvents: "auto",
             zIndex: 100,
+            cursor: "pointer",
           }}
         >
           <svg

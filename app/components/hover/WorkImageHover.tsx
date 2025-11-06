@@ -91,6 +91,7 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
       style={{
         transition: transitionStyle,
         height: variant === "desktop" ? "100%" : undefined,
+        cursor: hasVideo ? "pointer" : undefined,
       }}
     >
       {children}
