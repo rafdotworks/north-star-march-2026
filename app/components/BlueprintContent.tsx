@@ -29,6 +29,7 @@ interface ParsedBlueprint {
 interface BlueprintContentProps {
   shouldReduceMotion?: boolean;
   onBack: () => void;
+  preFetchedContent?: string | null;
 }
 
 // ============================================================================
@@ -209,9 +210,10 @@ function parseBlueprint(content: string): ParsedBlueprint {
 export function BlueprintContent({
   shouldReduceMotion: _shouldReduceMotion = false,
   onBack,
+  preFetchedContent,
 }: BlueprintContentProps) {
-  const [content, setContent] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [content, setContent] = useState<string | null>(preFetchedContent ?? null);
+  const [isLoading, setIsLoading] = useState(!preFetchedContent);
   const [error, setError] = useState<string | null>(null);
   
   // Parse content when loaded
@@ -225,8 +227,15 @@ export function BlueprintContent({
     }
   }, [content]);
   
-  // Fetch blueprint content
+  // Fetch blueprint content if not pre-fetched
   useEffect(() => {
+    // If we have pre-fetched content, use it and skip fetching
+    if (preFetchedContent) {
+      setContent(preFetchedContent);
+      setIsLoading(false);
+      return;
+    }
+    
     const fetchContent = async () => {
       try {
         setIsLoading(true);
@@ -254,7 +263,7 @@ export function BlueprintContent({
     };
     
     fetchContent();
-  }, []);
+  }, [preFetchedContent]);
   
   if (isLoading) {
     return (
@@ -263,7 +272,7 @@ export function BlueprintContent({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3, delay: 0.7 }}
+        transition={{ duration: 0.3 }}
       >
         <p className="text-sm text-foreground/50">Loading blueprint...</p>
       </motion.div>
@@ -277,7 +286,7 @@ export function BlueprintContent({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3, delay: 0.7 }}
+        transition={{ duration: 0.3 }}
       >
         <p className="text-sm text-foreground/70 mb-2">Unable to load blueprint</p>
         <p className="text-xs text-foreground/50">{error}</p>
@@ -292,7 +301,7 @@ export function BlueprintContent({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3, delay: 0.7 }}
+        transition={{ duration: 0.3 }}
       >
         <p className="text-sm text-foreground/70">No sections found in blueprint</p>
       </motion.div>
@@ -321,7 +330,7 @@ export function BlueprintContent({
         className="mb-6 text-xs tracking-wider text-foreground/40 hover:text-foreground/80 cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 font-medium inline-block"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.85 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         ← Back
@@ -329,78 +338,72 @@ export function BlueprintContent({
       
       {/* Content */}
       <motion.div
-        variants={{
-          hidden: { opacity: 1 },
-          visible: {
-            opacity: 1,
-            transition: { 
-              staggerChildren: 0.15, 
-              delayChildren: 0.7 
-            },
-          },
-          exit: {
-            opacity: 1,
-            transition: { staggerChildren: 0.05, staggerDirection: -1 },
-          },
-        }}
+        variants={modalTextStagger.container}
         initial="hidden"
         animate="visible"
         exit="exit"
         className="flex flex-col md:flex-row md:gap-6 space-y-6 md:space-y-0"
       >
-        {/* Sections - reversed order for stagger animation (third, second, first) */}
-        {[...parsedContent.sections].reverse().map((section, reversedIndex) => {
-          const sectionIndex = parsedContent.sections.length - 1 - reversedIndex;
-          return (
-            <React.Fragment key={section.title}>
-              <motion.div
-                variants={modalTextStagger.item}
-                className="flex-1 flex flex-col"
-              >
-                <div className="space-y-5">
-                  <h3 className="text-[10px] uppercase tracking-wider text-foreground/85 font-medium">
-                    {section.title}
-                  </h3>
-                  {/* Content Paragraphs */}
-                  {section.content.length > 0 && (
-                    <div className="space-y-4">
-                      {section.content.map((paragraph, paraIndex) => (
+        {/* Sections - ordered with "How I Work" first */}
+        {(() => {
+          // Sort sections to put "How I Work" first
+          const sortedSections = [...parsedContent.sections].sort((a, b) => {
+            if (a.title === "How I Work") return -1;
+            if (b.title === "How I Work") return 1;
+            return 0;
+          });
+          return sortedSections.map((section, sectionIndex) => {
+            return (
+              <React.Fragment key={section.title}>
+                <motion.div
+                  variants={modalTextStagger.item}
+                  className="flex-1 flex flex-col"
+                >
+                  <div className="space-y-5">
+                    <h3 className="text-[10px] uppercase tracking-wider text-foreground/85 font-medium">
+                      {section.title}
+                    </h3>
+                    {/* Content Paragraphs */}
+                    {section.content.length > 0 && (
+                      <div className="space-y-4">
+                        {section.content.map((paragraph, paraIndex) => (
+                          <p
+                            key={paraIndex}
+                            className="leading-[1.6] text-sm text-foreground/70"
+                          >
+                            {paragraph}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* List Items - pushed to bottom, rendered as paragraphs */}
+                  {section.items.length > 0 && (
+                    <div className="mt-auto space-y-3 pt-5">
+                      {section.items.map((item, itemIndex) => (
                         <p
-                          key={paraIndex}
+                          key={itemIndex}
                           className="leading-[1.6] text-sm text-foreground/70"
                         >
-                          {paragraph}
+                          {item}
                         </p>
                       ))}
                     </div>
                   )}
-                </div>
+                </motion.div>
                 
-                {/* List Items - pushed to bottom, rendered as paragraphs */}
-                {section.items.length > 0 && (
-                  <div className="mt-auto space-y-3 pt-5">
-                    {section.items.map((item, itemIndex) => (
-                      <p
-                        key={itemIndex}
-                        className="leading-[1.6] text-sm text-foreground/70"
-                      >
-                        {item}
-                      </p>
-                    ))}
-                  </div>
+                {/* Divider between sections (not after last section) */}
+                {sectionIndex < sortedSections.length - 1 && (
+                  <motion.div
+                    variants={modalTextStagger.item}
+                    className="md:w-px md:h-auto h-px w-full bg-foreground/10"
+                  />
                 )}
-              </motion.div>
-              
-              {/* Divider between sections (not after last section) */}
-              {reversedIndex < parsedContent.sections.length - 1 && (
-                <motion.div
-                  variants={modalTextStagger.item}
-                  className="md:w-px md:h-auto h-px w-full bg-foreground/10"
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
+              </React.Fragment>
+            );
+          });
+        })()}
       </motion.div>
     </motion.div>
   );

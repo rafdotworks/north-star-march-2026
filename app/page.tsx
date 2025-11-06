@@ -174,6 +174,7 @@ export default function Page() {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // About modal visible
   const [modalView, setModalView] = useState<'about' | 'blueprint'>('about'); // Current view in About modal
   const [previousModalView, setPreviousModalView] = useState<'about' | 'blueprint'>('about'); // Previous view for direction tracking
+  const [preFetchedBlueprintContent, setPreFetchedBlueprintContent] = useState<string | null>(null); // Pre-fetched blueprint content
 
   // Mobile-specific state
   const [activePanelIndex, setActivePanelIndex] = useState(0); // Active mobile scroll panel
@@ -341,6 +342,34 @@ export default function Page() {
       return new Array(totalPanels).fill(0);
     });
   }, []);
+
+  // EFFECT: Pre-fetch blueprint content when About modal opens
+  useEffect(() => {
+    if (!isAboutModalOpen || preFetchedBlueprintContent) {
+      return; // Don't fetch if modal is closed or already fetched
+    }
+
+    const fetchBlueprintContent = async () => {
+      try {
+        const response = await fetch(`/documents/blueprint.md?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
+        if (!response.ok) {
+          return; // Silently fail - BlueprintContent will handle its own fetch
+        }
+        const text = await response.text();
+        setPreFetchedBlueprintContent(text);
+      } catch (err) {
+        // Silently fail - BlueprintContent will handle its own fetch
+        console.error('Error pre-fetching blueprint:', err);
+      }
+    };
+
+    fetchBlueprintContent();
+  }, [isAboutModalOpen, preFetchedBlueprintContent]);
 
   const handleImageLoad = useCallback((src: string) => {
     setLoadedImages((prev) => {
@@ -1316,7 +1345,7 @@ export default function Page() {
                         <div className="tracking-tighter text-lg md:whitespace-nowrap">
                           {/* Static "Raf V." - no animation */}
                           <span
-                            className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
+                            className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 hover:border hover:border-foreground/20 transition-all duration-200 inline-block"
                             style={{
                               color: nameTextColor,
                               transition: shouldReduceMotion 
@@ -1430,7 +1459,7 @@ export default function Page() {
                               <div>
                                 {/* Static "Raf V." - visible immediately, bypasses parent opacity */}
                                 <span
-                                  className="font-raf text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 pointer-events-auto inline-block"
+                                  className="font-raf text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 hover:border hover:border-foreground/20 transition-all duration-200 pointer-events-auto inline-block"
                                   style={{ opacity: 1 }}
                                   onClick={() => setIsAboutModalOpen(true)}
                                   role="button"
@@ -2288,6 +2317,7 @@ export default function Page() {
                             setPreviousModalView('blueprint');
                             setModalView('about');
                           }}
+                          preFetchedContent={preFetchedBlueprintContent}
                         />
                       </motion.div>
                     )}
