@@ -1435,14 +1435,16 @@ export default function Page() {
                       {/* Header as first panel - vertically centered like images */}
                       <section
                         data-panel
-                        className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
-                        style={{
-                          paddingTop: "env(safe-area-inset-top, 0px)",
-                          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-                        }}
+                        className={`snap-center snap-always min-h-[calc(100svh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
                       >
                         {/* Constrain width to match About modal's visual padding */}
-                        <div className="w-full max-w-2xl">
+                        <div 
+                          className="w-full max-w-2xl"
+                          style={{
+                            paddingTop: "env(safe-area-inset-top, 0px)",
+                            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                          }}
+                        >
                           <div className="tracking-tighter text-base text-center">
                             <div className="text-foreground/70">
                               {/* Line 1: "Raf is a Senior AI Product Designer" */}
@@ -1531,9 +1533,15 @@ export default function Page() {
                           data-panel
                           // PADDING: Changed from px-4 sm:px-3 to unified MOBILE_CONTENT_PADDING (px-4 sm:px-6)
                           // This aligns images with header text and About modal content
-                          className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
+                          className={`snap-center snap-always min-h-[calc(100svh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
                         >
-                          <figure className="w-full max-w-screen-sm">
+                          <figure 
+                            className="w-full max-w-screen-sm"
+                            style={{
+                              paddingTop: "env(safe-area-inset-top, 0px)",
+                              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                            }}
+                          >
                             <div className="w-full max-h-[78svh] flex flex-col items-center justify-center relative pb-6 gap-3">
                               {/* Scroll blur wrapper - separate from animation layer */}
                               <div
@@ -1709,13 +1717,15 @@ export default function Page() {
                         }
                         key="end-panel"
                         data-panel
-                        className={`snap-center snap-always h-[100svh] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
-                        style={{
-                          paddingTop: "env(safe-area-inset-top, 0px)",
-                          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-                        }}
+                        className={`snap-center snap-always min-h-[calc(100svh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex items-center justify-center ${MOBILE_CONTENT_PADDING}`}
                       >
-                        <div className="w-full max-w-2xl flex flex-col items-center justify-center">
+                        <div 
+                          className="w-full max-w-2xl flex flex-col items-center justify-center"
+                          style={{
+                            paddingTop: "env(safe-area-inset-top, 0px)",
+                            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                          }}
+                        >
                           <motion.div
                             initial={{
                               opacity: 0,
