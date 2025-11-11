@@ -28,4 +28,4 @@ Notes about Design Engineering
 • Designs in systems, not screens.
 • Works across design, LLMs and React environments.
 • Builds flexible foundations: scalable tokens, modular UI, clean structure.
-• Sees design systems as living functions — adaptive, not static libraries.
+• Sees design systems as living functions

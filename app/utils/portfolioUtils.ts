@@ -351,6 +351,33 @@ export function getTextColors(
 }
 
 // ============================================================================
+// DECORATION COLOR HELPER
+// ============================================================================
+
+/**
+ * Creates a decoration color (underline) from a text color with reduced opacity.
+ * 
+ * @remarks
+ * Takes an HSL color string and returns a color suitable for text decoration
+ * (underline) with 20% opacity. Uses CSS color-mix for modern browsers.
+ * 
+ * @param textColor - HSL color string (e.g., "hsl(var(--neutral-h) 15% 95%)")
+ * @param opacity - Opacity value between 0 and 1 (default: 0.2 for 20%)
+ * @returns CSS color string with opacity applied
+ * 
+ * @example
+ * ```ts
+ * const decorationColor = getDecorationColor('hsl(var(--neutral-h) 15% 95%)', 0.2);
+ * // Returns color suitable for underline decoration
+ * ```
+ */
+export function getDecorationColor(textColor: string, opacity: number = 0.2): string {
+  // Use CSS color-mix to apply opacity to the text color
+  // This ensures the decoration color updates with theme changes
+  return `color-mix(in srgb, ${textColor} ${opacity * 100}%, transparent)`;
+}
+
+// ============================================================================
 // PLACEHOLDER GENERATION
 // ============================================================================
 

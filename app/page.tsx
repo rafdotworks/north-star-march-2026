@@ -93,6 +93,7 @@ import {
   renderYearWithRolling,
   generatePlaceholder,
   getTextColors,
+  getDecorationColor,
 } from "@/app/utils/portfolioUtils";
 
 // ============================================================================
@@ -199,12 +200,10 @@ export default function Page() {
   // ============================================================================
 
   /**
-   * Memoized theme preference check for consistent use across components
+   * Reactive theme preference check that listens to system appearance changes
+   * Updates when user switches between light and dark mode
    */
-  const prefersDark = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }, []);
+  const [prefersDark, setPrefersDark] = useState<boolean>(false);
 
   /**
    * Determines if opposite theme should be used based on current view state.
@@ -264,6 +263,30 @@ export default function Page() {
   // EFFECT: Client-side mount detection
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // EFFECT: Listen to system appearance changes (prefers-color-scheme)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Create media query listener for dark mode preference
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+
+    // Set initial value
+    setPrefersDark(mql.matches);
+
+    // Handler to update state when preference changes
+    const onChange = (event: MediaQueryListEvent) => {
+      setPrefersDark(event.matches);
+    };
+
+    // Listen for changes
+    mql.addEventListener('change', onChange);
+
+    // Cleanup
+    return () => {
+      mql.removeEventListener('change', onChange);
+    };
   }, []);
 
   // EFFECT: Mobile scroll position reset (mobile-only)
@@ -1335,12 +1358,23 @@ export default function Page() {
                         <div className="tracking-tighter text-lg md:whitespace-nowrap">
                           {/* Static "Raf V." - no animation */}
                           <span
-                            className="font-raf cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
+                            className="font-raf cursor-pointer underline underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
                             style={{
                               color: nameTextColor,
+                              textDecorationColor: getDecorationColor(nameTextColor, 0.2),
                               transition: shouldReduceMotion 
                                 ? 'none' 
-                                : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                                : 'color 1500ms cubic-bezier(0.22, 1, 0.36, 1), text-decoration-color 1500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!shouldReduceMotion) {
+                                e.currentTarget.style.textDecorationColor = getDecorationColor(nameTextColor, 0.5);
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!shouldReduceMotion) {
+                                e.currentTarget.style.textDecorationColor = getDecorationColor(nameTextColor, 0.2);
+                              }
                             }}
                             onClick={() => setIsAboutModalOpen(true)}
                             role="button"
@@ -1451,8 +1485,21 @@ export default function Page() {
                               <div>
                                 {/* Static "Raf V." - visible immediately, bypasses parent opacity */}
                                 <span
-                                  className="font-raf text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 hover:border hover:border-foreground/20 transition-all duration-200 pointer-events-auto inline-block"
-                                  style={{ opacity: 1 }}
+                                  className="font-raf text-foreground cursor-pointer underline underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 hover:border hover:border-foreground/20 transition-all duration-200 pointer-events-auto inline-block"
+                                  style={{ 
+                                    opacity: 1,
+                                    textDecorationColor: 'color-mix(in srgb, currentColor 20%, transparent)',
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!shouldReduceMotion) {
+                                      e.currentTarget.style.textDecorationColor = 'color-mix(in srgb, currentColor 50%, transparent)';
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!shouldReduceMotion) {
+                                      e.currentTarget.style.textDecorationColor = 'color-mix(in srgb, currentColor 20%, transparent)';
+                                    }
+                                  }}
                                   onClick={() => setIsAboutModalOpen(true)}
                                   role="button"
                                   tabIndex={0}
