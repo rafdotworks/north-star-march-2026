@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { ExternalLink, Mail } from "lucide-react"
 import SideTray from "./components/SideTray"
 import { useSystemTheme } from "@/hooks/use-system-theme"
@@ -8,7 +8,13 @@ import { useSystemTheme } from "@/hooks/use-system-theme"
 export default function NewMinimalPage() {
   const [timezoneMessage, setTimezoneMessage] = useState("")
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null)
-  const { prefersDark } = useSystemTheme()
+  const { prefersDark, isReady } = useSystemTheme()
+
+  // Invert theme: show opposite of user's system preference, defaulting to dark
+  const shouldShowDark = useMemo(() => {
+    // Default to dark during SSR/initial render or when user prefers light
+    return !prefersDark || !isReady
+  }, [prefersDark, isReady])
 
   useEffect(() => {
     const updateTimezoneMessage = () => {
@@ -53,6 +59,7 @@ export default function NewMinimalPage() {
   return (
     <main
       className="min-h-screen min-h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 md:pr-8 relative pt-16 md:pt-0 transition-colors duration-200"
+      data-theme={shouldShowDark ? "dark" : "light"}
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0), 4rem)',
         paddingBottom: 'max(env(safe-area-inset-bottom, 0), 2rem)'

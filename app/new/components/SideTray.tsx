@@ -552,7 +552,11 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                     >
                       {/* Origins & Craft */}
                       <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        I spent the first 20 years of my life in the Amalfi Coast, Italy. Over the past eight years, I&apos;ve designed and engineered products, systems and experiences. I interned at Apple and worked at Coinbase, Voiceflow, Theoriq, Zalando and many more startups, blending craft with code, and care with speed.
+                      I spent the first 20 years of my life on the Amalfi Coast. I’ve designed and built products that connect logic with feeling, working with startups of all sizes and companies like Coinbase, Voiceflow, Theoriq, Zalando and Apple. </p>
+
+  {/* Now */}
+  <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                        Today I focus on AI systems and design-engineering work that makes complex products feel clear, fast and trustworthy.                      
                       </p>
 
                       {/* Presence */}
@@ -564,7 +568,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                       <div className="space-y-1.5">
                         <p className="text-xs text-muted-foreground transition-colors duration-200">— How you do anything is how you do everything</p>
                         <p className="text-xs text-muted-foreground transition-colors duration-200">— Always happy, never satisfied</p>
-                        <p className="text-xs text-muted-foreground transition-colors duration-200">— Slow is smooth, smooth is fast</p>
+                        <p className="text-xs text-muted-foreground transition-colors duration-200">— Progress over movement</p>
                       </div>
 
                     </motion.div>
