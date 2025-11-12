@@ -343,32 +343,32 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
   // Custom components for ReactMarkdown with improved typography
   const markdownComponents: Components = {
     h1: ({ children }) => (
-      <h1 className="text-base font-light text-white tracking-wider mb-6 mt-8">{children}</h1>
+      <h1 className="text-base font-light text-foreground tracking-wider mb-6 mt-8 transition-colors duration-200">{children}</h1>
     ),
     h2: ({ children }) => (
-      <h2 className="text-sm font-normal text-neutral-200 mb-4 mt-7">{children}</h2>
+      <h2 className="text-sm font-normal text-foreground/90 mb-4 mt-7 transition-colors duration-200">{children}</h2>
     ),
     h3: ({ children }) => (
-      <h3 className="text-xs font-medium text-neutral-300 mb-3 mt-5">{children}</h3>
+      <h3 className="text-xs font-medium text-foreground/80 mb-3 mt-5 transition-colors duration-200">{children}</h3>
     ),
     p: ({ children }) => (
-      <p className="text-xs text-neutral-400 mb-4 leading-loose">{children}</p>
+      <p className="text-xs text-muted-foreground mb-4 leading-loose transition-colors duration-200">{children}</p>
     ),
     ul: ({ children }) => (
-      <ul className="text-xs text-neutral-400 mb-4 ml-4 space-y-2 list-disc list-inside">{children}</ul>
+      <ul className="text-xs text-muted-foreground mb-4 ml-4 space-y-2 list-disc list-inside transition-colors duration-200">{children}</ul>
     ),
     ol: ({ children }) => (
-      <ol className="text-xs text-neutral-400 mb-4 ml-4 space-y-2 list-decimal list-inside">{children}</ol>
+      <ol className="text-xs text-muted-foreground mb-4 ml-4 space-y-2 list-decimal list-inside transition-colors duration-200">{children}</ol>
     ),
     li: ({ children }) => (
-      <li className="text-xs text-neutral-400 leading-loose">{children}</li>
+      <li className="text-xs text-muted-foreground leading-loose transition-colors duration-200">{children}</li>
     ),
     a: ({ href, children }) => (
       <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-neutral-300 hover:text-white visited:text-neutral-300 active:text-white focus:text-neutral-300 focus:outline-none transition-colors duration-200 underline underline-offset-2"
+        className="text-primary hover:text-foreground visited:text-primary active:text-foreground focus:text-primary focus:outline-none transition-colors duration-200 underline underline-offset-2"
         style={{
           WebkitTapHighlightColor: 'transparent'
         }}
@@ -377,20 +377,20 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
       </a>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="text-xs text-neutral-500 border-l-2 border-neutral-700 pl-3 my-4 italic">
+      <blockquote className="text-xs text-muted-foreground border-l-2 border-border pl-3 my-4 italic transition-colors duration-200">
         {children}
       </blockquote>
     ),
     code: ({ children }) => (
-      <code className="text-[10px] bg-neutral-900 px-1 py-0.5 rounded text-neutral-300 font-mono">
+      <code className="text-[10px] bg-muted px-1 py-0.5 rounded text-foreground font-mono transition-colors duration-200">
         {children}
       </code>
     ),
     strong: ({ children }) => (
-      <strong className="font-medium text-neutral-200">{children}</strong>
+      <strong className="font-medium text-foreground transition-colors duration-200">{children}</strong>
     ),
     em: ({ children }) => <em className="italic">{children}</em>,
-    hr: () => <hr className="border-neutral-800 my-6" />
+    hr: () => <hr className="border-border my-6 transition-colors duration-200" />
   }
 
   return (
@@ -400,7 +400,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
           {/* Backdrop */}
           <motion.div
             key="backdrop"
-            className="fixed inset-0 bg-black/50"
+            className="fixed inset-0 bg-background/50 backdrop-blur-sm transition-colors duration-200"
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -411,7 +411,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
           {/* Side tray with 3D perspective and mobile optimization */}
           <motion.div
             key="tray"
-            className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-[92vh] max-h-[92dvh] rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} bg-[#0a0a0a]`}
+            className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-[92vh] max-h-[92dvh] rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} bg-background transition-colors duration-200`}
             variants={activeTrayVariants}
             initial="hidden"
             animate="visible"
@@ -430,7 +430,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
               {/* Mobile drag handle */}
               {isMobile && (
                 <div className="flex justify-center py-3 pt-4 pb-2">
-                  <div className="w-12 h-1.5 rounded-full bg-neutral-600" />
+                  <div className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200" />
                 </div>
               )}
 
@@ -451,17 +451,17 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                   WebkitTapHighlightColor: 'transparent',
                   cursor: 'pointer'
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'rgb(255, 255, 255)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'rgb(115, 115, 115)'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.outline = 'none'
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.color = 'rgb(115, 115, 115)'
-                }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'hsl(var(--foreground))'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = 'none'
+                    e.currentTarget.style.boxShadow = 'none'
+                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                  }}
               >
                 {/* X icon with thin strokes */}
                 <svg
@@ -497,19 +497,19 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    color: 'rgb(115, 115, 115)',
+                    color: 'hsl(var(--muted-foreground))',
                     WebkitTapHighlightColor: 'transparent',
                     cursor: 'pointer'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'rgb(255, 255, 255)'
+                    e.currentTarget.style.color = 'hsl(var(--foreground))'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'rgb(115, 115, 115)'
+                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
-                    e.currentTarget.style.color = 'rgb(115, 115, 115)'
+                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
                   }}
                 >
                   {/* Minimal arrow icon */}
@@ -551,20 +551,20 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                       className="space-y-6"
                     >
                       {/* Origins & Craft */}
-                      <p className="text-xs text-neutral-400 leading-relaxed">
+                      <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
                         I spent the first 20 years of my life in the Amalfi Coast, Italy. Over the past eight years, I&apos;ve designed and engineered products, systems and experiences. I interned at Apple and worked at Coinbase, Voiceflow, Theoriq, Zalando and many more startups, blending craft with code, and care with speed.
                       </p>
 
                       {/* Presence */}
-                      <p className="text-xs text-neutral-400 leading-relaxed">
+                      <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
                         I split my time mainly between Toronto and Lisbon. I&apos;m usually on a yoga mat, cycling, or chasing light through quiet spaces.
                       </p>
 
                       {/* Principles */}
                       <div className="space-y-1.5">
-                        <p className="text-xs text-neutral-500">— How you do anything is how you do everything</p>
-                        <p className="text-xs text-neutral-500">— Always happy, never satisfied</p>
-                        <p className="text-xs text-neutral-500">— Slow is smooth, smooth is fast</p>
+                        <p className="text-xs text-muted-foreground transition-colors duration-200">— How you do anything is how you do everything</p>
+                        <p className="text-xs text-muted-foreground transition-colors duration-200">— Always happy, never satisfied</p>
+                        <p className="text-xs text-muted-foreground transition-colors duration-200">— Slow is smooth, smooth is fast</p>
                       </div>
 
                     </motion.div>
@@ -593,8 +593,8 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                           whileHover={{ x: 4, opacity: 1 }}
                           transition={{ duration: 0.2, ease: EASING.smooth }}
                         >
-                          <p className="text-xs text-white">{article.title}</p>
-                          <p className="text-xs text-neutral-500">{article.date}</p>
+                          <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                          <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
                         </motion.div>
                       ))}
                     </motion.div>
@@ -610,7 +610,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                       {[...Array(5)].map((_, i) => (
                         <motion.div
                           key={i}
-                          className="h-4 bg-neutral-800 rounded"
+                          className="h-4 bg-muted rounded transition-colors duration-200"
                           style={{ width: `${100 - i * 15}%` }}
                           animate={{ opacity: [0.3, 0.6, 0.3] }}
                           transition={{
@@ -631,11 +631,11 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                       exit={{ opacity: 0, scale: 0.95 }}
                       className="text-center py-8"
                     >
-                      <p className="text-xs text-neutral-400 mb-2">Unable to load this article</p>
-                      <p className="text-xs text-neutral-500">{error}</p>
+                      <p className="text-xs text-muted-foreground mb-2 transition-colors duration-200">Unable to load this article</p>
+                      <p className="text-xs text-muted-foreground transition-colors duration-200">{error}</p>
                       <motion.button
                         onClick={() => articleId && loadArticle(articleId)}
-                        className="mt-4 text-xs text-neutral-300 hover:text-white transition-colors duration-200 underline"
+                        className="mt-4 text-xs text-primary hover:text-foreground transition-colors duration-200 underline"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -650,7 +650,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="text-xs text-neutral-400 leading-loose"
+                      className="text-xs text-muted-foreground leading-loose transition-colors duration-200"
                     >
                       <ReactMarkdown components={markdownComponents}>
                         {content.content}
