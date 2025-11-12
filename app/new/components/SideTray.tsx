@@ -368,7 +368,10 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-neutral-300 hover:text-white transition-colors duration-200 underline underline-offset-2"
+        className="text-neutral-300 hover:text-white visited:text-neutral-300 active:text-white focus:text-neutral-300 focus:outline-none transition-colors duration-200 underline underline-offset-2"
+        style={{
+          WebkitTapHighlightColor: 'transparent'
+        }}
       >
         {children}
       </a>
@@ -547,64 +550,21 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                       exit="exit"
                       className="space-y-6"
                     >
-                      {/* Origins */}
-                      <div className="space-y-3">
-                        <h3 className="text-[10px] uppercase tracking-wider text-neutral-500">Origins</h3>
-                        <div className="space-y-2">
-                          <p className="text-xs text-neutral-400 leading-relaxed">
-                            I spent the first 20 years of my life in the Amalfi Coast, Italy. I care about clarity, systems, and the stories products tell.
-                          </p>
-                          <p className="text-xs text-neutral-400 leading-relaxed">
-                            I started in design from software engineer + hospitality excellence through curiosity and obligation. <em className="text-neutral-500">What makes things feel right?</em>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="border-b border-neutral-800/30" />
-
-                      {/* Craft */}
-                      <div className="space-y-3">
-                        <h3 className="text-[10px] uppercase tracking-wider text-neutral-500">Craft</h3>
-                        <div className="space-y-2">
-                          <p className="text-xs text-neutral-400 leading-relaxed">
-                            Over the past eight years, I&apos;ve designed and engineered products, systems and experiences. I&apos;ve built onboarding systems, shaped design languages, and helped products grow from zero to scale.
-                          </p>
-                          <p className="text-xs text-neutral-400 leading-relaxed">
-                            I interned at Apple and worked at Coinbase, Voiceflow, Theoriq, Zalando and many more startups, blending craft with code, and care with speed.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="border-b border-neutral-800/30" />
+                      {/* Origins & Craft */}
+                      <p className="text-xs text-neutral-400 leading-relaxed">
+                        I spent the first 20 years of my life in the Amalfi Coast, Italy. Over the past eight years, I&apos;ve designed and engineered products, systems and experiences. I interned at Apple and worked at Coinbase, Voiceflow, Theoriq, Zalando and many more startups, blending craft with code, and care with speed.
+                      </p>
 
                       {/* Presence */}
-                      <div className="space-y-3">
-                        <h3 className="text-[10px] uppercase tracking-wider text-neutral-500">Presence</h3>
-                        <div className="space-y-2">
-                          <p className="text-xs text-neutral-400 leading-relaxed">
-                            I split my time mainly between Toronto and Lisbon. This contrast keeps me balanced.
-                          </p>
-                          <p className="text-xs text-neutral-400 leading-relaxed">
-                            I have a thing for offices and thoughtful workspaces. How they influence focus, energy, and flow. I&apos;m usually on a yoga mat, cycling, or chasing light through quiet spaces.
-                          </p>
-                          <p className="text-xs text-neutral-400 leading-relaxed">
-                            Personality-wise, I&apos;m an ENTJ, a Red–Yellow on the Color Code, and an Enneagram 8. I value clarity, integrity, and energy that feels aligned.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="border-b border-neutral-800/30" />
+                      <p className="text-xs text-neutral-400 leading-relaxed">
+                        I split my time mainly between Toronto and Lisbon. I&apos;m usually on a yoga mat, cycling, or chasing light through quiet spaces.
+                      </p>
 
                       {/* Principles */}
-                      <div className="space-y-3">
-                        <h3 className="text-[10px] uppercase tracking-wider text-neutral-500">Principles</h3>
-                        <div className="space-y-1.5">
-                          <p className="text-xs text-neutral-500">— Work hard, be kind, spread joy</p>
-                          <p className="text-xs text-neutral-500">— How you do anything is how you do everything</p>
-                          <p className="text-xs text-neutral-500">— Start before you think you&apos;re ready</p>
-                          <p className="text-xs text-neutral-500">— Always happy, never satisfied</p>
-                          <p className="text-xs text-neutral-500">— Slow is smooth, smooth is fast</p>
-                        </div>
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-neutral-500">— How you do anything is how you do everything</p>
+                        <p className="text-xs text-neutral-500">— Always happy, never satisfied</p>
+                        <p className="text-xs text-neutral-500">— Slow is smooth, smooth is fast</p>
                       </div>
 
                     </motion.div>

@@ -57,18 +57,15 @@ export default function NewMinimalPage() {
       }}
     >
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-20 w-full md:w-auto md:items-start md:my-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-20 w-full md:w-auto md:items-baseline md:my-0">
         {/* Column 1 - Name and Title */}
-        <div className="space-y-6 md:space-y-8">
-          {/* Main text */}
-          <div className="space-y-1">
-            <h1 className="text-base md:text-base font-light text-white tracking-wide">Raf V</h1>
-            <p className="text-xs md:text-xs text-neutral-500">AI Product Designer</p>
-          </div>
+        <div className="relative">
+          <h1 className="text-base md:text-base font-light text-white tracking-wide leading-[1.5] absolute bottom-full mb-1">Raf V</h1>
+          <p className="text-xs md:text-xs text-neutral-500 leading-[1.5]">AI Product Designer</p>
         </div>
 
         {/* Column 2 - About */}
-        <div className="pt-[1.875rem] md:pt-[1.625rem]">
+        <div>
           <div
             role="button"
             tabIndex={0}
@@ -79,7 +76,7 @@ export default function NewMinimalPage() {
                 setSelectedArticle("about");
               }
             }}
-            className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-neutral-500 active:text-white active:scale-[0.98] md:active:scale-100 md:hover:text-white transition-all duration-200"
+            className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-neutral-500 active:text-white active:scale-[0.98] md:active:scale-100 md:hover:text-white transition-all duration-200 leading-[1.5]"
             aria-label="About Raf"
             style={{
               WebkitTapHighlightColor: 'transparent',
@@ -93,15 +90,18 @@ export default function NewMinimalPage() {
         </div>
 
         {/* Column 3 - Links */}
-        <div className="pt-[1.875rem] md:pt-[1.625rem]">
+        <div>
           {/* Navigation links */}
           <nav className="space-y-2 md:space-y-1 group/nav">
             <a
               href="https://linkedin.com/in/raffaelevitaledesign"
               target="_blank"
               rel="noopener noreferrer"
-              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200"
+              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200 leading-[1.5] visited:text-neutral-500 active:text-white focus:text-neutral-500 focus:outline-none"
               aria-label="Visit Raf on LinkedIn"
+              style={{
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
               LinkedIn
               <ExternalLink size={12} className="w-[12px] h-[12px] md:w-[10px] md:h-[10px] opacity-100 md:opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
@@ -109,8 +109,11 @@ export default function NewMinimalPage() {
             <br className="hidden md:block" />
             <a
               href="mailto:raf@raf.works"
-              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200"
+              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200 leading-[1.5] visited:text-neutral-500 active:text-white focus:text-neutral-500 focus:outline-none"
               aria-label="Send email to Raf"
+              style={{
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
               Email
               <Mail size={12} className="w-[12px] h-[12px] md:w-[10px] md:h-[10px] opacity-100 md:opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
@@ -120,8 +123,11 @@ export default function NewMinimalPage() {
               href="/documents/CV.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200"
+              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-neutral-500 md:group-hover/nav:text-neutral-700 md:hover:!text-white transition-colors duration-200 leading-[1.5] visited:text-neutral-500 active:text-white focus:text-neutral-500 focus:outline-none"
               aria-label="Download CV"
+              style={{
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
               CV
               <ExternalLink size={12} className="w-[12px] h-[12px] md:w-[10px] md:h-[10px] opacity-100 md:opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
