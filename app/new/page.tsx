@@ -3,11 +3,13 @@
 import { useEffect, useState, useMemo } from "react"
 import { ExternalLink, Mail } from "lucide-react"
 import SideTray from "./components/SideTray"
+import WorksPanel from "./components/WorksPanel"
 import { useSystemTheme } from "@/hooks/use-system-theme"
 
 export default function NewMinimalPage() {
   const [timezoneMessage, setTimezoneMessage] = useState("")
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null)
+  const [selectedWritingArticle, setSelectedWritingArticle] = useState<string | null>(null)
   const { prefersDark, isReady } = useSystemTheme()
 
   // Invert theme: show opposite of user's system preference, defaulting to dark
@@ -56,9 +58,11 @@ export default function NewMinimalPage() {
     return () => clearInterval(interval)
   }, [])
 
+  const isWorksPanelOpen = selectedArticle === "works"
+
   return (
     <main
-      className="min-h-screen min-h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 md:pr-8 relative pt-16 md:pt-0 transition-colors duration-200"
+      className={`min-h-screen min-h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 relative pt-16 md:pt-0 transition-all duration-200 ${isWorksPanelOpen ? 'md:pr-[50%]' : 'md:pr-8'}`}
       data-theme={shouldShowDark ? "dark" : "light"}
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0), 4rem)',
@@ -68,33 +72,77 @@ export default function NewMinimalPage() {
       {/* Mobile: Flex column layout with left alignment and links at bottom */}
       <div className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-3 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0">
         {/* Column 1 - Name and Title */}
-        <div className="relative flex flex-col items-start md:items-start md:relative mb-12 md:mb-0">
+        <div className="relative flex flex-col items-start md:items-start md:relative mb-12 md:mb-0 gap-1">
           <h1 className="text-base md:text-base font-light text-foreground tracking-wide leading-[1.5] md:absolute md:bottom-full md:mb-1 transition-colors duration-200">Raf V</h1>
           <p className="text-xs md:text-xs text-muted-foreground leading-[1.5] transition-colors duration-200">Senior AI Product Designer</p>
         </div>
 
-        {/* Column 2 - About */}
+        {/* Column 2 - About, Works, Writing */}
         <div className="flex justify-start md:block mb-12 md:mb-0">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => setSelectedArticle("about")}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setSelectedArticle("about");
-              }
-            }}
-            className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:hover:text-foreground transition-all duration-200 leading-[1.5]"
-            aria-label="About Raf"
-            style={{
-              WebkitTapHighlightColor: 'transparent',
-              WebkitUserSelect: 'none',
-              userSelect: 'none',
-              outline: 'none'
-            }}
-          >
-            About
+          <div className="flex flex-col gap-1">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedArticle("about")}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedArticle("about");
+                }
+              }}
+              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:hover:text-foreground transition-all duration-200 leading-[1.5]"
+              aria-label="About Raf"
+              style={{
+                WebkitTapHighlightColor: 'transparent',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                outline: 'none'
+              }}
+            >
+              About
+            </div>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedArticle("works")}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedArticle("works");
+                }
+              }}
+              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:hover:text-foreground transition-all duration-200 leading-[1.5]"
+              aria-label="View Works"
+              style={{
+                WebkitTapHighlightColor: 'transparent',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                outline: 'none'
+              }}
+            >
+              Works
+            </div>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedArticle("writing")}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedArticle("writing");
+                }
+              }}
+              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:hover:text-foreground transition-all duration-200 leading-[1.5]"
+              aria-label="View Writing"
+              style={{
+                WebkitTapHighlightColor: 'transparent',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                outline: 'none'
+              }}
+            >
+              Writing
+            </div>
           </div>
         </div>
 
@@ -104,7 +152,7 @@ export default function NewMinimalPage() {
         {/* Column 3 - Links and Timezone on same line (mobile) */}
         <div className="w-full md:w-auto flex flex-row justify-between items-center md:block md:mt-0">
           {/* Navigation links */}
-          <nav className="flex flex-row gap-2 md:flex-col md:space-y-0 group/nav">
+          <nav className="flex flex-row gap-2 md:flex-col md:gap-1 group/nav">
             <a
               href="https://linkedin.com/in/raffaelevitaledesign"
               target="_blank"
@@ -163,7 +211,27 @@ export default function NewMinimalPage() {
       </div>
 
       {/* Side tray for reading articles */}
-      <SideTray articleId={selectedArticle} onClose={() => setSelectedArticle(null)} />
+      <SideTray 
+        articleId={selectedArticle === "writing" ? selectedWritingArticle : selectedArticle === "about" ? "about" : null} 
+        onClose={() => {
+          if (selectedArticle === "writing") {
+            // Close the entire writing tray (both list and article views)
+            setSelectedArticle(null)
+            setSelectedWritingArticle(null)
+          } else {
+            setSelectedArticle(null)
+          }
+        }}
+        isWritingMode={selectedArticle === "writing"}
+        onArticleSelect={selectedArticle === "writing" ? setSelectedWritingArticle : undefined}
+      />
+      
+      {/* Works Panel */}
+      <WorksPanel 
+        isOpen={selectedArticle === "works"} 
+        onClose={() => setSelectedArticle(null)} 
+      />
     </main>
   )
 }
+

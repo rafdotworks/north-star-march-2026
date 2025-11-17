@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown"
 import type { Components } from "react-markdown"
 import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+import { ExternalLink } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const allWritings = [
@@ -21,6 +22,8 @@ const allWritings = [
 interface SideTrayProps {
   articleId: string | null
   onClose: () => void
+  isWritingMode?: boolean
+  onArticleSelect?: (articleId: string | null) => void
 }
 
 interface ArticleContent {
@@ -244,11 +247,14 @@ function useArticleLoader() {
   return { content, isLoading, error, loadArticle, resetContent }
 }
 
-export default function SideTray({ articleId, onClose }: SideTrayProps) {
+export default function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }: SideTrayProps) {
   const { content, isLoading, error, loadArticle, resetContent } = useArticleLoader()
-  const [viewMode, setViewMode] = useState<'list' | 'article' | 'about'>('list')
+  const [viewMode, setViewMode] = useState<'list' | 'article' | 'about' | 'writing-list'>('list')
   const shouldReduceMotion = useReducedMotion()
   const isMobile = useIsMobile()
+  
+  // For nested writing tray, we need to track if we're showing the list or an article
+  const isNestedWritingTray = isWritingMode && articleId !== null
 
   // Mobile-optimized animation variants
   const mobileTrayVariants = {
@@ -307,7 +313,11 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
   useEffect(() => {
     if (!articleId) {
       resetContent()
-      setViewMode('list')
+      if (isWritingMode) {
+        setViewMode('writing-list')
+      } else {
+        setViewMode('list')
+      }
       return
     }
 
@@ -323,10 +333,17 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
       return
     }
 
+    // If in writing mode and articleId is set, show the article
+    if (isWritingMode) {
+      setViewMode('article')
+      loadArticle(articleId)
+      return
+    }
+
     // Load the specific article
     setViewMode('article')
     loadArticle(articleId)
-  }, [articleId, loadArticle, resetContent])
+  }, [articleId, loadArticle, resetContent, isWritingMode])
 
   // Handle escape key
   useEffect(() => {
@@ -352,7 +369,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
       <h3 className="text-xs font-medium text-foreground/80 mb-3 mt-5 transition-colors duration-200">{children}</h3>
     ),
     p: ({ children }) => (
-      <p className="text-xs text-muted-foreground mb-4 leading-loose transition-colors duration-200">{children}</p>
+      <p className="text-xs text-muted-foreground mb-4 leading-[1.5] transition-colors duration-200">{children}</p>
     ),
     ul: ({ children }) => (
       <ul className="text-xs text-muted-foreground mb-4 ml-4 space-y-2 list-disc list-inside transition-colors duration-200">{children}</ul>
@@ -361,21 +378,27 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
       <ol className="text-xs text-muted-foreground mb-4 ml-4 space-y-2 list-decimal list-inside transition-colors duration-200">{children}</ol>
     ),
     li: ({ children }) => (
-      <li className="text-xs text-muted-foreground leading-loose transition-colors duration-200">{children}</li>
+      <li className="text-xs text-muted-foreground leading-[1.5] transition-colors duration-200">{children}</li>
     ),
-    a: ({ href, children }) => (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-primary hover:text-foreground visited:text-primary active:text-foreground focus:text-primary focus:outline-none transition-colors duration-200 underline underline-offset-2"
-        style={{
-          WebkitTapHighlightColor: 'transparent'
-        }}
-      >
-        {children}
-      </a>
-    ),
+    a: ({ href, children }) => {
+      const isExternal = href?.startsWith('http://') || href?.startsWith('https://')
+      return (
+        <a
+          href={href}
+          target={isExternal ? "_blank" : undefined}
+          rel={isExternal ? "noopener noreferrer" : undefined}
+          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+          style={{
+            WebkitTapHighlightColor: 'transparent'
+          }}
+        >
+          {children}
+          {isExternal && (
+            <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
+          )}
+        </a>
+      )
+    },
     blockquote: ({ children }) => (
       <blockquote className="text-xs text-muted-foreground border-l-2 border-border pl-3 my-4 italic transition-colors duration-200">
         {children}
@@ -393,34 +416,181 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
     hr: () => <hr className="border-border my-6 transition-colors duration-200" />
   }
 
+  // Determine if we should show the tray
+  // Show tray if: writing mode (always show), or articleId is set (normal mode)
+  const shouldShowTray = isWritingMode || articleId !== null
+  
+  // For writing mode: show list tray when no article selected, show article tray when article selected
+  const showWritingListTray = isWritingMode && articleId === null
+  const showWritingArticleTray = isWritingMode && articleId !== null
+  const showNormalTray = !isWritingMode && articleId !== null
+  
   return (
-    <AnimatePresence>
-      {articleId && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="backdrop"
-            className="fixed inset-0 bg-background/50 backdrop-blur-sm transition-colors duration-200"
-            variants={backdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={onClose}
-          />
+    <>
+      {/* Writing list tray (first tray when in writing mode) */}
+      <AnimatePresence>
+        {showWritingListTray && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="writing-list-backdrop"
+              className="fixed inset-0 bg-background/50 backdrop-blur-sm transition-colors duration-200 z-40"
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={onClose}
+            />
 
-          {/* Side tray with 3D perspective and mobile optimization */}
-          <motion.div
-            key="tray"
-            className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-[92vh] max-h-[92dvh] rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} bg-background transition-colors duration-200`}
-            variants={activeTrayVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            style={isMobile ? {
-              paddingTop: 'env(safe-area-inset-top, 0px)',
-              maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))'
-            } : { transformStyle: "preserve-3d", perspective: "1200px" }}
-          >
+            {/* Writing list tray */}
+            <motion.div
+              key="writing-list-tray"
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-[92vh] max-h-[92dvh] rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} bg-background transition-colors duration-200 z-50`}
+              variants={activeTrayVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              style={isMobile ? {
+                paddingTop: 'env(safe-area-inset-top, 0px)',
+                maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))'
+              } : { transformStyle: "preserve-3d", perspective: "1200px" }}
+            >
+              <motion.div
+                className="h-full flex flex-col"
+                variants={shouldReduceMotion ? undefined : activeContentVariants}
+                initial={shouldReduceMotion ? undefined : "hidden"}
+                animate={shouldReduceMotion ? undefined : "visible"}
+              >
+                {/* Mobile drag handle */}
+                {isMobile && (
+                  <div className="flex justify-center py-3 pt-4 pb-2">
+                    <div className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200" />
+                  </div>
+                )}
+
+                {/* Close button */}
+                <motion.button
+                  onClick={onClose}
+                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 p-3 md:p-2 group`}
+                  whileHover={{ scale: 1.02, rotate: 15 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: EASING.gentle }}
+                  aria-label="Close"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    boxShadow: 'none',
+                    color: 'rgb(115, 115, 115)',
+                    WebkitTapHighlightColor: 'transparent',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'hsl(var(--foreground))'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = 'none'
+                    e.currentTarget.style.boxShadow = 'none'
+                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                  }}
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    <path
+                      d="M1 1L11 11M11 1L1 11"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </motion.button>
+
+                {/* Content */}
+                <div
+                  className={`flex-1 overflow-y-auto ${isMobile ? 'px-6 pt-14 pb-8' : 'px-8 pt-16 pb-8'}`}
+                  style={isMobile ? {
+                    paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))'
+                  } : {}}
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key="writing-list"
+                      variants={activeViewTransitionVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      className="space-y-4"
+                    >
+                      {allWritings.map((article, i) => (
+                        <motion.div
+                          key={article.id}
+                          custom={i}
+                          variants={listItemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          onClick={() => {
+                            if (onArticleSelect) {
+                              onArticleSelect(article.id)
+                            }
+                          }}
+                          className="cursor-pointer space-y-1 transition-opacity duration-200"
+                          whileHover={{ x: 4, opacity: 1 }}
+                          transition={{ duration: 0.2, ease: EASING.smooth }}
+                        >
+                          <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                          <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Writing article tray (nested tray when article selected) or normal tray */}
+      <AnimatePresence>
+        {(showWritingArticleTray || showNormalTray) && (
+          <>
+            {/* Backdrop - always show to enable click-outside-to-close */}
+            <motion.div
+              key="backdrop"
+              className="fixed inset-0 bg-background/50 backdrop-blur-sm transition-colors duration-200 z-40"
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={onClose}
+            />
+
+            {/* Side tray with 3D perspective and mobile optimization */}
+            <motion.div
+              key="tray"
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-[92vh] max-h-[92dvh] rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} bg-background transition-colors duration-200`}
+              variants={activeTrayVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              style={{
+                ...(isMobile ? {
+                  paddingTop: 'env(safe-area-inset-top, 0px)',
+                  maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))'
+                } : { transformStyle: "preserve-3d", perspective: "1200px" }),
+                // Higher z-index for nested writing tray
+                zIndex: isNestedWritingTray ? 60 : 50,
+              }}
+            >
             <motion.div
               className="h-full flex flex-col"
               variants={shouldReduceMotion ? undefined : activeContentVariants}
@@ -485,8 +655,13 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
               {viewMode === 'article' && articleId !== "all" && (
                 <motion.button
                   onClick={() => {
-                    setViewMode('list')
-                    resetContent()
+                    if (isWritingMode && onArticleSelect) {
+                      // For writing mode, go back to list
+                      onArticleSelect(null)
+                    } else {
+                      setViewMode('list')
+                      resetContent()
+                    }
                   }}
                   className={`absolute ${isMobile ? 'top-4 left-4' : 'top-6 left-6'} z-10 p-2 group`}
                   whileHover={{ scale: 1.02, x: -1 }}
@@ -540,7 +715,38 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                 } : {}}
               >
                 <AnimatePresence mode="wait">
-                  {viewMode === 'about' ? (
+                  {viewMode === 'writing-list' ? (
+                    // Writing list view
+                    <motion.div
+                      key="writing-list"
+                      variants={activeViewTransitionVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      className="space-y-4"
+                    >
+                      {allWritings.map((article, i) => (
+                        <motion.div
+                          key={article.id}
+                          custom={i}
+                          variants={listItemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          onClick={() => {
+                            if (onArticleSelect) {
+                              onArticleSelect(article.id)
+                            }
+                          }}
+                          className="cursor-pointer space-y-1 transition-opacity duration-200"
+                          whileHover={{ x: 4, opacity: 1 }}
+                          transition={{ duration: 0.2, ease: EASING.smooth }}
+                        >
+                          <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                          <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  ) : viewMode === 'about' ? (
                     // About content with sophisticated transitions
                     <motion.div
                       key="about"
@@ -552,11 +758,11 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                     >
                       {/* Origins & Craft */}
                       <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                      I spent the first 20 years of my life on the Amalfi Coast. I’ve designed and built products that connect logic with feeling, working with startups of all sizes and companies like Coinbase, Voiceflow, Theoriq, Zalando and Apple. </p>
+                      I spent the first 20 years of my life on the Amalfi Coast. I’ve designed and built products that connect logic with feeling, working mainly as a contractor with startups of all sizes and companies like Coinbase, Voiceflow, Theoriq, Zalando and Apple. </p>
 
   {/* Now */}
   <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        Today I focus on AI systems and design-engineering work that makes complex products feel clear, fast and trustworthy.                      
+                        Today I focus on AI systems and design-engineering work that makes complex products feel clear, fast and trustworthy.  2025 is an intentional year of exploration for me.     
                       </p>
 
                       {/* Presence */}
@@ -573,7 +779,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
 
                     </motion.div>
                   ) : viewMode === 'list' ? (
-                    // Show all articles list with enhanced transitions
+                    // Show all articles list with enhanced transitions (legacy mode, not used in writing mode)
                     <motion.div
                       key="list"
                       variants={activeViewTransitionVariants}
@@ -654,7 +860,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="text-xs text-muted-foreground leading-loose transition-colors duration-200"
+                      className="space-y-6"
                     >
                       <ReactMarkdown components={markdownComponents}>
                         {content.content}
@@ -667,6 +873,7 @@ export default function SideTray({ articleId, onClose }: SideTrayProps) {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   )
 }
