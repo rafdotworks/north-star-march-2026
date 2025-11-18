@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { ExternalLink, Mail } from "lucide-react"
 import SideTray from "./components/SideTray"
 import WorksPanel from "./components/WorksPanel"
 import { useSystemTheme } from "@/hooks/use-system-theme"
@@ -69,8 +68,8 @@ export default function NewMinimalPage() {
         paddingBottom: 'max(env(safe-area-inset-bottom, 0), 2rem)'
       }}
     >
-      {/* Mobile: Flex column layout with left alignment and links at bottom */}
-      <div className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-3 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0">
+      {/* Mobile: Flex column layout with left alignment */}
+      <div className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-2 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0">
         {/* Column 1 - Name and Title */}
         <div className="relative flex flex-col items-start md:items-start md:relative mb-12 md:mb-0 gap-1">
           <h1 className="text-base md:text-base font-light text-foreground tracking-wide leading-[1.5] md:absolute md:bottom-full md:mb-1 transition-colors duration-200">Raf V</h1>
@@ -79,7 +78,7 @@ export default function NewMinimalPage() {
 
         {/* Column 2 - About, Works, Writing */}
         <div className="flex justify-start md:block mb-12 md:mb-0">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 group/menu">
             <div
               role="button"
               tabIndex={0}
@@ -90,7 +89,7 @@ export default function NewMinimalPage() {
                   setSelectedArticle("about");
                 }
               }}
-              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:hover:text-foreground transition-all duration-200 leading-[1.5]"
+              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:group-hover/menu:text-muted-foreground/70 md:hover:!text-foreground transition-all duration-200 leading-[1.5]"
               aria-label="About Raf"
               style={{
                 WebkitTapHighlightColor: 'transparent',
@@ -111,7 +110,7 @@ export default function NewMinimalPage() {
                   setSelectedArticle("works");
                 }
               }}
-              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:hover:text-foreground transition-all duration-200 leading-[1.5]"
+              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:group-hover/menu:text-muted-foreground/70 md:hover:!text-foreground transition-all duration-200 leading-[1.5]"
               aria-label="View Works"
               style={{
                 WebkitTapHighlightColor: 'transparent',
@@ -132,7 +131,7 @@ export default function NewMinimalPage() {
                   setSelectedArticle("writing");
                 }
               }}
-              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:hover:text-foreground transition-all duration-200 leading-[1.5]"
+              className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:group-hover/menu:text-muted-foreground/70 md:hover:!text-foreground transition-all duration-200 leading-[1.5]"
               aria-label="View Writing"
               style={{
                 WebkitTapHighlightColor: 'transparent',
@@ -146,65 +145,18 @@ export default function NewMinimalPage() {
           </div>
         </div>
 
-        {/* Spacer for equal spacing on mobile - pushes links to bottom */}
-        <div className="flex-1 md:hidden"></div>
-
-        {/* Column 3 - Links and Timezone on same line (mobile) */}
-        <div className="w-full md:w-auto flex flex-row justify-between items-center md:block md:mt-0">
-          {/* Navigation links */}
-          <nav className="flex flex-row gap-2 md:flex-col md:gap-1 group/nav">
-            <a
-              href="https://linkedin.com/in/raffaelevitaledesign"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-muted-foreground md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none whitespace-nowrap"
-              aria-label="Visit Raf on LinkedIn"
-              style={{
-                WebkitTapHighlightColor: 'transparent'
-              }}
-            >
-              LinkedIn
-              <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-            </a>
-            <a
-              href="mailto:raf@raf.works"
-              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-muted-foreground md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none whitespace-nowrap"
-              aria-label="Send email to Raf"
-              style={{
-                WebkitTapHighlightColor: 'transparent'
-              }}
-            >
-              Email
-              <Mail size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-            </a>
-            <a
-              href="/documents/CV.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group/link inline-flex items-center gap-2 md:gap-1.5 py-2 md:py-0 -mx-2 px-2 md:mx-0 md:px-0 text-sm md:text-xs text-muted-foreground md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none whitespace-nowrap"
-              aria-label="Download CV"
-              style={{
-                WebkitTapHighlightColor: 'transparent'
-              }}
-            >
-              CV
-              <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-            </a>
-          </nav>
-
-          {/* Timezone message - inline with links on mobile, absolute on desktop */}
-          <div className="md:hidden flex items-center">
-            <p className="text-[10px] text-muted-foreground tracking-wide transition-colors duration-200 whitespace-nowrap">{timezoneMessage}</p>
-          </div>
+        {/* Timezone message - inline on mobile */}
+        <div className="md:hidden flex items-center w-full mt-auto pt-4">
+          <p className="text-[10px] text-muted-foreground tracking-wide transition-colors duration-200 whitespace-nowrap">{timezoneMessage}</p>
         </div>
       </div>
 
-      {/* Timezone Difference - Bottom Right Corner (Desktop only) */}
+      {/* Timezone Difference - Bottom Left Corner (Desktop only) */}
       <div
-        className="hidden md:block absolute bottom-4 right-4"
+        className="hidden md:block absolute bottom-4 left-20"
         style={{
           bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
-          right: 'max(1.5rem, calc(env(safe-area-inset-right, 0px) + 1.5rem))'
+          left: 'max(5rem, calc(env(safe-area-inset-left, 0px) + 5rem))'
         }}
       >
         <p className="text-[10px] text-muted-foreground tracking-wide transition-colors duration-200">{timezoneMessage}</p>

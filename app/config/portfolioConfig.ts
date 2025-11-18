@@ -400,7 +400,7 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
 export const PROJECT_CAPTIONS: Record<string, string> = {
   cb: "Q3 2025 — Shipped SQL AI Playground and Embedded Wallets launch for the Coinbase Developer Platform.",
   vf: "Q2 2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion.",
-  theo: "2024 — Founding designer at Theoriq, scaled from PDF to 140k active users in six months across product, brand and marketing.",
+  theo: "2024 — Founding designer at Theoriq, scaled from PDF to 140k active users across product, brand and marketing.",
   atlas:
     "2020 — Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products.",
   defituna:

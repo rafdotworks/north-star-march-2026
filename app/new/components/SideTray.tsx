@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown"
 import type { Components } from "react-markdown"
 import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { ExternalLink } from "lucide-react"
+import { ExternalLink, Mail } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const allWritings = [
@@ -756,18 +756,44 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       exit="exit"
                       className="space-y-6"
                     >
-                      {/* Origins & Craft */}
+                      {/* Opening */}
                       <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                      I spent the first 20 years of my life on the Amalfi Coast. I’ve designed and built products that connect logic with feeling, working mainly as a contractor with startups of all sizes and companies like Coinbase, Voiceflow, Theoriq, Zalando and Apple. </p>
-
-  {/* Now */}
-  <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        Today I focus on AI systems and design-engineering work that makes complex products feel clear, fast and trustworthy.  2025 is an intentional year of exploration for me.     
+                        I spent the first twenty years of my life on the Amalfi Coast, Italy. I design and build products that connect logic with feeling.
                       </p>
 
-                      {/* Presence */}
+                      {/* Work Modes */}
+                      <div className="space-y-4">
+                        <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                          My work moves in two modes:
+                        </p>
+                        <div className="space-y-3 ml-4">
+                          <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                            <span className="font-medium text-foreground">1.</span> Full-time inside early teams where I shape the foundations of new products. I&apos;ve been a <span className="font-medium text-foreground">Founding Product Designer</span> at Theoriq, <span className="font-medium text-foreground">Product Design Lead</span> for accessibility at CurbCutOS, and <span className="font-medium text-foreground">Design Lead</span> at an early crypto startup. Before that, <span className="font-medium text-foreground">Founding Designer</span> at Artscapy and UX/UI Design Intern at Apple Developer Academy.
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                            <span className="font-medium text-foreground">2.</span> Contract work where I join for clarity, speed and system thinking. Recently designing AI agents at Voiceflow and developer tools at Coinbase. Before that, design systems at Zalando and product work at TravelNest.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Full-time vs Contract */}
                       <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        I split my time mainly between Toronto and Lisbon. I&apos;m usually on a yoga mat, cycling, or chasing light through quiet spaces.
+                        Full-time gives me depth. Contract gives me range. Since 2016, I&apos;ve also led design at Never Before Seen Studio, a freelance practice.
+                      </p>
+
+                      {/* Today */}
+                      <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                        Today I focus on AI systems and design-engineering work that makes complex products feel clear, fast and trustworthy.
+                      </p>
+
+                      {/* 2025 */}
+                      {/* <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                        2025 is an intentional year of exploration across design, design engineering and product.
+                      </p> */}
+
+                      {/* Location */}
+                      <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                        I now live in Toronto, often spending time in Lisbon and New York City. I&apos;m usually on a yoga mat, cycling, or chasing light through quiet spaces.
                       </p>
 
                       {/* Principles */}
@@ -776,6 +802,47 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                         <p className="text-xs text-muted-foreground transition-colors duration-200">— Always happy, never satisfied</p>
                         <p className="text-xs text-muted-foreground transition-colors duration-200">— Progress over movement</p>
                       </div>
+
+                      {/* Contact Links */}
+                      <nav className="flex flex-col gap-1 group/nav pt-2">
+                        <a
+                          href="https://linkedin.com/in/raffaelevitaledesign"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          aria-label="Visit Raf on LinkedIn"
+                          style={{
+                            WebkitTapHighlightColor: 'transparent'
+                          }}
+                        >
+                          LinkedIn
+                          <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
+                        </a>
+                        <a
+                          href="mailto:raf@raf.works"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          aria-label="Send email to Raf"
+                          style={{
+                            WebkitTapHighlightColor: 'transparent'
+                          }}
+                        >
+                          Email
+                          <Mail size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
+                        </a>
+                        <a
+                          href="/documents/CV.pdf"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          aria-label="Download CV"
+                          style={{
+                            WebkitTapHighlightColor: 'transparent'
+                          }}
+                        >
+                          CV
+                          <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
+                        </a>
+                      </nav>
 
                     </motion.div>
                   ) : viewMode === 'list' ? (

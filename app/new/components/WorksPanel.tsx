@@ -207,7 +207,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             {/* Works Panel - Right side half-screen */}
             <motion.div
               key="panel"
-              className="fixed right-0 top-0 h-full w-1/2 bg-background transition-colors duration-200 z-50 overflow-y-auto"
+              className="fixed right-0 top-0 h-full w-1/2 bg-background transition-colors duration-200 z-50 overflow-hidden"
               variants={shouldReduceMotion ? undefined : panelVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
               animate={shouldReduceMotion ? undefined : "visible"}
@@ -217,7 +217,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
               }}
             >
-              <div className="h-full flex flex-col px-8 py-20">
+              <div className="relative h-full flex flex-col">
                 {/* Close button */}
                 <motion.button
                   onClick={onClose}
@@ -266,22 +266,21 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
 
                 {/* Carousel Container */}
                 <div
-                  className="flex-1 flex items-start justify-center min-h-0 overflow-y-auto py-8"
+                  className="flex items-end justify-center flex-1 px-8 pb-8 md:pb-12"
                   onMouseEnter={() => setIsSlideshowPaused(true)}
                   onMouseLeave={() => setIsSlideshowPaused(false)}
                 >
-                  <div className="relative w-full max-h-full flex items-start justify-center py-8">
+                  <div className="relative w-full flex items-start justify-center">
                     <div
                       className="relative w-full max-w-4xl"
                       style={{ 
                         perspective: "1200px",
-                        minHeight: "calc(100vh - 12rem)",
                       }}
                     >
                       {IMAGE_SOURCES.map((src, index) => (
                         <motion.div
                           key={src}
-                          className="absolute top-0 left-0 right-0 w-full"
+                          className="relative w-full"
                           variants={pageTurnVariants(animationLevel, lastDirection)}
                           initial="initial"
                           animate={
@@ -292,48 +291,52 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             zIndex: index === currentImageIndex ? 2 : 1,
                             pointerEvents:
                               index === currentImageIndex ? "auto" : "none",
+                            display: index === currentImageIndex ? "block" : "none",
+                            visibility: index === currentImageIndex ? "visible" : "hidden",
                           }}
                         >
-                          {index === currentImageIndex && (
-                            <>
-                              <div
-                                className={`absolute left-0 top-0 h-full w-[38%] z-[60] ${loadedImages[src] && !isNavigating ? "cursor-w-resize" : ""}`}
-                                style={{
-                                  pointerEvents: loadedImages[src] && !isNavigating ? "auto" : "none",
-                                  cursor: loadedImages[src] && !isNavigating ? "w-resize" : "default"
-                                }}
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  if (isNavigating || !loadedImages[src]) return
-                                  setIsNavigating(true)
-                                  navigateBy(-1)
-                                  window.setTimeout(
-                                    () => setIsNavigating(false),
-                                    NAVIGATION_DEBOUNCE
-                                  )
-                                }}
-                              />
-                              <div
-                                className={`absolute right-0 top-0 h-full w-[38%] z-[60] ${loadedImages[src] && !isNavigating ? "cursor-e-resize" : ""}`}
-                                style={{
-                                  pointerEvents: loadedImages[src] && !isNavigating ? "auto" : "none",
-                                  cursor: loadedImages[src] && !isNavigating ? "e-resize" : "default"
-                                }}
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  if (isNavigating || !loadedImages[src]) return
-                                  setIsNavigating(true)
-                                  navigateBy(1)
-                                  window.setTimeout(
-                                    () => setIsNavigating(false),
-                                    NAVIGATION_DEBOUNCE
-                                  )
-                                }}
-                              />
-                              <div className="absolute left-[38%] top-0 h-full w-[24%] z-[95] pointer-events-none" />
-                            </>
-                          )}
-                          <div className="flex flex-col items-center w-full">
+                          <div className="flex flex-col items-center w-full relative">
+                            {index === currentImageIndex && (
+                              <>
+                                <div
+                                  className={`absolute left-0 top-0 w-[38%] z-[60] ${loadedImages[src] && !isNavigating ? "cursor-w-resize" : ""}`}
+                                  style={{
+                                    height: 'calc(100% + 10rem)',
+                                    pointerEvents: loadedImages[src] && !isNavigating ? "auto" : "none",
+                                    cursor: loadedImages[src] && !isNavigating ? "w-resize" : "default"
+                                  }}
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    if (isNavigating || !loadedImages[src]) return
+                                    setIsNavigating(true)
+                                    navigateBy(-1)
+                                    window.setTimeout(
+                                      () => setIsNavigating(false),
+                                      NAVIGATION_DEBOUNCE
+                                    )
+                                  }}
+                                />
+                                <div
+                                  className={`absolute right-0 top-0 w-[38%] z-[60] ${loadedImages[src] && !isNavigating ? "cursor-e-resize" : ""}`}
+                                  style={{
+                                    height: 'calc(100% + 10rem)',
+                                    pointerEvents: loadedImages[src] && !isNavigating ? "auto" : "none",
+                                    cursor: loadedImages[src] && !isNavigating ? "e-resize" : "default"
+                                  }}
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    if (isNavigating || !loadedImages[src]) return
+                                    setIsNavigating(true)
+                                    navigateBy(1)
+                                    window.setTimeout(
+                                      () => setIsNavigating(false),
+                                      NAVIGATION_DEBOUNCE
+                                    )
+                                  }}
+                                />
+                                <div className="absolute left-[38%] top-0 w-[24%] z-[95] pointer-events-none" style={{ height: 'calc(100% + 10rem)' }} />
+                              </>
+                            )}
                             <WorkImageContainer
                               src={src}
                               alt={getAltText(src, index)}
@@ -362,25 +365,61 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                                 />
                                 {/* Caption directly below image */}
                                 <div
-                                  className="w-full mt-6"
+                                  className="w-full mt-6 mb-8"
                                   style={{
                                     maxWidth: imageWidth
                                       ? `${imageWidth}px`
                                       : "min(92vw, 1200px)",
                                   }}
                                 >
-                                  {(() => {
-                                    const currentSrc = IMAGE_SOURCES[currentImageIndex]
-                                    const caption = getCaptionForSrc(currentSrc)
-                                    if (!caption) return null
-                                    const parsed = parseCaption(caption)
+                              {(() => {
+                                const currentSrc = IMAGE_SOURCES[currentImageIndex]
+                                const caption = getCaptionForSrc(currentSrc)
+                                if (!caption) return null
+                                const parsed = parseCaption(caption)
 
-                                    return (
-                                      <motion.div
-                                        key={
-                                          getProjectFromSrc(currentSrc) ??
-                                          currentImageIndex
-                                        }
+                                return (
+                                  <motion.div
+                                    key={
+                                      getProjectFromSrc(currentSrc) ??
+                                      currentImageIndex
+                                    }
+                                    initial={{
+                                      opacity: 0,
+                                      filter: "blur(12px) saturate(0.96)",
+                                    }}
+                                    animate={{
+                                      opacity: 1,
+                                      filter: "blur(0px) saturate(1)",
+                                    }}
+                                    transition={{
+                                      duration: 2.2,
+                                      ease: [0.16, 1, 0.3, 1],
+                                    }}
+                                  >
+                                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-6">
+                                      {parsed.year && (
+                                        <motion.span
+                                          key={`year-${currentImageIndex}`}
+                                          className="text-xs leading-normal text-muted-foreground transition-colors duration-200"
+                                          initial={{
+                                            opacity: 0,
+                                            filter: "blur(12px) saturate(0.96)",
+                                          }}
+                                          animate={{
+                                            opacity: 1,
+                                            filter: "blur(0px) saturate(1)",
+                                          }}
+                                          transition={{
+                                            duration: 2.2,
+                                            ease: [0.16, 1, 0.3, 1],
+                                          }}
+                                        >
+                                          {renderYearWithRolling(parsed.year)}
+                                        </motion.span>
+                                      )}
+                                      <motion.span
+                                        key={`caption-${currentImageIndex}`}
                                         initial={{
                                           opacity: 0,
                                           filter: "blur(12px) saturate(0.96)",
@@ -393,50 +432,14 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                                           duration: 2.2,
                                           ease: [0.16, 1, 0.3, 1],
                                         }}
+                                        className="text-xs leading-normal sm:text-right text-muted-foreground transition-colors duration-200"
                                       >
-                                        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-6">
-                                          {parsed.year && (
-                                            <motion.span
-                                              key={`year-${currentImageIndex}`}
-                                              className="text-xs leading-normal text-muted-foreground transition-colors duration-200"
-                                              initial={{
-                                                opacity: 0,
-                                                filter: "blur(12px) saturate(0.96)",
-                                              }}
-                                              animate={{
-                                                opacity: 1,
-                                                filter: "blur(0px) saturate(1)",
-                                              }}
-                                              transition={{
-                                                duration: 2.2,
-                                                ease: [0.16, 1, 0.3, 1],
-                                              }}
-                                            >
-                                              {renderYearWithRolling(parsed.year)}
-                                            </motion.span>
-                                          )}
-                                          <motion.span
-                                            key={`caption-${currentImageIndex}`}
-                                            initial={{
-                                              opacity: 0,
-                                              filter: "blur(12px) saturate(0.96)",
-                                            }}
-                                            animate={{
-                                              opacity: 1,
-                                              filter: "blur(0px) saturate(1)",
-                                            }}
-                                            transition={{
-                                              duration: 2.2,
-                                              ease: [0.16, 1, 0.3, 1],
-                                            }}
-                                            className="text-xs leading-normal sm:text-right text-muted-foreground transition-colors duration-200"
-                                          >
-                                            {parsed.description}
-                                          </motion.span>
-                                        </div>
-                                      </motion.div>
-                                    )
-                                  })()}
+                                        {parsed.description}
+                                      </motion.span>
+                                    </div>
+                                  </motion.div>
+                                )
+                              })()}
                                 </div>
                               </>
                             )}

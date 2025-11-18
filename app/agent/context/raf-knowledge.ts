@@ -111,7 +111,7 @@ export const rafKnowledge = {
         "Designed end-to-end experiences from marketing to core product across AI interfaces",
         "Designed and implemented in Storybook a scalable design system that reduced friction across teams",
         "Partnered with leadership to prototype, design, and ship intuitive AI-powered user interfaces",
-        "Scaled from concept to 140k users in 6 months"
+        "Scaled from concept to 140k users across product, brand and marketing."
       ],
       tags: ["AI", "crypto", "founding designer", "design systems", "rapid growth"],
       hasVideo: true
