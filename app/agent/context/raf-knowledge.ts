@@ -102,7 +102,7 @@ export const rafKnowledge = {
       tags: ["AI", "onboarding", "activation", "product design"]
     },
     theoriq: {
-      year: 2024,
+      year: 2024-2025,
       company: "Theoriq",
       role: "Founding Product Designer - AI and Crypto Agents",
       location: "Toronto, Canada",
@@ -148,7 +148,7 @@ export const rafKnowledge = {
     },
     cryptoStartup: {
       year: 2022,
-      company: "Early Crypto Stealth Startup (Steel Perlot backed)",
+      company: "Crypto Stealth Startup (Steel Perlot backed)",
       role: "Senior Product Design and Lead - Crypto",
       location: "Remote, NYC",
       description: "Led small design team from zero and established component library for rapid iteration",

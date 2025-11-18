@@ -398,19 +398,19 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
  * ```
  */
 export const PROJECT_CAPTIONS: Record<string, string> = {
-  cb: "Q3 2025 — Shipped SQL AI Playground and Embedded Wallets launch for the Coinbase Developer Platform.",
-  vf: "Q2 2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion.",
-  theo: "2024 — Founding designer at Theoriq, scaled from PDF to 140k active users across product, brand and marketing.",
+  cb: "2025 — Shipped SQL AI Playground and Embedded Wallets launch for the Coinbase Developer Platform.",
+  vf: "2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion.",
+  theo: "2024/25 — Founding designer at Theoriq, scaled from PDF to 140k active users across product, brand and marketing.",
   atlas:
-    "2020 — Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products.",
+    "2022/23 — Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products.",
   defituna:
-    "2021 — Designed and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
+    "2022 — Designed and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
   curbcut:
-    "2021 — Designed calm, legible data tools that made accessibility insights usable for everyone.",
+    "2023/24 — Designed calm, legible data tools that made accessibility insights usable for everyone.",
   zalando:
-    "2022 — Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.",
+    "2021/22 — Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.",
   earlyworks:
-    "From 2017 — Built brands, interfaces, and launch sites for 10+ backed startups and award-winning agencies.",
+    "From 2016 — Built brands, interfaces, and launch sites for 10+ backed startups and award-winning agencies.",
 };
 
 // ============================================================================
