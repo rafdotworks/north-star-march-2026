@@ -442,6 +442,64 @@ export const PRELOAD_IMAGES = IMAGE_SOURCES.slice(
   INITIAL_IMAGE_COUNT + PRELOAD_IMAGE_COUNT
 );
 
+// ============================================================================
+// WORK TIMELINE MAPPING
+// ============================================================================
+
+/**
+ * Maps project keys to work experience identifiers.
+ * 
+ * Used to highlight the correct work entry in the timeline when a project
+ * is displayed in the carousel (WorksPanel component).
+ * 
+ * FORMAT:
+ * { projectKey: { section: 'fulltime' | 'contract' | 'studio', identifier: string } }
+ * 
+ * - section: Which section of the timeline (Full-Time, Contract, or Studio)
+ * - identifier: The time period identifier (e.g., "2024–2025", "2025")
+ * 
+ * HOW IT WORKS:
+ * When user navigates to a project image, we:
+ * 1. Get the project key from the image source
+ * 2. Look up the work entry in this map
+ * 3. Highlight that entry in the timeline
+ * 
+ * SPECIAL CASES:
+ * - Multiple projects can map to the same work entry (e.g., "atlas" and "defituna" both map to "2022–2023")
+ * - Some projects have specific identifiers (e.g., "vf" and "cb" both use "2025" but are differentiated by project key)
+ * 
+ * @see app/new/components/WorksPanel.tsx for usage
+ */
+export const PROJECT_TO_WORK_MAP: Record<string, { section: 'fulltime' | 'contract' | 'studio', identifier: string }> = {
+  'theo': { section: 'fulltime', identifier: '2024–2025' },
+  'cb': { section: 'contract', identifier: '2025' }, // Coinbase
+  'vf': { section: 'contract', identifier: '2025' }, // Voiceflow (first 2025 entry)
+  'atlas': { section: 'fulltime', identifier: '2022–2023' }, // Crypto Stealth Startup
+  'defituna': { section: 'fulltime', identifier: '2022–2023' }, // Crypto Stealth Startup
+  'curbcut': { section: 'fulltime', identifier: '2023–2024' },
+  'zalando': { section: 'contract', identifier: '2021–2022' },
+  'earlyworks': { section: 'studio', identifier: '2016–present' },
+  'nationalArchives': { section: 'studio', identifier: '2016–present' },
+}
+
+/**
+ * Gets the work experience identifier for the current project.
+ * 
+ * Used to determine which timeline entry should be highlighted.
+ * 
+ * @param {string | null} projectKey - The project key from the current image
+ * @returns {Object | null} The work entry mapping (section and identifier) or null if not found
+ * 
+ * @example
+ * getHighlightedWorkEntry("theo") // Returns { section: 'fulltime', identifier: '2024–2025' }
+ * 
+ * @see app/new/components/WorksPanel.tsx for usage
+ */
+export function getHighlightedWorkEntry(projectKey: string | null): { section: string, identifier: string } | null {
+  if (!projectKey) return null
+  return PROJECT_TO_WORK_MAP[projectKey] || null
+}
+
 
 
 

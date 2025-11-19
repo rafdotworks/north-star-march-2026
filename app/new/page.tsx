@@ -1,84 +1,259 @@
+/**
+ * ============================================================================
+ * NEW MINIMAL PAGE - app/new/page.tsx
+ * ============================================================================
+ * 
+ * This is the new web page entry point for the portfolio site. It provides
+ * a minimal, elegant interface for navigating between About, Works, and Writing
+ * sections.
+ * 
+ * ARCHITECTURE:
+ * - Client-side rendered component with responsive layout
+ * - Mobile-first design with desktop enhancements
+ * - Theme system that inverts system preference (dark by default)
+ * - Three main navigation sections: About, Works, Writing
+ * - SideTray component for About and Writing content
+ * - WorksPanel component for portfolio showcase
+ * 
+ * KEY FEATURES:
+ * 1. Theme Inversion: Shows opposite of system preference (defaults to dark)
+ * 2. Timezone Display: Shows relative timezone difference from Toronto
+ * 3. Responsive Layout: Mobile (column) vs Desktop (grid with side panels)
+ * 4. Navigation Flow: State-driven content panels that slide in from sides
+ * 5. Accessibility: Full keyboard navigation and ARIA labels
+ * 
+ * COMPONENT HIERARCHY:
+ * ```
+ * NewMinimalPage
+ * ├── Main Layout (responsive grid/column)
+ * │   ├── Column 1: Name & Title
+ * │   ├── Column 2: Navigation Menu (About, Works, Writing)
+ * │   └── Timezone Message (mobile inline, desktop absolute)
+ * ├── SideTray (for About & Writing content)
+ * └── WorksPanel (for portfolio showcase)
+ * ```
+ * 
+ * STATE MANAGEMENT:
+ * - selectedArticle: Controls which main section is open ("about" | "works" | "writing" | null)
+ * - selectedWritingArticle: Controls which specific writing article is displayed (when in writing mode)
+ * - timezoneMessage: Dynamic message showing timezone difference from Toronto
+ * 
+ * NAVIGATION FLOW:
+ * 1. User clicks "About" → SideTray opens with about content
+ * 2. User clicks "Works" → WorksPanel opens (right side, 50% width)
+ * 3. User clicks "Writing" → SideTray opens in writing mode (shows list first)
+ *    → User selects article → SideTray shows nested article view
+ * 
+ * @component
+ * @returns {JSX.Element} The main page component
+ */
+
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useState, useMemo } from "react"
 import SideTray from "./components/SideTray"
 import WorksPanel from "./components/WorksPanel"
 import { useSystemTheme } from "@/hooks/use-system-theme"
+import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 
+// ============================================================================
+// TYPES
+// ============================================================================
+
+/**
+ * Type for main navigation article IDs.
+ * 
+ * Defines the valid values for selectedArticle state.
+ * Improves type safety and autocomplete support.
+ */
+type ArticleId = "about" | "works" | "writing" | null
+
+/**
+ * Main page component for the new minimal portfolio entry point.
+ * 
+ * Handles navigation state, theme management, and timezone display.
+ * Renders responsive layout with conditional side panels.
+ */
 export default function NewMinimalPage() {
-  const [timezoneMessage, setTimezoneMessage] = useState("")
-  const [selectedArticle, setSelectedArticle] = useState<string | null>(null)
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+  
+  /**
+   * Dynamic timezone message showing relative difference from Toronto timezone.
+   * Updates every minute to account for potential timezone changes.
+   * 
+   * @example "Raf is 3 hours ahead of you"
+   * @example "Raf is in your timezone"
+   * 
+   * @see useTimezoneMessage hook for implementation details
+   */
+  const timezoneMessage = useTimezoneMessage()
+  
+  /**
+   * Controls which main navigation section is currently open.
+   * 
+   * Values:
+   * - "about" → Opens SideTray with about content
+   * - "works" → Opens WorksPanel (right side panel)
+   * - "writing" → Opens SideTray in writing mode (shows article list first)
+   * - null → No panel open, showing main page
+   * 
+   * @see SideTray component for how this prop is used
+   */
+  const [selectedArticle, setSelectedArticle] = useState<ArticleId>(null)
+  
+  /**
+   * Controls which specific writing article is displayed when in writing mode.
+   * 
+   * Only used when selectedArticle === "writing". When set, SideTray shows
+   * the article content instead of the article list.
+   * 
+   * @see SideTray component's isWritingMode and onArticleSelect props
+   */
   const [selectedWritingArticle, setSelectedWritingArticle] = useState<string | null>(null)
+  
+  /**
+   * System theme preference from useSystemTheme hook.
+   * - prefersDark: true if system prefers dark mode
+   * - isReady: true when theme detection is complete (prevents hydration mismatch)
+   */
   const { prefersDark, isReady } = useSystemTheme()
 
-  // Invert theme: show opposite of user's system preference, defaulting to dark
+  // ============================================================================
+  // THEME MANAGEMENT
+  // ============================================================================
+  
+  /**
+   * Theme inversion logic: Shows opposite of user's system preference.
+   * 
+   * WHY INVERT?
+   * This creates a deliberate contrast experience - if the user's system is
+   * light, we show dark (and vice versa). This makes the site feel distinct
+   * and intentional rather than just matching system preferences.
+   * 
+   * LOGIC:
+   * - Defaults to dark during SSR/initial render (before isReady)
+   * - If user prefers light → show dark (!prefersDark)
+   * - If user prefers dark → show light (prefersDark && isReady)
+   * 
+   * The isReady check prevents hydration mismatches by ensuring we only
+   * apply the inverted theme after client-side detection completes.
+   * 
+   * @returns {boolean} true if dark theme should be shown
+   */
   const shouldShowDark = useMemo(() => {
     // Default to dark during SSR/initial render or when user prefers light
     return !prefersDark || !isReady
   }, [prefersDark, isReady])
 
-  useEffect(() => {
-    const updateTimezoneMessage = () => {
-      const now = new Date()
-
-      // Get user's local time
-      const userHour = now.getHours()
-
-      // Get Toronto time
-      const torontoTime = new Date(now.toLocaleString("en-US", {
-        timeZone: "America/Toronto"
-      }))
-      const torontoHour = torontoTime.getHours()
-
-      // Calculate difference
-      let difference = torontoHour - userHour
-
-      // Handle day boundary crossing
-      if (difference > 12) difference -= 24
-      if (difference < -12) difference += 24
-
-      // Generate message
-      let message = ""
-      if (difference === 0) {
-        message = "Raf is in your timezone"
-      } else if (difference > 0) {
-        message = `Raf is ${difference} hour${difference !== 1 ? 's' : ''} ahead of you`
-      } else {
-        message = `Raf is ${Math.abs(difference)} hour${Math.abs(difference) !== 1 ? 's' : ''} behind you`
-      }
-
-      setTimezoneMessage(message)
-    }
-
-    updateTimezoneMessage()
-    // Update every minute (timezone difference won't change more frequently)
-    const interval = setInterval(updateTimezoneMessage, 60000)
-
-    return () => clearInterval(interval)
-  }, [])
-
+  // ============================================================================
+  // DERIVED STATE
+  // ============================================================================
+  
+  /**
+   * Determines if Works panel is currently open.
+   * Used to adjust main layout padding on desktop (makes room for panel).
+   * 
+   * When Works panel is open, desktop layout reduces right padding from 8 (2rem)
+   * to 50% to accommodate the half-screen panel.
+   */
   const isWorksPanelOpen = selectedArticle === "works"
 
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+  
   return (
     <main
-      className={`min-h-screen min-h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 relative pt-16 md:pt-0 transition-all duration-200 ${isWorksPanelOpen ? 'md:pr-[50%]' : 'md:pr-8'}`}
+      /**
+       * RESPONSIVE LAYOUT STRATEGY:
+       * 
+       * Mobile (< md breakpoint):
+       * - flex-col: Vertical stack
+       * - pt-16: Top padding for safe area
+       * - px-8: Horizontal padding
+       * 
+       * Desktop (>= md breakpoint):
+       * - flex-row: Horizontal layout
+       * - md:items-center: Vertically center content
+       * - md:pl-20: Left padding (5rem)
+       * - md:pr-[50%] or md:pr-8: Right padding adjusts based on Works panel
+       *   - When Works panel open: 50% (makes room for half-screen panel)
+       *   - When Works panel closed: 2rem (normal padding)
+       * 
+       * SAFE AREA HANDLING:
+       * Uses CSS env() variables for devices with notches/safe areas:
+       * - paddingTop: max(safe-area-inset-top, 4rem) - ensures content isn't hidden
+       * - paddingBottom: max(safe-area-inset-bottom, 2rem) - ensures content isn't hidden
+       * 
+       * SUGGESTED IMPROVEMENT:
+       * Extract safe area padding values to constants for maintainability.
+       */
+      className={`min-h-screen min-h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 relative pt-16 md:pt-0 transition-all duration-200 ${isWorksPanelOpen ? 'md:pr-[50%]' : 'md:pr-8'} w-full`}
+      /**
+       * Theme data attribute controls CSS custom properties for light/dark theme.
+       * The theme system uses CSS variables that change based on this attribute.
+       */
       data-theme={shouldShowDark ? "dark" : "light"}
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0), 4rem)',
         paddingBottom: 'max(env(safe-area-inset-bottom, 0), 2rem)'
       }}
     >
-      {/* Mobile: Flex column layout with left alignment */}
+      {/* ========================================================================
+         * MAIN CONTENT AREA
+         * ========================================================================
+         * 
+         * LAYOUT STRUCTURE:
+         * Mobile: Single column, stacked vertically
+         * Desktop: Two-column grid with 4rem gap
+         * 
+         * Column 1: Name and professional title
+         * Column 2: Navigation menu (About, Works, Writing)
+         */}
       <div className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-2 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0">
         {/* Column 1 - Name and Title */}
         <div className="relative flex flex-col items-start md:items-start md:relative mb-12 md:mb-0 gap-1">
+          {/* 
+            Name heading - positioned absolutely above title on desktop
+            On mobile: Normal flow, appears first
+            On desktop: Absolute positioning, appears above title
+          */}
           <h1 className="text-base md:text-base font-light text-foreground tracking-wide leading-[1.5] md:absolute md:bottom-full md:mb-1 transition-colors duration-200">Raf V</h1>
+          {/* Professional title - always visible */}
           <p className="text-xs md:text-xs text-muted-foreground leading-[1.5] transition-colors duration-200">Senior AI Product Designer</p>
         </div>
 
-        {/* Column 2 - About, Works, Writing */}
+        {/* Column 2 - Navigation Menu */}
         <div className="flex justify-start md:block mb-12 md:mb-0">
+          {/* 
+            Navigation menu with hover effects
+            group/menu: Enables group hover for all menu items
+            Each item has individual hover states that work with group hover
+          */}
           <div className="flex flex-col gap-1 group/menu">
+            {/* 
+              NAVIGATION ITEM: About
+              
+              Opens SideTray with about content when clicked.
+              
+              ACCESSIBILITY:
+              - role="button": Semantically indicates clickable element
+              - tabIndex={0}: Makes it keyboard focusable
+              - onKeyDown: Handles Enter and Space key presses
+              - aria-label: Screen reader description
+              
+              INTERACTION STATES:
+              - Mobile: active:scale-[0.98] - Visual feedback on tap
+              - Desktop: hover:!text-foreground - Text color change on hover
+              - group-hover: All items slightly fade when hovering menu group
+              
+              STYLING NOTES:
+              - -mx-2 px-2: Negative margin + padding creates larger tap target on mobile
+              - WebkitTapHighlightColor: 'transparent' - Removes iOS tap highlight
+              - userSelect: 'none' - Prevents text selection on interaction
+            */}
             <div
               role="button"
               tabIndex={0}
@@ -100,6 +275,14 @@ export default function NewMinimalPage() {
             >
               About
             </div>
+            {/* 
+              NAVIGATION ITEM: Works
+              
+              Opens WorksPanel (right side panel) when clicked.
+              WorksPanel shows portfolio carousel with work timeline.
+              
+              @see WorksPanel component for implementation details
+            */}
             <div
               role="button"
               tabIndex={0}
@@ -121,6 +304,16 @@ export default function NewMinimalPage() {
             >
               Works
             </div>
+            {/* 
+              NAVIGATION ITEM: Writing
+              
+              Opens SideTray in writing mode when clicked.
+              Writing mode shows a two-step flow:
+              1. First: Article list (allWritings array)
+              2. Second: Selected article content (when user clicks an article)
+              
+              @see SideTray component's isWritingMode prop for implementation
+            */}
             <div
               role="button"
               tabIndex={0}
@@ -145,13 +338,29 @@ export default function NewMinimalPage() {
           </div>
         </div>
 
-        {/* Timezone message - inline on mobile */}
+        {/* 
+          TIMEZONE MESSAGE - Mobile Layout
+          
+          Displayed inline at bottom of mobile content area.
+          Uses mt-auto to push to bottom of flex container.
+        */}
         <div className="md:hidden flex items-center w-full mt-auto pt-4">
           <p className="text-[10px] text-muted-foreground tracking-wide transition-colors duration-200 whitespace-nowrap">{timezoneMessage}</p>
         </div>
       </div>
 
-      {/* Timezone Difference - Bottom Left Corner (Desktop only) */}
+      {/* 
+        TIMEZONE MESSAGE - Desktop Layout
+        
+        Positioned absolutely in bottom-left corner.
+        Uses safe area insets to avoid notches/device cutouts.
+        
+        POSITIONING:
+        - bottom: max(1.5rem, safe-area-inset-bottom + 1.5rem)
+        - left: max(5rem, safe-area-inset-left + 5rem)
+        
+        This ensures the message is always visible and not hidden by device UI.
+      */}
       <div
         className="hidden md:block absolute bottom-4 left-20"
         style={{
@@ -162,12 +371,40 @@ export default function NewMinimalPage() {
         <p className="text-[10px] text-muted-foreground tracking-wide transition-colors duration-200">{timezoneMessage}</p>
       </div>
 
-      {/* Side tray for reading articles */}
+      {/* ========================================================================
+         * SIDE TRAY COMPONENT
+         * ========================================================================
+         * 
+         * Handles display of About content and Writing articles.
+         * 
+         * PROPS LOGIC:
+         * 
+         * articleId:
+         * - If writing mode: Uses selectedWritingArticle (specific article ID)
+         * - If about mode: Uses "about" string
+         * - Otherwise: null (tray closed)
+         * 
+         * isWritingMode:
+         * - true when selectedArticle === "writing"
+         * - Enables two-step navigation (list → article)
+         * 
+         * onArticleSelect:
+         * - Only provided in writing mode
+         * - Updates selectedWritingArticle when user selects an article
+         * 
+         * onClose:
+         * - Writing mode: Closes both selectedArticle and selectedWritingArticle
+         *   (handles nested state cleanup)
+         * - Other modes: Only closes selectedArticle
+         * 
+         * @see SideTray component for detailed implementation
+         */}
       <SideTray 
         articleId={selectedArticle === "writing" ? selectedWritingArticle : selectedArticle === "about" ? "about" : null} 
         onClose={() => {
           if (selectedArticle === "writing") {
             // Close the entire writing tray (both list and article views)
+            // This ensures clean state when closing nested writing mode
             setSelectedArticle(null)
             setSelectedWritingArticle(null)
           } else {
@@ -178,7 +415,23 @@ export default function NewMinimalPage() {
         onArticleSelect={selectedArticle === "writing" ? setSelectedWritingArticle : undefined}
       />
       
-      {/* Works Panel */}
+      {/* ========================================================================
+         * WORKS PANEL COMPONENT
+         * ========================================================================
+         * 
+         * Displays portfolio carousel with work timeline.
+         * 
+         * Opens as a right-side panel (50% width on desktop) when
+         * selectedArticle === "works".
+         * 
+         * Features:
+         * - Image carousel with keyboard navigation
+         * - Work timeline that highlights current project
+         * - Video modal for projects with videos
+         * - Click-outside-to-close functionality
+         * 
+         * @see WorksPanel component for detailed implementation
+         */}
       <WorksPanel 
         isOpen={selectedArticle === "works"} 
         onClose={() => setSelectedArticle(null)} 

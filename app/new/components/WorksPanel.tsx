@@ -1,3 +1,53 @@
+/**
+ * ============================================================================
+ * WORKS PANEL COMPONENT - app/new/components/WorksPanel.tsx
+ * ============================================================================
+ * 
+ * A right-side panel component that displays a portfolio carousel with work timeline.
+ * Shows portfolio images in a navigable carousel with keyboard and click navigation.
+ * 
+ * ARCHITECTURE:
+ * - Client-side rendered with Framer Motion animations
+ * - Right-side panel (50% width on desktop)
+ * - Image carousel with page-turn animations
+ * - Work timeline that highlights current project
+ * - Video modal for projects with videos
+ * - Click-outside-to-close functionality
+ * 
+ * CAROUSEL FUNCTIONALITY:
+ * - Navigate images with arrow keys (← → ↑ ↓)
+ * - Click left/right sides of image to navigate
+ * - Page-turn animation transitions between images
+ * - Respects animation level preference (user setting)
+ * - Image preloading for smooth navigation
+ * 
+ * WORK TIMELINE:
+ * - Displays work experience organized by type (Full-Time, Contract, Studio)
+ * - Highlights current project's work entry
+ * - Smooth transitions when navigating between projects
+ * - Maps project keys to work experience identifiers
+ * 
+ * KEYBOARD NAVIGATION:
+ * - Arrow keys (← → ↑ ↓) navigate carousel
+ * - Escape key closes panel
+ * - Disabled when video modal is open
+ * 
+ * IMAGE LOADING STRATEGY:
+ * - Initial images loaded with priority (eager)
+ * - Remaining images lazy-loaded
+ * - Preloading for smooth navigation
+ * - Loading state tracking
+ * 
+ * VIDEO MODAL:
+ * - Opens when clicking play button on images with videos
+ * - Vimeo embed with autoplay
+ * - Escape key closes modal
+ * - Click-outside-to-close
+ * 
+ * @component
+ * @see app/new/page.tsx for usage examples
+ */
+
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
@@ -5,11 +55,14 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { WorkImageContainer } from "@/app/components/hover"
 import useAnimationLevel from "@/hooks/useAnimationLevel"
 import { pageTurnVariants } from "@/components/animations/imageTransitions"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { EASING } from "@/components/animations/constants"
 import {
   IMAGE_SOURCES,
   NAVIGATION_DEBOUNCE,
   IMAGE_QUALITY,
   INITIAL_IMAGE_COUNT,
+  getHighlightedWorkEntry,
 } from "@/app/config/portfolioConfig"
 import {
   getProjectFromSrc,
@@ -21,18 +74,46 @@ import {
   generatePlaceholder,
 } from "@/app/utils/portfolioUtils"
 
+/**
+ * Props for WorksPanel component.
+ * 
+ * @interface WorksPanelProps
+ * @property {boolean} isOpen - Whether the panel is currently open
+ * @property {() => void} onClose - Callback when panel should be closed
+ * 
+ * @example
+ * <WorksPanel 
+ *   isOpen={selectedArticle === "works"} 
+ *   onClose={() => setSelectedArticle(null)} 
+ * />
+ */
 interface WorksPanelProps {
   isOpen: boolean
   onClose: () => void
 }
 
-const EASING = {
-  smooth: [0.4, 0.0, 0.2, 1] as const,
-  spring: [0.16, 1, 0.3, 1] as const,
-  gentle: [0.25, 0.1, 0.25, 1.0] as const,
-  elastic: [0.12, 1, 0.28, 1] as const,
-} as const
+// ============================================================================
+// ANIMATION CONFIGURATION
+// ============================================================================
+// 
+// Easing curves are imported from shared constants file.
+// @see components/animations/constants.ts
 
+// ============================================================================
+// ANIMATION VARIANTS
+// ============================================================================
+
+/**
+ * Desktop panel animation variants.
+ * 
+ * Slides in from right with 3D perspective effect.
+ * Same animation style as SideTray for consistency.
+ * 
+ * ANIMATION STAGES:
+ * 1. x: Slides from 100% (off-screen) to 0
+ * 2. scale: Scales from 0.98 to 1 (subtle zoom)
+ * 3. rotateY: Rotates from -5deg to 0 (3D effect)
+ */
 const panelVariants = {
   hidden: {
     x: "100%",
@@ -73,6 +154,38 @@ const panelVariants = {
   },
 } as const
 
+/**
+ * Mobile panel animation variants.
+ * 
+ * Slides up from bottom (bottom sheet style).
+ * Simpler animation for better mobile performance.
+ */
+const mobilePanelVariants = {
+  hidden: { y: "100%" },
+  visible: {
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 350,
+      damping: 40,
+      duration: 0.4
+    }
+  },
+  exit: {
+    y: "100%",
+    transition: {
+      duration: 0.3,
+      ease: EASING.smooth
+    }
+  },
+} as const
+
+/**
+ * Content fade-in animation variants.
+ * 
+ * Creates blur-to-focus effect when panel content loads.
+ * Same as SideTray for consistency.
+ */
 const contentVariants = {
   hidden: {
     opacity: 0,
@@ -104,6 +217,12 @@ const contentVariants = {
   }
 } as const
 
+/**
+ * Backdrop animation variants.
+ * 
+ * Fades in/out the semi-transparent backdrop.
+ * Enables click-outside-to-close functionality.
+ */
 const backdropVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -122,44 +241,223 @@ const backdropVariants = {
   },
 } as const
 
-// Map project keys to work experience identifiers
-// Format: { projectKey: { section: 'fulltime' | 'contract' | 'studio', identifier: string } }
-const PROJECT_TO_WORK_MAP: Record<string, { section: 'fulltime' | 'contract' | 'studio', identifier: string }> = {
-  'theo': { section: 'fulltime', identifier: '2024–2025' },
-  'cb': { section: 'contract', identifier: '2025' }, // Coinbase
-  'vf': { section: 'contract', identifier: '2025' }, // Voiceflow (first 2025 entry)
-  'atlas': { section: 'fulltime', identifier: '2022–2023' }, // Crypto Stealth Startup
-  'defituna': { section: 'fulltime', identifier: '2022–2023' }, // Crypto Stealth Startup
-  'curbcut': { section: 'fulltime', identifier: '2023–2024' },
-  'zalando': { section: 'contract', identifier: '2021–2022' },
-  'earlyworks': { section: 'studio', identifier: '2016–present' },
-  'nationalArchives': { section: 'studio', identifier: '2016–present' },
-}
+/**
+ * Timeline row animation variants.
+ * 
+ * Synchronized with image transition (2.2s duration) for consistent, delightful feel.
+ * Uses same easing curve as image transition: [0.16, 1, 0.3, 1]
+ * 
+ * ANIMATION STAGES:
+ * - highlighted: Full opacity, slight scale, no blur (feels connected to image)
+ * - unhighlighted: Reduced opacity, normal scale, no blur
+ * 
+ * TIMING:
+ * - Duration: 2.2s (matches image transition)
+ * - Delay: 0.15s (subtle delay so table highlight feels connected to image transition)
+ * - Easing: [0.16, 1, 0.3, 1] (same as image transition)
+ */
+const TIMELINE_TRANSITION_DURATION = 2.2
+const TIMELINE_TRANSITION_DELAY = 0.15
+const TIMELINE_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1]
+// CSS transition string for color animations (matches Framer Motion timing)
+const TIMELINE_COLOR_TRANSITION = `color ${TIMELINE_TRANSITION_DURATION}s cubic-bezier(${TIMELINE_EASE.join(', ')}) ${TIMELINE_TRANSITION_DELAY}s`
 
-// Get the work experience identifier for the current project
-function getHighlightedWorkEntry(projectKey: string | null): { section: string, identifier: string } | null {
-  if (!projectKey) return null
-  return PROJECT_TO_WORK_MAP[projectKey] || null
-}
+const timelineRowVariants = {
+  highlighted: {
+    opacity: 1,
+    scale: 1.02,
+    filter: "blur(0px)",
+    transition: {
+      duration: TIMELINE_TRANSITION_DURATION,
+      ease: TIMELINE_EASE,
+      delay: TIMELINE_TRANSITION_DELAY,
+    },
+  },
+  unhighlighted: {
+    opacity: 0.5,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      duration: TIMELINE_TRANSITION_DURATION,
+      ease: TIMELINE_EASE,
+      delay: TIMELINE_TRANSITION_DELAY,
+    },
+  },
+} as const
 
+/**
+ * Timeline text opacity animation variants.
+ * 
+ * Note: Color transitions are handled via CSS transitions with matching timing
+ * (see className transitions on motion.span and motion.p elements).
+ * This is because Framer Motion cannot directly animate CSS custom properties.
+ */
+const timelineTextVariants = {
+  highlighted: {
+    opacity: 1,
+    transition: {
+      duration: TIMELINE_TRANSITION_DURATION,
+      ease: TIMELINE_EASE,
+      delay: TIMELINE_TRANSITION_DELAY,
+    },
+  },
+  unhighlighted: {
+    opacity: 1,
+    transition: {
+      duration: TIMELINE_TRANSITION_DURATION,
+      ease: TIMELINE_EASE,
+      delay: TIMELINE_TRANSITION_DELAY,
+    },
+  },
+  unhighlightedSubtle: {
+    opacity: 1,
+    transition: {
+      duration: TIMELINE_TRANSITION_DURATION,
+      ease: TIMELINE_EASE,
+      delay: TIMELINE_TRANSITION_DELAY,
+    },
+  },
+} as const
+
+
+/**
+ * WorksPanel Component
+ * 
+ * Displays a portfolio carousel with work timeline in a right-side panel.
+ * 
+ * @param {WorksPanelProps} props - Component props
+ * @returns {JSX.Element} The WorksPanel component
+ */
 export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+  
+  /**
+   * Current image index in the carousel (0-based).
+   */
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  
+  /**
+   * Last navigation direction (1 = forward, -1 = backward).
+   * Used for page-turn animation direction.
+   */
   const [lastDirection, setLastDirection] = useState<1 | -1>(1)
+  
+  /**
+   * Whether carousel is currently navigating (debouncing).
+   * Prevents rapid clicking from causing multiple navigations.
+   */
   const [isNavigating, setIsNavigating] = useState(false)
+  
+  /**
+   * Whether slideshow is paused (when user hovers over image).
+   * Currently not used for auto-play, but available for future use.
+   */
   const [isSlideshowPaused, setIsSlideshowPaused] = useState(false)
+  
+  /**
+   * Tracks which images have been loaded.
+   * Used to enable click navigation only after image loads.
+   */
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({})
+  
+  /**
+   * Whether video modal is currently open.
+   */
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+  
+  /**
+   * Current video URL for the modal.
+   * Set when user clicks play button on an image with a video.
+   */
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null)
+  
+  /**
+   * Measured width of the current image.
+   * Used for caption alignment (currently hidden but available).
+   */
   const [imageWidth, setImageWidth] = useState<number | null>(null)
+  
+  /**
+   * Ref to measure image width for caption alignment.
+   */
   const imageMeasureRef = useRef<HTMLDivElement | null>(null)
+  
+  /**
+   * Accessibility: Respects user's motion preference.
+   */
   const shouldReduceMotion = useReducedMotion()
+  
+  /**
+   * User's animation level preference.
+   * Used to adjust page-turn animation intensity.
+   */
   const animationLevel = useAnimationLevel()
+  
+  /**
+   * Responsive: Detects if user is on mobile device.
+   */
+  const isMobile = useIsMobile()
+  
+  /**
+   * Ref for backdrop element to disable pointer events during exit animation.
+   * This allows hover events to work immediately after closing the panel.
+   */
+  const backdropRef = useRef<HTMLDivElement>(null)
 
-  // Get current project and highlighted work entry
+  // ============================================================================
+  // RESPONSIVE ANIMATION VARIANTS
+  // ============================================================================
+  
+  /**
+   * Selects appropriate animation variants based on device and accessibility.
+   * 
+   * - Mobile: slide up from bottom (mobilePanelVariants)
+   * - Desktop: slide in from right with 3D effect (panelVariants)
+   * - Reduced motion: Disables animations (undefined)
+   */
+  const activePanelVariants = isMobile ? mobilePanelVariants : panelVariants
+  const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.3,
+        ease: EASING.smooth,
+        delay: 0.1
+      }
+    }
+  } as const : contentVariants)
+
+  // ============================================================================
+  // DERIVED STATE
+  // ============================================================================
+  
+  /**
+   * Gets current image source, project key, and highlighted work entry.
+   * 
+   * Used to:
+   * - Display the correct image
+   * - Highlight the correct timeline entry
+   * - Determine if video is available
+   */
   const currentImageSrc = IMAGE_SOURCES[currentImageIndex] || null
   const currentProject = currentImageSrc ? getProjectFromSrc(currentImageSrc) : null
   const highlightedEntry = getHighlightedWorkEntry(currentProject)
 
+  // ============================================================================
+  // EVENT HANDLERS
+  // ============================================================================
+  
+  /**
+   * Handles image load completion.
+   * 
+   * Marks image as loaded in loadedImages state.
+   * This enables click navigation only after image is ready.
+   * 
+   * @param {string} src - The image source path
+   */
   const handleImageLoad = useCallback((src: string) => {
     setLoadedImages((prev) => {
       if (prev[src]) {
@@ -169,18 +467,38 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
     })
   }, [])
 
+  /**
+   * Navigates carousel by a given delta (positive = forward, negative = backward).
+   * 
+   * CAROUSEL LOGIC:
+   * - Uses modulo arithmetic for circular navigation
+   * - Wraps around: going forward from last image goes to first, and vice versa
+   * - Updates lastDirection for page-turn animation
+   * 
+   * @param {number} delta - Number of images to move (positive = forward, negative = backward)
+   * 
+   * @example
+   * navigateBy(1)  // Move to next image
+   * navigateBy(-1) // Move to previous image
+   */
   const navigateBy = useCallback(
     (delta: number) => {
       const dir: 1 | -1 = delta >= 0 ? 1 : -1
       setLastDirection(dir)
       setCurrentImageIndex((prev) => {
         const length = IMAGE_SOURCES.length
+        // Modulo arithmetic ensures circular navigation
         return (prev + delta + length) % length
       })
     },
     []
   )
 
+  /**
+   * Opens video modal for an image that has an associated video.
+   * 
+   * @param {string} imageSrc - The image source path
+   */
   const handleOpenVideoModal = (imageSrc: string) => {
     const videoUrl = getVideoForSrc(imageSrc)
     if (videoUrl) {
@@ -189,12 +507,27 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
     }
   }
 
+  /**
+   * Closes video modal and clears video URL.
+   */
   const handleCloseVideoModal = () => {
     setIsVideoModalOpen(false)
     setCurrentVideoUrl(null)
   }
 
-  // Handle escape key
+  // ============================================================================
+  // KEYBOARD NAVIGATION
+  // ============================================================================
+  
+  /**
+   * Handles Escape key to close panel or video modal.
+   * 
+   * PRIORITY:
+   * 1. If video modal is open → close modal
+   * 2. Otherwise → close panel
+   * 
+   * Only active when panel is open.
+   */
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -212,11 +545,23 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
     }
   }, [isOpen, isVideoModalOpen, onClose])
 
-  // Keyboard navigation
+  /**
+   * Handles arrow key navigation for carousel.
+   * 
+   * KEYBOARD CONTROLS:
+   * - ArrowLeft / ArrowUp: Previous image (navigateBy(-1))
+   * - ArrowRight / ArrowDown: Next image (navigateBy(1))
+   * 
+   * SAFETY:
+   * - Disabled when panel is closed
+   * - Disabled when video modal is open (to avoid conflicts)
+   * - Ignores key presses when user is typing in input/textarea
+   */
   useEffect(() => {
     if (!isOpen || isVideoModalOpen) return
 
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't interfere with text input
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement
@@ -242,7 +587,15 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [isOpen, isVideoModalOpen, navigateBy])
 
-  // Measure image width for caption alignment
+  /**
+   * Measures image width for caption alignment.
+   * 
+   * Uses ResizeObserver to track image width changes.
+   * Currently used for caption alignment (though captions are hidden).
+   * 
+   * SUGGESTED IMPROVEMENT:
+   * Consider removing if captions remain hidden, or extract to a custom hook.
+   */
   useEffect(() => {
     const el = imageMeasureRef.current
     if (!el) return
@@ -267,6 +620,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
           <>
             {/* Backdrop */}
             <motion.div
+              ref={backdropRef}
               key="backdrop"
               className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
               variants={backdropVariants}
@@ -274,33 +628,60 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
               animate="visible"
               exit="exit"
               onClick={onClose}
+              onAnimationStart={(definition) => {
+                // Disable pointer events when exit animation starts
+                // This allows hover events to work immediately after closing
+                if (definition === 'exit' && backdropRef.current) {
+                  backdropRef.current.style.pointerEvents = 'none'
+                }
+              }}
             />
 
-            {/* Works Panel - Right side half-screen */}
+            {/* Works Panel */}
+            {/* 
+            Mobile: Full-screen bottom sheet with timeline table at top and carousel below
+            Desktop: Right-side half-screen panel (w-1/2)
+            */}
             <motion.div
               key="panel"
-              className="fixed right-0 top-0 h-full w-1/2 bg-background transition-colors duration-200 z-50 overflow-hidden"
-              variants={shouldReduceMotion ? undefined : panelVariants}
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-[64px] backdrop-saturate-50 bg-white/80 dark:bg-neutral-950/75' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
+              variants={shouldReduceMotion ? undefined : activePanelVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
               animate={shouldReduceMotion ? undefined : "visible"}
               exit={shouldReduceMotion ? undefined : "exit"}
               style={{
-                paddingTop: 'env(safe-area-inset-top, 0px)',
-                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                transformStyle: "preserve-3d",
-                perspective: "1200px"
+                ...(isMobile ? {
+                  // Mobile: Full viewport height starting from bottom
+                  height: '100dvh',
+                  maxHeight: '100dvh',
+                  paddingTop: 'env(safe-area-inset-top, 0px)',
+                  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                } : {
+                  // Desktop: Preserve 3D transform for side panel
+                  paddingTop: 'env(safe-area-inset-top, 0px)',
+                  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                  transformStyle: "preserve-3d",
+                  perspective: "1200px"
+                })
               }}
             >
               <motion.div
-                className="relative h-full flex flex-col overflow-hidden"
-                variants={shouldReduceMotion ? undefined : contentVariants}
+                className={`relative h-full flex flex-col ${isMobile ? 'overflow-y-auto' : 'overflow-hidden'}`}
+                variants={shouldReduceMotion ? undefined : activeContentVariants}
                 initial={shouldReduceMotion ? undefined : "hidden"}
                 animate={shouldReduceMotion ? undefined : "visible"}
               >
+                {/* Mobile drag handle */}
+                {isMobile && (
+                  <div className="flex justify-center py-3 pt-4 pb-2">
+                    <div className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200" />
+                  </div>
+                )}
+
                 {/* Close button */}
                 <motion.button
                   onClick={onClose}
-                  className="absolute top-6 right-6 z-10 p-2 group"
+                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-3' : 'p-2'} group`}
                   whileHover={shouldReduceMotion ? {} : { scale: 1.02, rotate: 15 }}
                   whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
                   transition={{ duration: 0.4, ease: EASING.gentle }}
@@ -344,92 +725,232 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                 </motion.button>
 
                 {/* Work Timeline Table - at top */}
-                <div className="relative z-20 px-8 pt-12 pb-3 bg-background">
+                {/* 
+                Mobile: Table at top of scrollable container with reduced padding
+                Desktop: Fixed position with standard padding
+                */}
+                <div className={`relative z-20 ${isMobile ? 'px-6 pt-4 pb-3' : 'px-8 pt-12 pb-3'} bg-background`}>
                   <div className="space-y-1.5">
                     {/* Full-Time Roles */}
                     <div className="space-y-1">
                       <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Full-Time</p>
                       <div className="space-y-1">
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025' 
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2024–2025</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>Theoriq · Founding Product Designer</p>
-                        </div>
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024' 
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2024–2025
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            Theoriq · Founding Product Designer
+                          </motion.p>
+                        </motion.div>
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2023–2024</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>CurbCutOS · Product Design Lead, Accessibility</p>
-                        </div>
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023' 
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2023–2024
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            CurbCutOS · Product Design Lead, Accessibility
+                          </motion.p>
+                        </motion.div>
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2022–2023</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>Crypto Stealth Startup · Senior Product Designer, Design Lead</p>
-                        </div>
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021' 
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2022–2023
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            Crypto Stealth Startup · Senior Product Designer, Design Lead
+                          </motion.p>
+                        </motion.div>
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2020–2021</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>Artscapy · Founding Designer</p>
-                        </div>
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2019' 
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
-                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2019'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2019</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2019'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>Apple Developer Academy · UX/UI Design Intern</p>
-                        </div>
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2020–2021
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            Artscapy · Founding Designer
+                          </motion.p>
+                        </motion.div>
                       </div>
                     </div>
 
@@ -437,70 +958,276 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     <div className="space-y-1">
                       <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Contract</p>
                       <div className="space-y-1">
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2025</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>Voiceflow · Senior Product Designer, AI Agents</p>
-                        </div>
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2025
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            Voiceflow · Senior Product Designer, AI Agents
+                          </motion.p>
+                        </motion.div>
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2025</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>Coinbase · Senior Product Designer, Developer Tools</p>
-                        </div>
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022' 
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2025
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            Coinbase · Senior Product Designer, Developer Tools
+                          </motion.p>
+                        </motion.div>
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2021–2022</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>Zalando · Senior Product Designer, Design System</p>
-                        </div>
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021' 
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2021–2022
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            Zalando · Senior Product Designer, Design System
+                          </motion.p>
+                        </motion.div>
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2021</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>TravelNest · Senior Product Designer</p>
-                        </div>
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2021
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            TravelNest · Senior Product Designer
+                          </motion.p>
+                        </motion.div>
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2019'
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2019'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2019'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2019
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2019'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2019'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            Apple Developer Academy · UX/UI Design Intern
+                          </motion.p>
+                        </motion.div>
                       </div>
                     </div>
 
@@ -508,32 +1235,77 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     <div className="space-y-1">
                       <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Studio</p>
                       <div className="space-y-1">
-                        <div className={`flex justify-between items-start transition-all duration-300 ${
-                          highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present' 
-                            ? 'opacity-100 scale-[1.02]' 
-                            : 'opacity-50'
-                        }`}>
-                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                        <motion.div
+                          className="flex justify-between items-start"
+                          variants={shouldReduceMotion ? undefined : timelineRowVariants}
+                          animate={
                             highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground/70'
-                          }`}>2016–present</span>
-                          <p className={`text-xs transition-colors duration-200 text-right ${
-                            highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}>Never Before Seen Studio · Freelance Designer, Design Lead</p>
-                        </div>
+                              ? 'highlighted'
+                              : 'unhighlighted'
+                          }
+                        >
+                          <motion.span
+                            className={`text-xs font-light tabular-nums ${
+                              highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/70'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
+                                ? 'highlighted'
+                                : 'unhighlightedSubtle'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            2016–present
+                          </motion.span>
+                          <motion.p
+                            className={`text-xs text-right ${
+                              highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
+                                ? 'text-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                            variants={shouldReduceMotion ? undefined : timelineTextVariants}
+                            animate={
+                              highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
+                                ? 'highlighted'
+                                : 'unhighlighted'
+                            }
+                            style={
+                              shouldReduceMotion
+                                ? {}
+                                : {
+                                    transition: TIMELINE_COLOR_TRANSITION,
+                                  }
+                            }
+                          >
+                            Never Before Seen Studio · Freelance Designer, Design Lead
+                          </motion.p>
+                        </motion.div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Carousel Container */}
+                {/* 
+                Mobile: Carousel below timeline table in same scrollable container
+                Desktop: Fixed position with hover pause
+                */}
                 <div
-                  className="relative z-10 flex items-end justify-center flex-1 px-8 pt-2 pb-8 md:pb-12 min-h-0"
-                  onMouseEnter={() => setIsSlideshowPaused(true)}
-                  onMouseLeave={() => setIsSlideshowPaused(false)}
+                  className={`relative z-10 flex items-end justify-center flex-1 ${isMobile ? 'px-6 pt-2 pb-8' : 'px-8 pt-2 pb-8 md:pb-12'} min-h-0`}
+                  onMouseEnter={() => !isMobile && setIsSlideshowPaused(true)}
+                  onMouseLeave={() => !isMobile && setIsSlideshowPaused(false)}
+                  style={isMobile ? {
+                    paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))'
+                  } : {}}
                 >
                   <div className="relative w-full flex items-start justify-center">
                     <div

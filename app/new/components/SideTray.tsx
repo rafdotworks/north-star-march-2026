@@ -1,28 +1,94 @@
+/**
+ * ============================================================================
+ * SIDE TRAY COMPONENT - app/new/components/SideTray.tsx
+ * ============================================================================
+ * 
+ * A slide-in side panel component that displays About content and Writing articles.
+ * Supports dual-mode operation: normal mode (About) and writing mode (article list + content).
+ * 
+ * ARCHITECTURE:
+ * - Client-side rendered with Framer Motion animations
+ * - Responsive: Mobile (bottom sheet) vs Desktop (right side panel)
+ * - Markdown rendering with custom typography components
+ * - Article loading via API with error handling
+ * - Nested navigation for writing mode (list → article)
+ * 
+ * DUAL-MODE OPERATION:
+ * 
+ * 1. NORMAL MODE (isWritingMode = false):
+ *    - Used for "About" content
+ *    - Single view: Shows about content directly
+ *    - articleId: "about" string
+ * 
+ * 2. WRITING MODE (isWritingMode = true):
+ *    - Used for "Writing" section
+ *    - Two-step navigation:
+ *      a) List view: Shows allWritings array when articleId === null
+ *      b) Article view: Shows specific article when articleId is set
+ *    - Requires onArticleSelect prop to handle article selection
+ *    - Supports nested trays (list tray → article tray)
+ * 
+ * ANIMATION SYSTEM:
+ * - Uses Framer Motion for smooth, performant animations
+ * - Respects prefers-reduced-motion for accessibility
+ * - Custom easing curves for natural motion
+ * - Multi-stage animations (backdrop, tray, content)
+ * - Mobile-optimized variants (slide up from bottom)
+ * - Desktop variants (slide in from right with 3D transforms)
+ * 
+ * ARTICLE LOADING:
+ * - Fetches articles from /api/article/[id] endpoint
+ * - Parses frontmatter using gray-matter
+ * - Handles loading, error, and success states
+ * - Custom hook (useArticleLoader) manages article state
+ * 
+ * MARKDOWN RENDERING:
+ * - Custom ReactMarkdown components for typography
+ * - Consistent styling with design system
+ * - External link detection and icon display
+ * - Theme-aware color transitions
+ * 
+ * @component
+ * @see app/new/page.tsx for usage examples
+ */
+
 "use client"
 
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback, useRef } from "react"
 import ReactMarkdown from "react-markdown"
-import type { Components } from "react-markdown"
 import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { ExternalLink, Mail } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { EASING } from "@/components/animations/constants"
+import { markdownComponents } from "@/app/components/markdown/markdownComponents"
+import { allWritings } from "@/app/config/writingsConfig"
 
-const allWritings = [
-  // Featured articles at the top
-  { id: "working-philosophy", title: "Working Philosophy", date: "Nov 16, 2025" },
-  { id: "personal-blueprint", title: "Personal Blueprint", date: "Nov 3, 2025" },
-  // Other articles below
-  { id: "the-path-not-the-road", title: "The Path, not the Road", date: "Aug 17, 2025" },
-  { id: "memorable-excellence", title: "Memorable Excellence", date: "Jun 14, 2025" },
-  { id: "config-sf-slowing-down", title: "Config, SF, slowing down", date: "May 9, 2025" },
-  { id: "why-frequent-job-changes", title: "Why frequent job changes", date: "Apr 11, 2025" },
-  { id: "my-personality-tests", title: "My Personality Tests", date: "Mar 6, 2025" },
-  { id: "my-music-dna", title: "My Music DNA", date: "Mar 5, 2025" },
-  { id: "slipping-through-winter", title: "Slipping Through Winter", date: "Feb 26, 2025" },
-  { id: "on-ai-agents", title: "On AI Agents", date: "Feb 15, 2025" },
-]
-
+/**
+ * Props for SideTray component.
+ * 
+ * @interface SideTrayProps
+ * @property {string | null} articleId - The article ID to display, or null to show list (writing mode) or close tray
+ * @property {() => void} onClose - Callback when tray should be closed
+ * @property {boolean} [isWritingMode=false] - If true, enables writing mode with two-step navigation
+ * @property {(articleId: string | null) => void} [onArticleSelect] - Callback when article is selected (required in writing mode)
+ * 
+ * @example
+ * // Normal mode (About)
+ * <SideTray 
+ *   articleId="about" 
+ *   onClose={() => setSelectedArticle(null)} 
+ * />
+ * 
+ * @example
+ * // Writing mode (with article selection)
+ * <SideTray 
+ *   articleId={selectedWritingArticle}
+ *   onClose={handleClose}
+ *   isWritingMode={true}
+ *   onArticleSelect={setSelectedWritingArticle}
+ * />
+ */
 interface SideTrayProps {
   articleId: string | null
   onClose: () => void
@@ -30,22 +96,37 @@ interface SideTrayProps {
   onArticleSelect?: (articleId: string | null) => void
 }
 
+/**
+ * Parsed article content structure.
+ * 
+ * @interface ArticleContent
+ * @property {string} title - Article title from frontmatter
+ * @property {string} date - Article date from frontmatter
+ * @property {string} content - Article markdown content (without frontmatter)
+ */
 interface ArticleContent {
   title: string
   date: string
   content: string
 }
 
-// Custom easing curves for beautiful animations
-const EASING = {
-  smooth: [0.4, 0.0, 0.2, 1] as const,
-  spring: [0.16, 1, 0.3, 1] as const,
-  gentle: [0.25, 0.1, 0.25, 1.0] as const,
-  elastic: [0.12, 1, 0.28, 1] as const,
-  stagger: [0.19, 1, 0.22, 1] as const
-} as const
+// ============================================================================
+// ANIMATION CONFIGURATION
+// ============================================================================
+// 
+// Easing curves are imported from shared constants file.
+// @see components/animations/constants.ts
 
-// Enhanced multi-stage animation variants
+// ============================================================================
+// ANIMATION VARIANTS
+// ============================================================================
+
+/**
+ * Backdrop animation variants.
+ * 
+ * Fades in/out the semi-transparent backdrop behind the tray.
+ * Provides visual separation and enables click-outside-to-close.
+ */
 const backdropVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -64,6 +145,24 @@ const backdropVariants = {
   }
 } as const
 
+/**
+ * Desktop tray animation variants.
+ * 
+ * Creates a sophisticated 3D slide-in effect from the right side.
+ * 
+ * ANIMATION STAGES:
+ * 1. x: Slides in from 100% (off-screen right) to 0
+ * 2. scale: Slightly scales up from 0.98 to 1 (subtle zoom effect)
+ * 3. rotateY: Rotates from -5deg to 0 (3D perspective effect)
+ * 
+ * TIMING:
+ * - x: Spring animation (natural bounce) - 0.5s
+ * - scale: Elastic easing with 0.1s delay - 0.6s
+ * - rotateY: Spring easing with 0.05s delay - 0.7s
+ * 
+ * The staggered delays create a layered, sophisticated entrance.
+ * Exit animation is simpler (just slides out) for faster dismissal.
+ */
 const trayVariants = {
   hidden: {
     x: "100%",
@@ -104,6 +203,22 @@ const trayVariants = {
   }
 } as const
 
+/**
+ * Content fade-in animation variants.
+ * 
+ * Creates a smooth blur-to-focus effect when content loads.
+ * 
+ * ANIMATION:
+ * - opacity: Fades from 0 to 1
+ * - filter: Blurs from 8px to 0px (creates focus effect)
+ * 
+ * TIMING:
+ * - Both animations start after 0.3s delay (allows tray to slide in first)
+ * - opacity: 0.6s duration
+ * - filter: 0.8s duration (slightly longer for smooth blur transition)
+ * 
+ * This creates a layered animation: tray slides in, then content fades in.
+ */
 const contentVariants = {
   hidden: {
     opacity: 0,
@@ -135,6 +250,22 @@ const contentVariants = {
   }
 } as const
 
+/**
+ * List item animation variants (for article lists).
+ * 
+ * Creates a staggered entrance effect for list items.
+ * 
+ * ANIMATION:
+ * - opacity: Fades in
+ * - x: Slides in from -20px (left)
+ * - filter: Blurs from 4px to 0px
+ * 
+ * STAGGERING:
+ * - Each item has a delay of i * 0.04s (40ms per item)
+ * - Creates a cascading effect as items appear sequentially
+ * 
+ * @param {number} i - Index of the item (used for delay calculation)
+ */
 const listItemVariants = {
   hidden: {
     opacity: 0,
@@ -157,29 +288,52 @@ const listItemVariants = {
   })
 }
 
-// Enhanced view transition variants
+/**
+ * View transition variants (for switching between list/article/about views).
+ * 
+ * Creates a sophisticated, inspiring transition when switching views within the tray.
+ * Content materializes into focus with a smooth blur-to-focus effect and subtle motion.
+ * 
+ * ANIMATION:
+ * - opacity: Fades in/out
+ * - scale: Slightly scales from 0.96 to 1 (subtle zoom)
+ * - y: Slides up from 12px to 0 (subtle upward motion)
+ * - rotateX: Rotates from -5deg to 0 (3D perspective)
+ * - filter: Blurs from 12px to 0px (dramatic focus effect)
+ * 
+ * TIMING:
+ * - duration: 0.7s (longer for smoother, more inspiring feel)
+ * - delayChildren: 0.15s (slightly longer delay for better layering)
+ * - staggerChildren: 0.08s between each child animation
+ * 
+ * This creates a smooth, layered transition where content feels like it's
+ * materializing into focus rather than just fading in.
+ */
 const viewTransitionVariants = {
   initial: {
     opacity: 0,
     scale: 0.96,
+    y: 12,
     rotateX: -5,
-    filter: "blur(8px)"
+    filter: "blur(12px)"
   },
   animate: {
     opacity: 1,
     scale: 1,
+    y: 0,
     rotateX: 0,
     filter: "blur(0px)",
     transition: {
-      duration: 0.5,
+      duration: 0.7,
       ease: EASING.elastic,
       staggerChildren: 0.08,
-      delayChildren: 0.1
+      delayChildren: 0.15
     }
   },
   exit: {
     opacity: 0,
     scale: 0.96,
+    y: 8,
     rotateX: 5,
     filter: "blur(8px)",
     transition: {
@@ -189,7 +343,42 @@ const viewTransitionVariants = {
   }
 }
 
-// Custom hook for loading articles
+// ============================================================================
+// CUSTOM HOOKS
+// ============================================================================
+
+/**
+ * Custom hook for loading and managing article content.
+ * 
+ * Handles:
+ * - Fetching articles from API endpoint
+ * - Parsing frontmatter (title, date) from markdown
+ * - Loading, error, and success states
+ * - Content reset when article changes
+ * 
+ * API ENDPOINT:
+ * Fetches from /api/article/[id] which returns markdown content with frontmatter.
+ * 
+ * FRONTMATTER PARSING:
+ * Uses gray-matter to parse YAML frontmatter from markdown files.
+ * Extracts title and date, leaving content as markdown string.
+ * 
+ * ERROR HANDLING:
+ * - Catches fetch errors and parsing errors
+ * - Sets error message for display
+ * - Resets content on error
+ * 
+ * @returns {Object} Object containing:
+ *   - content: Parsed article content (title, date, content) or null
+ *   - isLoading: Boolean indicating if article is currently loading
+ *   - error: Error message string or null
+ *   - loadArticle: Function to load an article by ID
+ *   - resetContent: Function to reset content state
+ * 
+ * @example
+ * const { content, isLoading, error, loadArticle } = useArticleLoader()
+ * loadArticle("working-philosophy")
+ */
 function useArticleLoader() {
   const [content, setContent] = useState<ArticleContent | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -240,16 +429,107 @@ function useArticleLoader() {
   return { content, isLoading, error, loadArticle, resetContent }
 }
 
+/**
+ * SideTray Component
+ * 
+ * A slide-in side panel for displaying About content and Writing articles.
+ * Supports dual-mode operation with sophisticated animations and responsive design.
+ * 
+ * MODES:
+ * 
+ * 1. Normal Mode (isWritingMode = false):
+ *    - Displays About content when articleId === "about"
+ *    - Single view, no navigation
+ * 
+ * 2. Writing Mode (isWritingMode = true):
+ *    - Two-step navigation: List → Article
+ *    - Shows article list when articleId === null
+ *    - Shows article content when articleId is set
+ *    - Requires onArticleSelect prop for navigation
+ * 
+ * RESPONSIVE BEHAVIOR:
+ * - Mobile: Slides up from bottom (bottom sheet style)
+ * - Desktop: Slides in from right (side panel style)
+ * 
+ * ANIMATIONS:
+ * - Respects prefers-reduced-motion
+ * - Multi-stage animations (backdrop → tray → content)
+ * - Smooth transitions between views
+ * 
+ * KEYBOARD NAVIGATION:
+ * - Escape key closes the tray
+ * - Full keyboard accessibility
+ * 
+ * @param {SideTrayProps} props - Component props
+ * @returns {JSX.Element} The SideTray component
+ */
 export default function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }: SideTrayProps) {
+  // ============================================================================
+  // HOOKS & STATE
+  // ============================================================================
+  
+  /**
+   * Article loading hook - manages fetching, parsing, and state for articles.
+   */
   const { content, isLoading, error, loadArticle, resetContent } = useArticleLoader()
+  
+  /**
+   * Current view mode within the tray.
+   * 
+   * - 'list': Article list view (legacy, not used in writing mode)
+   * - 'article': Individual article content view
+   * - 'about': About content view
+   * - 'writing-list': Writing mode article list view
+   */
   const [viewMode, setViewMode] = useState<'list' | 'article' | 'about' | 'writing-list'>('list')
+  
+  /**
+   * Accessibility: Respects user's motion preference.
+   * When true, animations are simplified or disabled.
+   */
   const shouldReduceMotion = useReducedMotion()
+  
+  /**
+   * Responsive: Detects if user is on mobile device.
+   * Used to switch between mobile (bottom sheet) and desktop (side panel) layouts.
+   */
   const isMobile = useIsMobile()
   
-  // For nested writing tray, we need to track if we're showing the list or an article
+  /**
+   * Refs for backdrop elements to disable pointer events during exit animation.
+   * This allows hover events to work immediately after closing the tray.
+   */
+  const writingListBackdropRef = useRef<HTMLDivElement>(null)
+  const mainBackdropRef = useRef<HTMLDivElement>(null)
+  
+  // ============================================================================
+  // NESTED TRAY LOGIC
+  // ============================================================================
+  
+  /**
+   * Determines if we're showing a nested writing tray (article view within writing mode).
+   * 
+   * In writing mode:
+   * - When articleId === null: Shows list tray (first level)
+   * - When articleId !== null: Shows article tray (nested level, higher z-index)
+   * 
+   * This allows for proper layering when transitioning from list to article view.
+   */
   const isNestedWritingTray = isWritingMode && articleId !== null
 
-  // Mobile-optimized animation variants
+  // ============================================================================
+  // RESPONSIVE ANIMATION VARIANTS
+  // ============================================================================
+  
+  /**
+   * Mobile-optimized animation variants.
+   * 
+   * Slides up from bottom (y: "100%") instead of sliding from right.
+   * Simpler animation for better mobile performance.
+   * 
+   * SUGGESTED IMPROVEMENT:
+   * Consider extracting mobile variants to a separate constants file.
+   */
   const mobileTrayVariants = {
     hidden: { y: "100%" },
     visible: {
@@ -270,7 +550,13 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
     }
   } as const
 
-  // Choose animation variants based on device
+  /**
+   * Selects appropriate animation variants based on device and accessibility preferences.
+   * 
+   * - Mobile: Uses mobileTrayVariants (slide up from bottom)
+   * - Desktop: Uses trayVariants (slide in from right with 3D effects)
+   * - Reduced motion: Disables animations (undefined variants)
+   */
   const activeTrayVariants = isMobile ? mobileTrayVariants : trayVariants
   const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? {
     hidden: { opacity: 0 },
@@ -300,6 +586,32 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
     }
   } as const : viewTransitionVariants)
 
+  // ============================================================================
+  // ARTICLE LOADING LOGIC
+  // ============================================================================
+  
+  /**
+   * Handles article loading and view mode switching based on articleId.
+   * 
+   * LOGIC FLOW:
+   * 1. If articleId is null:
+   *    - Reset content
+   *    - Show list view (writing-list in writing mode, list otherwise)
+   * 
+   * 2. If articleId === "all":
+   *    - Reset content
+   *    - Show list view (legacy mode)
+   * 
+   * 3. If articleId === "about":
+   *    - Reset content
+   *    - Show about view (no API call needed)
+   * 
+   * 4. If articleId is a specific article ID:
+   *    - Set view mode to 'article'
+   *    - Load article from API
+   * 
+   * This effect runs whenever articleId, isWritingMode, or loading functions change.
+   */
   useEffect(() => {
     if (!articleId) {
       resetContent()
@@ -335,7 +647,16 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
     loadArticle(articleId)
   }, [articleId, loadArticle, resetContent, isWritingMode])
 
-  // Handle escape key
+  // ============================================================================
+  // KEYBOARD NAVIGATION
+  // ============================================================================
+  
+  /**
+   * Handles Escape key to close the tray.
+   * 
+   * Only active when tray is open (articleId is not null).
+   * Removes event listener when tray closes to prevent memory leaks.
+   */
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -347,64 +668,12 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
     }
   }, [articleId, onClose])
 
-  // Custom components for ReactMarkdown with improved typography
-  const markdownComponents: Components = {
-    h1: ({ children }) => (
-      <h1 className="text-base font-light text-foreground tracking-wider mb-6 mt-8 transition-colors duration-200">{children}</h1>
-    ),
-    h2: ({ children }) => (
-      <h2 className="text-sm font-normal text-foreground/90 mb-4 mt-7 transition-colors duration-200">{children}</h2>
-    ),
-    h3: ({ children }) => (
-      <h3 className="text-xs font-medium text-foreground/80 mb-3 mt-5 transition-colors duration-200">{children}</h3>
-    ),
-    p: ({ children }) => (
-      <p className="text-xs text-muted-foreground mb-4 leading-[1.5] transition-colors duration-200">{children}</p>
-    ),
-    ul: ({ children }) => (
-      <ul className="text-xs text-muted-foreground mb-4 ml-4 space-y-2 list-disc list-inside transition-colors duration-200">{children}</ul>
-    ),
-    ol: ({ children }) => (
-      <ol className="text-xs text-muted-foreground mb-4 ml-4 space-y-2 list-decimal list-inside transition-colors duration-200">{children}</ol>
-    ),
-    li: ({ children }) => (
-      <li className="text-xs text-muted-foreground leading-[1.5] transition-colors duration-200">{children}</li>
-    ),
-    a: ({ href, children }) => {
-      const isExternal = href?.startsWith('http://') || href?.startsWith('https://')
-      return (
-        <a
-          href={href}
-          target={isExternal ? "_blank" : undefined}
-          rel={isExternal ? "noopener noreferrer" : undefined}
-          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
-          style={{
-            WebkitTapHighlightColor: 'transparent'
-          }}
-        >
-          {children}
-          {isExternal && (
-            <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-          )}
-        </a>
-      )
-    },
-    blockquote: ({ children }) => (
-      <blockquote className="text-xs text-muted-foreground border-l-2 border-border pl-3 my-4 italic transition-colors duration-200">
-        {children}
-      </blockquote>
-    ),
-    code: ({ children }) => (
-      <code className="text-[10px] bg-muted px-1 py-0.5 rounded text-foreground font-mono transition-colors duration-200">
-        {children}
-      </code>
-    ),
-    strong: ({ children }) => (
-      <strong className="font-medium text-foreground transition-colors duration-200">{children}</strong>
-    ),
-    em: ({ children }) => <em className="italic">{children}</em>,
-    hr: () => <hr className="border-border my-6 transition-colors duration-200" />
-  }
+  // ============================================================================
+  // MARKDOWN RENDERING COMPONENTS
+  // ============================================================================
+  // 
+  // Markdown components are imported from shared file.
+  // @see app/components/markdown/markdownComponents.tsx
 
   // Determine if we should show the tray
   // Show tray if: writing mode (always show), or articleId is set (normal mode)
@@ -423,6 +692,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
           <>
             {/* Backdrop */}
             <motion.div
+              ref={writingListBackdropRef}
               key="writing-list-backdrop"
               className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
               variants={backdropVariants}
@@ -430,19 +700,32 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
               animate="visible"
               exit="exit"
               onClick={onClose}
+              onAnimationStart={(definition) => {
+                // Disable pointer events when exit animation starts
+                // This allows hover events to work immediately after closing
+                if (definition === 'exit' && writingListBackdropRef.current) {
+                  writingListBackdropRef.current.style.pointerEvents = 'none'
+                }
+              }}
             />
 
             {/* Writing list tray */}
+            {/* 
+            Mobile: Full-screen bottom sheet starting from very bottom of viewport
+            Desktop: Right-side panel with fixed width
+            */}
             <motion.div
               key="writing-list-tray"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-[92vh] max-h-[92dvh] rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} bg-background transition-colors duration-200 z-50`}
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-[64px] backdrop-saturate-50 bg-white/80 dark:bg-neutral-950/75' : 'bg-background'} transition-colors duration-200 z-50`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
               style={isMobile ? {
+                // Start from very bottom - use full viewport height
+                height: '100dvh',
+                maxHeight: '100dvh',
                 paddingTop: 'env(safe-area-inset-top, 0px)',
-                maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))'
               } : { transformStyle: "preserve-3d", perspective: "1200px" }}
             >
               <motion.div
@@ -518,7 +801,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="space-y-4"
+                      className="space-y-4 group/writings"
                     >
                       {allWritings.map((article, i) => (
                         <React.Fragment key={article.id}>
@@ -536,7 +819,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/70 md:hover:!text-foreground'}`}>{article.title}</p>
                             <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
                           </motion.div>
                           {i === 1 && (
@@ -561,6 +844,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
           <>
             {/* Backdrop - always show to enable click-outside-to-close */}
             <motion.div
+              ref={mainBackdropRef}
               key="backdrop"
               className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
               variants={backdropVariants}
@@ -568,20 +852,33 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
               animate="visible"
               exit="exit"
               onClick={onClose}
+              onAnimationStart={(definition) => {
+                // Disable pointer events when exit animation starts
+                // This allows hover events to work immediately after closing
+                if (definition === 'exit' && mainBackdropRef.current) {
+                  mainBackdropRef.current.style.pointerEvents = 'none'
+                }
+              }}
             />
 
             {/* Side tray with 3D perspective and mobile optimization */}
+            {/* 
+            Mobile: Full-screen bottom sheet starting from very bottom of viewport
+            Desktop: Right-side panel with fixed width
+            */}
             <motion.div
               key="tray"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-[92vh] max-h-[92dvh] rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} bg-background transition-colors duration-200`}
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-[64px] backdrop-saturate-50 bg-white/80 dark:bg-neutral-950/75' : 'bg-background'} transition-colors duration-200`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
               style={{
                 ...(isMobile ? {
+                  // Start from very bottom - use full viewport height
+                  height: '100dvh',
+                  maxHeight: '100dvh',
                   paddingTop: 'env(safe-area-inset-top, 0px)',
-                  maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))'
                 } : { transformStyle: "preserve-3d", perspective: "1200px" }),
                 // Higher z-index for nested writing tray
                 zIndex: isNestedWritingTray ? 60 : 50,
@@ -719,7 +1016,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="space-y-4"
+                      className="space-y-4 group/writings"
                     >
                       {allWritings.map((article, i) => (
                         <React.Fragment key={article.id}>
@@ -737,7 +1034,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/70 md:hover:!text-foreground'}`}>{article.title}</p>
                             <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
                           </motion.div>
                           {i === 1 && (
@@ -756,11 +1053,16 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="flex flex-col h-full"
+                      className="flex flex-col h-full justify-between"
                     >
-                      {/* Work Timeline - at top */}
+                      {/* 
+                      Work Timeline - INTENTIONALLY HIDDEN
+                      This timeline table has been removed from the About modal.
+                      Work information is now available in the Works panel instead.
+                      DO NOT UNCOMMENT - this content should never be shown.
+                      */}
+                      {/* 
                       <div className="space-y-3">
-                        {/* Full-Time Roles */}
                         <div className="space-y-1.5">
                           <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Full-Time</p>
                           <div className="space-y-1.5">
@@ -780,14 +1082,9 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2020–2021</span>
                               <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Artscapy · Founding Designer</p>
                             </div>
-                            <div className="flex justify-between items-start">
-                              <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2019</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Apple Developer Academy · UX/UI Design Intern</p>
-                            </div>
                           </div>
                         </div>
 
-                        {/* Contract Roles */}
                         <div className="space-y-1.5">
                           <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Contract</p>
                           <div className="space-y-1.5">
@@ -807,10 +1104,13 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2021</span>
                               <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">TravelNest · Senior Product Designer</p>
                             </div>
+                            <div className="flex justify-between items-start">
+                              <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2019</span>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Apple Developer Academy · UX/UI Design Intern</p>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Studio */}
                         <div className="space-y-1.5">
                           <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Studio</p>
                           <div className="space-y-1.5">
@@ -821,9 +1121,10 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                           </div>
                         </div>
                       </div>
+                      */}
 
-                      {/* Rest of content - at bottom */}
-                      <div className="space-y-5 mt-auto">
+                      {/* Text Content Section - at top */}
+                      <div className="space-y-5">
                         {/* Opening */}
                         <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
                           I spent the first twenty years of my life on the Amalfi Coast, Italy. I design and build products that connect logic with feeling.
@@ -850,48 +1151,48 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                           <p className="text-xs text-muted-foreground transition-colors duration-200">— Always happy, never satisfied</p>
                           <p className="text-xs text-muted-foreground transition-colors duration-200">— Progress over movement</p>
                         </div>
-
-                        {/* Contact Links */}
-                        <nav className="flex flex-col gap-1 group/nav pt-2">
-                          <a
-                            href="https://linkedin.com/in/raffaelevitaledesign"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
-                            aria-label="Visit Raf on LinkedIn"
-                            style={{
-                              WebkitTapHighlightColor: 'transparent'
-                            }}
-                          >
-                            LinkedIn
-                            <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-                          </a>
-                          <a
-                            href="mailto:raf@raf.works"
-                            className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
-                            aria-label="Send email to Raf"
-                            style={{
-                              WebkitTapHighlightColor: 'transparent'
-                            }}
-                          >
-                            Email
-                            <Mail size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-                          </a>
-                          <a
-                            href="/documents/CV.pdf"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
-                            aria-label="Download CV"
-                            style={{
-                              WebkitTapHighlightColor: 'transparent'
-                            }}
-                          >
-                            CV
-                            <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-                          </a>
-                        </nav>
                       </div>
+
+                      {/* Contact Links Section - at bottom */}
+                      <nav className="flex flex-col gap-1 group/nav pt-2">
+                        <a
+                          href="https://linkedin.com/in/raffaelevitaledesign"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          aria-label="Visit Raf on LinkedIn"
+                          style={{
+                            WebkitTapHighlightColor: 'transparent'
+                          }}
+                        >
+                          LinkedIn
+                          <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
+                        </a>
+                        <a
+                          href="mailto:raf@raf.works"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          aria-label="Send email to Raf"
+                          style={{
+                            WebkitTapHighlightColor: 'transparent'
+                          }}
+                        >
+                          Email
+                          <Mail size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
+                        </a>
+                        <a
+                          href="/documents/CV.pdf"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          aria-label="Download CV"
+                          style={{
+                            WebkitTapHighlightColor: 'transparent'
+                          }}
+                        >
+                          CV
+                          <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
+                        </a>
+                      </nav>
 
                     </motion.div>
                   ) : viewMode === 'list' ? (
@@ -902,7 +1203,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="space-y-4"
+                      className="space-y-4 group/writings"
                     >
                       {allWritings.map((article, i) => (
                         <React.Fragment key={article.id}>
@@ -919,7 +1220,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/70 md:hover:!text-foreground'}`}>{article.title}</p>
                             <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
                           </motion.div>
                           {i === 1 && (
@@ -928,30 +1229,6 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                             </div>
                           )}
                         </React.Fragment>
-                      ))}
-                    </motion.div>
-                  ) : isLoading ? (
-                    // Loading state
-                    <motion.div
-                      key="loading"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-4"
-                    >
-                      {[...Array(5)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="h-4 bg-muted rounded transition-colors duration-200"
-                          style={{ width: `${100 - i * 15}%` }}
-                          animate={{ opacity: [0.3, 0.6, 0.3] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: i * 0.1
-                          }}
-                        />
                       ))}
                     </motion.div>
                   ) : error ? (
