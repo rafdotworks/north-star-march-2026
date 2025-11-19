@@ -157,28 +157,43 @@ const panelVariants = {
 /**
  * Mobile panel animation variants.
  * 
- * Slides up from bottom (bottom sheet style).
- * Uses refined spring physics for natural, delightful motion.
+ * Enhanced multi-dimensional animation for smoother, more inspiring entrance.
+ * Slides up from bottom with scale, opacity, and refined spring physics.
  * 
- * ANIMATION IMPROVEMENTS:
- * - Entrance: Smooth spring with slight overshoot for delightful feel
+ * ANIMATION ENHANCEMENTS:
+ * - y: Slides up from 100% (off-screen bottom) to 0
+ * - scale: Subtle zoom-in effect (0.96 → 1.0) for materialization
+ * - opacity: Smooth fade-in (0.8 → 1.0) for elegant appearance
+ * - Spring physics: Refined parameters (stiffness: 320, damping: 38) for smoother motion
  * - Exit: Quick, responsive spring for satisfying dismissal
- * - Optimized parameters for 60fps performance
+ * 
+ * TIMING:
+ * - Entrance: ~0.5s with natural spring physics for fluid motion
+ * - Exit: ~0.3s for responsive dismissal
+ * - Matches SideTray animation for consistency
  */
 const mobilePanelVariants = {
-  hidden: { y: "100%" },
+  hidden: { 
+    y: "100%",
+    scale: 0.96,
+    opacity: 0.8
+  },
   visible: {
     y: 0,
+    scale: 1,
+    opacity: 1,
     transition: {
       type: "spring" as const,
-      stiffness: 380,
-      damping: 35,
-      mass: 0.75,
+      stiffness: 320,
+      damping: 38,
+      mass: 0.85,
       duration: 0.5
     }
   },
   exit: {
     y: "100%",
+    scale: 0.96,
+    opacity: 0.8,
     transition: {
       type: "spring" as const,
       stiffness: 450,
@@ -231,18 +246,28 @@ const contentVariants = {
  * 
  * Fades in/out the semi-transparent backdrop.
  * Enables click-outside-to-close functionality.
+ * 
+ * ENHANCED FOR MOBILE:
+ * - Adds subtle scale effect (0.98 → 1.0) for depth perception
+ * - Faster entrance (0.35s) to establish visual hierarchy before modal
+ * - Coordinated timing with modal entrance for polished feel
  */
 const backdropVariants = {
-  hidden: { opacity: 0 },
+  hidden: { 
+    opacity: 0,
+    scale: 0.98
+  },
   visible: {
     opacity: 1,
+    scale: 1,
     transition: {
-      duration: 0.4,
+      duration: 0.35,
       ease: EASING.smooth,
     },
   },
   exit: {
     opacity: 0,
+    scale: 0.98,
     transition: {
       duration: 0.25,
       ease: EASING.smooth,
@@ -440,7 +465,21 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
   const activePanelVariants = isMobile ? mobilePanelVariants : panelVariants
   // On mobile, disable content fade-in animation to ensure immediate visibility
   // Desktop keeps the blur-to-focus effect for polish
-  const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? undefined : contentVariants)
+  const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? {
+    hidden: { 
+      opacity: 0,
+      y: 12
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: EASING.smooth,
+        delay: 0.1
+      }
+    }
+  } as const : contentVariants)
 
   // ============================================================================
   // DERIVED STATE

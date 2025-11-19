@@ -126,18 +126,28 @@ interface ArticleContent {
  * 
  * Fades in/out the semi-transparent backdrop behind the tray.
  * Provides visual separation and enables click-outside-to-close.
+ * 
+ * ENHANCED FOR MOBILE:
+ * - Adds subtle scale effect (0.98 → 1.0) for depth perception
+ * - Faster entrance (0.35s) to establish visual hierarchy before modal
+ * - Coordinated timing with modal entrance for polished feel
  */
 const backdropVariants = {
-  hidden: { opacity: 0 },
+  hidden: { 
+    opacity: 0,
+    scale: 0.98
+  },
   visible: {
     opacity: 1,
+    scale: 1,
     transition: {
-      duration: 0.4,
+      duration: 0.35,
       ease: EASING.smooth
     }
   },
   exit: {
     opacity: 0,
+    scale: 0.98,
     transition: {
       duration: 0.25,
       ease: EASING.smooth
@@ -536,35 +546,48 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   /**
    * Mobile-optimized animation variants.
    * 
-   * Slides up from bottom (y: "100%") instead of sliding from right.
-   * Uses spring physics for natural, smooth motion matching WorksPanel.
+   * Enhanced multi-dimensional animation for smoother, more inspiring entrance.
+   * Slides up from bottom with scale, opacity, and refined spring physics.
    * 
-   * ANIMATION IMPROVEMENTS:
-   * - Entrance: Spring animation with optimized stiffness/damping for natural feel
-   * - Exit: Faster spring animation for responsive dismissal
-   * - Both use spring physics for momentum-based motion
-   * - Matches WorksPanel animation for consistency
+   * ANIMATION ENHANCEMENTS:
+   * - y: Slides up from 100% (off-screen bottom) to 0
+   * - scale: Subtle zoom-in effect (0.96 → 1.0) for materialization
+   * - opacity: Smooth fade-in (0.8 → 1.0) for elegant appearance
+   * - Spring physics: Refined parameters (stiffness: 320, damping: 38) for smoother motion
+   * - Exit: Quick, responsive spring for satisfying dismissal
+   * 
+   * TIMING:
+   * - Entrance: ~0.5s with natural spring physics for fluid motion
+   * - Exit: ~0.3s for responsive dismissal
    */
   const mobileTrayVariants = {
-    hidden: { y: "100%" },
+    hidden: { 
+      y: "100%",
+      scale: 0.96,
+      opacity: 0.8
+    },
     visible: {
       y: 0,
+      scale: 1,
+      opacity: 1,
       transition: {
         type: "spring" as const,
-        stiffness: 400,
-        damping: 42,
-        mass: 0.8,
-        duration: 0.45
+        stiffness: 320,
+        damping: 38,
+        mass: 0.85,
+        duration: 0.5
       }
     },
     exit: {
       y: "100%",
+      scale: 0.96,
+      opacity: 0.8,
       transition: {
         type: "spring" as const,
         stiffness: 500,
         damping: 45,
         mass: 0.7,
-        duration: 0.35
+        duration: 0.3
       }
     }
   } as const
@@ -578,11 +601,15 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
    */
   const activeTrayVariants = isMobile ? mobileTrayVariants : trayVariants
   const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? {
-    hidden: { opacity: 0 },
+    hidden: { 
+      opacity: 0,
+      y: 12
+    },
     visible: {
       opacity: 1,
+      y: 0,
       transition: {
-        duration: 0.3,
+        duration: 0.4,
         ease: EASING.smooth,
         delay: 0.1
       }
