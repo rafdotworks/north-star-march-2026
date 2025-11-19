@@ -731,7 +731,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             <motion.div
               ref={backdropRef}
               key="backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/70 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -754,7 +754,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             <motion.div
               ref={panelRef}
               key="panel"
-              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/100 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
               variants={shouldReduceMotion ? undefined : activePanelVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
               animate={shouldReduceMotion ? undefined : (

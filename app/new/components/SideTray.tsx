@@ -299,6 +299,35 @@ const listItemVariants = {
 }
 
 /**
+ * Mobile-optimized list item animation variants.
+ * 
+ * Simplified animation for mobile to avoid distracting "line update" effect.
+ * Removes blur, slide, and stagger effects that create a cascading "checking" appearance.
+ * 
+ * ANIMATION:
+ * - opacity: Simple fade-in (0 → 1)
+ * - No blur: Removed to eliminate scanning effect
+ * - No slide: Removed to eliminate wave effect
+ * - No stagger: All items appear simultaneously for clean appearance
+ * 
+ * TIMING:
+ * - Duration: 0.3s with smooth easing
+ * - All items animate together for instant, clean appearance
+ */
+const mobileListItemVariants = {
+  hidden: {
+    opacity: 0
+  },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+      ease: EASING.smooth
+    }
+  }
+}
+
+/**
  * View transition variants (for switching between list/article/about views).
  * 
  * Creates a sophisticated, inspiring transition when switching views within the tray.
@@ -615,6 +644,13 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
       }
     }
   } as const : contentVariants)
+  /**
+   * Selects appropriate list item variants based on device.
+   * 
+   * - Mobile: Uses mobileListItemVariants (simple fade, no stagger/blur/slide)
+   * - Desktop: Uses listItemVariants (staggered with blur and slide effects)
+   */
+  const activeListItemVariants = isMobile ? mobileListItemVariants : listItemVariants
   const activeViewTransitionVariants = shouldReduceMotion ? undefined : (isMobile ? {
     initial: { opacity: 0 },
     animate: {
@@ -788,7 +824,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             <motion.div
               ref={writingListBackdropRef}
               key="writing-list-backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/70 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -811,7 +847,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             <motion.div
               ref={writingListTrayRef}
               key="writing-list-tray"
-              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50`}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/100 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
@@ -944,7 +980,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                         <React.Fragment key={article.id}>
                           <motion.div
                             custom={i}
-                            variants={listItemVariants}
+                            variants={activeListItemVariants}
                             initial="hidden"
                             animate="visible"
                             onClick={() => {
@@ -983,7 +1019,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             <motion.div
               ref={mainBackdropRef}
               key="backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/70 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -1006,7 +1042,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             <motion.div
               ref={mainTrayRef}
               key="tray"
-              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-t border-border/20' : 'bg-background'} transition-colors duration-200`}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/100 border-t border-border/20' : 'bg-background'} transition-colors duration-200`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
@@ -1202,7 +1238,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                         <React.Fragment key={article.id}>
                           <motion.div
                             custom={i}
-                            variants={listItemVariants}
+                            variants={activeListItemVariants}
                             initial="hidden"
                             animate="visible"
                             onClick={() => {
@@ -1389,7 +1425,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                         <React.Fragment key={article.id}>
                           <motion.div
                             custom={i}
-                            variants={listItemVariants}
+                            variants={activeListItemVariants}
                             initial="hidden"
                             animate="visible"
                             onClick={() => {
