@@ -438,17 +438,9 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
    * - Reduced motion: Disables animations (undefined)
    */
   const activePanelVariants = isMobile ? mobilePanelVariants : panelVariants
-  const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.3,
-        ease: EASING.smooth,
-        delay: 0.1
-      }
-    }
-  } as const : contentVariants)
+  // On mobile, disable content fade-in animation to ensure immediate visibility
+  // Desktop keeps the blur-to-focus effect for polish
+  const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? undefined : contentVariants)
 
   // ============================================================================
   // DERIVED STATE
@@ -723,16 +715,19 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             <motion.div
               ref={panelRef}
               key="panel"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/98' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} bg-background transition-colors duration-200 z-50 overflow-hidden`}
               variants={shouldReduceMotion ? undefined : activePanelVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
-              animate={shouldReduceMotion ? undefined : {
-                ...(isMobile && dragY > 0 ? {
-                  y: dragY,
-                  opacity: Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4),
-                  scale: Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08),
-                } : {})
-              }}
+              animate={shouldReduceMotion ? undefined : (
+                isMobile && dragY > 0 
+                  ? {
+                      // Merge variant animation with drag properties
+                      y: dragY,
+                      opacity: Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4),
+                      scale: Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08),
+                    }
+                  : "visible" // Use variant "visible" state when not dragging
+              )}
               exit={shouldReduceMotion ? undefined : "exit"}
               // Drag-to-dismiss functionality (mobile only)
               drag={isMobile ? "y" : false}
@@ -750,11 +745,14 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                   maxHeight: '100dvh',
                   paddingTop: 'env(safe-area-inset-top, 0px)',
                   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                  y: dragY,
-                  // Visual feedback during drag - more subtle and smooth
-                  opacity: dragY > 0 ? Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4) : 1,
-                  scale: dragY > 0 ? Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08) : 1,
-                  transition: isDragging ? { type: "spring", stiffness: 300, damping: 30 } : undefined,
+                  // Only apply drag transforms when actively dragging
+                  // When not dragging, variant animation controls position
+                  ...(dragY > 0 ? {
+                    y: dragY,
+                    opacity: Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4),
+                    scale: Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08),
+                    transition: isDragging ? { type: "spring", stiffness: 300, damping: 30 } : undefined,
+                  } : {})
                 } : {
                   // Desktop: Preserve 3D transform for side panel
                   paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -766,9 +764,14 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             >
               <motion.div
                 className={`relative h-full flex flex-col overflow-hidden`}
-                variants={shouldReduceMotion ? undefined : activeContentVariants}
-                initial={shouldReduceMotion ? undefined : "hidden"}
-                animate={shouldReduceMotion ? undefined : "visible"}
+                variants={activeContentVariants}
+                initial={activeContentVariants ? "hidden" : undefined}
+                animate={activeContentVariants ? "visible" : undefined}
+                style={{
+                  // CRITICAL: Ensure content is always visible on mobile (no animation variants)
+                  // Desktop uses animation variants for blur-to-focus effect
+                  opacity: activeContentVariants ? undefined : 1,
+                }}
               >
                 {/* Mobile drag handle - more prominent and interactive */}
                 {isMobile && (
@@ -872,7 +875,13 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                 Mobile: Compact table at top, no scrolling - fits viewport
                 Desktop: Fixed position with standard padding
                 */}
-                <div className={`relative z-20 ${isMobile ? 'px-6 pt-2 pb-2' : 'px-8 pt-12 pb-3'} bg-background`}>
+                <div 
+                  className={`relative z-20 ${isMobile ? 'px-6 pt-2 pb-2' : 'px-8 pt-12 pb-3'} bg-background`}
+                  style={{
+                    // CRITICAL: Ensure timeline is always visible - force opacity to prevent invisible content
+                    opacity: 1,
+                  }}
+                >
                   <div className={`${isMobile ? 'space-y-1' : 'space-y-1.5'}`}>
                     {/* Full-Time Roles */}
                     <div className="space-y-1">
@@ -1474,33 +1483,38 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                   onMouseLeave={() => !isMobile && setIsSlideshowPaused(false)}
                   style={isMobile ? {
                     paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
-                    maxHeight: 'calc(100dvh - 280px)', // Ensure it fits: timeline (~200px) + gap (48px) + padding
+                    // More flexible height calculation - ensure minimum space for images
+                    maxHeight: 'calc(100dvh - 280px)',
+                    minHeight: '200px', // Ensure minimum height so images are always visible
                     overflow: 'hidden',
                   } : {}}
                 >
-                  <div className="relative w-full flex items-start justify-center">
+                  <div className="relative w-full flex items-start justify-center" style={isMobile ? { minHeight: '200px' } : {}}>
                     <div
                       className="relative w-full max-w-4xl"
                       style={{ 
                         perspective: "1200px",
+                        ...(isMobile ? { minHeight: '200px' } : {}),
                       }}
                     >
-                      {IMAGE_SOURCES.map((src, index) => (
+                      {IMAGE_SOURCES.map((src, index) => {
+                        const isCurrent = index === currentImageIndex
+                        return (
                         <motion.div
                           key={src}
                           className="relative w-full"
                           variants={pageTurnVariants(animationLevel, lastDirection)}
                           initial="initial"
                           animate={
-                            index === currentImageIndex ? "animate" : "exit"
+                            isCurrent ? "animate" : "exit"
                           }
                           exit="exit"
                           style={{
-                            zIndex: index === currentImageIndex ? 2 : 1,
-                            pointerEvents:
-                              index === currentImageIndex ? "auto" : "none",
-                            display: index === currentImageIndex ? "block" : "none",
-                            visibility: index === currentImageIndex ? "visible" : "hidden",
+                            zIndex: isCurrent ? 2 : 1,
+                            pointerEvents: isCurrent ? "auto" : "none",
+                            // Always render current image, or first image on mobile when panel opens
+                            display: isCurrent ? "block" : "none",
+                            visibility: isCurrent ? "visible" : "hidden",
                           }}
                         >
                           <div className="flex flex-col items-center w-full relative">
@@ -1563,7 +1577,8 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                               blurDataURL={generatePlaceholder(1200, 900)}
                               sizes="(min-width: 1280px) 50vw, 100vw"
                               quality={IMAGE_QUALITY}
-                              isLoaded={!!loadedImages[src]}
+                              // On mobile, show images even if not fully loaded to prevent black screen
+                              isLoaded={isMobile ? (loadedImages[src] ?? true) : !!loadedImages[src]}
                             />
                             {index === currentImageIndex && (
                               <>
@@ -1653,7 +1668,8 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             )}
                           </div>
                         </motion.div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 </div>
