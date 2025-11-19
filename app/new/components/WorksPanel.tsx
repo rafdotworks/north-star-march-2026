@@ -158,12 +158,12 @@ const panelVariants = {
  * Mobile panel animation variants.
  * 
  * Slides up from bottom (bottom sheet style).
- * Uses spring physics for natural, smooth motion.
+ * Uses refined spring physics for natural, delightful motion.
  * 
  * ANIMATION IMPROVEMENTS:
- * - Entrance: Spring animation with optimized stiffness/damping for natural feel
- * - Exit: Faster spring animation for responsive dismissal
- * - Both use spring physics for momentum-based motion
+ * - Entrance: Smooth spring with slight overshoot for delightful feel
+ * - Exit: Quick, responsive spring for satisfying dismissal
+ * - Optimized parameters for 60fps performance
  */
 const mobilePanelVariants = {
   hidden: { y: "100%" },
@@ -171,20 +171,20 @@ const mobilePanelVariants = {
     y: 0,
     transition: {
       type: "spring" as const,
-      stiffness: 400,
-      damping: 42,
-      mass: 0.8,
-      duration: 0.45
+      stiffness: 380,
+      damping: 35,
+      mass: 0.75,
+      duration: 0.5
     }
   },
   exit: {
     y: "100%",
     transition: {
       type: "spring" as const,
-      stiffness: 500,
-      damping: 45,
-      mass: 0.7,
-      duration: 0.35
+      stiffness: 450,
+      damping: 40,
+      mass: 0.65,
+      duration: 0.3
     }
   },
 } as const
@@ -540,10 +540,17 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
   // ============================================================================
   
   /**
-   * Handles drag start - resets drag position.
+   * Tracks if drag is currently active.
+   */
+  const [isDragging, setIsDragging] = useState(false)
+  
+  /**
+   * Handles drag start - resets drag position and marks as dragging.
    */
   const handleDragStart = () => {
+    if (!isMobile) return
     setDragY(0)
+    setIsDragging(true)
   }
   
   /**
@@ -555,6 +562,8 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
     // Only track downward drags (positive Y)
     if (info.offset.y > 0) {
       setDragY(info.offset.y)
+    } else {
+      setDragY(0)
     }
   }
   
@@ -562,25 +571,26 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
    * Handles drag end - determines if panel should close based on threshold and velocity.
    * 
    * CLOSING CONDITIONS:
-   * - Dragged down more than 30% of viewport height (or 150px minimum)
-   * - OR dragged with sufficient velocity downward (> 500px/s)
+   * - Dragged down more than 25% of viewport height (or 120px minimum)
+   * - OR dragged with sufficient velocity downward (> 400px/s)
    * 
-   * If threshold not met, panel snaps back to original position.
+   * If threshold not met, panel snaps back to original position with spring animation.
    */
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
     if (!isMobile) return
     
-    const viewportHeight = window.innerHeight
-    const threshold = Math.max(viewportHeight * 0.3, 150) // 30% of viewport or 150px minimum
-    const velocityThreshold = 500 // px/s
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 1000
+    const threshold = Math.max(viewportHeight * 0.25, 120) // 25% of viewport or 120px minimum
+    const velocityThreshold = 400 // px/s
     
     // Close if dragged beyond threshold OR if velocity is high enough
     if (info.offset.y > threshold || info.velocity.y > velocityThreshold) {
       onClose()
     }
     
-    // Reset drag position
+    // Reset drag position with smooth animation
     setDragY(0)
+    setIsDragging(false)
   }
 
   // ============================================================================
@@ -716,13 +726,20 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
               className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/95' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
               variants={shouldReduceMotion ? undefined : activePanelVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
-              animate={shouldReduceMotion ? undefined : "visible"}
+              animate={shouldReduceMotion ? undefined : {
+                ...(isMobile && dragY > 0 ? {
+                  y: dragY,
+                  opacity: Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4),
+                  scale: Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08),
+                } : {})
+              }}
               exit={shouldReduceMotion ? undefined : "exit"}
               // Drag-to-dismiss functionality (mobile only)
               drag={isMobile ? "y" : false}
               dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.2 }}
+              dragElastic={{ top: 0, bottom: 0.3 }}
               dragMomentum={false}
+              dragPropagation={false}
               onDragStart={handleDragStart}
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
@@ -734,9 +751,10 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                   paddingTop: 'env(safe-area-inset-top, 0px)',
                   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                   y: dragY,
-                  // Visual feedback during drag
-                  opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
-                  scale: dragY > 0 ? Math.max(0.95, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.1) : 1,
+                  // Visual feedback during drag - more subtle and smooth
+                  opacity: dragY > 0 ? Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4) : 1,
+                  scale: dragY > 0 ? Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08) : 1,
+                  transition: isDragging ? { type: "spring", stiffness: 300, damping: 30 } : undefined,
                 } : {
                   // Desktop: Preserve 3D transform for side panel
                   paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -747,75 +765,94 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
               }}
             >
               <motion.div
-                className={`relative h-full flex flex-col ${isMobile ? 'overflow-y-auto' : 'overflow-hidden'}`}
+                className={`relative h-full flex flex-col overflow-hidden`}
                 variants={shouldReduceMotion ? undefined : activeContentVariants}
                 initial={shouldReduceMotion ? undefined : "hidden"}
                 animate={shouldReduceMotion ? undefined : "visible"}
               >
-                {/* Mobile drag handle */}
+                {/* Mobile drag handle - more prominent and interactive */}
                 {isMobile && (
                   <motion.div 
-                    className="flex justify-center py-3 pt-4 pb-2 cursor-grab active:cursor-grabbing"
+                    className="flex justify-center items-center py-4 pt-5 pb-3 cursor-grab active:cursor-grabbing touch-manipulation"
                     style={{
                       WebkitTapHighlightColor: 'transparent',
+                      minHeight: '56px',
                     }}
                     animate={{
-                      scale: dragY > 0 ? 1.1 : 1,
-                      opacity: dragY > 0 ? 0.6 : 1,
+                      scale: dragY > 0 ? 1.05 : 1,
+                      opacity: dragY > 0 ? 0.7 : 1,
                     }}
                     transition={{
-                      duration: 0.2,
+                      duration: 0.15,
                       ease: EASING.smooth
                     }}
                   >
                     <motion.div 
-                      className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200"
+                      className="w-14 h-1.5 rounded-full bg-muted transition-colors duration-200"
                       animate={{
                         backgroundColor: dragY > 0 
-                          ? 'hsl(var(--muted-foreground))' 
-                          : 'hsl(var(--muted))',
-                        width: dragY > 0 ? 48 : 48,
+                          ? 'hsl(var(--foreground))' 
+                          : 'hsl(var(--muted-foreground))',
+                        width: dragY > 0 ? 56 : 56,
+                        scale: dragY > 0 ? 1.2 : 1,
                       }}
                       transition={{
-                        duration: 0.2,
+                        duration: 0.15,
                         ease: EASING.smooth
                       }}
                     />
                   </motion.div>
                 )}
 
-                {/* Close button */}
+                {/* Close button - larger and more accessible on mobile */}
                 <motion.button
-                  onClick={onClose}
-                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-3' : 'p-2'} group`}
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.02, rotate: 15 }}
-                  whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
-                  transition={{ duration: 0.4, ease: EASING.gentle }}
-                  aria-label="Close"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClose()
+                  }}
+                  className={`absolute ${isMobile ? 'top-4 right-4' : 'top-6 right-6'} z-50 ${isMobile ? 'p-4' : 'p-2'} group touch-manipulation`}
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.1, rotate: 15 }}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.9 }}
+                  transition={{ duration: 0.2, ease: EASING.smooth }}
+                  aria-label="Close panel"
                   style={{
-                    background: 'transparent',
+                    background: isMobile ? 'rgba(0, 0, 0, 0.05)' : 'transparent',
                     border: 'none',
                     outline: 'none',
                     boxShadow: 'none',
                     color: 'rgb(115, 115, 115)',
                     WebkitTapHighlightColor: 'transparent',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    borderRadius: isMobile ? '50%' : 'none',
+                    minWidth: isMobile ? '44px' : 'auto',
+                    minHeight: isMobile ? '44px' : 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--foreground))'
+                    if (isMobile) {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.1)'
+                    }
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    if (isMobile) {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)'
+                    }
                   }}
                   onFocus={(e) => {
+                    e.currentTarget.style.outline = '2px solid hsl(var(--foreground))'
+                    e.currentTarget.style.outlineOffset = '2px'
+                  }}
+                  onBlur={(e) => {
                     e.currentTarget.style.outline = 'none'
-                    e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
                   }}
                 >
                   <svg
-                    width="12"
-                    height="12"
+                    width={isMobile ? "16" : "12"}
+                    height={isMobile ? "16" : "12"}
                     viewBox="0 0 12 12"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -824,7 +861,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     <path
                       d="M1 1L11 11M11 1L1 11"
                       stroke="currentColor"
-                      strokeWidth="1"
+                      strokeWidth={isMobile ? "1.5" : "1"}
                       strokeLinecap="round"
                     />
                   </svg>
@@ -832,11 +869,11 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
 
                 {/* Work Timeline Table - at top */}
                 {/* 
-                Mobile: Table at top of scrollable container with reduced padding
+                Mobile: Compact table at top, no scrolling - fits viewport
                 Desktop: Fixed position with standard padding
                 */}
-                <div className={`relative z-20 ${isMobile ? 'px-6 pt-4 pb-3' : 'px-8 pt-12 pb-3'} bg-background`}>
-                  <div className="space-y-1.5">
+                <div className={`relative z-20 ${isMobile ? 'px-6 pt-2 pb-2' : 'px-8 pt-12 pb-3'} bg-background`}>
+                  <div className={`${isMobile ? 'space-y-1' : 'space-y-1.5'}`}>
                     {/* Full-Time Roles */}
                     <div className="space-y-1">
                       <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Full-Time</p>
@@ -1402,12 +1439,15 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
 
                 {/* Clickable gap between timeline and carousel */}
                 {/* 
-                Mobile: Clickable area to close panel
+                Mobile: Large clickable area to close panel (more reliable)
                 Desktop: Subtle hover feedback
                 */}
                 <div
-                  onClick={onClose}
-                  className={`relative z-15 ${isMobile ? 'h-8 cursor-pointer' : 'h-4 cursor-pointer md:hover:bg-background/5'} transition-colors duration-200`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClose()
+                  }}
+                  className={`relative z-30 ${isMobile ? 'h-12 cursor-pointer touch-manipulation' : 'h-4 cursor-pointer md:hover:bg-background/5'} transition-colors duration-200 ${isMobile ? 'active:bg-background/10' : ''}`}
                   aria-label="Close panel"
                   role="button"
                   tabIndex={0}
@@ -1419,20 +1459,23 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                   }}
                   style={{
                     WebkitTapHighlightColor: 'transparent',
+                    minHeight: isMobile ? '48px' : 'auto',
                   }}
                 />
 
                 {/* Carousel Container */}
                 {/* 
-                Mobile: Carousel below timeline table in same scrollable container
+                Mobile: Carousel below timeline table, no scrolling - fits viewport
                 Desktop: Fixed position with hover pause
                 */}
                 <div
-                  className={`relative z-10 flex items-end justify-center flex-1 ${isMobile ? 'px-6 pt-2 pb-8' : 'px-8 pt-2 pb-8 md:pb-12'} min-h-0`}
+                  className={`relative z-10 flex items-end justify-center flex-1 ${isMobile ? 'px-6 pt-1 pb-6' : 'px-8 pt-2 pb-8 md:pb-12'} min-h-0`}
                   onMouseEnter={() => !isMobile && setIsSlideshowPaused(true)}
                   onMouseLeave={() => !isMobile && setIsSlideshowPaused(false)}
                   style={isMobile ? {
-                    paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))'
+                    paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
+                    maxHeight: 'calc(100dvh - 280px)', // Ensure it fits: timeline (~200px) + gap (48px) + padding
+                    overflow: 'hidden',
                   } : {}}
                 >
                   <div className="relative w-full flex items-start justify-center">
