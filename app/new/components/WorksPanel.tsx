@@ -723,7 +723,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             <motion.div
               ref={panelRef}
               key="panel"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/95' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/98' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
               variants={shouldReduceMotion ? undefined : activePanelVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
               animate={shouldReduceMotion ? undefined : {
