@@ -751,7 +751,6 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     y: dragY,
                     opacity: Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4),
                     scale: Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08),
-                    transition: isDragging ? { type: "spring", stiffness: 300, damping: 30 } : undefined,
                   } : {})
                 } : {
                   // Desktop: Preserve 3D transform for side panel
