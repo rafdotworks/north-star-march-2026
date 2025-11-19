@@ -50,7 +50,7 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import SideTray from "./components/SideTray"
 import WorksPanel from "./components/WorksPanel"
 import { useSystemTheme } from "@/hooks/use-system-theme"
@@ -148,6 +148,29 @@ export default function NewMinimalPage() {
   }, [prefersDark, isReady])
 
   // ============================================================================
+  // THEME APPLICATION TO HTML ELEMENT
+  // ============================================================================
+  
+  /**
+   * Apply theme to html element to ensure full-page background color.
+   * 
+   * This useEffect runs when shouldShowDark changes and applies the
+   * data-theme attribute to document.documentElement (html element).
+   * This ensures the entire page (html/body) gets the correct background
+   * color, not just the main element.
+   * 
+   * IMPORTANT: This must run on the client side only to avoid hydration
+   * mismatches. The isReady check ensures we don't apply theme before
+   * client-side detection completes.
+   */
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const theme = shouldShowDark ? "dark" : "light"
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+  }, [shouldShowDark])
+
+  // ============================================================================
   // DERIVED STATE
   // ============================================================================
   
@@ -171,7 +194,8 @@ export default function NewMinimalPage() {
        * 
        * Mobile (< md breakpoint):
        * - flex-col: Vertical stack
-       * - pt-16: Top padding for safe area
+       * - h-screen h-[100dvh]: Exact viewport height to prevent scrolling
+       * - overflow-hidden: Prevents scrolling on mobile
        * - px-8: Horizontal padding
        * 
        * Desktop (>= md breakpoint):
@@ -187,15 +211,12 @@ export default function NewMinimalPage() {
        * - paddingTop: max(safe-area-inset-top, 4rem) - ensures content isn't hidden
        * - paddingBottom: max(safe-area-inset-bottom, 2rem) - ensures content isn't hidden
        * 
-       * SUGGESTED IMPROVEMENT:
-       * Extract safe area padding values to constants for maintainability.
+       * MOBILE SCROLLING PREVENTION:
+       * - h-screen h-[100dvh]: Enforces exact viewport height (no min-height)
+       * - overflow-hidden md:overflow-visible: Prevents scrolling on mobile, allows on desktop
+       * - Content is constrained to fit within viewport using flexbox
        */
-      className={`min-h-screen min-h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 relative pt-16 md:pt-0 transition-all duration-200 ${isWorksPanelOpen ? 'md:pr-[50%]' : 'md:pr-8'} w-full`}
-      /**
-       * Theme data attribute controls CSS custom properties for light/dark theme.
-       * The theme system uses CSS variables that change based on this attribute.
-       */
-      data-theme={shouldShowDark ? "dark" : "light"}
+      className={`h-screen h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 relative md:pt-0 transition-all duration-200 overflow-hidden md:overflow-visible ${isWorksPanelOpen ? 'md:pr-[50%]' : 'md:pr-8'} w-full`}
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0), 4rem)',
         paddingBottom: 'max(env(safe-area-inset-bottom, 0), 2rem)'
@@ -212,7 +233,7 @@ export default function NewMinimalPage() {
          * Column 1: Name and professional title
          * Column 2: Navigation menu (About, Works, Writing)
          */}
-      <div className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-2 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0">
+      <div className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-2 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0 min-h-0 overflow-hidden md:overflow-visible">
         {/* Column 1 - Name and Title */}
         <div className="relative flex flex-col items-start md:items-start md:relative mb-12 md:mb-0 gap-1">
           {/* 
