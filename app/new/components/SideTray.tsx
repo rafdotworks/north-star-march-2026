@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback } from "react"
 import ReactMarkdown from "react-markdown"
 import type { Components } from "react-markdown"
 import matter from "gray-matter"
@@ -9,14 +9,18 @@ import { ExternalLink, Mail } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const allWritings = [
-  { id: "on-ai-agents", title: "On AI Agents", date: "Feb 15, 2025" },
-  { id: "slipping-through-winter", title: "Slipping Through Winter", date: "Feb 26, 2025" },
-  { id: "my-music-dna", title: "My Music DNA", date: "Mar 5, 2025" },
-  { id: "my-personality-tests", title: "My Personality Tests", date: "Mar 6, 2025" },
-  { id: "why-frequent-job-changes", title: "Why frequent job changes", date: "Apr 11, 2025" },
-  { id: "config-sf-slowing-down", title: "Config, SF, slowing down", date: "May 9, 2025" },
-  { id: "memorable-excellence", title: "Memorable Excellence", date: "Jun 14, 2025" },
+  // Featured articles at the top
+  { id: "working-philosophy", title: "Working Philosophy", date: "Nov 16, 2025" },
+  { id: "personal-blueprint", title: "Personal Blueprint", date: "Nov 3, 2025" },
+  // Other articles below
   { id: "the-path-not-the-road", title: "The Path, not the Road", date: "Aug 17, 2025" },
+  { id: "memorable-excellence", title: "Memorable Excellence", date: "Jun 14, 2025" },
+  { id: "config-sf-slowing-down", title: "Config, SF, slowing down", date: "May 9, 2025" },
+  { id: "why-frequent-job-changes", title: "Why frequent job changes", date: "Apr 11, 2025" },
+  { id: "my-personality-tests", title: "My Personality Tests", date: "Mar 6, 2025" },
+  { id: "my-music-dna", title: "My Music DNA", date: "Mar 5, 2025" },
+  { id: "slipping-through-winter", title: "Slipping Through Winter", date: "Feb 26, 2025" },
+  { id: "on-ai-agents", title: "On AI Agents", date: "Feb 15, 2025" },
 ]
 
 interface SideTrayProps {
@@ -103,26 +107,19 @@ const trayVariants = {
 const contentVariants = {
   hidden: {
     opacity: 0,
-    y: 30,
-    filter: "blur(10px)"
+    filter: "blur(8px)"
   },
   visible: {
     opacity: 1,
-    y: 0,
     filter: "blur(0px)",
     transition: {
       opacity: {
-        duration: 0.5,
+        duration: 0.6,
         ease: EASING.smooth,
         delay: 0.3
       },
-      y: {
-        duration: 0.6,
-        ease: EASING.elastic,
-        delay: 0.35
-      },
       filter: {
-        duration: 0.7,
+        duration: 0.8,
         ease: EASING.gentle,
         delay: 0.3
       }
@@ -130,8 +127,7 @@ const contentVariants = {
   },
   exit: {
     opacity: 0,
-    y: -20,
-    filter: "blur(5px)",
+    filter: "blur(4px)",
     transition: {
       duration: 0.25,
       ease: EASING.smooth
@@ -166,14 +162,12 @@ const viewTransitionVariants = {
   initial: {
     opacity: 0,
     scale: 0.96,
-    y: 20,
     rotateX: -5,
     filter: "blur(8px)"
   },
   animate: {
     opacity: 1,
     scale: 1,
-    y: 0,
     rotateX: 0,
     filter: "blur(0px)",
     transition: {
@@ -186,7 +180,6 @@ const viewTransitionVariants = {
   exit: {
     opacity: 0,
     scale: 0.96,
-    y: -20,
     rotateX: 5,
     filter: "blur(8px)",
     transition: {
@@ -280,10 +273,9 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   // Choose animation variants based on device
   const activeTrayVariants = isMobile ? mobileTrayVariants : trayVariants
   const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? {
-    hidden: { opacity: 0, y: 10 },
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      y: 0,
       transition: {
         duration: 0.3,
         ease: EASING.smooth,
@@ -292,10 +284,9 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
     }
   } as const : contentVariants)
   const activeViewTransitionVariants = shouldReduceMotion ? undefined : (isMobile ? {
-    initial: { opacity: 0, y: 15 },
+    initial: { opacity: 0 },
     animate: {
       opacity: 1,
-      y: 0,
       transition: {
         duration: 0.3,
         ease: EASING.smooth
@@ -303,7 +294,6 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
     },
     exit: {
       opacity: 0,
-      y: -10,
       transition: {
         duration: 0.2
       }
@@ -434,7 +424,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             {/* Backdrop */}
             <motion.div
               key="writing-list-backdrop"
-              className="fixed inset-0 bg-background/50 backdrop-blur-sm transition-colors duration-200 z-40"
+              className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -531,24 +521,30 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       className="space-y-4"
                     >
                       {allWritings.map((article, i) => (
-                        <motion.div
-                          key={article.id}
-                          custom={i}
-                          variants={listItemVariants}
-                          initial="hidden"
-                          animate="visible"
-                          onClick={() => {
-                            if (onArticleSelect) {
-                              onArticleSelect(article.id)
-                            }
-                          }}
-                          className="cursor-pointer space-y-1 transition-opacity duration-200"
-                          whileHover={{ x: 4, opacity: 1 }}
-                          transition={{ duration: 0.2, ease: EASING.smooth }}
-                        >
-                          <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
-                          <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
-                        </motion.div>
+                        <React.Fragment key={article.id}>
+                          <motion.div
+                            custom={i}
+                            variants={listItemVariants}
+                            initial="hidden"
+                            animate="visible"
+                            onClick={() => {
+                              if (onArticleSelect) {
+                                onArticleSelect(article.id)
+                              }
+                            }}
+                            className="cursor-pointer space-y-1 transition-opacity duration-200"
+                            whileHover={{ x: 4, opacity: 1 }}
+                            transition={{ duration: 0.2, ease: EASING.smooth }}
+                          >
+                            <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                            <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
+                          </motion.div>
+                          {i === 1 && (
+                            <div className="pt-1 pb-1">
+                              <hr className="border-border/30 transition-colors duration-200" />
+                            </div>
+                          )}
+                        </React.Fragment>
                       ))}
                     </motion.div>
                   </AnimatePresence>
@@ -566,7 +562,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             {/* Backdrop - always show to enable click-outside-to-close */}
             <motion.div
               key="backdrop"
-              className="fixed inset-0 bg-background/50 backdrop-blur-sm transition-colors duration-200 z-40"
+              className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -726,24 +722,30 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       className="space-y-4"
                     >
                       {allWritings.map((article, i) => (
-                        <motion.div
-                          key={article.id}
-                          custom={i}
-                          variants={listItemVariants}
-                          initial="hidden"
-                          animate="visible"
-                          onClick={() => {
-                            if (onArticleSelect) {
-                              onArticleSelect(article.id)
-                            }
-                          }}
-                          className="cursor-pointer space-y-1 transition-opacity duration-200"
-                          whileHover={{ x: 4, opacity: 1 }}
-                          transition={{ duration: 0.2, ease: EASING.smooth }}
-                        >
-                          <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
-                          <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
-                        </motion.div>
+                        <React.Fragment key={article.id}>
+                          <motion.div
+                            custom={i}
+                            variants={listItemVariants}
+                            initial="hidden"
+                            animate="visible"
+                            onClick={() => {
+                              if (onArticleSelect) {
+                                onArticleSelect(article.id)
+                              }
+                            }}
+                            className="cursor-pointer space-y-1 transition-opacity duration-200"
+                            whileHover={{ x: 4, opacity: 1 }}
+                            transition={{ duration: 0.2, ease: EASING.smooth }}
+                          >
+                            <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                            <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
+                          </motion.div>
+                          {i === 1 && (
+                            <div className="pt-1 pb-1">
+                              <hr className="border-border/30 transition-colors duration-200" />
+                            </div>
+                          )}
+                        </React.Fragment>
                       ))}
                     </motion.div>
                   ) : viewMode === 'about' ? (
@@ -903,23 +905,29 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       className="space-y-4"
                     >
                       {allWritings.map((article, i) => (
-                        <motion.div
-                          key={article.id}
-                          custom={i}
-                          variants={listItemVariants}
-                          initial="hidden"
-                          animate="visible"
-                          onClick={() => {
-                            setViewMode('article')
-                            loadArticle(article.id)
-                          }}
-                          className="cursor-pointer space-y-1 transition-opacity duration-200"
-                          whileHover={{ x: 4, opacity: 1 }}
-                          transition={{ duration: 0.2, ease: EASING.smooth }}
-                        >
-                          <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
-                          <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
-                        </motion.div>
+                        <React.Fragment key={article.id}>
+                          <motion.div
+                            custom={i}
+                            variants={listItemVariants}
+                            initial="hidden"
+                            animate="visible"
+                            onClick={() => {
+                              setViewMode('article')
+                              loadArticle(article.id)
+                            }}
+                            className="cursor-pointer space-y-1 transition-opacity duration-200"
+                            whileHover={{ x: 4, opacity: 1 }}
+                            transition={{ duration: 0.2, ease: EASING.smooth }}
+                          >
+                            <p className="text-xs text-foreground transition-colors duration-200">{article.title}</p>
+                            <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
+                          </motion.div>
+                          {i === 1 && (
+                            <div className="pt-1 pb-1">
+                              <hr className="border-border/30 transition-colors duration-200" />
+                            </div>
+                          )}
+                        </React.Fragment>
                       ))}
                     </motion.div>
                   ) : isLoading ? (

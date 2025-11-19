@@ -96,7 +96,7 @@ raf.works/
 ├── public/                       # Static assets
 │   ├── images/                   # Work samples & photos
 │   └── fonts/                    # Custom font files
-├── recovered-writings/           # Markdown articles
+├── writings/                     # Markdown articles
 ├── CLAUDE.md                     # Claude Code instructions
 └── README.md                     # This file
 ```

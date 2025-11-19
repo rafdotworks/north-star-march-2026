@@ -1,6 +1,6 @@
-# Recovered Writing Articles
+# Writing Articles
 
-This directory contains all 8 writing articles that were previously on raf.works, recovered from Git history. These articles were originally stored in `/app/data/notes.ts` and were deleted in July 2025.
+This directory contains writing articles published on raf.works.
 
 ## Articles (Chronological Order)
 
@@ -36,13 +36,10 @@ This directory contains all 8 writing articles that were previously on raf.works
 **Date:** August 17, 2025
 **Summary:** Reflections on change, growth, and authenticity through transitions at Coinbase and Voiceflow, establishing roots in Toronto, and upcoming work with Berachain.
 
-## Recovery Information
+### 9. [Personal Blueprint](personal-blueprint.md)
+**Date:** November 3, 2025
+**Summary:** A personal blueprint outlining how I work, design approach, and design engineering principles.
 
-- **Original Location:** `/app/data/notes.ts`
-- **Deleted:** July 4, 2025 (commit `a7e08c4` - "clean up lfg")
-- **Recovery Date:** November 1, 2025
-- **Recovery Method:** Git history extraction using `git show` commands
-
-## Notes
-
-These articles were originally displayed on the website with a modal interface, navigation controls, and ReactMarkdown rendering. They were organized by categories (personal, work, ideas, travel) and included date formatting and metadata display.
+### 10. [Working Philosophy](working-philosophy.md)
+**Date:** November 16, 2025
+**Summary:** Eight core principles that guide my approach to design, engineering, and building products.

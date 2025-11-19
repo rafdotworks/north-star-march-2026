@@ -23,7 +23,7 @@ export async function GET(
       )
     }
 
-    const articlePath = path.join(process.cwd(), "recovered-writings", `${id}.md`)
+    const articlePath = path.join(process.cwd(), "writings", `${id}.md`)
 
     // Check if file exists before attempting to read
     try {

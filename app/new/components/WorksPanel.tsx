@@ -30,31 +30,78 @@ const EASING = {
   smooth: [0.4, 0.0, 0.2, 1] as const,
   spring: [0.16, 1, 0.3, 1] as const,
   gentle: [0.25, 0.1, 0.25, 1.0] as const,
+  elastic: [0.12, 1, 0.28, 1] as const,
 } as const
 
 const panelVariants = {
   hidden: {
     x: "100%",
-    opacity: 0,
+    scale: 0.98,
+    rotateY: -5,
   },
   visible: {
     x: 0,
-    opacity: 1,
+    scale: 1,
+    rotateY: 0,
     transition: {
-      type: "spring" as const,
-      stiffness: 300,
-      damping: 35,
-      duration: 0.5,
-    },
+      x: {
+        type: "spring" as const,
+        stiffness: 300,
+        damping: 35,
+        duration: 0.5
+      },
+      scale: {
+        duration: 0.6,
+        ease: EASING.elastic,
+        delay: 0.1
+      },
+      rotateY: {
+        duration: 0.7,
+        ease: EASING.spring,
+        delay: 0.05
+      }
+    }
   },
   exit: {
     x: "100%",
-    opacity: 0,
+    scale: 0.98,
+    rotateY: -5,
     transition: {
       duration: 0.35,
-      ease: EASING.smooth,
-    },
+      ease: EASING.smooth
+    }
   },
+} as const
+
+const contentVariants = {
+  hidden: {
+    opacity: 0,
+    filter: "blur(8px)"
+  },
+  visible: {
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: {
+      opacity: {
+        duration: 0.6,
+        ease: EASING.smooth,
+        delay: 0.3
+      },
+      filter: {
+        duration: 0.8,
+        ease: EASING.gentle,
+        delay: 0.3
+      }
+    }
+  },
+  exit: {
+    opacity: 0,
+    filter: "blur(4px)",
+    transition: {
+      duration: 0.25,
+      ease: EASING.smooth
+    }
+  }
 } as const
 
 const backdropVariants = {
@@ -75,6 +122,26 @@ const backdropVariants = {
   },
 } as const
 
+// Map project keys to work experience identifiers
+// Format: { projectKey: { section: 'fulltime' | 'contract' | 'studio', identifier: string } }
+const PROJECT_TO_WORK_MAP: Record<string, { section: 'fulltime' | 'contract' | 'studio', identifier: string }> = {
+  'theo': { section: 'fulltime', identifier: '2024–2025' },
+  'cb': { section: 'contract', identifier: '2025' }, // Coinbase
+  'vf': { section: 'contract', identifier: '2025' }, // Voiceflow (first 2025 entry)
+  'atlas': { section: 'fulltime', identifier: '2022–2023' }, // Crypto Stealth Startup
+  'defituna': { section: 'fulltime', identifier: '2022–2023' }, // Crypto Stealth Startup
+  'curbcut': { section: 'fulltime', identifier: '2023–2024' },
+  'zalando': { section: 'contract', identifier: '2021–2022' },
+  'earlyworks': { section: 'studio', identifier: '2016–present' },
+  'nationalArchives': { section: 'studio', identifier: '2016–present' },
+}
+
+// Get the work experience identifier for the current project
+function getHighlightedWorkEntry(projectKey: string | null): { section: string, identifier: string } | null {
+  if (!projectKey) return null
+  return PROJECT_TO_WORK_MAP[projectKey] || null
+}
+
 export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [lastDirection, setLastDirection] = useState<1 | -1>(1)
@@ -87,6 +154,11 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
   const imageMeasureRef = useRef<HTMLDivElement | null>(null)
   const shouldReduceMotion = useReducedMotion()
   const animationLevel = useAnimationLevel()
+
+  // Get current project and highlighted work entry
+  const currentImageSrc = IMAGE_SOURCES[currentImageIndex] || null
+  const currentProject = currentImageSrc ? getProjectFromSrc(currentImageSrc) : null
+  const highlightedEntry = getHighlightedWorkEntry(currentProject)
 
   const handleImageLoad = useCallback((src: string) => {
     setLoadedImages((prev) => {
@@ -196,7 +268,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             {/* Backdrop */}
             <motion.div
               key="backdrop"
-              className="fixed inset-0 bg-background/50 backdrop-blur-sm transition-colors duration-200 z-40"
+              className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -215,9 +287,16 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
               style={{
                 paddingTop: 'env(safe-area-inset-top, 0px)',
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                transformStyle: "preserve-3d",
+                perspective: "1200px"
               }}
             >
-              <div className="relative h-full flex flex-col">
+              <motion.div
+                className="relative h-full flex flex-col overflow-hidden"
+                variants={shouldReduceMotion ? undefined : contentVariants}
+                initial={shouldReduceMotion ? undefined : "hidden"}
+                animate={shouldReduceMotion ? undefined : "visible"}
+              >
                 {/* Close button */}
                 <motion.button
                   onClick={onClose}
@@ -264,9 +343,195 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                   </svg>
                 </motion.button>
 
+                {/* Work Timeline Table - at top */}
+                <div className="relative z-20 px-8 pt-12 pb-3 bg-background">
+                  <div className="space-y-1.5">
+                    {/* Full-Time Roles */}
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Full-Time</p>
+                      <div className="space-y-1">
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025' 
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2024–2025</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>Theoriq · Founding Product Designer</p>
+                        </div>
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024' 
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2023–2024</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>CurbCutOS · Product Design Lead, Accessibility</p>
+                        </div>
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023' 
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2022–2023</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>Crypto Stealth Startup · Senior Product Designer, Design Lead</p>
+                        </div>
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021' 
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2020–2021</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>Artscapy · Founding Designer</p>
+                        </div>
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2019' 
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2019'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2019</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2019'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>Apple Developer Academy · UX/UI Design Intern</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contract Roles */}
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Contract</p>
+                      <div className="space-y-1">
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2025</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>Voiceflow · Senior Product Designer, AI Agents</p>
+                        </div>
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2025</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>Coinbase · Senior Product Designer, Developer Tools</p>
+                        </div>
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022' 
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2021–2022</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>Zalando · Senior Product Designer, Design System</p>
+                        </div>
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021' 
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2021</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>TravelNest · Senior Product Designer</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Studio */}
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Studio</p>
+                      <div className="space-y-1">
+                        <div className={`flex justify-between items-start transition-all duration-300 ${
+                          highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present' 
+                            ? 'opacity-100 scale-[1.02]' 
+                            : 'opacity-50'
+                        }`}>
+                          <span className={`text-xs font-light tabular-nums transition-colors duration-200 ${
+                            highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground/70'
+                          }`}>2016–present</span>
+                          <p className={`text-xs transition-colors duration-200 text-right ${
+                            highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}>Never Before Seen Studio · Freelance Designer, Design Lead</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Carousel Container */}
                 <div
-                  className="flex items-end justify-center flex-1 px-8 pb-8 md:pb-12"
+                  className="relative z-10 flex items-end justify-center flex-1 px-8 pt-2 pb-8 md:pb-12 min-h-0"
                   onMouseEnter={() => setIsSlideshowPaused(true)}
                   onMouseLeave={() => setIsSlideshowPaused(false)}
                 >
@@ -363,8 +628,8 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                                   ref={imageMeasureRef}
                                   className="w-full max-w-[800px] hidden"
                                 />
-                                {/* Caption directly below image */}
-                                <div
+                                {/* Caption directly below image - Temporarily hidden for evaluation */}
+                                {/* <div
                                   className="w-full mt-6 mb-8"
                                   style={{
                                     maxWidth: imageWidth
@@ -440,7 +705,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                                   </motion.div>
                                 )
                               })()}
-                                </div>
+                                </div> */}
                               </>
                             )}
                           </div>
@@ -449,7 +714,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           </>
         )}
