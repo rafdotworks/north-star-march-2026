@@ -502,6 +502,18 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   const writingListBackdropRef = useRef<HTMLDivElement>(null)
   const mainBackdropRef = useRef<HTMLDivElement>(null)
   
+  /**
+   * Current drag position for drag-to-dismiss functionality (mobile only).
+   * Tracks the Y offset during drag gesture.
+   */
+  const [dragY, setDragY] = useState(0)
+  
+  /**
+   * Refs to tray containers for drag functionality.
+   */
+  const writingListTrayRef = useRef<HTMLDivElement>(null)
+  const mainTrayRef = useRef<HTMLDivElement>(null)
+  
   // ============================================================================
   // NESTED TRAY LOGIC
   // ============================================================================
@@ -525,10 +537,13 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
    * Mobile-optimized animation variants.
    * 
    * Slides up from bottom (y: "100%") instead of sliding from right.
-   * Simpler animation for better mobile performance.
+   * Uses spring physics for natural, smooth motion matching WorksPanel.
    * 
-   * SUGGESTED IMPROVEMENT:
-   * Consider extracting mobile variants to a separate constants file.
+   * ANIMATION IMPROVEMENTS:
+   * - Entrance: Spring animation with optimized stiffness/damping for natural feel
+   * - Exit: Faster spring animation for responsive dismissal
+   * - Both use spring physics for momentum-based motion
+   * - Matches WorksPanel animation for consistency
    */
   const mobileTrayVariants = {
     hidden: { y: "100%" },
@@ -536,16 +551,20 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
       y: 0,
       transition: {
         type: "spring" as const,
-        stiffness: 350,
-        damping: 40,
-        duration: 0.4
+        stiffness: 400,
+        damping: 42,
+        mass: 0.8,
+        duration: 0.45
       }
     },
     exit: {
       y: "100%",
       transition: {
-        duration: 0.3,
-        ease: EASING.smooth
+        type: "spring" as const,
+        stiffness: 500,
+        damping: 45,
+        mass: 0.7,
+        duration: 0.35
       }
     }
   } as const
@@ -648,6 +667,54 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   }, [articleId, loadArticle, resetContent, isWritingMode])
 
   // ============================================================================
+  // DRAG-TO-DISMISS HANDLERS (MOBILE ONLY)
+  // ============================================================================
+  
+  /**
+   * Handles drag start - resets drag position.
+   */
+  const handleDragStart = () => {
+    setDragY(0)
+  }
+  
+  /**
+   * Handles drag event - updates drag position for visual feedback.
+   * Only allows downward dragging (positive Y values).
+   */
+  const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
+    if (!isMobile) return
+    // Only track downward drags (positive Y)
+    if (info.offset.y > 0) {
+      setDragY(info.offset.y)
+    }
+  }
+  
+  /**
+   * Handles drag end - determines if tray should close based on threshold and velocity.
+   * 
+   * CLOSING CONDITIONS:
+   * - Dragged down more than 30% of viewport height (or 150px minimum)
+   * - OR dragged with sufficient velocity downward (> 500px/s)
+   * 
+   * If threshold not met, tray snaps back to original position.
+   */
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
+    if (!isMobile) return
+    
+    const viewportHeight = window.innerHeight
+    const threshold = Math.max(viewportHeight * 0.3, 150) // 30% of viewport or 150px minimum
+    const velocityThreshold = 500 // px/s
+    
+    // Close if dragged beyond threshold OR if velocity is high enough
+    if (info.offset.y > threshold || info.velocity.y > velocityThreshold) {
+      onClose()
+    }
+    
+    // Reset drag position
+    setDragY(0)
+  }
+
+  // ============================================================================
   // KEYBOARD NAVIGATION
   // ============================================================================
   
@@ -715,17 +782,30 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             Desktop: Right-side panel with fixed width
             */}
             <motion.div
+              ref={writingListTrayRef}
               key="writing-list-tray"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-[64px] backdrop-saturate-50 bg-white/80 dark:bg-neutral-950/75' : 'bg-background'} transition-colors duration-200 z-50`}
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/95' : 'bg-background'} transition-colors duration-200 z-50`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
+              // Drag-to-dismiss functionality (mobile only)
+              drag={isMobile ? "y" : false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.2 }}
+              dragMomentum={false}
+              onDragStart={handleDragStart}
+              onDrag={handleDrag}
+              onDragEnd={handleDragEnd}
               style={isMobile ? {
                 // Start from very bottom - use full viewport height
                 height: '100dvh',
                 maxHeight: '100dvh',
                 paddingTop: 'env(safe-area-inset-top, 0px)',
+                y: dragY,
+                // Visual feedback during drag
+                opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
+                scale: dragY > 0 ? Math.max(0.95, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.1) : 1,
               } : { transformStyle: "preserve-3d", perspective: "1200px" }}
             >
               <motion.div
@@ -736,17 +816,42 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
               >
                 {/* Mobile drag handle */}
                 {isMobile && (
-                  <div className="flex justify-center py-3 pt-4 pb-2">
-                    <div className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200" />
-                  </div>
+                  <motion.div 
+                    className="flex justify-center py-3 pt-4 pb-2 cursor-grab active:cursor-grabbing"
+                    style={{
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                    animate={{
+                      scale: dragY > 0 ? 1.1 : 1,
+                      opacity: dragY > 0 ? 0.6 : 1,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                      ease: EASING.smooth
+                    }}
+                  >
+                    <motion.div 
+                      className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200"
+                      animate={{
+                        backgroundColor: dragY > 0 
+                          ? 'hsl(var(--muted-foreground))' 
+                          : 'hsl(var(--muted))',
+                        width: dragY > 0 ? 48 : 48,
+                      }}
+                      transition={{
+                        duration: 0.2,
+                        ease: EASING.smooth
+                      }}
+                    />
+                  </motion.div>
                 )}
 
                 {/* Close button */}
                 <motion.button
                   onClick={onClose}
-                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 p-3 md:p-2 group`}
-                  whileHover={{ scale: 1.02, rotate: 15 }}
-                  whileTap={{ scale: 0.98 }}
+                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-3' : 'p-2'} group`}
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.02, rotate: 15 }}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
                   transition={{ duration: 0.4, ease: EASING.gentle }}
                   aria-label="Close"
                   style={{
@@ -867,18 +972,31 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             Desktop: Right-side panel with fixed width
             */}
             <motion.div
+              ref={mainTrayRef}
               key="tray"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-[64px] backdrop-saturate-50 bg-white/80 dark:bg-neutral-950/75' : 'bg-background'} transition-colors duration-200`}
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/95' : 'bg-background'} transition-colors duration-200`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
+              // Drag-to-dismiss functionality (mobile only)
+              drag={isMobile ? "y" : false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.2 }}
+              dragMomentum={false}
+              onDragStart={handleDragStart}
+              onDrag={handleDrag}
+              onDragEnd={handleDragEnd}
               style={{
                 ...(isMobile ? {
                   // Start from very bottom - use full viewport height
                   height: '100dvh',
                   maxHeight: '100dvh',
                   paddingTop: 'env(safe-area-inset-top, 0px)',
+                  y: dragY,
+                  // Visual feedback during drag
+                  opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
+                  scale: dragY > 0 ? Math.max(0.95, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.1) : 1,
                 } : { transformStyle: "preserve-3d", perspective: "1200px" }),
                 // Higher z-index for nested writing tray
                 zIndex: isNestedWritingTray ? 60 : 50,
@@ -892,17 +1010,42 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             >
               {/* Mobile drag handle */}
               {isMobile && (
-                <div className="flex justify-center py-3 pt-4 pb-2">
-                  <div className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200" />
-                </div>
+                <motion.div 
+                  className="flex justify-center py-3 pt-4 pb-2 cursor-grab active:cursor-grabbing"
+                  style={{
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                  animate={{
+                    scale: dragY > 0 ? 1.1 : 1,
+                    opacity: dragY > 0 ? 0.6 : 1,
+                  }}
+                  transition={{
+                    duration: 0.2,
+                    ease: EASING.smooth
+                  }}
+                >
+                  <motion.div 
+                    className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200"
+                    animate={{
+                      backgroundColor: dragY > 0 
+                        ? 'hsl(var(--muted-foreground))' 
+                        : 'hsl(var(--muted))',
+                      width: dragY > 0 ? 48 : 48,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                      ease: EASING.smooth
+                    }}
+                  />
+                </motion.div>
               )}
 
               {/* Minimal close button - Beautiful X icon */}
               <motion.button
                 onClick={onClose}
-                className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 p-3 md:p-2 group`}
-                whileHover={{ scale: 1.02, rotate: 15 }}
-                whileTap={{ scale: 0.98 }}
+                className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-3' : 'p-2'} group`}
+                whileHover={shouldReduceMotion ? {} : { scale: 1.02, rotate: 15 }}
+                whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
                 transition={{ duration: 0.4, ease: EASING.gentle }}
                 aria-label="Close"
                 style={{

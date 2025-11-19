@@ -158,7 +158,12 @@ const panelVariants = {
  * Mobile panel animation variants.
  * 
  * Slides up from bottom (bottom sheet style).
- * Simpler animation for better mobile performance.
+ * Uses spring physics for natural, smooth motion.
+ * 
+ * ANIMATION IMPROVEMENTS:
+ * - Entrance: Spring animation with optimized stiffness/damping for natural feel
+ * - Exit: Faster spring animation for responsive dismissal
+ * - Both use spring physics for momentum-based motion
  */
 const mobilePanelVariants = {
   hidden: { y: "100%" },
@@ -166,16 +171,20 @@ const mobilePanelVariants = {
     y: 0,
     transition: {
       type: "spring" as const,
-      stiffness: 350,
-      damping: 40,
-      duration: 0.4
+      stiffness: 400,
+      damping: 42,
+      mass: 0.8,
+      duration: 0.45
     }
   },
   exit: {
     y: "100%",
     transition: {
-      duration: 0.3,
-      ease: EASING.smooth
+      type: "spring" as const,
+      stiffness: 500,
+      damping: 45,
+      mass: 0.7,
+      duration: 0.35
     }
   },
 } as const
@@ -405,6 +414,17 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
    * This allows hover events to work immediately after closing the panel.
    */
   const backdropRef = useRef<HTMLDivElement>(null)
+  
+  /**
+   * Current drag position for drag-to-dismiss functionality (mobile only).
+   * Tracks the Y offset during drag gesture.
+   */
+  const [dragY, setDragY] = useState(0)
+  
+  /**
+   * Ref to the panel container for drag functionality.
+   */
+  const panelRef = useRef<HTMLDivElement>(null)
 
   // ============================================================================
   // RESPONSIVE ANIMATION VARIANTS
@@ -513,6 +533,54 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
   const handleCloseVideoModal = () => {
     setIsVideoModalOpen(false)
     setCurrentVideoUrl(null)
+  }
+
+  // ============================================================================
+  // DRAG-TO-DISMISS HANDLERS (MOBILE ONLY)
+  // ============================================================================
+  
+  /**
+   * Handles drag start - resets drag position.
+   */
+  const handleDragStart = () => {
+    setDragY(0)
+  }
+  
+  /**
+   * Handles drag event - updates drag position for visual feedback.
+   * Only allows downward dragging (positive Y values).
+   */
+  const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
+    if (!isMobile) return
+    // Only track downward drags (positive Y)
+    if (info.offset.y > 0) {
+      setDragY(info.offset.y)
+    }
+  }
+  
+  /**
+   * Handles drag end - determines if panel should close based on threshold and velocity.
+   * 
+   * CLOSING CONDITIONS:
+   * - Dragged down more than 30% of viewport height (or 150px minimum)
+   * - OR dragged with sufficient velocity downward (> 500px/s)
+   * 
+   * If threshold not met, panel snaps back to original position.
+   */
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
+    if (!isMobile) return
+    
+    const viewportHeight = window.innerHeight
+    const threshold = Math.max(viewportHeight * 0.3, 150) // 30% of viewport or 150px minimum
+    const velocityThreshold = 500 // px/s
+    
+    // Close if dragged beyond threshold OR if velocity is high enough
+    if (info.offset.y > threshold || info.velocity.y > velocityThreshold) {
+      onClose()
+    }
+    
+    // Reset drag position
+    setDragY(0)
   }
 
   // ============================================================================
@@ -643,12 +711,21 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             Desktop: Right-side half-screen panel (w-1/2)
             */}
             <motion.div
+              ref={panelRef}
               key="panel"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-[64px] backdrop-saturate-50 bg-white/80 dark:bg-neutral-950/75' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/95' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
               variants={shouldReduceMotion ? undefined : activePanelVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
               animate={shouldReduceMotion ? undefined : "visible"}
               exit={shouldReduceMotion ? undefined : "exit"}
+              // Drag-to-dismiss functionality (mobile only)
+              drag={isMobile ? "y" : false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.2 }}
+              dragMomentum={false}
+              onDragStart={handleDragStart}
+              onDrag={handleDrag}
+              onDragEnd={handleDragEnd}
               style={{
                 ...(isMobile ? {
                   // Mobile: Full viewport height starting from bottom
@@ -656,6 +733,10 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                   maxHeight: '100dvh',
                   paddingTop: 'env(safe-area-inset-top, 0px)',
                   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                  y: dragY,
+                  // Visual feedback during drag
+                  opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
+                  scale: dragY > 0 ? Math.max(0.95, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.1) : 1,
                 } : {
                   // Desktop: Preserve 3D transform for side panel
                   paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -673,9 +754,34 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
               >
                 {/* Mobile drag handle */}
                 {isMobile && (
-                  <div className="flex justify-center py-3 pt-4 pb-2">
-                    <div className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200" />
-                  </div>
+                  <motion.div 
+                    className="flex justify-center py-3 pt-4 pb-2 cursor-grab active:cursor-grabbing"
+                    style={{
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                    animate={{
+                      scale: dragY > 0 ? 1.1 : 1,
+                      opacity: dragY > 0 ? 0.6 : 1,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                      ease: EASING.smooth
+                    }}
+                  >
+                    <motion.div 
+                      className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200"
+                      animate={{
+                        backgroundColor: dragY > 0 
+                          ? 'hsl(var(--muted-foreground))' 
+                          : 'hsl(var(--muted))',
+                        width: dragY > 0 ? 48 : 48,
+                      }}
+                      transition={{
+                        duration: 0.2,
+                        ease: EASING.smooth
+                      }}
+                    />
+                  </motion.div>
                 )}
 
                 {/* Close button */}
@@ -1293,6 +1399,28 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     </div>
                   </div>
                 </div>
+
+                {/* Clickable gap between timeline and carousel */}
+                {/* 
+                Mobile: Clickable area to close panel
+                Desktop: Subtle hover feedback
+                */}
+                <div
+                  onClick={onClose}
+                  className={`relative z-15 ${isMobile ? 'h-8 cursor-pointer' : 'h-4 cursor-pointer md:hover:bg-background/5'} transition-colors duration-200`}
+                  aria-label="Close panel"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onClose()
+                    }
+                  }}
+                  style={{
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                />
 
                 {/* Carousel Container */}
                 {/* 
