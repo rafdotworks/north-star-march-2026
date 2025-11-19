@@ -692,7 +692,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             <motion.div
               ref={backdropRef}
               key="backdrop"
-              className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
+              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/70 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -709,13 +709,13 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
 
             {/* Works Panel */}
             {/* 
-            Mobile: Full-screen bottom sheet with timeline table at top and carousel below
+            Mobile: Full-screen bottom sheet covering entire viewport with timeline table at top and carousel below
             Desktop: Right-side half-screen panel (w-1/2)
             */}
             <motion.div
               ref={panelRef}
               key="panel"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} bg-background transition-colors duration-200 z-50 overflow-hidden`}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
               variants={shouldReduceMotion ? undefined : activePanelVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
               animate={shouldReduceMotion ? undefined : (
@@ -740,7 +740,11 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
               onDragEnd={handleDragEnd}
               style={{
                 ...(isMobile ? {
-                  // Mobile: Full viewport height starting from bottom
+                  // Cover full viewport including safe areas
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   height: '100dvh',
                   maxHeight: '100dvh',
                   paddingTop: 'env(safe-area-inset-top, 0px)',

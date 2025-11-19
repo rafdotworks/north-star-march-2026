@@ -761,7 +761,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             <motion.div
               ref={writingListBackdropRef}
               key="writing-list-backdrop"
-              className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
+              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/70 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -778,13 +778,13 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
 
             {/* Writing list tray */}
             {/* 
-            Mobile: Full-screen bottom sheet starting from very bottom of viewport
+            Mobile: Full-screen bottom sheet covering entire viewport
             Desktop: Right-side panel with fixed width
             */}
             <motion.div
               ref={writingListTrayRef}
               key="writing-list-tray"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/95' : 'bg-background'} transition-colors duration-200 z-50`}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
@@ -798,10 +798,15 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
               style={isMobile ? {
-                // Start from very bottom - use full viewport height
+                // Cover full viewport including safe areas
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 height: '100dvh',
                 maxHeight: '100dvh',
                 paddingTop: 'env(safe-area-inset-top, 0px)',
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                 y: dragY,
                 // Visual feedback during drag
                 opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
@@ -951,7 +956,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             <motion.div
               ref={mainBackdropRef}
               key="backdrop"
-              className="fixed inset-0 bg-background/50 backdrop-blur-md transition-colors duration-200 z-40"
+              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/70 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -968,13 +973,13 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
 
             {/* Side tray with 3D perspective and mobile optimization */}
             {/* 
-            Mobile: Full-screen bottom sheet starting from very bottom of viewport
+            Mobile: Full-screen bottom sheet covering entire viewport
             Desktop: Right-side panel with fixed width
             */}
             <motion.div
               ref={mainTrayRef}
               key="tray"
-              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 h-full rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-lg backdrop-saturate-50 bg-background/95' : 'bg-background'} transition-colors duration-200`}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-t border-border/20' : 'bg-background'} transition-colors duration-200`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
@@ -989,10 +994,15 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
               onDragEnd={handleDragEnd}
               style={{
                 ...(isMobile ? {
-                  // Start from very bottom - use full viewport height
+                  // Cover full viewport including safe areas
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   height: '100dvh',
                   maxHeight: '100dvh',
                   paddingTop: 'env(safe-area-inset-top, 0px)',
+                  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                   y: dragY,
                   // Visual feedback during drag
                   opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
