@@ -450,6 +450,16 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
    * Ref to the panel container for drag functionality.
    */
   const panelRef = useRef<HTMLDivElement>(null)
+  
+  /**
+   * Track if scroll-to-dismiss is currently active (prevents normal scrolling).
+   */
+  const [isScrollDismissing, setIsScrollDismissing] = useState(false)
+  
+  /**
+   * Track last touch position for scroll-to-dismiss detection.
+   */
+  const lastTouchYRef = useRef<number | null>(null)
 
   // ============================================================================
   // RESPONSIVE ANIMATION VARIANTS
@@ -576,20 +586,57 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
   
   /**
-   * Handles drag start - resets drag position and marks as dragging.
+   * Tracks the initial touch Y position to determine if drag started in top 20%.
    */
-  const handleDragStart = () => {
+  const dragStartYRef = useRef<number | null>(null)
+  
+  /**
+   * Handles drag start - resets drag position, marks as dragging, and tracks initial touch position.
+   */
+  const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
     if (!isMobile) return
     setDragY(0)
     setIsDragging(true)
+    
+    // Get initial touch Y position
+    let clientY = 0
+    if (event instanceof TouchEvent && event.touches.length > 0) {
+      clientY = event.touches[0].clientY
+    } else if (event instanceof MouseEvent || event instanceof PointerEvent) {
+      clientY = event.clientY
+    }
+    
+    dragStartYRef.current = clientY
+  }
+  
+  /**
+   * Checks if drag started in the top 20% of the modal.
+   */
+  const isDragInTopArea = (): boolean => {
+    if (!dragStartYRef.current) return false
+    
+    const modalTop = 0 // Modal starts at top of viewport
+    const modalHeight = typeof window !== 'undefined' ? window.innerHeight : 1000
+    const top20Percent = modalHeight * 0.2
+    const dragStartY = dragStartYRef.current
+    
+    // Check if drag started within top 20% of viewport
+    return dragStartY <= (modalTop + top20Percent)
   }
   
   /**
    * Handles drag event - updates drag position for visual feedback.
-   * Only allows downward dragging (positive Y values).
+   * Only allows downward dragging (positive Y values) if drag started in top 20%.
    */
   const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
     if (!isMobile) return
+    
+    // Only allow drag if started in top 20% of modal
+    if (!isDragInTopArea()) {
+      setDragY(0)
+      return
+    }
+    
     // Only track downward drags (positive Y)
     if (info.offset.y > 0) {
       setDragY(info.offset.y)
@@ -606,9 +653,18 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
    * - OR dragged with sufficient velocity downward (> 400px/s)
    * 
    * If threshold not met, panel snaps back to original position with spring animation.
+   * Only processes if drag started in top 20% of modal.
    */
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
     if (!isMobile) return
+    
+    // Only process if drag started in top 20%
+    if (!isDragInTopArea()) {
+      setDragY(0)
+      setIsDragging(false)
+      dragStartYRef.current = null
+      return
+    }
     
     const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 1000
     const threshold = Math.max(viewportHeight * 0.25, 120) // 25% of viewport or 120px minimum
@@ -622,7 +678,123 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
     // Reset drag position with smooth animation
     setDragY(0)
     setIsDragging(false)
+    dragStartYRef.current = null
   }
+
+  // ============================================================================
+  // SCROLL-TO-DISMISS DETECTION (MOBILE ONLY)
+  // ============================================================================
+  
+  /**
+   * Handles scroll-to-dismiss: converts scroll gestures into drag gestures.
+   * 
+   * For WorksPanel, since there's no scrollable content area, we detect scroll
+   * gestures on the panel container itself. When user tries to scroll down,
+   * immediately converts the scroll gesture into drag-to-dismiss animation.
+   * 
+   * Works with both wheel events (desktop trackpad) and touchmove events (mobile).
+   */
+  useEffect(() => {
+    if (!isMobile || !isOpen) return
+    
+    const panelEl = panelRef.current
+    if (!panelEl) return
+    
+    let scrollStartY = 0
+    let accumulatedDragY = 0
+    
+    /**
+     * Handles wheel events (trackpad/mouse wheel).
+     * Detects scroll down attempts.
+     */
+    const handleWheel = (e: WheelEvent) => {
+      if (isScrollDismissing) {
+        e.preventDefault()
+        // Continue accumulating drag
+        const delta = Math.min(e.deltaY, 50)
+        accumulatedDragY = Math.min(accumulatedDragY + delta, window.innerHeight * 0.5)
+        setDragY(accumulatedDragY)
+        return
+      }
+      
+      // Trigger on scroll down
+      if (e.deltaY > 0) {
+        e.preventDefault()
+        setIsScrollDismissing(true)
+        accumulatedDragY = Math.min(e.deltaY, 50)
+        setDragY(accumulatedDragY)
+      }
+    }
+    
+    /**
+     * Handles touch start - tracks initial touch position.
+     */
+    const handleTouchStart = (e: TouchEvent) => {
+      scrollStartY = e.touches[0].clientY
+      lastTouchYRef.current = scrollStartY
+      accumulatedDragY = 0
+    }
+    
+    /**
+     * Handles touch move - detects scroll down attempts.
+     */
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!lastTouchYRef.current) return
+      
+      const currentY = e.touches[0].clientY
+      const deltaY = currentY - lastTouchYRef.current
+      
+      // Only trigger if moving down
+      if (deltaY > 0) {
+        e.preventDefault()
+        setIsScrollDismissing(true)
+        accumulatedDragY = Math.min(accumulatedDragY + deltaY, window.innerHeight * 0.5)
+        setDragY(accumulatedDragY)
+        lastTouchYRef.current = currentY
+      } else if (deltaY < 0) {
+        // Scrolling up - don't trigger dismiss
+        setIsScrollDismissing(false)
+        accumulatedDragY = 0
+        setDragY(0)
+        lastTouchYRef.current = currentY
+      }
+    }
+    
+    /**
+     * Handles touch end - determines if should close based on accumulated dragY.
+     */
+    const handleTouchEnd = () => {
+      if (isScrollDismissing && accumulatedDragY > 0) {
+        // Use same threshold logic as drag-to-dismiss
+        const viewportHeight = window.innerHeight
+        const threshold = Math.max(viewportHeight * 0.25, 120)
+        
+        if (accumulatedDragY > threshold) {
+          onClose()
+        } else {
+          // Snap back
+          setDragY(0)
+        }
+      }
+      
+      setIsScrollDismissing(false)
+      accumulatedDragY = 0
+      lastTouchYRef.current = null
+    }
+    
+    // Add event listeners to panel container
+    panelEl.addEventListener('wheel', handleWheel, { passive: false })
+    panelEl.addEventListener('touchstart', handleTouchStart, { passive: true })
+    panelEl.addEventListener('touchmove', handleTouchMove, { passive: false })
+    panelEl.addEventListener('touchend', handleTouchEnd, { passive: true })
+    
+    return () => {
+      panelEl.removeEventListener('wheel', handleWheel)
+      panelEl.removeEventListener('touchstart', handleTouchStart)
+      panelEl.removeEventListener('touchmove', handleTouchMove)
+      panelEl.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [isMobile, isOpen, isScrollDismissing, onClose])
 
   // ============================================================================
   // STATE RESET ON OPEN/CLOSE
@@ -636,8 +808,50 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
     if (isOpen) {
       setDragY(0)
       setIsDragging(false)
+      setIsScrollDismissing(false)
+      lastTouchYRef.current = null
+      dragStartYRef.current = null
     }
   }, [isOpen])
+
+  // ============================================================================
+  // PULL-TO-REFRESH PREVENTION
+  // ============================================================================
+  
+  /**
+   * Prevents browser pull-to-refresh when modal is open.
+   * 
+   * Adds CSS and JS prevention to body/document to disable pull-to-refresh
+   * behavior that could interfere with drag-to-dismiss.
+   */
+  useEffect(() => {
+    if (!isMobile || !isOpen) return
+    
+    // Prevent pull-to-refresh on body
+    const originalStyle = document.body.style.overscrollBehaviorY
+    document.body.style.overscrollBehaviorY = 'none'
+    
+    // Prevent default touchmove when at top of page
+    const preventPullToRefresh = (e: TouchEvent) => {
+      if (window.scrollY === 0 && e.touches[0].clientY > 0) {
+        // Only prevent if we're at the top and trying to scroll down
+        const touch = e.touches[0]
+        const startY = touch.clientY
+        
+        // Check if this is a pull-to-refresh gesture (starting near top)
+        if (startY < 100) {
+          e.preventDefault()
+        }
+      }
+    }
+    
+    document.addEventListener('touchmove', preventPullToRefresh, { passive: false })
+    
+    return () => {
+      document.body.style.overscrollBehaviorY = originalStyle
+      document.removeEventListener('touchmove', preventPullToRefresh)
+    }
+  }, [isMobile, isOpen])
 
   // ============================================================================
   // KEYBOARD NAVIGATION
@@ -751,7 +965,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
 
   return (
     <>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {shouldShowPanel && (
           <>
             {/* Backdrop */}
@@ -763,6 +977,10 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
               ref={backdropRef}
               key="backdrop"
               className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              style={isMobile ? {
+                overscrollBehavior: 'none',
+                touchAction: 'none'
+              } : {}}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -821,9 +1039,12 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                   right: 0,
                   bottom: 0,
                   height: '100dvh',
+                  minHeight: '100dvh',
                   maxHeight: '100dvh',
                   paddingTop: 'env(safe-area-inset-top, 0px)',
                   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                  overscrollBehavior: 'none',
+                  touchAction: 'pan-y',
                   // Only apply drag transforms when actively dragging
                   // When not dragging, variant animation controls position
                   ...(dragY > 0 ? {

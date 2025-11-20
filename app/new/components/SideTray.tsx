@@ -553,6 +553,22 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   const writingListTrayRef = useRef<HTMLDivElement>(null)
   const mainTrayRef = useRef<HTMLDivElement>(null)
   
+  /**
+   * Refs to scrollable content containers for scroll-to-dismiss detection.
+   */
+  const writingListContentRef = useRef<HTMLDivElement>(null)
+  const mainContentRef = useRef<HTMLDivElement>(null)
+  
+  /**
+   * Track if scroll-to-dismiss is currently active (prevents normal scrolling).
+   */
+  const [isScrollDismissing, setIsScrollDismissing] = useState(false)
+  
+  /**
+   * Track last touch position for scroll-to-dismiss detection.
+   */
+  const lastTouchYRef = useRef<number | null>(null)
+  
   // ============================================================================
   // NESTED TRAY LOGIC
   // ============================================================================
@@ -734,18 +750,56 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   // ============================================================================
   
   /**
-   * Handles drag start - resets drag position.
+   * Tracks the initial touch Y position to determine if drag started in top 20%.
    */
-  const handleDragStart = () => {
+  const dragStartYRef = useRef<number | null>(null)
+  
+  /**
+   * Handles drag start - resets drag position and tracks initial touch position.
+   */
+  const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
+    if (!isMobile) return
     setDragY(0)
+    
+    // Get initial touch Y position
+    let clientY = 0
+    if (event instanceof TouchEvent && event.touches.length > 0) {
+      clientY = event.touches[0].clientY
+    } else if (event instanceof MouseEvent || event instanceof PointerEvent) {
+      clientY = event.clientY
+    }
+    
+    dragStartYRef.current = clientY
+  }
+  
+  /**
+   * Checks if drag started in the top 20% of the modal.
+   */
+  const isDragInTopArea = (): boolean => {
+    if (!dragStartYRef.current) return false
+    
+    const modalTop = 0 // Modal starts at top of viewport
+    const modalHeight = typeof window !== 'undefined' ? window.innerHeight : 1000
+    const top20Percent = modalHeight * 0.2
+    const dragStartY = dragStartYRef.current
+    
+    // Check if drag started within top 20% of viewport
+    return dragStartY <= (modalTop + top20Percent)
   }
   
   /**
    * Handles drag event - updates drag position for visual feedback.
-   * Only allows downward dragging (positive Y values).
+   * Only allows downward dragging (positive Y values) if drag started in top 20%.
    */
   const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
     if (!isMobile) return
+    
+    // Only allow drag if started in top 20% of modal
+    if (!isDragInTopArea()) {
+      setDragY(0)
+      return
+    }
+    
     // Only track downward drags (positive Y)
     if (info.offset.y > 0) {
       setDragY(info.offset.y)
@@ -760,9 +814,17 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
    * - OR dragged with sufficient velocity downward (> 500px/s)
    * 
    * If threshold not met, tray snaps back to original position.
+   * Only processes if drag started in top 20% of modal.
    */
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
     if (!isMobile) return
+    
+    // Only process if drag started in top 20%
+    if (!isDragInTopArea()) {
+      setDragY(0)
+      dragStartYRef.current = null
+      return
+    }
     
     const viewportHeight = window.innerHeight
     const threshold = Math.max(viewportHeight * 0.3, 150) // 30% of viewport or 150px minimum
@@ -775,7 +837,183 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
     
     // Reset drag position
     setDragY(0)
+    dragStartYRef.current = null
   }
+
+  // ============================================================================
+  // SCROLL-TO-DISMISS DETECTION (MOBILE ONLY)
+  // ============================================================================
+  
+  /**
+   * Handles scroll-to-dismiss: converts scroll gestures at top of content into drag gestures.
+   * 
+   * When content is scrolled to top (scrollTop === 0) and user tries to scroll down,
+   * immediately converts the scroll gesture into drag-to-dismiss animation.
+   * 
+   * Works with both wheel events (desktop trackpad) and touchmove events (mobile).
+   */
+  useEffect(() => {
+    // Calculate values here to avoid dependency on variables declared later
+    const shouldShow = isWritingMode || articleId !== null
+    const showWritingList = isWritingMode && articleId === null
+    
+    if (!isMobile || !shouldShow) return
+    
+    const contentRef = showWritingList ? writingListContentRef : mainContentRef
+    const contentEl = contentRef.current
+    if (!contentEl) return
+    
+    let scrollStartY = 0
+    let accumulatedDragY = 0
+    
+    /**
+     * Handles wheel events (trackpad/mouse wheel).
+     * Detects scroll down attempts when at top of content.
+     */
+    const handleWheel = (e: WheelEvent) => {
+      if (isScrollDismissing) {
+        e.preventDefault()
+        // Continue accumulating drag
+        const delta = Math.min(e.deltaY, 50)
+        accumulatedDragY = Math.min(accumulatedDragY + delta, window.innerHeight * 0.5)
+        setDragY(accumulatedDragY)
+        return
+      }
+      
+      // Only trigger if content is at top and scrolling down
+      if (contentEl.scrollTop === 0 && e.deltaY > 0) {
+        e.preventDefault()
+        setIsScrollDismissing(true)
+        accumulatedDragY = Math.min(e.deltaY, 50)
+        setDragY(accumulatedDragY)
+      } else if (contentEl.scrollTop > 0) {
+        // If content is scrolled, allow normal scrolling
+        setIsScrollDismissing(false)
+        accumulatedDragY = 0
+        setDragY(0)
+      }
+    }
+    
+    /**
+     * Handles touch start - tracks initial touch position.
+     */
+    const handleTouchStart = (e: TouchEvent) => {
+      if (contentEl.scrollTop === 0) {
+        scrollStartY = e.touches[0].clientY
+        lastTouchYRef.current = scrollStartY
+        accumulatedDragY = 0
+      } else {
+        lastTouchYRef.current = null
+      }
+    }
+    
+    /**
+     * Handles touch move - detects scroll down attempts when at top.
+     */
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!lastTouchYRef.current) return
+      
+      const currentY = e.touches[0].clientY
+      const deltaY = currentY - lastTouchYRef.current
+      
+      // Only trigger if content is at top and moving down
+      if (contentEl.scrollTop === 0 && deltaY > 0) {
+        e.preventDefault()
+        setIsScrollDismissing(true)
+        accumulatedDragY = Math.min(accumulatedDragY + deltaY, window.innerHeight * 0.5)
+        setDragY(accumulatedDragY)
+        lastTouchYRef.current = currentY
+      } else if (contentEl.scrollTop > 0) {
+        // If content is scrolled, allow normal scrolling
+        setIsScrollDismissing(false)
+        accumulatedDragY = 0
+        setDragY(0)
+        lastTouchYRef.current = null
+      } else if (deltaY < 0) {
+        // Scrolling up at top - don't trigger dismiss
+        setIsScrollDismissing(false)
+        accumulatedDragY = 0
+        setDragY(0)
+        lastTouchYRef.current = currentY
+      }
+    }
+    
+    /**
+     * Handles touch end - determines if should close based on accumulated dragY.
+     */
+    const handleTouchEnd = () => {
+      if (isScrollDismissing && accumulatedDragY > 0) {
+        // Use same threshold logic as drag-to-dismiss
+        const viewportHeight = window.innerHeight
+        const threshold = Math.max(viewportHeight * 0.3, 150)
+        
+        if (accumulatedDragY > threshold) {
+          onClose()
+        } else {
+          // Snap back
+          setDragY(0)
+        }
+      }
+      
+      setIsScrollDismissing(false)
+      accumulatedDragY = 0
+      lastTouchYRef.current = null
+    }
+    
+    // Add event listeners
+    contentEl.addEventListener('wheel', handleWheel, { passive: false })
+    contentEl.addEventListener('touchstart', handleTouchStart, { passive: true })
+    contentEl.addEventListener('touchmove', handleTouchMove, { passive: false })
+    contentEl.addEventListener('touchend', handleTouchEnd, { passive: true })
+    
+    return () => {
+      contentEl.removeEventListener('wheel', handleWheel)
+      contentEl.removeEventListener('touchstart', handleTouchStart)
+      contentEl.removeEventListener('touchmove', handleTouchMove)
+      contentEl.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [isMobile, isWritingMode, articleId, isScrollDismissing, onClose])
+
+  // ============================================================================
+  // PULL-TO-REFRESH PREVENTION
+  // ============================================================================
+  
+  /**
+   * Prevents browser pull-to-refresh when modal is open.
+   * 
+   * Adds CSS and JS prevention to body/document to disable pull-to-refresh
+   * behavior that could interfere with drag-to-dismiss.
+   */
+  useEffect(() => {
+    // Calculate value here to avoid dependency on variable declared later
+    const shouldShow = isWritingMode || articleId !== null
+    if (!isMobile || !shouldShow) return
+    
+    // Prevent pull-to-refresh on body
+    const originalStyle = document.body.style.overscrollBehaviorY
+    document.body.style.overscrollBehaviorY = 'none'
+    
+    // Prevent default touchmove when at top of page
+    const preventPullToRefresh = (e: TouchEvent) => {
+      if (window.scrollY === 0 && e.touches[0].clientY > 0) {
+        // Only prevent if we're at the top and trying to scroll down
+        const touch = e.touches[0]
+        const startY = touch.clientY
+        
+        // Check if this is a pull-to-refresh gesture (starting near top)
+        if (startY < 100) {
+          e.preventDefault()
+        }
+      }
+    }
+    
+    document.addEventListener('touchmove', preventPullToRefresh, { passive: false })
+    
+    return () => {
+      document.body.style.overscrollBehaviorY = originalStyle
+      document.removeEventListener('touchmove', preventPullToRefresh)
+    }
+  }, [isMobile, isWritingMode, articleId])
 
   // ============================================================================
   // KEYBOARD NAVIGATION
@@ -830,6 +1068,10 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
               animate="visible"
               exit="exit"
               onClick={onClose}
+              style={isMobile ? {
+                overscrollBehavior: 'none',
+                touchAction: 'none'
+              } : {}}
               onAnimationStart={(definition) => {
                 // Disable pointer events when exit animation starts
                 // This allows hover events to work immediately after closing
@@ -867,6 +1109,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                 right: 0,
                 bottom: 0,
                 height: '100dvh',
+                minHeight: '100dvh',
                 maxHeight: '100dvh',
                 paddingTop: 'env(safe-area-inset-top, 0px)',
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -962,9 +1205,12 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
 
                 {/* Content */}
                 <div
+                  ref={writingListContentRef}
                   className={`flex-1 overflow-y-auto ${isMobile ? 'px-6 pt-14 pb-8' : 'px-8 pt-16 pb-8'}`}
                   style={isMobile ? {
-                    paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))'
+                    paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))',
+                    overscrollBehavior: 'none',
+                    touchAction: 'pan-y'
                   } : {}}
                 >
                   <AnimatePresence mode="wait">
@@ -1020,6 +1266,10 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
               ref={mainBackdropRef}
               key="backdrop"
               className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              style={isMobile ? {
+                overscrollBehavior: 'none',
+                touchAction: 'none'
+              } : {}}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -1063,6 +1313,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                   right: 0,
                   bottom: 0,
                   height: '100dvh',
+                  minHeight: '100dvh',
                   maxHeight: '100dvh',
                   paddingTop: 'env(safe-area-inset-top, 0px)',
                   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -1218,9 +1469,12 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
 
               {/* Content - adjusted padding to account for floating buttons */}
               <div
+                ref={mainContentRef}
                 className={`flex-1 overflow-y-auto ${isMobile ? 'px-6 pt-14 pb-8' : 'px-8 pt-16 pb-8'} ${viewMode === 'about' ? 'flex flex-col' : ''}`}
                 style={isMobile ? {
-                  paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))'
+                  paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))',
+                  overscrollBehavior: 'none',
+                  touchAction: 'pan-y'
                 } : {}}
               >
                 <AnimatePresence mode="wait">
