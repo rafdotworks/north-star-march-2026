@@ -209,6 +209,9 @@ const mobilePanelVariants = {
  * 
  * Creates blur-to-focus effect when panel content loads.
  * Same as SideTray for consistency.
+ * 
+ * FIXED: Reduced delay from 0.3s to 0.1s to ensure content is visible faster
+ * when panel opens, preventing the "blur but no content" issue.
  */
 const contentVariants = {
   hidden: {
@@ -222,12 +225,12 @@ const contentVariants = {
       opacity: {
         duration: 0.6,
         ease: EASING.smooth,
-        delay: 0.3
+        delay: 0.1
       },
       filter: {
         duration: 0.8,
         ease: EASING.gentle,
-        delay: 0.3
+        delay: 0.1
       }
     }
   },
@@ -1850,8 +1853,9 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                               blurDataURL={generatePlaceholder(1200, 900)}
                               sizes="(min-width: 1280px) 50vw, 100vw"
                               quality={IMAGE_QUALITY}
-                              // On mobile, show images even if not fully loaded to prevent black screen
-                              isLoaded={isMobile ? (loadedImages[src] ?? true) : !!loadedImages[src]}
+                              // Show images even if not fully loaded to prevent invisible content
+                              // Fixed: Desktop now defaults to visible (true) like mobile, preventing blur-only state
+                              isLoaded={loadedImages[src] ?? true}
                             />
                             {index === currentImageIndex && (
                               <>
