@@ -1375,7 +1375,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                           href="https://linkedin.com/in/raffaelevitaledesign"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground/50 md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground/50 active:text-foreground focus:text-muted-foreground/50 focus:outline-none"
                           aria-label="Visit Raf on LinkedIn"
                           style={{
                             WebkitTapHighlightColor: 'transparent'
@@ -1386,7 +1386,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                         </a>
                         <a
                           href="mailto:raf@raf.works"
-                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground/50 md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground/50 active:text-foreground focus:text-muted-foreground/50 focus:outline-none"
                           aria-label="Send email to Raf"
                           style={{
                             WebkitTapHighlightColor: 'transparent'
@@ -1399,7 +1399,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                           href="/documents/CV.pdf"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground active:text-foreground focus:text-muted-foreground focus:outline-none"
+                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground/50 md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground/50 active:text-foreground focus:text-muted-foreground/50 focus:outline-none"
                           aria-label="Download CV"
                           style={{
                             WebkitTapHighlightColor: 'transparent'

@@ -728,6 +728,10 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
         {isOpen && (
           <>
             {/* Backdrop */}
+            {/* 
+            Mobile: Full-screen backdrop covering entire viewport
+            Desktop: Full-screen backdrop to blur entire page and enable click-outside-to-close
+            */}
             <motion.div
               ref={backdropRef}
               key="backdrop"
@@ -778,6 +782,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
               style={{
+                zIndex: 50, // Ensure panel appears above backdrop (z-40)
                 ...(isMobile ? {
                   // Cover full viewport including safe areas
                   top: 0,
@@ -942,7 +947,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -964,7 +969,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2024–2025'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -996,7 +1001,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1018,7 +1023,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2023–2024'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1050,7 +1055,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1072,7 +1077,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2022–2023'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1104,7 +1109,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1126,7 +1131,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'fulltime' && highlightedEntry?.identifier === '2020–2021'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1165,7 +1170,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1187,7 +1192,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'vf'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1219,7 +1224,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1241,7 +1246,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2025' && currentProject === 'cb'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1273,7 +1278,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1295,7 +1300,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021–2022'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1327,7 +1332,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1349,7 +1354,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2021'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1381,7 +1386,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2019'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1403,7 +1408,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'contract' && highlightedEntry?.identifier === '2019'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1442,7 +1447,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs font-light tabular-nums ${
                               highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground/70'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1464,7 +1469,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                             className={`text-xs text-right ${
                               highlightedEntry?.section === 'studio' && highlightedEntry?.identifier === '2016–present'
                                 ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                : 'text-muted-foreground/50'
                             }`}
                             variants={shouldReduceMotion ? undefined : timelineTextVariants}
                             animate={
@@ -1487,32 +1492,6 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     </div>
                   </div>
                 </div>
-
-                {/* Clickable gap between timeline and carousel */}
-                {/* 
-                Mobile: Large clickable area to close panel (more reliable)
-                Desktop: Subtle hover feedback
-                */}
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onClose()
-                  }}
-                  className={`relative z-30 ${isMobile ? 'h-12 cursor-pointer touch-manipulation' : 'h-4 cursor-pointer md:hover:bg-background/5'} transition-colors duration-200 ${isMobile ? 'active:bg-background/10' : ''}`}
-                  aria-label="Close panel"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      onClose()
-                    }
-                  }}
-                  style={{
-                    WebkitTapHighlightColor: 'transparent',
-                    minHeight: isMobile ? '48px' : 'auto',
-                  }}
-                />
 
                 {/* Carousel Container */}
                 {/* 

@@ -19,8 +19,15 @@ export type AnimationLevel = 0 | 1 | 2 | 3;
 /**
  * Duration for blur-to-focus transition
  * Slower, smoother timing for carousel clicks (~2.2s)
+ * Matches timeline text animation duration for synchronization
  */
 const TRANSITION_DURATION = 2.2;
+
+/**
+ * Delay for blur-to-focus transition
+ * Matches timeline text animation delay (0.15s) for synchronized, delightful feel
+ */
+const TRANSITION_DELAY = 0.15;
 
 /** Calmer easing curve for smooth motion */
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -55,12 +62,12 @@ export function pageTurnVariants(
     animate: {
       opacity: 1,
       filter: "blur(0px)",
-      transition: { duration: TRANSITION_DURATION, ease: EASE },
+      transition: { duration: TRANSITION_DURATION, ease: EASE, delay: TRANSITION_DELAY },
     },
     exit: {
       opacity: 0,
       filter: `blur(${blurMax}px)`,
-      transition: { duration: TRANSITION_DURATION, ease: EASE },
+      transition: { duration: TRANSITION_DURATION, ease: EASE, delay: TRANSITION_DELAY },
     },
   } as Variants;
 }
