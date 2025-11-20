@@ -59,11 +59,11 @@ import {
   modalReduced,
   modalTextStagger,
 } from "@/components/animations/LoadingAnimations";
-import { WorkImageContainer } from "./components/hover"; // Work image with hover effects
+import { WorkImageContainer } from "@/app/components/hover"; // Work image with hover effects
 import useAnimationLevel from "@/hooks/useAnimationLevel"; // Animation preference detection
 import { pageTurnVariants } from "@/components/animations/imageTransitions"; // Blur-to-focus animation variants
-import { AboutModalContent } from "./components/AboutModalContent"; // Localized About modal content
-import { BlueprintContent } from "./components/BlueprintContent"; // Blueprint content for modal
+import { AboutModalContent } from "@/app/components/AboutModalContent"; // Localized About modal content
+import { BlueprintContent } from "@/app/components/BlueprintContent"; // Blueprint content for modal
 
 // Import portfolio configuration and utilities
 import {
