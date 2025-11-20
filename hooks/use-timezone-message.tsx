@@ -41,16 +41,17 @@ const TARGET_TIMEZONE = "America/Toronto"
  * 
  * HOW IT WORKS:
  * 1. Gets current local time (user's timezone)
- * 2. Converts to Toronto timezone using toLocaleString
- * 3. Calculates hour difference
- * 4. Handles day boundary crossing (e.g., if difference is 15 hours,
- *    it's actually -9 hours, meaning Toronto is behind)
- * 5. Generates user-friendly message
+ * 2. Uses Intl.DateTimeFormat with formatToParts to get Toronto timezone values
+ * 3. Calculates difference in minutes (more accurate than just hours)
+ * 4. Handles day boundary crossing (normalize to -12 to +12 hours range)
+ * 5. Rounds to nearest hour for display
+ * 6. Generates user-friendly message
  * 
  * EDGE CASES HANDLED:
- * - Day boundary crossing (difference > 12 or < -12)
+ * - Day boundary crossing (difference > 12 hours or < -12 hours)
  * - Same timezone (difference === 0)
  * - Singular vs plural hour(s)
+ * - DST transitions (updates every minute)
  * 
  * @returns {string} User-friendly timezone difference message
  * 
@@ -66,34 +67,43 @@ export function useTimezoneMessage(): string {
     const updateTimezoneMessage = () => {
       const now = new Date()
 
-      // Get user's local time (current timezone)
-      const userHour = now.getHours()
+      // Get Toronto time using proper timezone-aware formatting
+      const torontoFormatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: TARGET_TIMEZONE,
+        hour: "2-digit",
+        hour12: false,
+        minute: "2-digit",
+      })
+      
+      const torontoParts = torontoFormatter.formatToParts(now)
+      const torontoHour = parseInt(torontoParts.find(p => p.type === "hour")?.value || "0", 10)
+      const torontoMinute = parseInt(torontoParts.find(p => p.type === "minute")?.value || "0", 10)
+      const torontoTotalMinutes = torontoHour * 60 + torontoMinute
 
-      // Get Toronto time by converting to Toronto timezone
-      // Note: toLocaleString with timeZone option converts the time
-      const torontoTime = new Date(now.toLocaleString("en-US", {
-        timeZone: TARGET_TIMEZONE
-      }))
-      const torontoHour = torontoTime.getHours()
+      // Get user's local time
+      const userTotalMinutes = now.getHours() * 60 + now.getMinutes()
 
-      // Calculate hour difference
-      let difference = torontoHour - userHour
+      // Calculate difference in minutes
+      let differenceMinutes = torontoTotalMinutes - userTotalMinutes
 
-      // Handle day boundary crossing
-      // If difference is > 12, we've crossed midnight forward (subtract 24)
-      // If difference is < -12, we've crossed midnight backward (add 24)
-      // Example: If Toronto is 15 hours ahead, it's actually 9 hours behind
-      if (difference > 12) difference -= 24
-      if (difference < -12) difference += 24
+      // Handle day boundary crossing (normalize to -12 to +12 hours range)
+      if (differenceMinutes > 12 * 60) {
+        differenceMinutes -= 24 * 60
+      } else if (differenceMinutes < -12 * 60) {
+        differenceMinutes += 24 * 60
+      }
+
+      // Convert to hours (round to nearest hour)
+      const differenceHours = Math.round(differenceMinutes / 60)
 
       // Generate user-friendly message
       let message = ""
-      if (difference === 0) {
+      if (differenceHours === 0) {
         message = "Raf is in your timezone"
-      } else if (difference > 0) {
-        message = `Raf is ${difference} hour${difference !== 1 ? 's' : ''} ahead of you`
+      } else if (differenceHours > 0) {
+        message = `Raf is ${differenceHours} hour${differenceHours !== 1 ? 's' : ''} ahead of you`
       } else {
-        message = `Raf is ${Math.abs(difference)} hour${Math.abs(difference) !== 1 ? 's' : ''} behind you`
+        message = `Raf is ${Math.abs(differenceHours)} hour${Math.abs(differenceHours) !== 1 ? 's' : ''} behind you`
       }
 
       setTimezoneMessage(message)
