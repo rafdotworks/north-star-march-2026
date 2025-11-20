@@ -7,7 +7,7 @@
  * Contains the list of all available writing articles with their metadata.
  * 
  * This file is imported by:
- * - app/new/components/SideTray.tsx (for displaying article list)
+ * - app/new/components/SideTray.tsx (for displaying article list - component location unchanged)
  * 
  * STRUCTURE:
  * Each article has:

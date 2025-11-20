@@ -71,16 +71,18 @@ npm run lint     # Run ESLint
 ```
 raf.works/
 ├── app/                          # Next.js App Router
-│   ├── page.tsx                  # Main portfolio (carousel/slideshow)
+│   ├── page.tsx                  # Main minimal portfolio entry point
 │   ├── layout.tsx                # Root layout with fonts & metadata
 │   ├── globals.css               # Global styles & CSS variables
+│   ├── q3-2025/                  # Previous landing page version
+│   │   └── page.tsx              # Previous portfolio (carousel/slideshow)
 │   ├── agent/                    # AI chat interface
 │   │   ├── page.tsx              # Chat page
 │   │   ├── ChatMessages.tsx      # Message display component
 │   │   ├── ChatInput.tsx         # Input component
 │   │   └── context/              # AI agent knowledge base
-│   ├── new/                      # Alternative minimal layout
-│   │   └── page.tsx              # Text-based portfolio view
+│   ├── new/                      # Components for main page
+│   │   └── components/           # SideTray and WorksPanel components
 │   ├── api/
 │   │   ├── chat/                 # AI chat API endpoint
 │   │   └── article/              # Article content API
@@ -103,8 +105,8 @@ raf.works/
 
 ## Key Routes
 
-- **`/`** - Main portfolio with image carousel
-- **`/new`** - Alternative minimal text-based layout
+- **`/`** - Main minimal portfolio entry point (text-based layout)
+- **`/q3-2025`** - Previous portfolio version (image carousel/slideshow)
 - **`/agent`** - AI chat interface to discuss Raf's work
 - **`/raf`** - Additional portfolio page
 - **`/deck`** - Redirects to Figma presentation

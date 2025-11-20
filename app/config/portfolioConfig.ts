@@ -7,7 +7,7 @@
  * Contains all constants, project data, and UI configuration.
  *
  * This file is imported by:
- * - app/page.tsx (main page component)
+ * - app/q3-2025/page.tsx (Q3 2025 portfolio page component)
  * - app/utils/portfolioUtils.ts (helper functions)
  * - Future extracted components and hooks
  */
@@ -468,7 +468,7 @@ export const PRELOAD_IMAGES = IMAGE_SOURCES.slice(
  * - Multiple projects can map to the same work entry (e.g., "atlas" and "defituna" both map to "2022–2023")
  * - Some projects have specific identifiers (e.g., "vf" and "cb" both use "2025" but are differentiated by project key)
  * 
- * @see app/new/components/WorksPanel.tsx for usage
+ * @see app/new/components/WorksPanel.tsx for usage (component location unchanged)
  */
 export const PROJECT_TO_WORK_MAP: Record<string, { section: 'fulltime' | 'contract' | 'studio', identifier: string }> = {
   'theo': { section: 'fulltime', identifier: '2024–2025' },
@@ -493,7 +493,7 @@ export const PROJECT_TO_WORK_MAP: Record<string, { section: 'fulltime' | 'contra
  * @example
  * getHighlightedWorkEntry("theo") // Returns { section: 'fulltime', identifier: '2024–2025' }
  * 
- * @see app/new/components/WorksPanel.tsx for usage
+ * @see app/new/components/WorksPanel.tsx for usage (component location unchanged)
  */
 export function getHighlightedWorkEntry(projectKey: string | null): { section: string, identifier: string } | null {
   if (!projectKey) return null

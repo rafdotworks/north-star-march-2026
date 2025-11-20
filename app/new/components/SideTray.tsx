@@ -49,7 +49,7 @@
  * - Theme-aware color transitions
  * 
  * @component
- * @see app/new/page.tsx for usage examples
+ * @see app/page.tsx for usage examples
  */
 
 "use client"

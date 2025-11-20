@@ -45,7 +45,7 @@
  * - Click-outside-to-close
  * 
  * @component
- * @see app/new/page.tsx for usage examples
+ * @see app/page.tsx for usage examples
  */
 
 "use client"
@@ -196,9 +196,9 @@ const mobilePanelVariants = {
     opacity: 0.8,
     transition: {
       type: "spring" as const,
-      stiffness: 450,
-      damping: 40,
-      mass: 0.65,
+      stiffness: 500,
+      damping: 45,
+      mass: 0.7,
       duration: 0.3
     }
   },
@@ -625,6 +625,21 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
   }
 
   // ============================================================================
+  // STATE RESET ON OPEN/CLOSE
+  // ============================================================================
+  
+  /**
+   * Reset drag state when panel opens to ensure clean state.
+   * Prevents race conditions where dragY might have stale values.
+   */
+  useEffect(() => {
+    if (isOpen) {
+      setDragY(0)
+      setIsDragging(false)
+    }
+  }, [isOpen])
+
+  // ============================================================================
   // KEYBOARD NAVIGATION
   // ============================================================================
   
@@ -722,10 +737,22 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
     }
   }, [currentImageIndex])
 
+  // ============================================================================
+  // RENDER CONDITIONS
+  // ============================================================================
+  
+  /**
+   * Explicit boolean check to determine if panel should be shown.
+   * This ensures consistent state handling and prevents race conditions.
+   * 
+   * Similar to SideTray's shouldShowTray pattern for consistency.
+   */
+  const shouldShowPanel = isOpen
+
   return (
     <>
       <AnimatePresence>
-        {isOpen && (
+        {shouldShowPanel && (
           <>
             {/* Backdrop */}
             {/* 
@@ -746,6 +773,10 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                 // This allows hover events to work immediately after closing
                 if (definition === 'exit' && backdropRef.current) {
                   backdropRef.current.style.pointerEvents = 'none'
+                }
+                // Re-enable pointer events when entering to ensure backdrop is clickable
+                if (definition === 'visible' && backdropRef.current) {
+                  backdropRef.current.style.pointerEvents = 'auto'
                 }
               }}
             />
