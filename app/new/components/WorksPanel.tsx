@@ -208,10 +208,11 @@ const mobilePanelVariants = {
  * Content fade-in animation variants.
  * 
  * Creates blur-to-focus effect when panel content loads.
- * Same as SideTray for consistency.
+ * Similar to SideTray but with reduced delay (0.1s vs 0.3s) for faster visibility.
  * 
- * FIXED: Reduced delay from 0.3s to 0.1s to ensure content is visible faster
- * when panel opens, preventing the "blur but no content" issue.
+ * NOTE: With AnimatePresence initial prop removed, animation now triggers properly
+ * on first render, ensuring content is always visible. The 0.1s delay provides
+ * a smooth blur-to-focus effect without causing invisible content issues.
  */
 const contentVariants = {
   hidden: {
@@ -968,7 +969,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
 
   return (
     <>
-      <AnimatePresence initial={false}>
+      <AnimatePresence>
         {shouldShowPanel && (
           <>
             {/* Backdrop */}
@@ -1072,6 +1073,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                 style={{
                   // CRITICAL: Ensure content is always visible on mobile (no animation variants)
                   // Desktop uses animation variants for blur-to-focus effect
+                  // With AnimatePresence initial prop removed, animation now triggers properly on first render
                   opacity: activeContentVariants ? undefined : 1,
                 }}
               >
