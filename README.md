@@ -144,6 +144,7 @@ Required environment variables (see `.env.example`):
 
 ```bash
 OPENAI_API_KEY=           # OpenAI API key for chat agent
+OPENWEATHERMAP_API_KEY=   # OpenWeatherMap API key for weather data (get free key at https://openweathermap.org/api)
 ```
 
 ## Development Notes
