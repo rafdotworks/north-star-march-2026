@@ -383,9 +383,15 @@ export default function Page() {
             
             Displayed inline at bottom of mobile content area.
             Uses mt-auto to push to bottom of flex container.
+            Blurs when any side tray is open.
           */}
           <div className="md:hidden flex items-center w-full mt-auto pt-4">
-            <p className="text-[10px] text-muted-foreground/50 leading-relaxed transition-colors duration-200 whitespace-nowrap">{timezoneMessage}</p>
+            <p 
+              className="text-[10px] text-muted-foreground/50 leading-relaxed transition-all duration-200 whitespace-nowrap"
+              style={{ filter: selectedArticle ? 'blur(4px)' : 'blur(0px)' }}
+            >
+              {timezoneMessage}
+            </p>
           </div>
         </div>
 
