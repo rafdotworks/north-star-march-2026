@@ -134,26 +134,21 @@ export default function Page() {
   // ============================================================================
   
   /**
-   * Theme inversion logic: Shows opposite of user's system preference.
-   * 
-   * WHY INVERT?
-   * This creates a deliberate contrast experience - if the user's system is
-   * light, we show dark (and vice versa). This makes the site feel distinct
-   * and intentional rather than just matching system preferences.
+   * Theme logic: Matches user's system preference.
    * 
    * LOGIC:
-   * - Defaults to dark during SSR/initial render (before isReady)
-   * - If user prefers light → show dark (!prefersDark)
-   * - If user prefers dark → show light (prefersDark && isReady)
+   * - Defaults to light during SSR/initial render (before isReady)
+   * - If user prefers dark → show dark (prefersDark && isReady)
+   * - If user prefers light → show light (!prefersDark && isReady)
    * 
    * The isReady check prevents hydration mismatches by ensuring we only
-   * apply the inverted theme after client-side detection completes.
+   * apply the theme after client-side detection completes.
    * 
    * @returns {boolean} true if dark theme should be shown
    */
   const shouldShowDark = useMemo(() => {
-    // Default to dark during SSR/initial render or when user prefers light
-    return !prefersDark || !isReady
+    // Show dark theme only when system prefers dark and detection is ready
+    return prefersDark && isReady
   }, [prefersDark, isReady])
 
   // ============================================================================

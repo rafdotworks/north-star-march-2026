@@ -2223,7 +2223,7 @@ export default function Page() {
                         border: "none",
                         outline: "none",
                         boxShadow: "none",
-                        color: "rgb(115, 115, 115)",
+                        color: "hsl(var(--muted-foreground))",
                         WebkitTapHighlightColor: "transparent",
                         cursor: "pointer",
                       }}

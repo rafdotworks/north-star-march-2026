@@ -1170,7 +1170,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                     border: 'none',
                     outline: 'none',
                     boxShadow: 'none',
-                    color: 'rgb(115, 115, 115)',
+                    color: 'hsl(var(--muted-foreground))',
                     WebkitTapHighlightColor: 'transparent',
                     cursor: 'pointer'
                   }}
@@ -1377,7 +1377,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                   border: 'none',
                   outline: 'none',
                   boxShadow: 'none',
-                  color: 'rgb(115, 115, 115)',
+                  color: 'hsl(var(--muted-foreground))',
                   WebkitTapHighlightColor: 'transparent',
                   cursor: 'pointer'
                 }}

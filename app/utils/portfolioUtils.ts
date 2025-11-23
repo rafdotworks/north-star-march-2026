@@ -316,12 +316,12 @@ export function getTextColors(
     // Opposite theme colors
     // When background is inverted, text colors are also inverted
     const primaryText = prefersDark
-      ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color)
-      : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color)
+      ? 'hsl(var(--neutral-h) 15% 10%)' // Light theme text (dark color) - opposite of dark system
+      : 'hsl(var(--neutral-h) 15% 95%)'; // Dark theme text (light color) - opposite of light system
     
     const mutedText = prefersDark
-      ? 'hsl(var(--neutral-h) 15% 25%)' // Light theme muted text
-      : 'hsl(var(--neutral-h) 10% 70%)'; // Dark theme muted text
+      ? 'hsl(var(--neutral-h) 10% 35%)' // Light theme muted text - matches --muted-foreground in light mode
+      : 'hsl(var(--neutral-h) 10% 70%)'; // Dark theme muted text - matches --muted-foreground in dark mode
     
     return {
       mainText: primaryText,
@@ -331,14 +331,16 @@ export function getTextColors(
       yearText: mutedText,
     };
   } else {
-    // Default theme colors (use system theme colors)
+    // Default theme colors (use system theme colors - matches CSS variable values)
+    // Note: We use hardcoded HSL values here because this function calculates colors
+    // based on the prefersDark parameter, not CSS variables which reflect the page theme state
     const primaryText = prefersDark
-      ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color)
-      : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color)
+      ? 'hsl(var(--neutral-h) 15% 95%)' // Dark theme text (light color) - matches --foreground in dark mode
+      : 'hsl(var(--neutral-h) 15% 10%)'; // Light theme text (dark color) - matches --foreground in light mode
     
     const mutedText = prefersDark
-      ? 'hsl(var(--neutral-h) 10% 70%)' // Dark theme muted text
-      : 'hsl(var(--neutral-h) 15% 35%)'; // Light theme muted text
+      ? 'hsl(var(--neutral-h) 10% 70%)' // Dark theme muted text - matches --muted-foreground in dark mode
+      : 'hsl(var(--neutral-h) 10% 35%)'; // Light theme muted text - matches --muted-foreground in light mode
     
     return {
       mainText: primaryText,

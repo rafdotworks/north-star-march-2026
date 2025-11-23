@@ -160,19 +160,25 @@
       --destructive-foreground: var(--neutral-h) 10% 6%;
       --border: var(--neutral-h) 12% 18%;
       --input: var(--neutral-h) 12% 14%;
-      --ring: var(--accent-h) 95% 66%;
+  --ring: var(--accent-h) 95% 66%;
 
-      /* Legacy mappings (dark) */
-      --bg-primary: var(--bg);
-      --bg-secondary: var(--bg-muted);
-      --text-primary: var(--fg);
-      --text-secondary: var(--fg-muted);
-      --accent-primary: var(--primary-color);
-      --accent-hover: var(--primary-color);
+  /* Legacy mappings (dark) */
+  --bg-primary: var(--bg);
+  --bg-secondary: var(--bg-muted);
+  --text-primary: var(--fg);
+  --text-secondary: var(--fg-muted);
+  --accent-primary: var(--primary-color);
+  --accent-hover: var(--primary-color);
 
-      /* Scrollbar (dark) */
-      --scrollbar-color: rgba(255, 255, 255, 0.1);
-      --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
+  /* Navigation Colors (mapped to primary by default) */
+  --nav-work: var(--primary-color);
+  --nav-about: var(--primary-color);
+  --nav-projects: var(--primary-color);
+  --nav-contact: var(--primary-color);
+
+  /* Scrollbar (dark) */
+  --scrollbar-color: rgba(255, 255, 255, 0.1);
+  --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
     }
   }
 }
@@ -227,6 +233,24 @@
   --border: var(--neutral-h) 12% 18%;
   --input: var(--neutral-h) 12% 14%;
   --ring: var(--accent-h) 95% 66%;
+
+  /* Legacy mappings (dark) */
+  --bg-primary: var(--bg);
+  --bg-secondary: var(--bg-muted);
+  --text-primary: var(--fg);
+  --text-secondary: var(--fg-muted);
+  --accent-primary: var(--primary-color);
+  --accent-hover: var(--primary-color);
+
+  /* Navigation Colors (mapped to primary by default) */
+  --nav-work: var(--primary-color);
+  --nav-about: var(--primary-color);
+  --nav-projects: var(--primary-color);
+  --nav-contact: var(--primary-color);
+
+  /* Scrollbar (dark) */
+  --scrollbar-color: rgba(255, 255, 255, 0.1);
+  --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Support explicit light theme switching via data attribute */
@@ -287,6 +311,12 @@
   --text-secondary: var(--fg-muted);
   --accent-primary: var(--primary-color);
   --accent-hover: var(--primary-color);
+
+  /* Navigation Colors (mapped to primary by default) */
+  --nav-work: var(--primary-color);
+  --nav-about: var(--primary-color);
+  --nav-projects: var(--primary-color);
+  --nav-contact: var(--primary-color);
 
   /* Scrollbar (light) */
   --scrollbar-color: rgba(0, 0, 0, 0.08);
