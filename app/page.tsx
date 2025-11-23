@@ -372,22 +372,34 @@ export default function Page() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* 
-            TIMEZONE MESSAGE - Mobile Layout
-            
-            Displayed inline at bottom of mobile content area.
-            Uses mt-auto to push to bottom of flex container.
-            Blurs when any side tray is open.
-          */}
-          <div className="md:hidden flex items-center w-full mt-auto pt-4">
-            <p 
-              className="text-[10px] text-muted-foreground/50 leading-relaxed transition-all duration-200 whitespace-nowrap"
-              style={{ filter: selectedArticle ? 'blur(4px)' : 'blur(0px)' }}
-            >
-              {timezoneMessage}
-            </p>
-          </div>
+        {/* 
+          TIMEZONE MESSAGE - Mobile Layout
+          
+          Positioned absolutely at bottom-left of viewport on mobile.
+          Uses safe area insets to avoid notches/device cutouts.
+          Blurs when any side tray is open.
+          
+          POSITIONING:
+          - bottom: max(1rem, safe-area-inset-bottom + 1rem)
+          - left: max(2rem, safe-area-inset-left + 2rem) (matching px-8 padding)
+          
+          This ensures the message is always visible and not hidden by device UI.
+        */}
+        <div
+          className="md:hidden absolute"
+          style={{
+            bottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
+            left: 'max(2rem, calc(env(safe-area-inset-left, 0px) + 2rem))'
+          }}
+        >
+          <p 
+            className="text-[10px] text-muted-foreground/50 leading-relaxed transition-all duration-200 whitespace-nowrap"
+            style={{ filter: selectedArticle ? 'blur(4px)' : 'blur(0px)' }}
+          >
+            {timezoneMessage}
+          </p>
         </div>
 
         {/* 
