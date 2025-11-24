@@ -120,7 +120,8 @@ interface WorksPanelProps {
  * - rotateY: Spring easing with 0.05s delay - 0.7s
  * 
  * The staggered delays create a layered, sophisticated entrance.
- * Exit animation uses smooth opacity fade for elegant dismissal.
+ * Exit animation keeps panel in place (x: 0, scale: 1, rotateY: 0) and
+ * only fades out opacity for elegant, non-sliding dismissal.
  */
 const panelVariants = {
   hidden: {
@@ -152,10 +153,15 @@ const panelVariants = {
     }
   },
   exit: {
+    x: 0,
+    scale: 1,
+    rotateY: 0,
     opacity: 0,
     transition: {
-      duration: 0.35,
-      ease: EASING.smooth
+      opacity: {
+        duration: 0.3,
+        ease: EASING.smooth
+      }
     }
   },
 } as const
@@ -171,11 +177,11 @@ const panelVariants = {
  * - scale: Subtle zoom-in effect (0.96 → 1.0) for materialization
  * - opacity: Smooth fade-in (0.8 → 1.0) for elegant appearance
  * - Spring physics: Refined parameters (stiffness: 320, damping: 38) for smoother motion
- * - Exit: Smooth opacity fade for elegant dismissal
+ * - Exit: Keeps panel in place (y: 0, scale: 1) and only fades out opacity for elegant dismissal
  * 
  * TIMING:
  * - Entrance: ~0.5s with natural spring physics for fluid motion
- * - Exit: ~0.3s smooth fade for responsive dismissal
+ * - Exit: ~0.3s smooth fade-only (no slide) for responsive dismissal
  * - Matches SideTray animation for consistency
  */
 const mobilePanelVariants = {
@@ -197,10 +203,14 @@ const mobilePanelVariants = {
     }
   },
   exit: {
+    y: 0,
+    scale: 1,
     opacity: 0,
     transition: {
-      duration: 0.3,
-      ease: EASING.smooth
+      opacity: {
+        duration: 0.3,
+        ease: EASING.smooth
+      }
     }
   },
 } as const
