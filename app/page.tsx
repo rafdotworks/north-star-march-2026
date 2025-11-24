@@ -364,7 +364,7 @@ export default function Page() {
               On mobile: Normal flow, appears first
               On desktop: Absolute positioning, appears above title
             */}
-            <h1 className="text-base md:text-base font-light text-foreground tracking-wide leading-[1.5] md:absolute md:bottom-full md:mb-1 transition-colors duration-200">Raf V</h1>
+            <h1 className="text-base md:text-base font-light text-foreground tracking-wide leading-[1.5] md:absolute md:bottom-full md:mb-1 transition-colors duration-200">Raf V.</h1>
             {/* Professional title - always visible */}
             <p className="text-xs md:text-xs text-muted-foreground leading-[1.5] transition-colors duration-200">Senior AI Product Designer</p>
           </div>
