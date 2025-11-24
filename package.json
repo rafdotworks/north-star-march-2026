@@ -11,8 +11,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.56",
     "@ai-sdk/react": "^2.0.81",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.4.0",
+    "@react-three/drei": "^9.114.0",
+    "@react-three/fiber": "^8.18.0",
     "@react-three/postprocessing": "^3.0.4",
     "@vercel/analytics": "^1.5.0",
     "ai": "^5.0.81",
