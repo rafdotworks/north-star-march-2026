@@ -111,7 +111,7 @@ export default function RootLayout({
     >
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={ronzino.className} suppressHydrationWarning>

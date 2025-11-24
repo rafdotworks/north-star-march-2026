@@ -106,13 +106,21 @@ interface WorksPanelProps {
 /**
  * Desktop panel animation variants.
  * 
- * Slides in from right with 3D perspective effect.
- * Same animation style as SideTray for consistency.
+ * Creates a sophisticated 3D slide-in effect from the right side.
+ * Matches SideTray animation style for consistency.
  * 
  * ANIMATION STAGES:
- * 1. x: Slides from 100% (off-screen) to 0
- * 2. scale: Scales from 0.98 to 1 (subtle zoom)
- * 3. rotateY: Rotates from -5deg to 0 (3D effect)
+ * 1. x: Slides in from 100% (off-screen right) to 0
+ * 2. scale: Slightly scales up from 0.98 to 1 (subtle zoom effect)
+ * 3. rotateY: Rotates from -5deg to 0 (3D perspective effect)
+ * 
+ * TIMING:
+ * - x: Spring animation (natural bounce) - 0.5s
+ * - scale: Elastic easing with 0.1s delay - 0.6s
+ * - rotateY: Spring easing with 0.05s delay - 0.7s
+ * 
+ * The staggered delays create a layered, sophisticated entrance.
+ * Exit animation is simpler (just slides out) for faster dismissal.
  */
 const panelVariants = {
   hidden: {
@@ -205,16 +213,21 @@ const mobilePanelVariants = {
 } as const
 
 /**
- * Content fade-in animation variants.
+ * Timeline container animation variants.
  * 
- * Creates blur-to-focus effect when panel content loads.
- * Similar to SideTray but with reduced delay (0.1s vs 0.3s) for faster visibility.
+ * Appears together with carousel using blur-to-unblurred effect.
+ * Beautifully coordinated with panel entrance: panel slides in first, then content blurs in together.
  * 
- * NOTE: With AnimatePresence initial prop removed, animation now triggers properly
- * on first render, ensuring content is always visible. The 0.1s delay provides
- * a smooth blur-to-focus effect without causing invisible content issues.
+ * ANIMATION:
+ * - opacity: Fades from 0 to 1
+ * - filter: Blurs from 8px to 0px (smooth focus effect, matches SideTray style)
+ * 
+ * TIMING:
+ * - Synchronized with carousel: 0.4s delay (starts after panel finishes sliding in ~0.5s)
+ * - 0.6s duration for opacity, 0.8s for blur
+ * - Creates beautiful unified effect: panel → timeline and carousel blur together
  */
-const contentVariants = {
+const timelineContainerVariants = {
   hidden: {
     opacity: 0,
     filter: "blur(8px)"
@@ -226,18 +239,118 @@ const contentVariants = {
       opacity: {
         duration: 0.6,
         ease: EASING.smooth,
-        delay: 0.1
+        delay: 0.4
       },
       filter: {
         duration: 0.8,
         ease: EASING.gentle,
-        delay: 0.1
+        delay: 0.4
       }
     }
   },
   exit: {
     opacity: 0,
     filter: "blur(4px)",
+    transition: {
+      duration: 0.25,
+      ease: EASING.smooth
+    }
+  }
+} as const
+
+/**
+ * Carousel container animation variants.
+ * 
+ * Appears together with timeline using blur-to-unblurred effect.
+ * Beautifully coordinated with panel entrance: panel slides in first, then content blurs in together.
+ * 
+ * ANIMATION:
+ * - opacity: Fades from 0 to 1
+ * - filter: Blurs from 8px to 0px (smooth focus effect, matches SideTray style)
+ * 
+ * TIMING:
+ * - Synchronized with timeline: 0.4s delay (starts after panel finishes sliding in ~0.5s)
+ * - 0.6s duration for opacity, 0.8s for blur
+ * - Creates beautiful unified effect: panel → timeline and carousel blur together
+ */
+const carouselContainerVariants = {
+  hidden: {
+    opacity: 0,
+    filter: "blur(8px)"
+  },
+  visible: {
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: {
+      opacity: {
+        duration: 0.6,
+        ease: EASING.smooth,
+        delay: 0.4
+      },
+      filter: {
+        duration: 0.8,
+        ease: EASING.gentle,
+        delay: 0.4
+      }
+    }
+  },
+  exit: {
+    opacity: 0,
+    filter: "blur(4px)",
+    transition: {
+      duration: 0.25,
+      ease: EASING.smooth
+    }
+  }
+} as const
+
+/**
+ * Mobile timeline container animation variants.
+ * 
+ * Appears together with carousel for unified entrance on mobile.
+ * Simpler animation but synchronized timing.
+ */
+const mobileTimelineContainerVariants = {
+  hidden: {
+    opacity: 0
+  },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.4,
+      ease: EASING.smooth,
+      delay: 0.2
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: 0.25,
+      ease: EASING.smooth
+    }
+  }
+} as const
+
+/**
+ * Mobile carousel container animation variants.
+ * 
+ * Appears together with timeline for unified entrance on mobile.
+ * Simpler animation but synchronized timing.
+ */
+const mobileCarouselContainerVariants = {
+  hidden: {
+    opacity: 0
+  },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.4,
+      ease: EASING.smooth,
+      delay: 0.2
+    }
+  },
+  exit: {
+    opacity: 0,
     transition: {
       duration: 0.25,
       ease: EASING.smooth
@@ -277,6 +390,52 @@ const backdropVariants = {
       ease: EASING.smooth,
     },
   },
+} as const
+
+/**
+ * Close button animation variants.
+ * 
+ * Beautiful entrance animation coordinated with panel entrance.
+ * Appears after panel slides in, creating a polished, inspiring feel.
+ * 
+ * ANIMATION:
+ * - opacity: Fades from 0 to 1
+ * - scale: Scales from 0.9 to 1 (subtle zoom-in effect)
+ * 
+ * TIMING:
+ * - Delay: 0.6s (appears after panel finishes sliding in ~0.5s)
+ * - Duration: 0.5s for smooth, elegant appearance
+ * - Creates inspiring reveal effect as panel settles
+ */
+const closeButtonVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.9,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      opacity: {
+        duration: 0.5,
+        ease: EASING.smooth,
+        delay: 0.6
+      },
+      scale: {
+        duration: 0.5,
+        ease: EASING.elastic,
+        delay: 0.6
+      }
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.9,
+    transition: {
+      duration: 0.2,
+      ease: EASING.smooth
+    }
+  }
 } as const
 
 /**
@@ -477,23 +636,10 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
    * - Reduced motion: Disables animations (undefined)
    */
   const activePanelVariants = isMobile ? mobilePanelVariants : panelVariants
-  // On mobile, disable content fade-in animation to ensure immediate visibility
-  // Desktop keeps the blur-to-focus effect for polish
-  const activeContentVariants = shouldReduceMotion ? undefined : (isMobile ? {
-    hidden: { 
-      opacity: 0,
-      y: 12
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.4,
-        ease: EASING.smooth,
-        delay: 0.1
-      }
-    }
-  } as const : contentVariants)
+  // Separate animation variants for timeline and carousel
+  // Timeline fades in first, then carousel appears gradually
+  const activeTimelineVariants = shouldReduceMotion ? undefined : (isMobile ? mobileTimelineContainerVariants : timelineContainerVariants)
+  const activeCarouselVariants = shouldReduceMotion ? undefined : (isMobile ? mobileCarouselContainerVariants : carouselContainerVariants)
 
   // ============================================================================
   // DERIVED STATE
@@ -969,7 +1115,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
 
   return (
     <>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {shouldShowPanel && (
           <>
             {/* Backdrop */}
@@ -1067,14 +1213,9 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             >
               <motion.div
                 className={`relative h-full flex flex-col overflow-hidden`}
-                variants={activeContentVariants}
-                initial={activeContentVariants ? "hidden" : undefined}
-                animate={activeContentVariants ? "visible" : undefined}
                 style={{
-                  // CRITICAL: Ensure content is always visible on mobile (no animation variants)
-                  // Desktop uses animation variants for blur-to-focus effect
-                  // With AnimatePresence initial prop removed, animation now triggers properly on first render
-                  opacity: activeContentVariants ? undefined : 1,
+                  // Parent container is always visible - children (timeline + carousel) animate independently
+                  opacity: 1,
                 }}
               >
                 {/* Mobile drag handle */}
@@ -1109,12 +1250,16 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                   </motion.div>
                 )}
 
-                {/* Close button */}
+                {/* Close button - Subtle and smaller */}
                 <motion.button
                   onClick={onClose}
-                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-3' : 'p-2'} group`}
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.02, rotate: 15 }}
-                  whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-30 ${isMobile ? 'p-2.5' : 'p-1.5'} group`}
+                  variants={shouldReduceMotion ? undefined : closeButtonVariants}
+                  initial={shouldReduceMotion ? undefined : "hidden"}
+                  animate={shouldReduceMotion ? undefined : "visible"}
+                  exit={shouldReduceMotion ? undefined : "exit"}
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.1, rotate: 15 }}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
                   transition={{ duration: 0.4, ease: EASING.gentle }}
                   aria-label="Close"
                   style={{
@@ -1124,23 +1269,27 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     boxShadow: 'none',
                     color: 'hsl(var(--muted-foreground))',
                     WebkitTapHighlightColor: 'transparent',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    opacity: 0.6
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--foreground))'
+                    e.currentTarget.style.opacity = '1'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.opacity = '0.6'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
                     e.currentTarget.style.boxShadow = 'none'
                     e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.opacity = '0.6'
                   }}
                 >
                   <svg
-                    width="12"
-                    height="12"
+                    width="10"
+                    height="10"
                     viewBox="0 0 12 12"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -1149,7 +1298,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                     <path
                       d="M1 1L11 11M11 1L1 11"
                       stroke="currentColor"
-                      strokeWidth="1"
+                      strokeWidth="0.8"
                       strokeLinecap="round"
                     />
                   </svg>
@@ -1160,14 +1309,13 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                 Mobile: Compact table at top, no scrolling - fits viewport
                 Desktop: Fixed position with standard padding
                 */}
-                <div 
-                  className={`relative z-20 ${isMobile ? 'px-6 pt-2 pb-2' : 'px-8 pt-12 pb-3'} bg-background`}
-                  style={{
-                    // CRITICAL: Ensure timeline is always visible - force opacity to prevent invisible content
-                    opacity: 1,
-                  }}
+                <motion.div 
+                  className={`relative z-20 ${isMobile ? 'px-6 pt-12 pb-2' : 'px-8 pt-12 pb-3'} bg-background`}
+                  variants={activeTimelineVariants}
+                  initial={activeTimelineVariants ? "hidden" : undefined}
+                  animate={activeTimelineVariants ? "visible" : undefined}
                 >
-                  <div className={`${isMobile ? 'space-y-1' : 'space-y-1.5'}`}>
+                  <div className="space-y-4">
                     {/* Full-Time Roles */}
                     <div className="space-y-1">
                       <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider transition-colors duration-200">Full-Time</p>
@@ -1729,15 +1877,18 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Carousel Container */}
                 {/* 
                 Mobile: Carousel below timeline table, no scrolling - fits viewport
                 Desktop: Fixed position with hover pause
                 */}
-                <div
+                <motion.div
                   className={`relative z-10 flex items-end justify-center flex-1 ${isMobile ? 'px-6 pt-1 pb-6' : 'px-8 pt-2 pb-8 md:pb-12'} min-h-0`}
+                  variants={activeCarouselVariants}
+                  initial={activeCarouselVariants ? "hidden" : undefined}
+                  animate={activeCarouselVariants ? "visible" : undefined}
                   onMouseEnter={() => !isMobile && setIsSlideshowPaused(true)}
                   onMouseLeave={() => !isMobile && setIsSlideshowPaused(false)}
                   style={isMobile ? {
@@ -1932,7 +2083,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                       })}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             </motion.div>
           </>

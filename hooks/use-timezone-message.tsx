@@ -164,9 +164,12 @@ export function useTimezoneMessage(): string {
           const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost'
           if (isDev) {
             const errorData = await response.json().catch(() => ({}))
-            console.warn('Weather API error:', response.status, errorData.error || 'Unknown error')
+            const errorMsg = errorData.message || errorData.error || 'Unknown error'
+            console.warn('Weather API error:', response.status, errorMsg)
             if (response.status === 503) {
               console.info('💡 Tip: Add OPENWEATHERMAP_API_KEY to your .env.local file')
+            } else if (response.status === 401) {
+              console.error('💡 Invalid API key. Please verify your OPENWEATHERMAP_API_KEY in .env.local and ensure it\'s activated at https://openweathermap.org/api')
             }
           }
           // Silently fail - don't set weather data

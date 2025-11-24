@@ -328,6 +328,52 @@ const mobileListItemVariants = {
 }
 
 /**
+ * Close button animation variants.
+ * 
+ * Beautiful entrance animation coordinated with tray entrance.
+ * Appears after tray slides in, creating a polished, inspiring feel.
+ * 
+ * ANIMATION:
+ * - opacity: Fades from 0 to 1
+ * - scale: Scales from 0.9 to 1 (subtle zoom-in effect)
+ * 
+ * TIMING:
+ * - Delay: 0.6s (appears after tray finishes sliding in ~0.5s)
+ * - Duration: 0.5s for smooth, elegant appearance
+ * - Creates inspiring reveal effect as tray settles
+ */
+const closeButtonVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.9,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      opacity: {
+        duration: 0.5,
+        ease: EASING.smooth,
+        delay: 0.6
+      },
+      scale: {
+        duration: 0.5,
+        ease: EASING.elastic,
+        delay: 0.6
+      }
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.9,
+    transition: {
+      duration: 0.2,
+      ease: EASING.smooth
+    }
+  }
+} as const
+
+/**
  * View transition variants (for switching between list/article/about views).
  * 
  * Creates a sophisticated, inspiring transition when switching views within the tray.
@@ -568,6 +614,13 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
    * Track last touch position for scroll-to-dismiss detection.
    */
   const lastTouchYRef = useRef<number | null>(null)
+  
+  /**
+   * Scroll position for desktop article view blur effect.
+   * Tracks scrollTop of mainContentRef to apply blur to header buttons.
+   * Only used on desktop when viewing a writing article.
+   */
+  const [scrollTop, setScrollTop] = useState(0)
   
   // ============================================================================
   // NESTED TRAY LOGIC
@@ -1016,6 +1069,58 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   }, [isMobile, isWritingMode, articleId])
 
   // ============================================================================
+  // SCROLL-BASED BLUR FOR DESKTOP ARTICLE VIEW
+  // ============================================================================
+  
+  /**
+   * Tracks scroll position in desktop article view to apply blur effect to header buttons.
+   * 
+   * Only active when:
+   * - Desktop (!isMobile)
+   * - Article view (viewMode === 'article')
+   * - Writing mode (isWritingMode === true)
+   * 
+   * Calculates blur intensity based on scroll position:
+   * - 0px scroll = no blur
+   * - Increasing scroll = more blur (capped at 8px)
+   * 
+   * Uses requestAnimationFrame for smooth performance.
+   */
+  useEffect(() => {
+    // Only track scroll on desktop, in article view, in writing mode
+    if (isMobile || viewMode !== 'article' || !isWritingMode) {
+      setScrollTop(0)
+      return
+    }
+    
+    const contentEl = mainContentRef.current
+    if (!contentEl) return
+    
+    let rafId: number | null = null
+    
+    const handleScroll = () => {
+      if (rafId !== null) return
+      
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        setScrollTop(contentEl.scrollTop)
+      })
+    }
+    
+    contentEl.addEventListener('scroll', handleScroll, { passive: true })
+    
+    // Initial scroll position
+    setScrollTop(contentEl.scrollTop)
+    
+    return () => {
+      contentEl.removeEventListener('scroll', handleScroll)
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+    }
+  }, [isMobile, viewMode, isWritingMode])
+
+  // ============================================================================
   // KEYBOARD NAVIGATION
   // ============================================================================
   
@@ -1051,6 +1156,14 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   const showWritingListTray = isWritingMode && articleId === null
   const showWritingArticleTray = isWritingMode && articleId !== null
   const showNormalTray = !isWritingMode && articleId !== null
+  
+  // Calculate blur intensity for desktop article view header buttons
+  // Only applies on desktop, in article view, in writing mode
+  const shouldApplyBlur = !isMobile && viewMode === 'article' && isWritingMode
+  const blurValue = shouldApplyBlur ? Math.min(scrollTop / 50, 8) : 0
+  const blurStyle = shouldApplyBlur && blurValue > 0 
+    ? { filter: `blur(${blurValue}px)`, transition: 'filter 0.3s ease-out' }
+    : { filter: 'blur(0px)', transition: 'filter 0.3s ease-out' }
   
   return (
     <>
@@ -1157,12 +1270,16 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                   </motion.div>
                 )}
 
-                {/* Close button */}
+                {/* Close button - Subtle and smaller */}
                 <motion.button
                   onClick={onClose}
-                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-3' : 'p-2'} group`}
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.02, rotate: 15 }}
-                  whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-2.5' : 'p-1.5'} group`}
+                  variants={shouldReduceMotion ? undefined : closeButtonVariants}
+                  initial={shouldReduceMotion ? undefined : "hidden"}
+                  animate={shouldReduceMotion ? undefined : "visible"}
+                  exit={shouldReduceMotion ? undefined : "exit"}
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.1, rotate: 15 }}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
                   transition={{ duration: 0.4, ease: EASING.gentle }}
                   aria-label="Close"
                   style={{
@@ -1172,23 +1289,27 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                     boxShadow: 'none',
                     color: 'hsl(var(--muted-foreground))',
                     WebkitTapHighlightColor: 'transparent',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    opacity: 0.6
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--foreground))'
+                    e.currentTarget.style.opacity = '1'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.opacity = '0.6'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
                     e.currentTarget.style.boxShadow = 'none'
                     e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.opacity = '0.6'
                   }}
                 >
                   <svg
-                    width="12"
-                    height="12"
+                    width="10"
+                    height="10"
                     viewBox="0 0 12 12"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -1197,7 +1318,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                     <path
                       d="M1 1L11 11M11 1L1 11"
                       stroke="currentColor"
-                      strokeWidth="1"
+                      strokeWidth="0.8"
                       strokeLinecap="round"
                     />
                   </svg>
@@ -1364,12 +1485,16 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                 </motion.div>
               )}
 
-              {/* Minimal close button - Beautiful X icon */}
+              {/* Minimal close button - Subtle and smaller */}
               <motion.button
                 onClick={onClose}
-                className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-3' : 'p-2'} group`}
-                whileHover={shouldReduceMotion ? {} : { scale: 1.02, rotate: 15 }}
-                whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+                className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-2.5' : 'p-1.5'} group`}
+                variants={shouldReduceMotion ? undefined : closeButtonVariants}
+                initial={shouldReduceMotion ? undefined : "hidden"}
+                animate={shouldReduceMotion ? undefined : "visible"}
+                exit={shouldReduceMotion ? undefined : "exit"}
+                whileHover={shouldReduceMotion ? {} : { scale: 1.1, rotate: 15 }}
+                whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
                 transition={{ duration: 0.4, ease: EASING.gentle }}
                 aria-label="Close"
                 style={{
@@ -1379,24 +1504,29 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                   boxShadow: 'none',
                   color: 'hsl(var(--muted-foreground))',
                   WebkitTapHighlightColor: 'transparent',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  opacity: 0.6,
+                  ...blurStyle
                 }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--foreground))'
+                    e.currentTarget.style.opacity = '1'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.opacity = '0.6'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
                     e.currentTarget.style.boxShadow = 'none'
                     e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.opacity = '0.6'
                   }}
               >
                 {/* X icon with thin strokes */}
                 <svg
-                  width="12"
-                  height="12"
+                  width="10"
+                  height="10"
                   viewBox="0 0 12 12"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -1405,7 +1535,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                   <path
                     d="M1 1L11 11M11 1L1 11"
                     stroke="currentColor"
-                    strokeWidth="1"
+                    strokeWidth="0.8"
                     strokeLinecap="round"
                   />
                 </svg>
@@ -1434,7 +1564,8 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                     outline: 'none',
                     color: 'hsl(var(--muted-foreground))',
                     WebkitTapHighlightColor: 'transparent',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    ...blurStyle
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = 'hsl(var(--foreground))'

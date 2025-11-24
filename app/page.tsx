@@ -59,9 +59,11 @@
 
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import SideTray from "./new/components/SideTray"
 import WorksPanel from "./new/components/WorksPanel"
+import NavigationItem from "./components/NavigationItem"
+import TimezoneMessage from "./components/TimezoneMessage"
 import { useSystemTheme } from "@/hooks/use-system-theme"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 
@@ -184,8 +186,69 @@ export default function Page() {
    * 
    * When Works panel is open, desktop layout reduces right padding from 8 (2rem)
    * to 50% to accommodate the half-screen panel.
+   * 
+   * @returns {boolean} true if Works panel is currently open
    */
   const isWorksPanelOpen = selectedArticle === "works"
+
+  // ============================================================================
+  // EVENT HANDLERS
+  // ============================================================================
+  
+  /**
+   * Handles navigation item click events.
+   * 
+   * Updates selectedArticle state to open the corresponding panel:
+   * - "about" → Opens SideTray with about content
+   * - "works" → Opens WorksPanel (right side panel)
+   * - "writing" → Opens SideTray in writing mode
+   * 
+   * NOTE: Keyboard navigation (Enter/Space) is handled internally by NavigationItem component.
+   * 
+   * @param {ArticleId} articleId - The article ID to open ("about" | "works" | "writing")
+   * 
+   * @example
+   * handleNavClick("about") // Opens About panel
+   */
+  const handleNavClick = useCallback((articleId: ArticleId) => {
+    setSelectedArticle(articleId)
+  }, [])
+
+  /**
+   * Handles closing the SideTray component.
+   * 
+   * LOGIC:
+   * - Writing mode: Closes both selectedArticle and selectedWritingArticle
+   *   (handles nested state cleanup for two-step navigation)
+   * - Other modes: Only closes selectedArticle
+   * 
+   * This ensures clean state when closing nested writing mode (list → article).
+   * 
+   * @example
+   * handleSideTrayClose() // Closes current panel and resets nested state if needed
+   */
+  const handleSideTrayClose = useCallback(() => {
+    if (selectedArticle === "writing") {
+      // Close the entire writing tray (both list and article views)
+      // This ensures clean state when closing nested writing mode
+      setSelectedArticle(null)
+      setSelectedWritingArticle(null)
+    } else {
+      setSelectedArticle(null)
+    }
+  }, [selectedArticle])
+
+  /**
+   * Handles closing the WorksPanel component.
+   * 
+   * Simply resets selectedArticle to null, which closes the Works panel.
+   * 
+   * @example
+   * handleWorksPanelClose() // Closes Works panel
+   */
+  const handleWorksPanelClose = useCallback(() => {
+    setSelectedArticle(null)
+  }, [])
 
   // ============================================================================
   // RENDER
@@ -197,8 +260,17 @@ export default function Page() {
    * edge-to-edge background for this page. We use negative margins to
    * counteract the mobile-gutter padding.
    * 
-   * Mobile-gutter adds: max(16px, calc(env(safe-area-inset-left, 0px) + 16px))
-   * We counteract with negative margins that match.
+   * MOBILE-GUTTER CALCULATION:
+   * - Mobile-gutter adds: max(16px, calc(env(safe-area-inset-left, 0px) + 16px))
+   * - We counteract with negative margins: -mx-[max(16px,calc(env(safe-area-inset-left,0px)+16px))]
+   * 
+   * WIDTH CALCULATION:
+   * - Mobile: w-[calc(100%+max(32px,calc(env(safe-area-inset-left,0px)+env(safe-area-inset-right,0px)+32px)))]
+   *   - Adds back the negative margin width to ensure full-width background
+   *   - Accounts for both left and right safe area insets
+   * - Desktop (sm:): sm:w-full - Normal width, no negative margins needed
+   * 
+   * This technique allows edge-to-edge backgrounds while respecting safe areas.
    */
   return (
     <div className="-mx-[max(16px,calc(env(safe-area-inset-left,0px)+16px))] sm:mx-0 w-[calc(100%+max(32px,calc(env(safe-area-inset-left,0px)+env(safe-area-inset-right,0px)+32px)))] sm:w-full">
@@ -231,6 +303,21 @@ export default function Page() {
          * - Content is constrained to fit within viewport using flexbox
          */
         className={`h-screen h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 relative md:pt-0 transition-all duration-200 overflow-hidden md:overflow-visible ${isWorksPanelOpen ? 'md:pr-[50%]' : 'md:pr-8'} w-full`}
+        /**
+         * RESPONSIVE PADDING LOGIC:
+         * 
+         * Mobile (px-0):
+         * - No horizontal padding on main element (padding handled by inner content div)
+         * - Inner content div uses px-8 for consistent spacing
+         * 
+         * Desktop (md:pl-20, md:pr-[50%] or md:pr-8):
+         * - md:pl-20: Left padding (5rem) for consistent left alignment
+         * - md:pr-[50%]: When Works panel is open, right padding is 50% to make room for half-screen panel
+         * - md:pr-8: When Works panel is closed, normal right padding (2rem)
+         * 
+         * The conditional right padding (md:pr-[50%] vs md:pr-8) is calculated based on
+         * isWorksPanelOpen state, which is derived from selectedArticle === "works".
+         */
         style={{
           paddingTop: 'max(env(safe-area-inset-top, 0), 4rem)',
           paddingBottom: 'max(env(safe-area-inset-bottom, 0), 2rem)'
@@ -247,7 +334,29 @@ export default function Page() {
            * Column 1: Name and professional title
            * Column 2: Navigation menu (About, Works, Writing)
            */}
-        <div className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-2 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0 min-h-0 overflow-hidden md:overflow-visible">
+        <div 
+          className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-2 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0 min-h-0 overflow-hidden md:overflow-visible"
+          /**
+           * RESPONSIVE LAYOUT CLASSES:
+           * 
+           * Mobile:
+           * - flex flex-col: Vertical stack layout
+           * - items-start: Left-align items
+           * - flex-1: Take available space
+           * - px-8: Horizontal padding (2rem) for content spacing
+           * - min-h-0: Prevents flex item from overflowing
+           * - overflow-hidden: Prevents scrolling on mobile
+           * 
+           * Desktop (md:):
+           * - md:flex-none: Don't grow/shrink (fixed size)
+           * - md:grid md:grid-cols-2: Two-column grid layout
+           * - md:gap-16: 4rem gap between columns
+           * - md:px-0: No horizontal padding (handled by parent)
+           * - md:items-baseline: Align items to baseline
+           * - md:my-0: No vertical margin
+           * - md:overflow-visible: Allow overflow on desktop
+           */
+        >
           {/* Column 1 - Name and Title */}
           <div className="relative flex flex-col items-start md:items-start md:relative mb-12 md:mb-0 gap-1">
             {/* 
@@ -273,43 +382,14 @@ export default function Page() {
                 
                 Opens SideTray with about content when clicked.
                 
-                ACCESSIBILITY:
-                - role="button": Semantically indicates clickable element
-                - tabIndex={0}: Makes it keyboard focusable
-                - onKeyDown: Handles Enter and Space key presses
-                - aria-label: Screen reader description
-                
-                INTERACTION STATES:
-                - Mobile: active:scale-[0.98] - Visual feedback on tap
-                - Desktop: hover:!text-foreground - Text color change on hover
-                - group-hover: All items slightly fade when hovering menu group
-                
-                STYLING NOTES:
-                - -mx-2 px-2: Negative margin + padding creates larger tap target on mobile
-                - WebkitTapHighlightColor: 'transparent' - Removes iOS tap highlight
-                - userSelect: 'none' - Prevents text selection on interaction
+                @see NavigationItem component for implementation details
               */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedArticle("about")}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedArticle("about");
-                  }
-                }}
-                className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:group-hover/menu:text-muted-foreground/70 md:hover:!text-foreground transition-all duration-200 leading-[1.5]"
-                aria-label="About Raf"
-                style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  outline: 'none'
-                }}
-              >
-                About
-              </div>
+              <NavigationItem
+                label="About"
+                articleId="about"
+                onClick={handleNavClick}
+                ariaLabel="About Raf"
+              />
               {/* 
                 NAVIGATION ITEM: Works
                 
@@ -317,28 +397,14 @@ export default function Page() {
                 WorksPanel shows portfolio carousel with work timeline.
                 
                 @see WorksPanel component for implementation details
+                @see NavigationItem component for interaction details
               */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedArticle("works")}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedArticle("works");
-                  }
-                }}
-                className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:group-hover/menu:text-muted-foreground/70 md:hover:!text-foreground transition-all duration-200 leading-[1.5]"
-                aria-label="View Works"
-                style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  outline: 'none'
-                }}
-              >
-                Works
-              </div>
+              <NavigationItem
+                label="Works"
+                articleId="works"
+                onClick={handleNavClick}
+                ariaLabel="View Works"
+              />
               {/* 
                 NAVIGATION ITEM: Writing
                 
@@ -348,81 +414,31 @@ export default function Page() {
                 2. Second: Selected article content (when user clicks an article)
                 
                 @see SideTray component's isWritingMode prop for implementation
+                @see NavigationItem component for interaction details
               */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedArticle("writing")}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedArticle("writing");
-                  }
-                }}
-                className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground active:text-foreground active:scale-[0.98] md:active:scale-100 md:group-hover/menu:text-muted-foreground/70 md:hover:!text-foreground transition-all duration-200 leading-[1.5]"
-                aria-label="View Writing"
-                style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  outline: 'none'
-                }}
-              >
-                Writing
-              </div>
+              <NavigationItem
+                label="Writing"
+                articleId="writing"
+                onClick={handleNavClick}
+                ariaLabel="View Writing"
+              />
             </div>
           </div>
         </div>
 
         {/* 
-          TIMEZONE MESSAGE - Mobile Layout
+          TIMEZONE MESSAGE
           
-          Positioned absolutely at bottom-left of viewport on mobile.
-          Uses safe area insets to avoid notches/device cutouts.
-          Blurs when any side tray is open.
+          Displays timezone message with responsive positioning.
+          - Mobile: Bottom-left with blur when panels are open
+          - Desktop: Bottom-left with fixed offset
           
-          POSITIONING:
-          - bottom: max(1rem, safe-area-inset-bottom + 1rem)
-          - left: max(2rem, safe-area-inset-left + 2rem) (matching px-8 padding)
-          
-          This ensures the message is always visible and not hidden by device UI.
+          @see TimezoneMessage component for implementation details
         */}
-        <div
-          className="md:hidden absolute"
-          style={{
-            bottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
-            left: 'max(2rem, calc(env(safe-area-inset-left, 0px) + 2rem))'
-          }}
-        >
-          <p 
-            className="text-[10px] text-muted-foreground/50 leading-relaxed transition-all duration-200 whitespace-nowrap"
-            style={{ filter: selectedArticle ? 'blur(4px)' : 'blur(0px)' }}
-          >
-            {timezoneMessage}
-          </p>
-        </div>
-
-        {/* 
-          TIMEZONE MESSAGE - Desktop Layout
-          
-          Positioned absolutely in bottom-left corner.
-          Uses safe area insets to avoid notches/device cutouts.
-          
-          POSITIONING:
-          - bottom: max(1.5rem, safe-area-inset-bottom + 1.5rem)
-          - left: max(5rem, safe-area-inset-left + 5rem)
-          
-          This ensures the message is always visible and not hidden by device UI.
-        */}
-        <div
-          className="hidden md:block absolute bottom-4 left-20"
-          style={{
-            bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
-            left: 'max(5rem, calc(env(safe-area-inset-left, 0px) + 5rem))'
-          }}
-        >
-          <p className="text-[10px] text-muted-foreground/50 leading-relaxed transition-colors duration-200">{timezoneMessage}</p>
-        </div>
+        <TimezoneMessage 
+          message={timezoneMessage} 
+          blurWhenOpen={!!selectedArticle}
+        />
 
         {/* ========================================================================
            * SIDE TRAY COMPONENT
@@ -454,16 +470,7 @@ export default function Page() {
            */}
         <SideTray 
           articleId={selectedArticle === "writing" ? selectedWritingArticle : selectedArticle === "about" ? "about" : null} 
-          onClose={() => {
-            if (selectedArticle === "writing") {
-              // Close the entire writing tray (both list and article views)
-              // This ensures clean state when closing nested writing mode
-              setSelectedArticle(null)
-              setSelectedWritingArticle(null)
-            } else {
-              setSelectedArticle(null)
-            }
-          }}
+          onClose={handleSideTrayClose}
           isWritingMode={selectedArticle === "writing"}
           onArticleSelect={selectedArticle === "writing" ? setSelectedWritingArticle : undefined}
         />
@@ -487,7 +494,7 @@ export default function Page() {
            */}
         <WorksPanel 
           isOpen={selectedArticle === "works"} 
-          onClose={() => setSelectedArticle(null)} 
+          onClose={handleWorksPanelClose} 
         />
       </main>
     </div>

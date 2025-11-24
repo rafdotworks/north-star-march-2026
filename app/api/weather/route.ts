@@ -244,7 +244,16 @@ async function fetchWeatherData(lat: number, lon: number) {
   })
   
   if (!response.ok) {
-    throw new Error(`Weather API error: ${response.status} ${response.statusText}`)
+    // Try to parse error message from OpenWeatherMap
+    const errorData = await response.json().catch(() => ({}))
+    const errorMessage = errorData.message || response.statusText
+    
+    // Provide helpful message for common errors
+    if (response.status === 401) {
+      throw new Error(`Invalid API key: ${errorMessage}. Please verify your OPENWEATHERMAP_API_KEY in .env.local`)
+    }
+    
+    throw new Error(`Weather API error: ${response.status} ${errorMessage}`)
   }
   
   const data = await response.json()
