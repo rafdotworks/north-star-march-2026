@@ -302,7 +302,7 @@ export default function Page() {
          * - overflow-hidden md:overflow-visible: Prevents scrolling on mobile, allows on desktop
          * - Content is constrained to fit within viewport using flexbox
          */
-        className={`h-screen h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 relative md:pt-0 transition-all duration-200 overflow-hidden md:overflow-visible ${isWorksPanelOpen ? 'md:pr-[50%]' : 'md:pr-8'} w-full`}
+        className={`h-screen h-[100dvh] max-h-[100dvh] bg-background flex flex-col md:flex-row md:items-center px-0 md:pl-20 relative md:pt-0 transition-all duration-200 overflow-hidden md:overflow-visible ${isWorksPanelOpen ? 'md:pr-[50%]' : 'md:pr-8'} w-full`}
         /**
          * RESPONSIVE PADDING LOGIC:
          * 
@@ -335,7 +335,7 @@ export default function Page() {
            * Column 2: Navigation menu (About, Works, Writing)
            */}
         <div 
-          className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-2 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0 min-h-0 overflow-hidden md:overflow-visible"
+          className="flex flex-col items-start flex-1 md:flex-none md:grid md:grid-cols-2 md:gap-16 w-full md:w-auto md:items-baseline md:my-0 px-8 md:px-0 min-h-0 max-h-full overflow-hidden md:overflow-visible"
           /**
            * RESPONSIVE LAYOUT CLASSES:
            * 

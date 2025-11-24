@@ -666,6 +666,24 @@ html {
   height: 100%;
 }
 
+/* Prevent scrolling on mobile for fixed viewport pages */
+@media (max-width: 767px) {
+  html,
+  body {
+    overflow: hidden;
+    height: 100dvh;
+    max-height: 100dvh;
+    width: 100%;
+  }
+  
+  /* Ensure mobile-gutter doesn't cause overflow */
+  .mobile-gutter {
+    height: 100%;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+}
+
 /* Snap scroll container */
 .snap-y {
   scroll-snap-type: y mandatory;
