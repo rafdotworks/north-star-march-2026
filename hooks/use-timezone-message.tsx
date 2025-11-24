@@ -10,7 +10,8 @@
  * USAGE:
  * ```tsx
  * const timezoneMessage = useTimezoneMessage()
- * // Returns: "Raf is currently in Toronto (3 hours ahead) where it is 22°C/72°F and sunny"
+ * // Returns: "Raf is currently in Toronto (3 hours ahead) where it is 22°C and sunny" (Toronto uses Celsius)
+ * // Or: "Raf is currently in New York (3 hours ahead) where it is 72°F and sunny" (New York uses Fahrenheit)
  * // Or: "Raf is currently in Toronto (3 hours ahead)" if weather unavailable
  * ```
  * 
@@ -47,18 +48,32 @@ interface WeatherData {
 }
 
 /**
+ * Determines if Raf's current location uses Fahrenheit.
+ * 
+ * Uses the temperature scale configured for Raf's current city.
+ * This ensures the temperature scale matches the local convention of the city being displayed.
+ * 
+ * @param {string} temperatureScale - Temperature scale from location config ("C" or "F")
+ * @returns {boolean} True if location uses Fahrenheit, false for Celsius
+ */
+function usesFahrenheit(temperatureScale: "C" | "F"): boolean {
+  return temperatureScale === "F"
+}
+
+/**
  * Custom hook that calculates and displays relative timezone difference from Raf's location,
  * along with weather information.
  * 
  * HOW IT WORKS:
- * 1. Gets current location from config (city, timezone, coordinates)
+ * 1. Gets current location from config (city, timezone, coordinates, temperatureScale)
  * 2. Gets current local time (user's timezone)
  * 3. Uses Intl.DateTimeFormat with formatToParts to get target timezone values
  * 4. Calculates difference in minutes (more accurate than just hours)
  * 5. Handles day boundary crossing (normalize to -12 to +12 hours range)
  * 6. Rounds to nearest hour for display
  * 7. Fetches weather data from API (with graceful fallback)
- * 8. Generates user-friendly message with location, timezone diff, and weather
+ * 8. Uses location's temperatureScale to determine which temperature to display
+ * 9. Generates user-friendly message with location, timezone diff, and weather
  * 
  * EDGE CASES HANDLED:
  * - Day boundary crossing (difference > 12 hours or < -12 hours)
@@ -71,7 +86,8 @@ interface WeatherData {
  * @returns {string} User-friendly timezone and weather message
  * 
  * @example
- * "Raf is currently in Toronto (3 hours ahead) where it is 22°C/72°F and sunny"
+ * "Raf is currently in Toronto (3 hours ahead) where it is 22°C and sunny" (Toronto uses Celsius)
+ * "Raf is currently in New York (3 hours ahead) where it is 72°F and sunny" (New York uses Fahrenheit)
  * "Raf is currently in Toronto (3 hours ahead)" // if weather unavailable
  * "Raf is currently in Toronto (in your timezone)"
  */
@@ -82,7 +98,7 @@ export function useTimezoneMessage(): string {
 
   // Get current location from config (outside effect to avoid re-fetching)
   const location = getCurrentLocation()
-  const { city, timezone: targetTimezone, coordinates } = location
+  const { city, timezone: targetTimezone, coordinates, temperatureScale } = location
 
   /**
    * Calculates timezone difference and generates timezone portion of message.
@@ -206,11 +222,15 @@ export function useTimezoneMessage(): string {
     
     // Append weather if available
     if (weatherData) {
-      message += ` where it is ${weatherData.tempC}°C/${weatherData.tempF}°F and ${weatherData.description}`
+      const useFahrenheit = usesFahrenheit(temperatureScale)
+      const temperature = useFahrenheit 
+        ? `${weatherData.tempF}°F`
+        : `${weatherData.tempC}°C`
+      message += ` where it is ${temperature} and ${weatherData.description}`
     }
     
     setTimezoneMessage(message)
-  }, [timezoneDiff, weatherData, city])
+  }, [timezoneDiff, weatherData, city, temperatureScale])
 
   return timezoneMessage
 }

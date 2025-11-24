@@ -36,31 +36,37 @@
  * - city: Display name
  * - timezone: IANA timezone identifier (e.g., "America/Toronto")
  * - coordinates: Latitude and longitude for weather API
+ * - temperatureScale: "C" for Celsius or "F" for Fahrenheit (based on local convention)
  */
 const LOCATIONS: Record<string, {
   city: string;
   timezone: string;
   coordinates: { lat: number; lon: number };
+  temperatureScale: "C" | "F";
 }> = {
   toronto: {
     city: "Toronto",
     timezone: "America/Toronto",
     coordinates: { lat: 43.6532, lon: -79.3832 },
+    temperatureScale: "C", // Canada uses Celsius
   },
   newyork: {
     city: "New York",
     timezone: "America/New_York",
     coordinates: { lat: 40.7128, lon: -74.0060 },
+    temperatureScale: "F", // US uses Fahrenheit
   },
   london: {
     city: "London",
     timezone: "Europe/London",
     coordinates: { lat: 51.5074, lon: -0.1278 },
+    temperatureScale: "C", // UK uses Celsius
   },
   lisbon: {
     city: "Lisbon",
     timezone: "Europe/Lisbon",
     coordinates: { lat: 38.7223, lon: -9.1393 },
+    temperatureScale: "C", // Portugal uses Celsius
   },
 } as const;
 
@@ -79,12 +85,12 @@ const CURRENT_CITY: keyof typeof LOCATIONS = "toronto";
 /**
  * Gets the current location configuration.
  * 
- * @returns {Object} Current location with city, timezone, and coordinates
+ * @returns {Object} Current location with city, timezone, coordinates, and temperatureScale
  * 
  * @example
  * ```ts
  * const location = getCurrentLocation()
- * // { city: "Toronto", timezone: "America/Toronto", coordinates: {...} }
+ * // { city: "Toronto", timezone: "America/Toronto", coordinates: {...}, temperatureScale: "C" }
  * ```
  */
 export function getCurrentLocation() {
