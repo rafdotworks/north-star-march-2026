@@ -1728,12 +1728,14 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       <div className="space-y-5">
                         {/* Opening */}
                         <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                          I spent the first twenty years of my life on the Amalfi Coast, Italy. I design and build products that connect logic with feeling.
-                        </p>
+                        I grew up on the Amalfi Coast in Italy and built my product design career around a simple idea: products should feel clear, fast, and grounded in logic and emotion.                        </p>
 
                         {/* Today */}
                         <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                          Today I focus on AI systems and design-engineering work that makes complex products feel clear, fast and trustworthy.
+                        Today I design and build AI workflows and interfaces. 
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+Before that, I contributed and shipped design systems, developer tools, and product design foundations across teams like Theoriq, Coinbase, Zalando, Voiceflow and more. 
                         </p>
 
                         {/* 2025 */}

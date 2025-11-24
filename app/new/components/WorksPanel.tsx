@@ -120,7 +120,7 @@ interface WorksPanelProps {
  * - rotateY: Spring easing with 0.05s delay - 0.7s
  * 
  * The staggered delays create a layered, sophisticated entrance.
- * Exit animation is simpler (just slides out) for faster dismissal.
+ * Exit animation uses smooth opacity fade for elegant dismissal.
  */
 const panelVariants = {
   hidden: {
@@ -152,9 +152,7 @@ const panelVariants = {
     }
   },
   exit: {
-    x: "100%",
-    scale: 0.98,
-    rotateY: -5,
+    opacity: 0,
     transition: {
       duration: 0.35,
       ease: EASING.smooth
@@ -173,11 +171,11 @@ const panelVariants = {
  * - scale: Subtle zoom-in effect (0.96 → 1.0) for materialization
  * - opacity: Smooth fade-in (0.8 → 1.0) for elegant appearance
  * - Spring physics: Refined parameters (stiffness: 320, damping: 38) for smoother motion
- * - Exit: Quick, responsive spring for satisfying dismissal
+ * - Exit: Smooth opacity fade for elegant dismissal
  * 
  * TIMING:
  * - Entrance: ~0.5s with natural spring physics for fluid motion
- * - Exit: ~0.3s for responsive dismissal
+ * - Exit: ~0.3s smooth fade for responsive dismissal
  * - Matches SideTray animation for consistency
  */
 const mobilePanelVariants = {
@@ -199,15 +197,10 @@ const mobilePanelVariants = {
     }
   },
   exit: {
-    y: "100%",
-    scale: 0.96,
-    opacity: 0.8,
+    opacity: 0,
     transition: {
-      type: "spring" as const,
-      stiffness: 500,
-      damping: 45,
-      mass: 0.7,
-      duration: 0.3
+      duration: 0.3,
+      ease: EASING.smooth
     }
   },
 } as const
