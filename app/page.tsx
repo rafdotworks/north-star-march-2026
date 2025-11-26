@@ -159,11 +159,15 @@ export default function Page() {
   
   /**
    * Apply theme to html element to ensure full-page background color.
+   * Also add no-mobile-scroll class to prevent scrolling on mobile.
    * 
    * This useEffect runs when shouldShowDark changes and applies the
    * data-theme attribute to document.documentElement (html element).
    * This ensures the entire page (html/body) gets the correct background
    * color, not just the main element.
+   * 
+   * Additionally, adds the .no-mobile-scroll class to maintain fixed
+   * viewport behavior on mobile devices (prevents scrolling).
    * 
    * IMPORTANT: This must run on the client side only to avoid hydration
    * mismatches. The isReady check ensures we don't apply theme before
@@ -173,6 +177,15 @@ export default function Page() {
     if (typeof document !== 'undefined') {
       const theme = shouldShowDark ? "dark" : "light"
       document.documentElement.setAttribute('data-theme', theme)
+      // Add no-mobile-scroll class to prevent scrolling on mobile
+      document.documentElement.classList.add('no-mobile-scroll')
+    }
+    
+    // Cleanup: remove class on unmount
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('no-mobile-scroll')
+      }
     }
   }, [shouldShowDark])
 

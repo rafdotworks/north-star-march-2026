@@ -667,17 +667,18 @@ html {
 }
 
 /* Prevent scrolling on mobile for fixed viewport pages */
+/* Only applies when html element has .no-mobile-scroll class */
 @media (max-width: 767px) {
-  html,
-  body {
+  html.no-mobile-scroll,
+  html.no-mobile-scroll body {
     overflow: hidden;
     height: 100dvh;
     max-height: 100dvh;
     width: 100%;
   }
   
-  /* Ensure mobile-gutter doesn't cause overflow */
-  .mobile-gutter {
+  /* Ensure mobile-gutter doesn't cause overflow when no-scroll is active */
+  html.no-mobile-scroll .mobile-gutter {
     height: 100%;
     max-height: 100dvh;
     overflow: hidden;
