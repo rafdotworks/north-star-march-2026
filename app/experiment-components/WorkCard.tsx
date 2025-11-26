@@ -63,7 +63,7 @@ export function WorkCard({
 
       {/* Year, role and contract type label - left column (sticky on desktop, replaces previous) */}
       <div 
-        className="text-right text-[11px] text-muted-foreground/50 font-light pt-6 md:pt-8 first:pt-0 md:sticky md:top-12 md:bg-background self-baseline"
+        className="text-left md:text-right text-[11px] text-muted-foreground/50 font-light pt-6 md:pt-8 first:pt-0 md:sticky md:top-12 md:bg-background self-baseline"
         style={{ zIndex: 10 + projectIndex }}
       >
         <div>{year}</div>

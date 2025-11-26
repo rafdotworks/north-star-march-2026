@@ -20,6 +20,11 @@
 
 @layer base {
   :root {
+    /* Theme transition properties - smooth color transitions */
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
     /* — Core hue anchors (adjust these to nudge the vibe) */
     --accent-h: 226; /* indigo/blue */
     --accent-s: 92%;
@@ -184,6 +189,14 @@
 }
 
 /* Support explicit theme switching via data attribute */
+[data-theme="dark"],
+[data-theme="light"] {
+  /* Smooth transitions for theme-dependent properties */
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 [data-theme="dark"] {
   /* Mirror dark tokens */
   --bg: hsl(var(--neutral-h) 14% 8%);
@@ -346,18 +359,27 @@ body {
   font-size: 16px;
   overscroll-behavior: none;
   height: 100%;
+  /* Smooth theme transitions */
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Practical mappings (utility classes remain via Tailwind) */
 body {
   background: var(--bg);
   color: var(--fg);
+  /* Ensure smooth transitions for background and text */
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card {
   background: var(--card);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-primary {
   background: var(--primary-color);
@@ -372,6 +394,9 @@ textarea {
   background: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--fg);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 a {
   color: var(--primary-color);

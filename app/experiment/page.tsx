@@ -19,7 +19,7 @@
 
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
+import React, { useEffect, useState, useRef, useCallback } from "react"
 import { useSystemTheme } from "@/hooks/use-system-theme"
 import {
   PROJECT_ORDER,
@@ -74,6 +74,10 @@ export default function ExperimentPage() {
   const { prefersDark, isReady } = useSystemTheme()
   const shouldShowDark = prefersDark && isReady
 
+  // Atlas theme toggle state
+  const [isInAtlasSection, setIsInAtlasSection] = useState<boolean>(false)
+  const [originalTheme, setOriginalTheme] = useState<boolean | null>(null)
+
   // Timezone message
   const timezoneMessage = useTimezoneMessage()
 
@@ -97,29 +101,67 @@ export default function ExperimentPage() {
     }
   }, [])
 
+  // Store original theme preference on mount (only once)
+  useEffect(() => {
+    if (isReady && originalTheme === null) {
+      setOriginalTheme(shouldShowDark)
+    }
+  }, [isReady, shouldShowDark, originalTheme])
+
+  // Calculate effective theme: toggle when in atlas section, otherwise use original
+  const effectiveTheme = (() => {
+    if (originalTheme === null || !isReady) {
+      // Not ready yet, use system preference
+      return shouldShowDark
+    }
+    
+    if (isInAtlasSection) {
+      // In atlas section: toggle the original theme
+      return !originalTheme
+    }
+    
+    // Not in atlas section: use original theme
+    return originalTheme
+  })()
+
   // Apply theme to html element
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      const theme = shouldShowDark ? "dark" : "light"
+      const theme = effectiveTheme ? "dark" : "light"
       document.documentElement.setAttribute('data-theme', theme)
     }
-  }, [shouldShowDark])
+  }, [effectiveTheme])
 
-  // Intersection Observer for sticky year, role and contract type
+  // Intersection Observer for sticky year, role and contract type, and atlas theme toggle
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         // Find the most visible project (highest intersection ratio)
         let mostVisible: { projectKey: string; ratio: number } | null = null
+        let atlasIsIntersecting = false
+        let atlasRatio = 0
         
         entries.forEach((entry) => {
+          const projectKey = entry.target.getAttribute('data-project-key')
+          
+          // Track atlas project specifically
+          if (projectKey === 'atlas') {
+            atlasIsIntersecting = entry.isIntersecting
+            atlasRatio = entry.intersectionRatio
+          }
+          
+          // Find most visible project for year/role/contract type updates
           if (entry.isIntersecting) {
-            const projectKey = entry.target.getAttribute('data-project-key')
             if (projectKey && entry.intersectionRatio > (mostVisible?.ratio || 0)) {
               mostVisible = { projectKey, ratio: entry.intersectionRatio }
             }
           }
         })
+
+        // Update atlas section state based on visibility
+        // Consider atlas "in view" when the sentinel element is intersecting
+        // Since sentinel is at the start of the project, any intersection means we're viewing it
+        setIsInAtlasSection(atlasIsIntersecting)
 
         // Update year, role and contract type based on most visible project
         if (mostVisible) {
@@ -135,6 +177,7 @@ export default function ExperimentPage() {
       }
     )
 
+    // Observe all project sentinel elements
     projectRefs.current.forEach((element) => {
       if (element) observer.observe(element)
     })
@@ -218,26 +261,30 @@ export default function ExperimentPage() {
         const contractType = PROJECT_CONTRACT_TYPES[projectKey] || ""
 
         return (
-          <div
-            key={projectKey}
-            ref={(el) => {
-              if (el) projectRefs.current.set(projectKey, el)
-            }}
-            data-project-key={projectKey}
-            className="contents"
-          >
-            <WorkCard
-              year={year}
-              role={role}
-              contractType={contractType}
-              title={getProjectTitle(projectKey)}
-              description={description}
-              images={images}
-              altText={altText}
-              priority={index < 2} // Priority load first 2 images
-              projectIndex={index}
+          <React.Fragment key={projectKey}>
+            {/* Observer target - spans both columns, positioned at start of project */}
+            <div
+              ref={(el) => {
+                if (el) projectRefs.current.set(projectKey, el)
+              }}
+              data-project-key={projectKey}
+              className="col-span-1 md:col-span-2 h-px pointer-events-none"
+              aria-hidden="true"
             />
-          </div>
+            <div className="contents">
+              <WorkCard
+                year={year}
+                role={role}
+                contractType={contractType}
+                title={getProjectTitle(projectKey)}
+                description={description}
+                images={images}
+                altText={altText}
+                priority={index < 2} // Priority load first 2 images
+                projectIndex={index}
+              />
+            </div>
+          </React.Fragment>
         )
       })}
 
