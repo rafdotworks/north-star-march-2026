@@ -33,7 +33,7 @@ interface ContentGridProps {
 export function ContentGrid({ children }: ContentGridProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-[1400px] mx-auto px-8 md:px-20 pt-0 md:pt-0 pb-8 md:pb-12">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-20 pt-0 md:pt-0 pb-8 md:pb-12">
         <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16 gap-y-1 md:gap-y-2">
           {children}
         </div>
