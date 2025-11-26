@@ -311,18 +311,20 @@ const carouselContainerVariants = {
  * Mobile timeline container animation variants.
  * 
  * Appears together with carousel for unified entrance on mobile.
- * Simpler animation but synchronized timing.
+ * Matches SideTray content animation timing for consistency.
  */
 const mobileTimelineContainerVariants = {
   hidden: {
-    opacity: 0
+    opacity: 0,
+    y: 12
   },
   visible: {
     opacity: 1,
+    y: 0,
     transition: {
       duration: 0.4,
       ease: EASING.smooth,
-      delay: 0.2
+      delay: 0.1
     }
   },
   exit: {
@@ -338,18 +340,20 @@ const mobileTimelineContainerVariants = {
  * Mobile carousel container animation variants.
  * 
  * Appears together with timeline for unified entrance on mobile.
- * Simpler animation but synchronized timing.
+ * Matches SideTray content animation timing for consistency.
  */
 const mobileCarouselContainerVariants = {
   hidden: {
-    opacity: 0
+    opacity: 0,
+    y: 12
   },
   visible: {
     opacity: 1,
+    y: 0,
     transition: {
       duration: 0.4,
       ease: EASING.smooth,
-      delay: 0.2
+      delay: 0.1
     }
   },
   exit: {
@@ -1160,66 +1164,38 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
             <motion.div
               ref={panelRef}
               key="panel"
-              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/100 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50 overflow-hidden`}
-              variants={shouldReduceMotion ? undefined : activePanelVariants}
-              initial={shouldReduceMotion ? undefined : "hidden"}
-              animate={shouldReduceMotion ? undefined : (
-                isMobile && dragY > 0 
-                  ? {
-                      // Merge variant animation with drag properties
-                      y: dragY,
-                      opacity: Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4),
-                      scale: Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08),
-                    }
-                  : "visible" // Use variant "visible" state when not dragging
-              )}
-              exit={shouldReduceMotion ? undefined : "exit"}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-1/2'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/100 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50`}
+              variants={activePanelVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               // Drag-to-dismiss functionality (mobile only)
               drag={isMobile ? "y" : false}
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.2 }}
               dragMomentum={false}
-              dragPropagation={false}
               onDragStart={handleDragStart}
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
-              style={{
-                zIndex: 50, // Ensure panel appears above backdrop (z-40)
-                ...(isMobile ? {
-                  // Cover full viewport including safe areas
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: '100dvh',
-                  minHeight: '100dvh',
-                  maxHeight: '100dvh',
-                  paddingTop: 'env(safe-area-inset-top, 0px)',
-                  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                  overscrollBehavior: 'none',
-                  touchAction: 'pan-y',
-                  // Only apply drag transforms when actively dragging
-                  // When not dragging, variant animation controls position
-                  ...(dragY > 0 ? {
-                    y: dragY,
-                    opacity: Math.max(0.75, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.4),
-                    scale: Math.max(0.96, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.08),
-                  } : {})
-                } : {
-                  // Desktop: Preserve 3D transform for side panel
-                  paddingTop: 'env(safe-area-inset-top, 0px)',
-                  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                  transformStyle: "preserve-3d",
-                  perspective: "1200px"
-                })
-              }}
+              style={isMobile ? {
+                // Cover full viewport including safe areas
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: '100dvh',
+                minHeight: '100dvh',
+                maxHeight: '100dvh',
+                paddingTop: 'env(safe-area-inset-top, 0px)',
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                y: dragY,
+                // Visual feedback during drag
+                opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
+                scale: dragY > 0 ? Math.max(0.95, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.1) : 1,
+              } : { transformStyle: "preserve-3d", perspective: "1200px" }}
             >
               <motion.div
-                className={`relative h-full flex flex-col overflow-hidden`}
-                style={{
-                  // Parent container is always visible - children (timeline + carousel) animate independently
-                  opacity: 1,
-                }}
+                className="h-full flex flex-col"
               >
                 {/* Mobile drag handle */}
                 {isMobile && (
@@ -1256,7 +1232,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                 {/* Close button - Subtle and smaller */}
                 <motion.button
                   onClick={onClose}
-                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-30 ${isMobile ? 'p-2.5' : 'p-1.5'} group`}
+                  className={`absolute ${isMobile ? 'top-5 right-5' : 'top-6 right-6'} z-10 ${isMobile ? 'p-2.5' : 'p-1.5'} group`}
                   variants={shouldReduceMotion ? undefined : closeButtonVariants}
                   initial={shouldReduceMotion ? undefined : "hidden"}
                   animate={shouldReduceMotion ? undefined : "visible"}
