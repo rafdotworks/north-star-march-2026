@@ -76,7 +76,10 @@ export default function ExperimentPage() {
 
   // Atlas theme toggle state
   const [isInAtlasSection, setIsInAtlasSection] = useState<boolean>(false)
+  const [hasEnteredAtlas, setHasEnteredAtlas] = useState<boolean>(false)
+  const [hasReachedEnd, setHasReachedEnd] = useState<boolean>(false)
   const [originalTheme, setOriginalTheme] = useState<boolean | null>(null)
+  const footerRef = useRef<HTMLDivElement>(null)
 
   // Timezone message
   const timezoneMessage = useTimezoneMessage()
@@ -108,19 +111,19 @@ export default function ExperimentPage() {
     }
   }, [isReady, shouldShowDark, originalTheme])
 
-  // Calculate effective theme: toggle when in atlas section, otherwise use original
+  // Calculate effective theme: toggle when atlas is entered, stay toggled until end of page
   const effectiveTheme = (() => {
     if (originalTheme === null || !isReady) {
       // Not ready yet, use system preference
       return shouldShowDark
     }
     
-    if (isInAtlasSection) {
-      // In atlas section: toggle the original theme
+    // If we've entered atlas and haven't reached the end, keep theme toggled
+    if (hasEnteredAtlas && !hasReachedEnd) {
       return !originalTheme
     }
     
-    // Not in atlas section: use original theme
+    // Otherwise: use original theme
     return originalTheme
   })()
 

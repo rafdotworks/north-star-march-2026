@@ -20,10 +20,10 @@
 
 @layer base {
   :root {
-    /* Theme transition properties - smooth color transitions */
-    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Theme transition properties - gradual and beautiful color transitions */
+    transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                border-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     /* — Core hue anchors (adjust these to nudge the vibe) */
     --accent-h: 226; /* indigo/blue */
@@ -191,10 +191,10 @@
 /* Support explicit theme switching via data attribute */
 [data-theme="dark"],
 [data-theme="light"] {
-  /* Smooth transitions for theme-dependent properties */
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Gradual and beautiful transitions for theme-dependent properties */
+  transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              border-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 [data-theme="dark"] {
@@ -359,27 +359,27 @@ body {
   font-size: 16px;
   overscroll-behavior: none;
   height: 100%;
-  /* Smooth theme transitions */
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Gradual and beautiful theme transitions */
+  transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Practical mappings (utility classes remain via Tailwind) */
 body {
   background: var(--bg);
   color: var(--fg);
-  /* Ensure smooth transitions for background and text */
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Ensure gradual and beautiful transitions for background and text */
+  transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .card {
   background: var(--card);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius);
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              border-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .btn-primary {
   background: var(--primary-color);
@@ -394,9 +394,9 @@ textarea {
   background: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--fg);
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              border-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 a {
   color: var(--primary-color);
@@ -689,6 +689,9 @@ html {
   scroll-behavior: smooth;
   overscroll-behavior: none;
   height: 100%;
+  /* Gradual and beautiful theme transitions for html element */
+  transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Prevent scrolling on mobile for fixed viewport pages */
