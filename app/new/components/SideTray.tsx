@@ -128,18 +128,16 @@ interface ArticleContent {
  * Provides visual separation and enables click-outside-to-close.
  * 
  * ENHANCED FOR MOBILE:
- * - Adds subtle scale effect (0.98 → 1.0) for depth perception
  * - Faster entrance (0.35s) to establish visual hierarchy before modal
  * - Coordinated timing with modal entrance for polished feel
+ * - Scale animation removed to prevent visible rectangle artifact
  */
 const backdropVariants = {
   hidden: { 
-    opacity: 0,
-    scale: 0.98
+    opacity: 0
   },
   visible: {
     opacity: 1,
-    scale: 1,
     transition: {
       duration: 0.35,
       ease: EASING.smooth
@@ -147,7 +145,6 @@ const backdropVariants = {
   },
   exit: {
     opacity: 0,
-    scale: 0.98,
     transition: {
       duration: 0.25,
       ease: EASING.smooth
@@ -1178,7 +1175,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             <motion.div
               ref={writingListBackdropRef}
               key="writing-list-backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -1389,7 +1386,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
             <motion.div
               ref={mainBackdropRef}
               key="backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
               style={isMobile ? {
                 overscrollBehavior: 'none',
                 touchAction: 'none'

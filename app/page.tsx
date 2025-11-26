@@ -373,10 +373,10 @@ export default function Page() {
           <div className="flex justify-start md:block mb-12 md:mb-0">
             {/* 
               Navigation menu with hover effects
-              group/menu: Enables group hover for all menu items
-              Each item has individual hover states that work with group hover
+              group/nav: Enables group hover for all menu items
+              When hovering one item, others are toned down
             */}
-            <div className="flex flex-col gap-1 group/menu">
+            <div className="flex flex-col gap-1 group/nav">
               {/* 
                 NAVIGATION ITEM: About
                 

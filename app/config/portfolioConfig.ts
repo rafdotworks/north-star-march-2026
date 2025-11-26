@@ -238,25 +238,25 @@ export const LOADING_STAGES: string[] = [
 export const PROJECTS: Record<string, { images: string[] }> = {
   // Current/recent work (2024-2025)
   atlas: {
-    images: ["/work/atlas-2.png"], // Crypto marketplace, NFT era
+    images: ["/work/atlas-2.png", "/work/defituna-1.png"], // Crypto marketplace, NFT era
   },
   cb: {
-    images: ["/work/cb-1.png"], // Coinbase Developer Platform
+    images: ["/work/cb-1.png", "/work/cb.webp"], // Coinbase Developer Platform
   },
   vf: {
-    images: ["/work/vf-0.png"], // Voiceflow product redesign
+    images: ["/work/vf-0.png", "/work/vf-01.png", "/work/vf-03.png"], // Voiceflow product redesign
   },
   defituna: {
-    images: ["/work/defituna-1.png"], // DeFi project
+    images: ["/work/defituna-1.png", "/work/defituna-1.png"], // DeFi project
   },
   theo: {
-    images: ["/work/theo-1.png"], // Theoriq - AI platform, founding designer
+    images: ["/work/theo-1.png", "/work/theo-brand.png", "/work/theo-2.png", "/work/theo-mobile.png"], // Theoriq - AI platform, founding designer
   },
   // Legacy/early works (2017-2022)
-  curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools
+  curbcut: { images: ["/work/curbcutos.png", "/work/curbcutos.png"] }, // Accessibility data tools
   zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
   earlyworks: { images: ["/work/early-works.webp"] }, // Early brand work
-  nationalArchives: { images: ["/work/us.png"] }, // Early brand work
+  nationalArchives: { images: ["/work/us.png", "/work/us.png"] }, // Early brand work
 };
 
 // ============================================================================
@@ -328,8 +328,6 @@ export const PROJECT_ORDER: string[] = [
   "cb", // Coinbase (2025)
   "vf", // Voiceflow (2025)
   "atlas", // Atlas (2020)
-  "defituna", // DeFi Tuna (2021)
-  "curbcut", // CurbCut (2021)
   "zalando", // Zalando (2022)
   "earlyworks", // Early work (2017-2019)
 ];
@@ -377,6 +375,75 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
 };
 
 // ============================================================================
+// ROLE AND CONTRACT DATA - Project roles and contract types
+// ============================================================================
+
+/**
+ * PROJECT_ROLES: Maps project keys to role titles.
+ * 
+ * @remarks
+ * Used to display the role in the left column of the experiment page.
+ * 
+ * @example
+ * ```ts
+ * PROJECT_ROLES["theo"] // "Founding Product Designer"
+ * ```
+ */
+export const PROJECT_ROLES: Record<string, string> = {
+  theo: "Founding Product Designer",
+  cb: "Senior Product Designer",
+  vf: "Senior Product Designer",
+  atlas: "Senior Designer",
+  curbcut: "Product Designer",
+  zalando: "Senior Design System Designer",
+  earlyworks: "Designer",
+};
+
+/**
+ * PROJECT_CONTRACT_TYPES: Maps project keys to contract type.
+ * 
+ * @remarks
+ * Used to display the contract type in the left column of the experiment page.
+ * Values are either "Full-time" or "Contract".
+ * 
+ * @example
+ * ```ts
+ * PROJECT_CONTRACT_TYPES["theo"] // "Full-time"
+ * ```
+ */
+export const PROJECT_CONTRACT_TYPES: Record<string, string> = {
+  theo: "Full-time",
+  cb: "Contract",
+  vf: "Contract",
+  atlas: "Full-time",
+  curbcut: "Full-time",
+  zalando: "Full-time",
+  earlyworks: "Contract",
+};
+
+/**
+ * PROJECT_YEARS: Maps project keys to year strings.
+ * 
+ * @remarks
+ * Used to display the year in the left column of the experiment page.
+ * Year appears as the first line, followed by role and contract type.
+ * 
+ * @example
+ * ```ts
+ * PROJECT_YEARS["theo"] // "2024-25"
+ * ```
+ */
+export const PROJECT_YEARS: Record<string, string> = {
+  theo: "2024-25",
+  cb: "Q3-Q4 2025",
+  vf: "Q1-Q2 2025",
+  atlas: "2022/23",
+  curbcut: "2023/24",
+  zalando: "2021/22",
+  earlyworks: "From 2016",
+};
+
+// ============================================================================
 // CAPTION DATA - Project descriptions shown below images
 // ============================================================================
 
@@ -384,33 +451,29 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
  * PROJECT_CAPTIONS: Text descriptions for each project.
  * 
  * @remarks
- * Format: "YEAR — Description"
+ * Contains only the description text (no year prefix).
+ * Year is displayed separately in the left column via PROJECT_YEARS.
  * Used on both desktop and mobile views.
  * 
- * The " — " separator is used to split year from description.
- * This allows for separate styling and animation of year vs description.
- * 
- * @see {@link app/utils/portfolioUtils.ts#parseCaption} for parsing logic
+ * @see {@link app/experiment/page.tsx#parseCaption} for parsing logic
  * 
  * @example
  * ```ts
- * PROJECT_CAPTIONS["cb"] // "Q3 2025 — Shipped SQL AI Playground..."
+ * PROJECT_CAPTIONS["cb"] // "Shipped SQL AI Playground..."
  * ```
  */
 export const PROJECT_CAPTIONS: Record<string, string> = {
-  cb: "2025 — Shipped SQL AI Playground and Embedded Wallets launch for the Coinbase Developer Platform.",
-  vf: "2025 — Redesigned product activation, landing page and onboarding at Voiceflow to drive clarity and conversion.",
-  theo: "2024/25 — Founding designer at Theoriq, scaled from PDF to 140k active users across product, brand and marketing.",
+  cb: "Designed advanced developer tools for the CDP team.\n\nLed the SQL Playground experience and contributed to Embedded Wallets and ETH payment.",
+  vf: "Owned landing page activation and onboarding design.\n\nSimplified workflows, reduced friction for users deploying AI Agents , and improved foundational UX across the platform.",
+  theo: "Shaped the core product from early idea to 140k users across product, brand and marketing.\n\nBuilt the design system, validated with users, managed stakeholders and more.",
   atlas:
-    "2022/23 — Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products.",
-  defituna:
-    "2022 — Designed and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
+    "Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products. Introduced clearer navigation, cleaner purchase and listing flows, and a scalable design system for a fast-moving product.\n\nDesigned and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
   curbcut:
-    "2023/24 — Designed calm, legible data tools that made accessibility insights usable for everyone.",
+    "Designed calm, legible data tools that made accessibility insights usable for everyone.",
   zalando:
-    "2021/22 — Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.",
+    "Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.\n\nHelped teams adopt consistent patterns and improved usability for enterprise-scale workflows.",
   earlyworks:
-    "From 2016 — Built brands, interfaces, and launch sites for 10+ backed startups and award-winning agencies.",
+    "A mix of freelance with startups and agencies. Built brands, interfaces and websites. Selected clients: w.ai, Revolut, web3ops, Artscapy, Lyfe, Tela, Ethos, JazzX and more",
 };
 
 // ============================================================================
