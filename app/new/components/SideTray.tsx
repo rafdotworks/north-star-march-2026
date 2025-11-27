@@ -1728,15 +1728,15 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                       <div className="space-y-5">
                         {/* Opening */}
                         <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        I grew up on the Amalfi Coast in Italy and built my product design career around a simple idea: products should feel clear, fast, and grounded in logic and emotion.                        </p>
+                        I grew up on the Amalfi Coast in Italy. I built my product design career around a simple idea: products should feel clear, fast, and grounded in logic and emotion.                        </p>
 
                         {/* Today */}
                         <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        Today I design and build AI workflows and interfaces. 
+                        Today I design AI softwares for an early stage AI company and an enterprise retail as a contractor.
                         </p>
-                        <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-Before that, I contributed and shipped design systems, developer tools, and product design foundations across teams like Theoriq, Coinbase, Zalando, Voiceflow and more. 
-                        </p>
+                        {/* <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+Before that, I contributed and shipped design systems, developer tools, and product design foundations across teams like Theoriq, Coinbase, Zalando, Voiceflow and more.
+                        </p> */}
 
                         {/* 2025 */}
                         {/* <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
