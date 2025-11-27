@@ -238,7 +238,7 @@ export const LOADING_STAGES: string[] = [
 export const PROJECTS: Record<string, { images: string[] }> = {
   // Current/recent work (2024-2025)
   atlas: {
-    images: ["/work/atlas-2.png", "/work/defituna-1.png"], // Crypto marketplace, NFT era
+    images: ["/work/atlas-2.png", "/work/videos/atlas-ptv.mov", "/work/defituna-1.png", "/work/videos/defi-tuna.mov"], // Crypto marketplace, NFT era
   },
   cb: {
     images: ["/work/cb-1.png", "/work/cb.webp"], // Coinbase Developer Platform
@@ -250,7 +250,7 @@ export const PROJECTS: Record<string, { images: string[] }> = {
     images: ["/work/defituna-1.png", "/work/defituna-1.png"], // DeFi project
   },
   theo: {
-    images: ["/work/theo-1.png", "/work/theo-brand.png", "/work/theo-web.png", "/work/theo-mobile.png"], // Theoriq - AI platform, founding designer
+    images: ["/work/theo-1.png", "/work/videos/theo-prod.mov", "/work/theo-brand.png", "/work/theo-web.png", "/work/theo-mobile.png"], // Theoriq - AI platform, founding designer
   },
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png", "/work/curbcutos.png"] }, // Accessibility data tools

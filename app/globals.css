@@ -805,6 +805,51 @@ html {
   color: currentColor;
 }
 
+/* Subtle one-time shimmer effect for text */
+@keyframes text-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.text-shimmer {
+  --shimmer-color-light: rgba(255, 255, 255, 0.9);
+  --shimmer-color-dark: rgba(255, 255, 255, 0.7);
+  background: linear-gradient(
+    120deg,
+    currentColor 0%,
+    currentColor 35%,
+    var(--shimmer-color-light) 45%,
+    var(--shimmer-color-light) 55%,
+    currentColor 65%,
+    currentColor 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 1.5s ease-in-out 0.8s;
+  animation-iteration-count: 1;
+  animation-fill-mode: backwards;
+}
+
+@media (prefers-color-scheme: dark) {
+  .text-shimmer {
+    --shimmer-color-light: rgba(255, 255, 255, 0.95);
+  }
+}
+
+[data-theme="dark"] .text-shimmer {
+  --shimmer-color-light: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="light"] .text-shimmer {
+  --shimmer-color-light: rgba(255, 255, 255, 0.9);
+}
+
 /* Firefox specific selection styling */
 ::-moz-selection {
   background-color: rgba(184, 149, 111, 0.2); /* #b8956f with opacity */
