@@ -163,54 +163,58 @@ export default function ExperimentPage() {
       <SectionDivider />
 
       {/* ========================================================================
-       * WORKS SECTION
+       * WORKS SECTION - Wrapper contains sticky elements
        * ======================================================================== */}
-      {PROJECT_ORDER.map((projectKey, index) => {
-        const project = PROJECTS[projectKey]
-        const images = project.images
-        const title = PROJECT_DISPLAY_NAMES[projectKey] || projectKey
-        const altText = IMAGE_ALT_TEXT[images[0]] || `${title} project showcase`
+      <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16 gap-y-1 md:gap-y-2 pb-[50vh]">
+        {PROJECT_ORDER.map((projectKey, index) => {
+          const project = PROJECTS[projectKey]
+          const images = project.images
+          const title = PROJECT_DISPLAY_NAMES[projectKey] || projectKey
+          const altText = IMAGE_ALT_TEXT[images[0]] || `${title} project showcase`
 
-        return (
-          <WorkCard
-            key={projectKey}
-            year={PROJECT_YEARS[projectKey] || ""}
-            role={PROJECT_ROLES[projectKey] || ""}
-            contractType={PROJECT_CONTRACT_TYPES[projectKey] || ""}
-            title={title}
-            description={PROJECT_CAPTIONS[projectKey]}
-            images={images}
-            altText={altText}
-            priority={index < PRIORITY_IMAGE_COUNT}
-            projectIndex={index}
-          />
-        )
-      })}
+          return (
+            <WorkCard
+              key={projectKey}
+              year={PROJECT_YEARS[projectKey] || ""}
+              role={PROJECT_ROLES[projectKey] || ""}
+              contractType={PROJECT_CONTRACT_TYPES[projectKey] || ""}
+              title={title}
+              description={PROJECT_CAPTIONS[projectKey]}
+              images={images}
+              altText={altText}
+              priority={index < PRIORITY_IMAGE_COUNT}
+              projectIndex={index}
+            />
+          )
+        })}
+      </div>
 
       {/* ========================================================================
-       * FOOTER SECTION - DIVIDER + TIMEZONE/WEATHER MESSAGE
+       * FOOTER SECTION - HERO-STYLE WITH CONTENT AT BOTTOM
        * ======================================================================== */}
-      
+
       {/* Divider - spans both columns */}
       <SectionDivider />
 
-      {/* Footer content - aligned with project titles (right column) */}
-      {/* Empty left column */}
-      <div className="hidden md:block" />
+      {/* Footer hero - spans both columns, content at bottom */}
+      <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row md:items-end gap-0 md:gap-8 lg:gap-16 min-h-[50vh] justify-end py-[10vh] md:pt-[20vh] md:pb-[10vh]">
+        {/* Empty left column for grid alignment */}
+        <div className="hidden md:block md:w-[180px] lg:w-[200px] flex-shrink-0" />
 
-      {/* Timezone/Weather message - right column, aligned with project titles */}
-      <div className="pt-4 md:pt-6 pb-12 md:pb-16">
-        <p className="text-xs text-muted-foreground/50 leading-relaxed transition-colors duration-200">
-          {timezoneMessage}
-        </p>
+        {/* Footer content - right column, md:flex-1 for width on desktop only */}
+        <div className="flex flex-col md:flex-1">
+          <p className="text-xs text-muted-foreground/50 leading-relaxed transition-colors duration-200">
+            {timezoneMessage}
+          </p>
 
-        {/* Footer links */}
-        <nav className="flex flex-row gap-5 group/nav pt-3">
-          <FooterLink href="https://www.linkedin.com/in/raffaelevitaledesign/" label="LinkedIn" external />
-          <FooterLink href="mailto:raf@raf.works" label="Email" />
-          <FooterLink href="/cv" label="CV" />
-          <FooterLink href="https://x.com/lfgraf" label="X" external />
-        </nav>
+          {/* Footer links */}
+          <nav className="flex flex-row gap-5 group/nav pt-3">
+            <FooterLink href="https://www.linkedin.com/in/raffaelevitaledesign/" label="LinkedIn" external />
+            <FooterLink href="mailto:raf@raf.works" label="Email" />
+            <FooterLink href="/cv" label="CV" />
+            <FooterLink href="https://x.com/lfgraf" label="X" external />
+          </nav>
+        </div>
       </div>
       </ContentGrid>
 
