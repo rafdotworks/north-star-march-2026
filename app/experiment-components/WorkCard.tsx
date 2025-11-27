@@ -21,8 +21,11 @@
 
 "use client"
 
-import React from "react"
+import React, { memo, useMemo, useCallback } from "react"
 import Image from "next/image"
+
+/** Base z-index for sticky label stacking */
+const Z_INDEX_BASE = 10
 
 interface WorkCardProps {
   year: string
@@ -43,8 +46,9 @@ interface WorkCardProps {
  * Spans multiple grid rows (year+role+contract/title, description, images).
  *
  * Features minimal typography and full-width images in vertical stack.
+ * Wrapped in memo() to prevent unnecessary re-renders when parent state changes.
  */
-export function WorkCard({
+export const WorkCard = memo(function WorkCard({
   year,
   role,
   contractType,
@@ -55,16 +59,26 @@ export function WorkCard({
   priority = false,
   projectIndex = 0
 }: WorkCardProps) {
+  // Memoize description parsing to avoid recalculation on each render
+  const descriptionLines = useMemo(
+    () => description.split('\n').filter(line => line.trim() !== ''),
+    [description]
+  )
+
+  // Memoize event handler to prevent new function creation on each render
+  const preventDefault = useCallback((e: React.SyntheticEvent) => {
+    e.preventDefault()
+  }, [])
   return (
     <div className="contents">
       {/* ========================================================================
        * ROW 1: YEAR + ROLE + CONTRACT TYPE + TITLE
        * ======================================================================== */}
 
-      {/* Year, role and contract type label - left column (sticky on desktop, replaces previous) */}
-      <div 
+      {/* Year, role and contract type label - left column (sticky on desktop) */}
+      <div
         className="text-left md:text-right text-[11px] text-muted-foreground/50 font-light pt-6 md:pt-8 first:pt-0 md:sticky md:top-12 md:bg-background self-baseline"
-        style={{ zIndex: 10 + projectIndex }}
+        style={{ zIndex: Z_INDEX_BASE + projectIndex }}
       >
         <div>{year}</div>
         <div className="mt-0.5">{role}</div>
@@ -72,7 +86,7 @@ export function WorkCard({
       </div>
 
       {/* Title - right column */}
-      <h2 className="text-xs font-normal text-foreground pt-6 md:pt-8 first:pt-0 self-baseline">
+      <h2 className="text-sm font-normal text-foreground pt-6 md:pt-8 first:pt-0 self-baseline font-edu-marist">
         {title}
       </h2>
 
@@ -85,10 +99,10 @@ export function WorkCard({
 
       {/* Description - right column */}
       <p className="text-xs text-muted-foreground/60 leading-relaxed mt-1">
-        {description.split('\n').filter(line => line.trim() !== '').map((line, index, array) => (
+        {descriptionLines.map((line, index) => (
           <React.Fragment key={index}>
             {line}
-            {index < array.length - 1 && <br />}
+            {index < descriptionLines.length - 1 && <br />}
           </React.Fragment>
         ))}
       </p>
@@ -106,8 +120,8 @@ export function WorkCard({
           <div
             key={`${imageSrc}-${idx}`}
             className="relative w-full select-none"
-            onDragStart={(e) => e.preventDefault()}
-            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={preventDefault}
+            onContextMenu={preventDefault}
           >
             <Image
               src={imageSrc}
@@ -119,11 +133,10 @@ export function WorkCard({
               priority={priority && idx === 0}
               quality={85}
               draggable={false}
-              onDragStart={(e) => e.preventDefault()}
             />
           </div>
         ))}
       </div>
     </div>
   )
-}
+})

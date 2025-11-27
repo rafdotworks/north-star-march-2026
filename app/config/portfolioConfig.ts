@@ -250,7 +250,7 @@ export const PROJECTS: Record<string, { images: string[] }> = {
     images: ["/work/defituna-1.png", "/work/defituna-1.png"], // DeFi project
   },
   theo: {
-    images: ["/work/theo-1.png", "/work/theo-brand.png", "/work/theo-2.png", "/work/theo-mobile.png"], // Theoriq - AI platform, founding designer
+    images: ["/work/theo-1.png", "/work/theo-brand.png", "/work/theo-web.png", "/work/theo-mobile.png"], // Theoriq - AI platform, founding designer
   },
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png", "/work/curbcutos.png"] }, // Accessibility data tools
@@ -441,6 +441,30 @@ export const PROJECT_YEARS: Record<string, string> = {
   curbcut: "2023/24",
   zalando: "2021/22",
   earlyworks: "From 2016",
+};
+
+/**
+ * PROJECT_DISPLAY_NAMES: Human-readable titles for each project.
+ *
+ * @remarks
+ * Used to display project titles in the portfolio. Centralizes all
+ * project naming in the config file for consistency.
+ *
+ * @example
+ * ```ts
+ * PROJECT_DISPLAY_NAMES["theo"] // "Theoriq"
+ * ```
+ */
+export const PROJECT_DISPLAY_NAMES: Record<string, string> = {
+  theo: "Theoriq",
+  cb: "Coinbase Developer Platform",
+  vf: "Voiceflow",
+  atlas: "Crypto Platforms",
+  defituna: "DeFi Tuna",
+  curbcut: "CurbCut",
+  zalando: "Zalando B2B Design System",
+  earlyworks: "Early Works",
+  nationalArchives: "National Archives",
 };
 
 // ============================================================================
