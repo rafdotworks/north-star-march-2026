@@ -194,6 +194,44 @@ export default function ExperimentPage() {
         <p className="text-[10px] text-muted-foreground/50 leading-relaxed transition-colors duration-200">
           {timezoneMessage}
         </p>
+
+        {/* Footer links */}
+        <nav className="flex flex-row gap-4 group/nav pt-3">
+          <a
+            href="https://www.linkedin.com/in/raffaelevitaledesign/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 leading-[1.5]"
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
+            }}
+          >
+            LinkedIn
+          </a>
+          <a
+            href="/cv"
+            className="text-[10px] text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 leading-[1.5]"
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
+            }}
+          >
+            CV
+          </a>
+          <a
+            href="https://x.com/lfgraf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 leading-[1.5]"
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
+            }}
+          >
+            X
+          </a>
+        </nav>
       </div>
       </ContentGrid>
 
