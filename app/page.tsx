@@ -35,6 +35,7 @@ import { ContentGrid } from "./components/ContentGrid"
 import { WorkCard } from "./components/WorkCard"
 import { SectionDivider } from "./components/SectionDivider"
 import { ScrollBottomBlur } from "./components/ScrollBottomBlur"
+import { ScrollTopBlur } from "./components/ScrollTopBlur"
 import NavigationItem from "./components/NavigationItem"
 import FooterLink from "./components/FooterLink"
 import SideTray from "./new/components/SideTray"
@@ -221,8 +222,9 @@ export default function Page() {
       </div>
       </ContentGrid>
 
-      {/* Scroll-based bottom blur effect */}
+      {/* Scroll-based blur effects */}
       <ScrollBottomBlur />
+      <ScrollTopBlur />
 
       {/* SideTray component for About and Writing */}
       <SideTray

@@ -32,7 +32,7 @@ import { useEffect, useState, useRef } from "react"
 const FADE_START = 0.05
 
 /** Scroll progress (0-1) at which component is fully hidden */
-const FADE_END = 0.25
+const FADE_END = 0.15
 
 /** Blur amount for backdrop filter */
 const BLUR_AMOUNT = "40px"
