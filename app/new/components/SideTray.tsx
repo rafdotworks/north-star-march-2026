@@ -58,7 +58,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react"
 import ReactMarkdown from "react-markdown"
 import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { ExternalLink, Mail } from "lucide-react"
+import FooterLink from "@/app/components/FooterLink"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { EASING } from "@/components/animations/constants"
 import { markdownComponents } from "@/app/components/markdown/markdownComponents"
@@ -1758,43 +1758,10 @@ Before that, I contributed and shipped design systems, developer tools, and prod
 
                       {/* Contact Links Section - at bottom */}
                       <nav className="flex flex-col gap-1 group/nav pt-2">
-                        <a
-                          href="https://linkedin.com/in/raffaelevitaledesign"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground/50 md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground/50 active:text-foreground focus:text-muted-foreground/50 focus:outline-none"
-                          aria-label="Visit Raf on LinkedIn"
-                          style={{
-                            WebkitTapHighlightColor: 'transparent'
-                          }}
-                        >
-                          LinkedIn
-                          <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-                        </a>
-                        <a
-                          href="mailto:raf@raf.works"
-                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground/50 md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground/50 active:text-foreground focus:text-muted-foreground/50 focus:outline-none"
-                          aria-label="Send email to Raf"
-                          style={{
-                            WebkitTapHighlightColor: 'transparent'
-                          }}
-                        >
-                          Email
-                          <Mail size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-                        </a>
-                        <a
-                          href="/documents/CV.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group/link inline-flex items-center gap-1.5 text-xs text-muted-foreground/50 md:group-hover/nav:text-muted-foreground/70 md:hover:!text-foreground transition-colors duration-200 leading-[1.5] visited:text-muted-foreground/50 active:text-foreground focus:text-muted-foreground/50 focus:outline-none"
-                          aria-label="Download CV"
-                          style={{
-                            WebkitTapHighlightColor: 'transparent'
-                          }}
-                        >
-                          CV
-                          <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
-                        </a>
+                        <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
+                        <FooterLink href="mailto:raf@raf.works" label="Email" />
+                        <FooterLink href="/cv" label="CV" />
+                        <FooterLink href="https://x.com/lfgraf" label="X" external />
                       </nav>
 
                     </motion.div>

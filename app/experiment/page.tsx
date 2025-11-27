@@ -19,7 +19,7 @@
 
 "use client"
 
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback, useRef } from "react"
 import { useSystemTheme } from "@/hooks/use-system-theme"
 import {
   PROJECT_ORDER,
@@ -36,6 +36,7 @@ import { WorkCard } from "../experiment-components/WorkCard"
 import { SectionDivider } from "../experiment-components/SectionDivider"
 import { ScrollBottomBlur } from "../experiment-components/ScrollBottomBlur"
 import NavigationItem from "@/app/components/NavigationItem"
+import FooterLink from "@/app/components/FooterLink"
 import SideTray from "@/app/new/components/SideTray"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 
@@ -66,12 +67,20 @@ export default function ExperimentPage() {
   const [selectedArticle, setSelectedArticle] = useState<"about" | "writing" | null>(null)
   const [selectedWritingArticle, setSelectedWritingArticle] = useState<string | null>(null)
 
-  // Scroll-based theme toggle at threshold
+  // Scroll-based theme toggle at threshold (throttled with rAF)
+  const ticking = useRef(false)
+
   useEffect(() => {
     const handleScroll = () => {
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
-      const scrollProgress = window.scrollY / scrollHeight
-      setIsThemeToggled(scrollProgress >= SCROLL_THEME_THRESHOLD)
+      if (!ticking.current) {
+        requestAnimationFrame(() => {
+          const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+          const scrollProgress = window.scrollY / scrollHeight
+          setIsThemeToggled(scrollProgress >= SCROLL_THEME_THRESHOLD)
+          ticking.current = false
+        })
+        ticking.current = true
+      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -191,46 +200,16 @@ export default function ExperimentPage() {
 
       {/* Timezone/Weather message - right column, aligned with project titles */}
       <div className="pt-4 md:pt-6 pb-12 md:pb-16">
-        <p className="text-[10px] text-muted-foreground/50 leading-relaxed transition-colors duration-200">
+        <p className="text-xs text-muted-foreground/50 leading-relaxed transition-colors duration-200">
           {timezoneMessage}
         </p>
 
         {/* Footer links */}
-        <nav className="flex flex-row gap-4 group/nav pt-3">
-          <a
-            href="https://www.linkedin.com/in/raffaelevitaledesign/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 leading-[1.5]"
-            style={{
-              WebkitTapHighlightColor: 'transparent',
-              transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
-            }}
-          >
-            LinkedIn
-          </a>
-          <a
-            href="/cv"
-            className="text-[10px] text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 leading-[1.5]"
-            style={{
-              WebkitTapHighlightColor: 'transparent',
-              transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
-            }}
-          >
-            CV
-          </a>
-          <a
-            href="https://x.com/lfgraf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 leading-[1.5]"
-            style={{
-              WebkitTapHighlightColor: 'transparent',
-              transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
-            }}
-          >
-            X
-          </a>
+        <nav className="flex flex-row gap-5 group/nav pt-3">
+          <FooterLink href="https://www.linkedin.com/in/raffaelevitaledesign/" label="LinkedIn" external />
+          <FooterLink href="mailto:raf@raf.works" label="Email" />
+          <FooterLink href="/cv" label="CV" />
+          <FooterLink href="https://x.com/lfgraf" label="X" external />
         </nav>
       </div>
       </ContentGrid>

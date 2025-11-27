@@ -86,7 +86,7 @@ export const WorkCard = memo(function WorkCard({
       </div>
 
       {/* Title - right column */}
-      <h2 className="text-sm font-normal text-foreground pt-6 md:pt-8 first:pt-0 self-baseline font-edu-marist">
+      <h2 className="text-sm font-normal text-foreground pt-3 md:pt-8 first:pt-0 self-baseline font-edu-marist">
         {title}
       </h2>
 
@@ -115,7 +115,7 @@ export const WorkCard = memo(function WorkCard({
       <div className="hidden md:block" />
 
       {/* Full-width vertical image stack - right column */}
-      <div className="mt-3 md:mt-4 mb-8 md:mb-10 flex flex-col gap-3 md:gap-4">
+      <div className="mt-3 md:mt-4 mb-16 md:mb-10 flex flex-col gap-3 md:gap-4">
         {images.map((imageSrc, idx) => (
           <div
             key={`${imageSrc}-${idx}`}
@@ -128,6 +128,7 @@ export const WorkCard = memo(function WorkCard({
               alt={`${altText} - Image ${idx + 1}`}
               width={1200}
               height={800}
+              sizes="(max-width: 768px) 100vw, 800px"
               className="w-full h-auto object-contain pointer-events-none"
               loading={priority && idx === 0 ? "eager" : "lazy"}
               priority={priority && idx === 0}
