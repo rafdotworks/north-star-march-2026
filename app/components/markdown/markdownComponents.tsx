@@ -48,7 +48,7 @@ export const markdownComponents: Components = {
     <h1 className="text-base font-light text-foreground tracking-wider mb-6 mt-8 transition-colors duration-200">{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-sm font-normal text-foreground/90 mb-4 mt-7 transition-colors duration-200">{children}</h2>
+    <h2 className="text-sm font-normal text-foreground/80 mb-4 mt-7 transition-colors duration-200">{children}</h2>
   ),
   h3: ({ children }) => (
     <h3 className="text-xs font-medium text-foreground/80 mb-3 mt-5 transition-colors duration-200">{children}</h3>

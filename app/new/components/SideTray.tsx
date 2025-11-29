@@ -1359,7 +1359,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/70 md:hover:!text-foreground'}`}>{article.title}</p>
+                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/60 md:hover:!text-foreground'}`}>{article.title}</p>
                             <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
                           </motion.div>
                           {i === 1 && (
@@ -1635,7 +1635,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/70 md:hover:!text-foreground'}`}>{article.title}</p>
+                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/60 md:hover:!text-foreground'}`}>{article.title}</p>
                             <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
                           </motion.div>
                           {i === 1 && (
@@ -1790,7 +1790,7 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/70 md:hover:!text-foreground'}`}>{article.title}</p>
+                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/60 md:hover:!text-foreground'}`}>{article.title}</p>
                             <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
                           </motion.div>
                           {i === 1 && (

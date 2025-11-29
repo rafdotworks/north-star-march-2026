@@ -82,7 +82,7 @@ function NavigationItem({ label, articleId, onClick, ariaLabel }: NavigationItem
       tabIndex={0}
       onClick={() => onClick(articleId)}
       onKeyDown={handleKeyDown}
-      className="cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 text-sm md:text-xs text-muted-foreground/40 active:text-foreground active:scale-[0.98] md:active:scale-100 md:group-hover/nav:opacity-30 md:group-hover/nav:text-muted-foreground/30 md:hover:!opacity-60 md:hover:!text-muted-foreground/60 transition-all duration-200 leading-[1.5]"
+      className="type-nav cursor-pointer -mx-2 px-2 py-2 md:mx-0 md:px-0 md:py-0 active:text-foreground active:scale-[0.98] md:active:scale-100 md:group-hover/nav:opacity-30 md:group-hover/nav:text-muted-foreground/30 md:hover:!opacity-60 md:hover:!text-muted-foreground/60 transition-all duration-200"
       aria-label={ariaLabel}
       style={{
         WebkitTapHighlightColor: 'transparent',

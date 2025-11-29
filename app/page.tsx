@@ -127,7 +127,7 @@ export default function Page() {
       <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row md:items-baseline gap-0 md:gap-8 lg:gap-16 min-h-[80vh] justify-center md:justify-start py-[10vh] md:pt-[20vh] md:pb-[20vh]">
         {/* Name - left column, right-aligned, baseline-aligned with title */}
         <div className="text-left md:text-right md:w-[180px] lg:w-[200px] flex-shrink-0">
-          <h1 className="text-lg md:text-xl font-light text-foreground tracking-wide leading-tight font-edu-marist">
+          <h1 className="type-heading">
             Raf V.
           </h1>
         </div>
@@ -207,7 +207,7 @@ export default function Page() {
 
         {/* Footer content - right column, md:flex-1 for width on desktop only */}
         <div className="flex flex-col md:flex-1">
-          <p className="text-xs text-muted-foreground/50 leading-relaxed transition-colors duration-200">
+          <p className="type-body-sm transition-colors duration-200">
             {timezoneMessage}
           </p>
 

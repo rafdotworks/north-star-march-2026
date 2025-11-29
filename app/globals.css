@@ -4,6 +4,84 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+ * SEMANTIC TYPOGRAPHY CLASSES
+ * Centralized typography styles for consistent use across components.
+ * These classes consolidate size, weight, color, and line-height.
+ *
+ * OPACITY SCALE (consolidated from 7 to 3 levels):
+ *   /40 = subtle (inactive, tertiary)
+ *   /60 = muted (secondary content)
+ *   /80 = readable (primary secondary content)
+ * ============================================================================ */
+@layer components {
+  /* Labels: uppercase, smallest text (10px) */
+  .type-caption {
+    font-size: var(--text-2xs);
+    line-height: var(--leading-tight);
+    @apply text-muted-foreground/60 font-light uppercase tracking-wider;
+  }
+
+  /* Metadata: year, role, contract type (11px) */
+  .type-meta {
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    @apply text-muted-foreground/60 font-light;
+  }
+
+  /* Small body: descriptions, list items (12px) */
+  .type-body-sm {
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    @apply text-muted-foreground/60;
+  }
+
+  /* Body: modal content, paragraphs (14px) */
+  .type-body {
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    @apply text-foreground/80;
+  }
+
+  /* Navigation: interactive links (14px mobile, 12px desktop) */
+  .type-nav {
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    @apply text-muted-foreground/40;
+  }
+  @media (min-width: 768px) {
+    .type-nav {
+      font-size: var(--text-sm);
+    }
+  }
+
+  /* Link: footer links, always 12px */
+  .type-link {
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    @apply text-muted-foreground/40;
+  }
+
+  /* Title: work card titles (14px) */
+  .type-title {
+    font-size: var(--text-base);
+    line-height: var(--leading-tight);
+    @apply text-foreground font-normal font-edu-marist;
+  }
+
+  /* Heading: hero name, page titles */
+  .type-heading {
+    font-size: var(--text-xl);
+    line-height: var(--leading-tight);
+    @apply font-light text-foreground tracking-wide font-edu-marist;
+  }
+  @media (min-width: 768px) {
+    .type-heading {
+      font-size: var(--text-2xl);
+    }
+  }
+}
+
 /* Font-specific styles */
 .font-edu-marist {
   font-family: var(--font-edu-marist);
@@ -11,15 +89,28 @@
   letter-spacing: -0.02em;
 }
 
-/* Raf-specific font styling */
-.font-raf {
-  font-family: var(--font-edu-marist);
-  font-weight: normal;
-  letter-spacing: -0.02em;
-}
 
 @layer base {
   :root {
+    /* ================================================================
+     * TYPOGRAPHY SCALE
+     * Centralized text sizes for consistency across all components
+     * ================================================================ */
+    --text-2xs: 10px;   /* labels, timestamps, uppercase section headers */
+    --text-xs: 11px;    /* metadata (year, role, contract type) */
+    --text-sm: 12px;    /* body text, descriptions, navigation */
+    --text-base: 14px;  /* modal content, emphasized body text */
+    --text-lg: 16px;    /* page titles, headings */
+    --text-xl: 18px;    /* hero name (mobile) */
+    --text-2xl: 20px;   /* hero name (desktop) */
+
+    /* ================================================================
+     * LINE HEIGHTS
+     * Two levels: tight for headings, normal for body text
+     * ================================================================ */
+    --leading-tight: 1.25;  /* headings, compact text */
+    --leading-normal: 1.5;  /* all body text, descriptions */
+
     /* Theme transition properties - smooth, gradual */
     --theme-transition-duration: 2s;
     --theme-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
