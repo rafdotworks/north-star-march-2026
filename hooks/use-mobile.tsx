@@ -30,7 +30,6 @@ const MOBILE_BREAKPOINT = 768;
  */
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean>(false);
-  const [isReady, setIsReady] = React.useState(false);
 
   React.useEffect(() => {
     // Guard against SSR
@@ -40,11 +39,7 @@ export function useIsMobile() {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
 
     const onChange = () => {
-      const newIsMobile = window.innerWidth < MOBILE_BREAKPOINT;
-      setIsMobile(newIsMobile);
-      if (!isReady) {
-        setIsReady(true);
-      }
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     };
 
     // Set initial value
@@ -53,7 +48,7 @@ export function useIsMobile() {
     // Listen for viewport changes
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);
-  }, [isReady]);
+  }, []); // Empty dependency array - only runs once on mount
 
   return isMobile;
 }

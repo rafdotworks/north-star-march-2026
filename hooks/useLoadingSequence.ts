@@ -155,8 +155,8 @@ export function useLoadingSequence() {
     metricsRef.current.connectionQuality = detectConnectionQuality();
     metricsRef.current.startTime = Date.now();
 
-    // Start progress updates
-    const progressInterval = setInterval(updateLoadingProgress, 100);
+    // Start progress updates (250ms is sufficient for visual smoothness)
+    const progressInterval = setInterval(updateLoadingProgress, 250);
 
     // Calculate adaptive timing
     const adaptiveTiming = calculateAdaptiveTiming();
@@ -240,7 +240,12 @@ export function useStaggeredLoading(
 
     for (let i = 0; i < count; i++) {
       const timer = setTimeout(() => {
-        setLoadedIndices((prev) => new Set([...prev, i]));
+        // More efficient Set update - avoid spreading into array
+        setLoadedIndices((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(i);
+          return newSet;
+        });
       }, (baseDelay + i * staggerDelay) * 1000);
 
       timers.push(timer);

@@ -221,24 +221,46 @@ export const LOADING_STAGES: string[] = [
 // PROJECT DATA - Image paths grouped by project
 // ============================================================================
 
+// ============================================================================
+// TYPE DEFINITIONS - Ensures exhaustive checking across all project configs
+// ============================================================================
+
+/**
+ * All valid project keys used throughout the application.
+ * This is the source of truth for project identifiers.
+ */
+export const PROJECT_KEYS = [
+  "theo",
+  "cb",
+  "vf",
+  "atlas",
+  "defituna",
+  "curbcut",
+  "zalando",
+  "earlyworks",
+  "nationalArchives",
+] as const;
+
+export type ProjectKey = (typeof PROJECT_KEYS)[number];
+
 /**
  * PROJECTS: Maps project keys to their image paths.
- * 
+ *
  * @remarks
  * Each project has one representative image for the carousel.
  * All images are stored in /public/work/
- * 
+ *
  * Project keys are used throughout the codebase to identify projects.
- * 
+ *
  * @example
  * ```ts
  * const project = PROJECTS["cb"]; // Returns { images: ["/work/cb-1.png"] }
  * ```
  */
-export const PROJECTS: Record<string, { images: string[] }> = {
+export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
   // Current/recent work (2024-2025)
   atlas: {
-    images: ["/work/atlas-2.png", "/work/videos/atlas-ptv.mov", "/work/defituna-1.png", "/work/videos/defi-tuna.mov"], // Crypto marketplace, NFT era
+    images: ["/work/atlas-2.png", "/work/videos/atlas-ptv.mov"], // Crypto marketplace, NFT era
   },
   cb: {
     images: ["/work/cb-1.png", "/work/cb.webp"], // Coinbase Developer Platform
@@ -247,16 +269,16 @@ export const PROJECTS: Record<string, { images: string[] }> = {
     images: ["/work/vf-0.png", "/work/vf-01.png", "/work/vf-03.png"], // Voiceflow product redesign
   },
   defituna: {
-    images: ["/work/defituna-1.png", "/work/defituna-1.png"], // DeFi project
+    images: ["/work/defituna-1.png", "/work/videos/defi-tuna.mov"], // DeFi project (fixed: removed duplicate)
   },
   theo: {
     images: ["/work/theo-1.png", "/work/videos/theo-prod.mov", "/work/theo-brand.png", "/work/theo-web.png", "/work/theo-mobile.png"], // Theoriq - AI platform, founding designer
   },
   // Legacy/early works (2017-2022)
-  curbcut: { images: ["/work/curbcutos.png", "/work/curbcutos.png"] }, // Accessibility data tools
+  curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools (fixed: removed duplicate)
   zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
   earlyworks: { images: ["/work/early-works.webp"] }, // Early brand work
-  nationalArchives: { images: ["/work/us.png", "/work/us.png"] }, // Early brand work
+  nationalArchives: { images: ["/work/us.png"] }, // Early brand work (fixed: removed duplicate)
 };
 
 // ============================================================================
@@ -309,21 +331,24 @@ export const PROJECT_ALIAS: Record<string, string> = {
 
 /**
  * PROJECT_ORDER: Defines the sequence of projects in the carousel.
- * 
+ *
  * @remarks
  * Order: Recent work → Legacy work (chronological reverse)
  * This determines both desktop carousel and mobile scroll panel order.
- * 
+ *
  * The order is intentionally reversed (newest first) to showcase
  * recent work prominently.
- * 
+ *
+ * Note: Not all projects in PROJECT_KEYS appear here - some are auxiliary
+ * (e.g., defituna, curbcut, nationalArchives are used in other contexts).
+ *
  * @example
  * ```ts
  * PROJECT_ORDER[0] // "theo" - most recent
  * PROJECT_ORDER[PROJECT_ORDER.length - 1] // "earlyworks" - oldest
  * ```
  */
-export const PROJECT_ORDER: string[] = [
+export const PROJECT_ORDER: ProjectKey[] = [
   "theo", // Theoriq (2024)
   "cb", // Coinbase (2025)
   "vf", // Voiceflow (2025)

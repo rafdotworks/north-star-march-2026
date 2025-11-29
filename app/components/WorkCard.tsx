@@ -21,11 +21,14 @@
 
 "use client"
 
-import React, { memo, useMemo, useCallback } from "react"
+import React, { memo, useMemo, useCallback, useState } from "react"
 import Image from "next/image"
 
 /** Base z-index for sticky label stacking */
 const Z_INDEX_BASE = 10
+
+/** Fallback gradient shown when image fails to load */
+const IMAGE_ERROR_FALLBACK = "linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted-foreground) / 0.1) 100%)"
 
 interface WorkCardProps {
   year: string
@@ -59,6 +62,9 @@ export const WorkCard = memo(function WorkCard({
   priority = false,
   projectIndex = 0
 }: WorkCardProps) {
+  // Track failed images to show fallback
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+
   // Memoize description parsing to avoid recalculation on each render
   const descriptionLines = useMemo(
     () => description.split('\n').filter(line => line.trim() !== ''),
@@ -68,6 +74,11 @@ export const WorkCard = memo(function WorkCard({
   // Memoize event handler to prevent new function creation on each render
   const preventDefault = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault()
+  }, [])
+
+  // Handle image load errors gracefully
+  const handleImageError = useCallback((src: string) => {
+    setFailedImages(prev => new Set(prev).add(src))
   }, [])
   return (
     <div className="contents">
@@ -118,6 +129,7 @@ export const WorkCard = memo(function WorkCard({
       <div className="mt-3 md:mt-4 mb-16 md:mb-10 flex flex-col gap-3 md:gap-4">
         {images.map((src, idx) => {
           const isVideo = /\.(mov|mp4|webm)$/i.test(src)
+          const hasFailed = failedImages.has(src)
 
           return (
             <div
@@ -133,7 +145,15 @@ export const WorkCard = memo(function WorkCard({
                   muted
                   loop
                   playsInline
+                  preload="metadata"
                   className="w-full h-auto object-contain"
+                />
+              ) : hasFailed ? (
+                // Fallback for failed images - maintains aspect ratio
+                <div
+                  className="w-full aspect-[3/2] rounded-sm"
+                  style={{ background: IMAGE_ERROR_FALLBACK }}
+                  aria-label={`${altText} - Image unavailable`}
                 />
               ) : (
                 <Image
@@ -147,6 +167,7 @@ export const WorkCard = memo(function WorkCard({
                   priority={priority && idx === 0}
                   quality={85}
                   draggable={false}
+                  onError={() => handleImageError(src)}
                 />
               )}
             </div>

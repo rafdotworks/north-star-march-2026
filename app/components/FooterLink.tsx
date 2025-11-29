@@ -1,6 +1,6 @@
 "use client"
 
-import React, { memo } from "react"
+import React, { memo, CSSProperties } from "react"
 import { ExternalLink } from "lucide-react"
 
 interface FooterLinkProps {
@@ -8,6 +8,12 @@ interface FooterLinkProps {
   label: string
   ariaLabel?: string
   external?: boolean
+}
+
+// Extract style to constant to prevent object recreation on each render
+const linkStyle: CSSProperties = {
+  WebkitTapHighlightColor: 'transparent',
+  transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
 }
 
 function FooterLink({ href, label, ariaLabel, external = false }: FooterLinkProps) {
@@ -18,10 +24,7 @@ function FooterLink({ href, label, ariaLabel, external = false }: FooterLinkProp
       rel={external ? "noopener noreferrer" : undefined}
       className="type-link group/link inline-flex items-center gap-1 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 visited:text-muted-foreground/40 active:text-muted-foreground/60 focus:text-muted-foreground/40 focus:outline-none"
       aria-label={ariaLabel || label}
-      style={{
-        WebkitTapHighlightColor: 'transparent',
-        transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
-      }}
+      style={linkStyle}
     >
       {label}
       <ExternalLink

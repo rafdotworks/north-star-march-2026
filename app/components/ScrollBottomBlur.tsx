@@ -34,8 +34,9 @@ const FADE_START = 0.05
 /** Scroll progress (0-1) at which component is fully hidden */
 const FADE_END = 0.15
 
-/** Blur amount for backdrop filter */
+/** Blur amount for backdrop filter (reduced for accessibility) */
 const BLUR_AMOUNT = "40px"
+const BLUR_AMOUNT_REDUCED = "0px"
 
 /** Saturation adjustment for backdrop filter */
 const SATURATION = "1.02"
@@ -43,8 +44,19 @@ const SATURATION = "1.02"
 export function ScrollBottomBlur() {
   const [opacity, setOpacity] = useState(1)
   const [isVisible, setIsVisible] = useState(true)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const ticking = useRef(false)
   const hasBeenDismissed = useRef(false) // Once dismissed, never show again
+
+  // Check for reduced motion preference
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)")
+    setPrefersReducedMotion(mql.matches)
+    const onChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
+    mql.addEventListener("change", onChange)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,6 +106,8 @@ export function ScrollBottomBlur() {
     return null
   }
 
+  const blurAmount = prefersReducedMotion ? BLUR_AMOUNT_REDUCED : BLUR_AMOUNT
+
   return (
     <div
       className="pointer-events-none fixed bottom-0 left-0 right-0 z-[25] transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
@@ -101,8 +115,8 @@ export function ScrollBottomBlur() {
         height: "min(40vh, 300px)",
         opacity: opacity,
         background: "linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background)) 20%, hsla(var(--background) / 0.9) 40%, hsla(var(--background) / 0.5) 65%, hsla(var(--background) / 0) 100%)",
-        backdropFilter: `blur(${BLUR_AMOUNT}) saturate(${SATURATION})`,
-        WebkitBackdropFilter: `blur(${BLUR_AMOUNT}) saturate(${SATURATION})`,
+        backdropFilter: `blur(${blurAmount}) saturate(${SATURATION})`,
+        WebkitBackdropFilter: `blur(${blurAmount}) saturate(${SATURATION})`,
         maskImage: "linear-gradient(to top, black 0%, black 25%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.3) 75%, transparent 100%)",
         WebkitMaskImage: "linear-gradient(to top, black 0%, black 25%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.3) 75%, transparent 100%)",
       }}

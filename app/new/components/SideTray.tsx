@@ -54,7 +54,7 @@
 
 "use client"
 
-import React, { useEffect, useState, useCallback, useRef } from "react"
+import React, { useEffect, useState, useCallback, useRef, memo } from "react"
 import ReactMarkdown from "react-markdown"
 import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
@@ -549,7 +549,7 @@ function useArticleLoader() {
  * @param {SideTrayProps} props - Component props
  * @returns {JSX.Element} The SideTray component
  */
-export default function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }: SideTrayProps) {
+function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }: SideTrayProps) {
   // ============================================================================
   // HOOKS & STATE
   // ============================================================================
@@ -608,8 +608,9 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
   
   /**
    * Track if scroll-to-dismiss is currently active (prevents normal scrolling).
+   * Using ref for the internal tracking to avoid effect re-runs.
    */
-  const [isScrollDismissing, setIsScrollDismissing] = useState(false)
+  const isScrollDismissingRef = useRef(false)
   
   /**
    * Track last touch position for scroll-to-dismiss detection.
@@ -924,7 +925,7 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
      * Detects scroll down attempts when at top of content.
      */
     const handleWheel = (e: WheelEvent) => {
-      if (isScrollDismissing) {
+      if (isScrollDismissingRef.current) {
         e.preventDefault()
         // Continue accumulating drag
         const delta = Math.min(e.deltaY, 50)
@@ -932,16 +933,16 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
         setDragY(accumulatedDragY)
         return
       }
-      
+
       // Only trigger if content is at top and scrolling down
       if (contentEl.scrollTop === 0 && e.deltaY > 0) {
         e.preventDefault()
-        setIsScrollDismissing(true)
+        isScrollDismissingRef.current = true
         accumulatedDragY = Math.min(e.deltaY, 50)
         setDragY(accumulatedDragY)
       } else if (contentEl.scrollTop > 0) {
         // If content is scrolled, allow normal scrolling
-        setIsScrollDismissing(false)
+        isScrollDismissingRef.current = false
         accumulatedDragY = 0
         setDragY(0)
       }
@@ -965,26 +966,26 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
      */
     const handleTouchMove = (e: TouchEvent) => {
       if (!lastTouchYRef.current) return
-      
+
       const currentY = e.touches[0].clientY
       const deltaY = currentY - lastTouchYRef.current
-      
+
       // Only trigger if content is at top and moving down
       if (contentEl.scrollTop === 0 && deltaY > 0) {
         e.preventDefault()
-        setIsScrollDismissing(true)
+        isScrollDismissingRef.current = true
         accumulatedDragY = Math.min(accumulatedDragY + deltaY, window.innerHeight * 0.5)
         setDragY(accumulatedDragY)
         lastTouchYRef.current = currentY
       } else if (contentEl.scrollTop > 0) {
         // If content is scrolled, allow normal scrolling
-        setIsScrollDismissing(false)
+        isScrollDismissingRef.current = false
         accumulatedDragY = 0
         setDragY(0)
         lastTouchYRef.current = null
       } else if (deltaY < 0) {
         // Scrolling up at top - don't trigger dismiss
-        setIsScrollDismissing(false)
+        isScrollDismissingRef.current = false
         accumulatedDragY = 0
         setDragY(0)
         lastTouchYRef.current = currentY
@@ -995,11 +996,11 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
      * Handles touch end - determines if should close based on accumulated dragY.
      */
     const handleTouchEnd = () => {
-      if (isScrollDismissing && accumulatedDragY > 0) {
+      if (isScrollDismissingRef.current && accumulatedDragY > 0) {
         // Use same threshold logic as drag-to-dismiss
         const viewportHeight = window.innerHeight
         const threshold = Math.max(viewportHeight * 0.3, 150)
-        
+
         if (accumulatedDragY > threshold) {
           onClose()
         } else {
@@ -1007,25 +1008,25 @@ export default function SideTray({ articleId, onClose, isWritingMode = false, on
           setDragY(0)
         }
       }
-      
-      setIsScrollDismissing(false)
+
+      isScrollDismissingRef.current = false
       accumulatedDragY = 0
       lastTouchYRef.current = null
     }
-    
+
     // Add event listeners
     contentEl.addEventListener('wheel', handleWheel, { passive: false })
     contentEl.addEventListener('touchstart', handleTouchStart, { passive: true })
     contentEl.addEventListener('touchmove', handleTouchMove, { passive: false })
     contentEl.addEventListener('touchend', handleTouchEnd, { passive: true })
-    
+
     return () => {
       contentEl.removeEventListener('wheel', handleWheel)
       contentEl.removeEventListener('touchstart', handleTouchStart)
       contentEl.removeEventListener('touchmove', handleTouchMove)
       contentEl.removeEventListener('touchend', handleTouchEnd)
     }
-  }, [isMobile, isWritingMode, articleId, isScrollDismissing, onClose])
+  }, [isMobile, isWritingMode, articleId, onClose]) // Removed isScrollDismissing - now using ref
 
   // ============================================================================
   // PULL-TO-REFRESH PREVENTION
@@ -1846,3 +1847,6 @@ Before that, I contributed and shipped design systems, developer tools, and prod
     </>
   )
 }
+
+// Memoize to prevent re-renders when parent state changes
+export default memo(SideTray)

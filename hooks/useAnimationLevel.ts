@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useReducedMotion } from "framer-motion";
 
 export type AnimationLevel = 0 | 1 | 2 | 3;
 
-function getHardwareHints(): { deviceMemory?: number; cores?: number } {
+// Cache hardware hints at module level (doesn't change during session)
+const HARDWARE_HINTS: { deviceMemory?: number; cores?: number } = (() => {
   if (typeof navigator === "undefined") return {};
   const anyNav = navigator as unknown as {
     deviceMemory?: number;
@@ -19,29 +20,29 @@ function getHardwareHints(): { deviceMemory?: number; cores?: number } {
         ? anyNav.hardwareConcurrency
         : undefined,
   };
-}
+})();
 
-function isMobileUA(): boolean {
-  if (typeof navigator === "undefined") return false;
+// Cache mobile UA detection at module level (doesn't change during session)
+const IS_MOBILE_UA: boolean = (() => {
+  if (typeof navigator === "undefined" || typeof window === "undefined") return false;
   const ua =
-    navigator.userAgent || navigator.vendor || (window as any).opera || "";
+    navigator.userAgent || navigator.vendor || (window as unknown as { opera?: string }).opera || "";
   return /android|iphone|ipad|ipod|mobile/i.test(ua);
-}
+})();
 
 export function useAnimationLevel(override?: AnimationLevel): AnimationLevel {
   const prefersReduced = useReducedMotion();
-  const [level, setLevel] = useState<AnimationLevel>(0);
 
-  const computed = useMemo<AnimationLevel>(() => {
+  // Return memoized value directly - no need for useState + useEffect
+  return useMemo<AnimationLevel>(() => {
     if (typeof override === "number") return override;
     if (prefersReduced) return 0;
 
-    const { deviceMemory, cores } = getHardwareHints();
-    const mobile = isMobileUA();
+    const { deviceMemory, cores } = HARDWARE_HINTS;
 
     // Heuristic mapping
     if (
-      mobile ||
+      IS_MOBILE_UA ||
       (deviceMemory !== undefined && deviceMemory <= 4) ||
       (cores !== undefined && cores <= 4)
     ) {
@@ -57,10 +58,6 @@ export function useAnimationLevel(override?: AnimationLevel): AnimationLevel {
     }
     return 2;
   }, [override, prefersReduced]);
-
-  useEffect(() => setLevel(computed), [computed]);
-
-  return level;
 }
 
 export default useAnimationLevel;

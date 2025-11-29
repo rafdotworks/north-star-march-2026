@@ -92,13 +92,14 @@ function usesFahrenheit(temperatureScale: "C" | "F"): boolean {
  * "Raf is currently in Toronto (in your timezone)"
  */
 export function useTimezoneMessage(): string {
-  const [timezoneMessage, setTimezoneMessage] = useState("")
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
-  const [timezoneDiff, setTimezoneDiff] = useState("")
-
   // Get current location from config (outside effect to avoid re-fetching)
   const location = getCurrentLocation()
   const { city, timezone: targetTimezone, coordinates, temperatureScale } = location
+
+  // SSR guard - return consistent initial value to prevent hydration mismatch
+  const [timezoneMessage, setTimezoneMessage] = useState(`Raf is currently in ${city}`)
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
+  const [timezoneDiff, setTimezoneDiff] = useState("")
 
   /**
    * Calculates timezone difference and generates timezone portion of message.
@@ -162,27 +163,32 @@ export function useTimezoneMessage(): string {
     return () => clearInterval(interval)
   }, [targetTimezone]) // Re-run if timezone changes
 
-  // Effect 2: Fetch weather data
+  // Effect 2: Fetch weather data with AbortController for cleanup
   useEffect(() => {
+    const abortController = new AbortController()
+
     /**
      * Fetches weather data from API.
      * Silently fails if API is unavailable (per option 4b).
-     * Logs errors in development mode for debugging.
+     * Uses AbortController to prevent memory leaks on unmount.
      */
     const fetchWeather = async () => {
       try {
         const response = await fetch(
-          `/api/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`
+          `/api/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`,
+          { signal: abortController.signal }
         )
-        
+
         if (!response.ok) {
           // Silently fail - weather is optional
           return
         }
-        
+
         const data: WeatherData = await response.json()
         setWeatherData(data)
-      } catch {
+      } catch (error) {
+        // Ignore abort errors, silently fail others
+        if (error instanceof Error && error.name === 'AbortError') return
         // Silently fail - weather is optional
         // The timezone message will display without weather data
       }
@@ -190,11 +196,14 @@ export function useTimezoneMessage(): string {
 
     // Fetch immediately on mount
     fetchWeather()
-    
+
     // Re-fetch periodically (cache handles rate limiting)
     const interval = setInterval(fetchWeather, TIMEZONE_UPDATE_INTERVAL)
 
-    return () => clearInterval(interval)
+    return () => {
+      abortController.abort()
+      clearInterval(interval)
+    }
   }, [coordinates.lat, coordinates.lon]) // Re-run if coordinates change
 
   // Effect 3: Update message when timezone or weather changes
