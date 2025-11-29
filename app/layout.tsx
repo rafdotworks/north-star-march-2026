@@ -50,7 +50,7 @@ const eduMarist = localFont({
 
 /** Site metadata for SEO and social sharing */
 export const metadata: Metadata = {
-  title: "Raf V. - Senior AI Product Designer, Design Engineer",
+  title: "Raf V. - Software Designer",
   description:
     "Blending design, code, and systems thinking to craft interfaces where people and intelligent agents collaborate  with clarity, taste, and intent.",
   keywords: [
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Raf V. - Senior AI Product Designer, Design Engineer",
+    title: "Raf V. - Software Designer",
     description:
       "With 7+ years in product design and systems thinking, Raf now focuses on how humans and intelligent agents collaborate with clarity and intent.",
     url: "https://raf.works",
@@ -101,7 +101,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Raf V. - Senior AI Product Designer, Design Engineer",
+    title: "Raf V. - Software Designer",
     description:
       "Blending design, code, and systems thinking to craft interfaces where people and intelligent agents collaborate  with clarity, taste, and intent.",
     creator: "@lfgraf",
