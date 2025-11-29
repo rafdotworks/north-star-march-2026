@@ -176,31 +176,15 @@ export function useTimezoneMessage(): string {
         )
         
         if (!response.ok) {
-          // Log error in development for debugging (check if we're in dev mode)
-          const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-          if (isDev) {
-            const errorData = await response.json().catch(() => ({}))
-            const errorMsg = errorData.message || errorData.error || 'Unknown error'
-            console.warn('Weather API error:', response.status, errorMsg)
-            if (response.status === 503) {
-              console.info('💡 Tip: Add OPENWEATHERMAP_API_KEY to your .env.local file')
-            } else if (response.status === 401) {
-              console.error('💡 Invalid API key. Please verify your OPENWEATHERMAP_API_KEY in .env.local and ensure it\'s activated at https://openweathermap.org/api')
-            }
-          }
-          // Silently fail - don't set weather data
+          // Silently fail - weather is optional
           return
         }
         
         const data: WeatherData = await response.json()
         setWeatherData(data)
-      } catch (error) {
-        // Log error in development for debugging
-        const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        if (isDev) {
-          console.error('Failed to fetch weather:', error)
-        }
-        // Silently fail - don't set weather data
+      } catch {
+        // Silently fail - weather is optional
+        // The timezone message will display without weather data
       }
     }
 
