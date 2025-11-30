@@ -205,6 +205,30 @@
     /* Scrollbar (light) */
     --scrollbar-color: rgba(0, 0, 0, 0.08);
     --scrollbar-hover-color: rgba(0, 0, 0, 0.12);
+
+    /* ================================================================
+     * ATMOSPHERIC DEPTH & GRAIN EFFECTS
+     * Subtle visual layers that adapt to theme
+     * ================================================================ */
+
+    /* Vignette (soft edge darkening) */
+    --vignette-color: hsl(var(--neutral-h) 20% 0% / 0.03);
+    --vignette-intensity: 0.4;
+
+    /* Ambient glow (soft center illumination) */
+    --glow-color: hsl(var(--neutral-h) 10% 100% / 0.02);
+    --glow-position: 50% 30%;
+    --glow-size: 120% 80%;
+
+    /* Color wash (subtle tint overlay) */
+    --wash-hue: var(--neutral-h);
+    --wash-saturation: 8%;
+    --wash-lightness: 50%;
+    --wash-opacity: 0.015;
+
+    /* Film grain */
+    --grain-opacity: 0.025;
+    --grain-blend: multiply;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -283,6 +307,19 @@
   /* Scrollbar (dark) */
   --scrollbar-color: rgba(255, 255, 255, 0.1);
   --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
+
+  /* Atmospheric depth (dark) - deeper, cooler */
+  --vignette-color: hsl(var(--neutral-h) 30% 0% / 0.12);
+  --vignette-intensity: 0.6;
+  --glow-color: hsl(var(--accent-h) 30% 60% / 0.03);
+  --glow-position: 50% 40%;
+  --glow-size: 100% 60%;
+  --wash-hue: var(--accent-h);
+  --wash-saturation: 15%;
+  --wash-lightness: 20%;
+  --wash-opacity: 0.025;
+  --grain-opacity: 0.03;
+  --grain-blend: overlay;
     }
   }
 }
@@ -363,6 +400,19 @@
   /* Scrollbar (dark) */
   --scrollbar-color: rgba(255, 255, 255, 0.1);
   --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
+
+  /* Atmospheric depth (dark) */
+  --vignette-color: hsl(var(--neutral-h) 30% 0% / 0.12);
+  --vignette-intensity: 0.6;
+  --glow-color: hsl(var(--accent-h) 30% 60% / 0.03);
+  --glow-position: 50% 40%;
+  --glow-size: 100% 60%;
+  --wash-hue: var(--accent-h);
+  --wash-saturation: 15%;
+  --wash-lightness: 20%;
+  --wash-opacity: 0.025;
+  --grain-opacity: 0.03;
+  --grain-blend: overlay;
 }
 
 /* Support explicit light theme switching via data attribute */
@@ -433,6 +483,19 @@
   /* Scrollbar (light) */
   --scrollbar-color: rgba(0, 0, 0, 0.08);
   --scrollbar-hover-color: rgba(0, 0, 0, 0.12);
+
+  /* Atmospheric depth (light) */
+  --vignette-color: hsl(var(--neutral-h) 20% 0% / 0.03);
+  --vignette-intensity: 0.4;
+  --glow-color: hsl(var(--neutral-h) 10% 100% / 0.02);
+  --glow-position: 50% 30%;
+  --glow-size: 120% 80%;
+  --wash-hue: var(--neutral-h);
+  --wash-saturation: 8%;
+  --wash-lightness: 50%;
+  --wash-opacity: 0.015;
+  --grain-opacity: 0.025;
+  --grain-blend: multiply;
 }
 
 /* Add system preference support */
@@ -471,6 +534,52 @@ body {
   transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
               color var(--theme-transition-duration) var(--theme-transition-easing);
 }
+
+/* ============================================================================
+ * ATMOSPHERIC OVERLAY LAYERS
+ * Subtle grain and vignette effects using pseudo-elements
+ * ============================================================================ */
+
+/* Film grain overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  filter: url(#grain);
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend);
+  transition: opacity var(--theme-transition-duration) var(--theme-transition-easing),
+              mix-blend-mode var(--theme-transition-duration) var(--theme-transition-easing);
+}
+
+/* Vignette overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    transparent 0%,
+    transparent 40%,
+    var(--vignette-color) 100%
+  );
+  opacity: var(--vignette-intensity);
+  transition: opacity var(--theme-transition-duration) var(--theme-transition-easing),
+              background var(--theme-transition-duration) var(--theme-transition-easing);
+}
+
+/* Accessibility: Reduce effects for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    display: none;
+  }
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border-color);

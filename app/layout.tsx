@@ -25,6 +25,7 @@ import "./globals.css";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
 import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
+import { AtmosphericLayers } from "./components/AtmosphericLayers";
 
 // ============================================================================
 // FONT CONFIGURATION
@@ -69,13 +70,14 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
-      { url: "/favicon-64.png", sizes: "64x64", type: "image/png" },
-      { url: "/favicon-128.png", sizes: "128x128", type: "image/png" },
-      { url: "/favicon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/favicon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon-64x64.png", sizes: "64x64", type: "image/png" },
+      { url: "/favicon-128x128.png", sizes: "128x128", type: "image/png" },
+      { url: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/favicon-256x256.png", sizes: "256x256", type: "image/png" },
+      { url: "/favicon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
@@ -128,6 +130,34 @@ export default function RootLayout({
     >
       <head />
       <body className={ronzino.className} suppressHydrationWarning>
+        {/* SVG filter for film grain effect - hidden from DOM */}
+        <svg
+          className="absolute w-0 h-0"
+          aria-hidden="true"
+          style={{ position: "absolute", width: 0, height: 0 }}
+        >
+          <defs>
+            <filter id="grain" x="0%" y="0%" width="100%" height="100%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.65"
+                numOctaves="3"
+                stitchTiles="stitch"
+                result="noise"
+              />
+              <feColorMatrix
+                type="saturate"
+                values="0"
+                in="noise"
+                result="monoNoise"
+              />
+            </filter>
+          </defs>
+        </svg>
+
+        {/* Atmospheric depth layers (glow + color wash) */}
+        <AtmosphericLayers />
+
         <div className="mobile-gutter">{children}</div>
         <Analytics />
         <ConsoleEasterEgg />
