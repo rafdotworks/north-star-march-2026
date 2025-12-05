@@ -263,22 +263,22 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
     images: ["/work/atlas-2.png", "/work/videos/atlas-ptv.mov"], // Crypto marketplace, NFT era
   },
   cb: {
-    images: ["/work/cb-1.png", "/work/cb.webp"], // Coinbase Developer Platform
+    images: ["/work/cb-1.webp", "/work/cb.webp"], // Coinbase Developer Platform
   },
   vf: {
-    images: ["/work/vf-0.png", "/work/vf-01.png", "/work/vf-03.png"], // Voiceflow product redesign
+    images: ["/work/vf-0.png", "/work/vf-01.png", "/work/vf-03.webp"], // Voiceflow product redesign
   },
   defituna: {
     images: ["/work/defituna-1.png", "/work/videos/defi-tuna.mov"], // DeFi project (fixed: removed duplicate)
   },
   theo: {
-    images: ["/work/theo-1.png", "/work/videos/theo-prod.mov", "/work/theo-brand.png", "/work/theo-web.png", "/work/theo-mobile.png"], // Theoriq - AI platform, founding designer
+    images: ["/work/theo-1.png", "/work/videos/theo-prod.mov", "/work/theo-brand.png", "/work/theo-web.webp", "/work/theo-mobile.webp"], // Theoriq - AI platform, founding designer
   },
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools (fixed: removed duplicate)
   zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
   earlyworks: { images: ["/work/early-works.webp"] }, // Early brand work
-  nationalArchives: { images: ["/work/us.png"] }, // Early brand work (fixed: removed duplicate)
+  nationalArchives: { images: ["/work/us.webp"] }, // Early brand work (fixed: removed duplicate)
 };
 
 // ============================================================================
@@ -388,7 +388,7 @@ export const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
  * @see {@link app/utils/portfolioUtils.ts#getAltText} for usage
  */
 export const IMAGE_ALT_TEXT: Record<string, string> = {
-  "/work/cb-1.png": "Coinbase Developer Platform interface showing API documentation and developer tools",
+  "/work/cb-1.webp": "Coinbase Developer Platform interface showing API documentation and developer tools",
   "/work/theo-1.png": "Theoriq AI platform dashboard with agent management and workflow visualization",
   "/work/vf-0.png": "Voiceflow conversation design interface with flowchart-style dialog editor",
   "/work/atlas-2.png": "Atlas crypto marketplace featuring NFT collections and digital asset trading interface",
@@ -396,7 +396,7 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
   "/work/curbcutos.png": "CurbCut accessibility data visualization tool showing urban mobility metrics",
   "/work/zalando-dodont.png": "Zalando B2B design system documentation with component guidelines and patterns",
   "/work/early-works.webp": "Early design work portfolio showcasing brand identity and visual design projects",
-  "/work/us.png": "National Archives project featuring historical document digitization and archival interface",
+  "/work/us.webp": "National Archives project featuring historical document digitization and archival interface",
 };
 
 // ============================================================================

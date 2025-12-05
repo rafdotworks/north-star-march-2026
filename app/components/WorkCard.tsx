@@ -21,7 +21,7 @@
 
 "use client"
 
-import React, { memo, useMemo, useCallback, useState } from "react"
+import React, { memo, useMemo, useCallback, useState, useRef, useEffect } from "react"
 import Image from "next/image"
 
 /** Base z-index for sticky label stacking */
@@ -29,6 +29,46 @@ const Z_INDEX_BASE = 10
 
 /** Fallback gradient shown when image fails to load */
 const IMAGE_ERROR_FALLBACK = "linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted-foreground) / 0.1) 100%)"
+
+/** Simple gray blur placeholder for instant visual feedback (no text) */
+const BLUR_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2U1ZTVlNSIvPjwvc3ZnPg=="
+
+/** Lazy-loaded video that only loads/plays when visible in viewport */
+function LazyVideo({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '100px' } // Start loading slightly before visible
+    )
+
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <video
+      ref={videoRef}
+      src={isVisible ? src : undefined}
+      autoPlay={isVisible}
+      muted
+      loop
+      playsInline
+      preload="none"
+      className="w-full h-auto object-contain"
+    />
+  )
+}
 
 interface WorkCardProps {
   year: string
@@ -139,15 +179,7 @@ export const WorkCard = memo(function WorkCard({
               onContextMenu={preventDefault}
             >
               {isVideo ? (
-                <video
-                  src={src}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-auto object-contain"
-                />
+                <LazyVideo src={src} />
               ) : hasFailed ? (
                 // Fallback for failed images - maintains aspect ratio
                 <div
@@ -163,9 +195,11 @@ export const WorkCard = memo(function WorkCard({
                   height={800}
                   sizes="(max-width: 768px) 100vw, 800px"
                   className="w-full h-auto object-contain pointer-events-none"
-                  loading={priority && idx === 0 ? "eager" : "lazy"}
-                  priority={priority && idx === 0}
+                  loading={priority ? "eager" : "lazy"}
+                  priority={priority}
                   quality={85}
+                  placeholder="blur"
+                  blurDataURL={BLUR_PLACEHOLDER}
                   draggable={false}
                   onError={() => handleImageError(src)}
                 />

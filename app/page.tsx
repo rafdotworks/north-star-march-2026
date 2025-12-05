@@ -49,7 +49,7 @@ import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 const SCROLL_THEME_THRESHOLD = 0.5
 
 /** Number of projects to prioritize for image loading */
-const PRIORITY_IMAGE_COUNT = 2
+const PRIORITY_IMAGE_COUNT = 3
 
 /**
  * Main Page Component
