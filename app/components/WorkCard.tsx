@@ -22,7 +22,7 @@
 "use client"
 
 import React, { memo, useMemo, useCallback, useState, useRef, useEffect } from "react"
-import Image from "next/image"
+import { PictureImage } from "./PictureImage"
 
 /** Base z-index for sticky label stacking */
 const Z_INDEX_BASE = 10
@@ -188,7 +188,7 @@ export const WorkCard = memo(function WorkCard({
                   aria-label={`${altText} - Image unavailable`}
                 />
               ) : (
-                <Image
+                <PictureImage
                   src={src}
                   alt={`${altText} - Image ${idx + 1}`}
                   width={1200}

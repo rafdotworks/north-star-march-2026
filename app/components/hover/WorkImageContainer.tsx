@@ -22,7 +22,7 @@
  */
 
 import React, { useState } from "react";
-import Image from "next/image";
+import { PictureImage } from "../PictureImage";
 import { motion } from "framer-motion";
 import { WorkImageHover } from "./WorkImageHover";
 import { VideoPlayButton } from "./VideoPlayButton";
@@ -206,7 +206,7 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
       variant={variant}
       className={className}
     >
-      <Image
+      <PictureImage
         src={src}
         alt={alt}
         width={width}

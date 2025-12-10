@@ -1726,27 +1726,30 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
                       */}
 
                       {/* Text Content Section - at top */}
-                      <div className="space-y-5">
+                      <div className="space-y-6">
                         {/* Opening */}
-                        <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        I grew up on the Amalfi Coast in Italy. I built my product design career around a simple idea: products should feel clear, fast, and grounded in logic and emotion.                        </p>
+                        <div className="space-y-2">
+                        <p className="text-xs leading-relaxed transition-colors duration-200">
+                        <span className="text-foreground">Hello, I'm Raf. I am currently designing AI softwares across early stage teams and enterprise retail. </span>
+                        <span className="text-muted-foreground">I've spent almost a decade designing across startups and large organizations.</span>
+                        </p>
+                        </div>
 
-                        {/* Today */}
-                        <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        Today I design AI softwares for an early stage AI company and an enterprise retail as a contractor.
+                           {/* Today */}
+                           <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                        I care deeply about products, systems, and experiences that feel fast, logical, and emotionally considered.
                         </p>
                         {/* <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
 Before that, I contributed and shipped design systems, developer tools, and product design foundations across teams like Theoriq, Coinbase, Zalando, Voiceflow and more.
                         </p> */}
 
-                        {/* 2025 */}
-                        {/* <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                          2025 is an intentional year of exploration across design, design engineering and product.
-                        </p> */}
+                         
+
+                
 
                         {/* Location */}
                         <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                          I now live in Toronto, often spending time in Lisbon and New York City. I&apos;m usually on a yoga mat, cycling, or chasing light through quiet spaces.
+                        I grew up on the Amalfi Coast in Italy. I'm based in Toronto, often in Lisbon and New York. You’ll usually find me on a yoga mat, on a bike, or chasing light through quiet spaces.
                         </p>
 
                         {/* Principles */}
