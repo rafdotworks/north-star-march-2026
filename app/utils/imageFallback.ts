@@ -55,3 +55,4 @@ export function needsFallback(src: string): boolean {
   return src.toLowerCase().endsWith(".webp");
 }
 
+
