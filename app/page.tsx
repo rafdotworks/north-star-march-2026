@@ -136,7 +136,7 @@ export default function Page() {
         <div className="flex flex-col flex-1">
           {/* Title - baseline-aligned with "Raf. V" */}
           <span className="text-xs md:text-sm text-muted-foreground/60 font-light leading-tight mb-4 md:mb-5 text-shimmer">
-            Senior AI Product Designer
+            AI Senior Product Designer
           </span>
 
 

@@ -1482,7 +1482,7 @@ export default function Page() {
                         >
                           <div className="tracking-tighter text-base text-center">
                             <div className="text-foreground/70">
-                              {/* Line 1: "Raf is a Senior AI Product Designer" */}
+                              {/* Line 1: "Raf is an AI Senior Product Designer" */}
                               <div>
                                 {/* Static "Raf V." - visible immediately, bypasses parent opacity */}
                                 <span

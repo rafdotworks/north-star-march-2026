@@ -1730,8 +1730,8 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
                         {/* Opening */}
                         <div className="space-y-2">
                         <p className="text-xs leading-relaxed transition-colors duration-200">
-                        <span className="text-foreground">Hello, I'm Raf. I am currently designing AI softwares across early stage teams and enterprise retail. </span>
-                        <span className="text-muted-foreground">I've spent almost a decade designing across startups and large organizations.</span>
+                        <span className="text-foreground">Hello, I&apos;m Raf. I am currently designing AI softwares across early stage teams and enterprise retail. </span>
+                        <span className="text-muted-foreground">I&apos;ve spent almost a decade designing across startups and large organizations.</span>
                         </p>
                         </div>
 
@@ -1749,7 +1749,7 @@ Before that, I contributed and shipped design systems, developer tools, and prod
 
                         {/* Location */}
                         <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        I grew up on the Amalfi Coast in Italy. I'm based in Toronto, often in Lisbon and New York. You’ll usually find me on a yoga mat, on a bike, or chasing light through quiet spaces.
+                        I grew up on the Amalfi Coast in Italy. I&apos;m based in Toronto, often in Lisbon and New York. You&apos;ll usually find me on a yoga mat, on a bike, or chasing light through quiet spaces.
                         </p>
 
                         {/* Principles */}
