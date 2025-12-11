@@ -897,6 +897,8 @@ html {
   scroll-behavior: smooth;
   overscroll-behavior: none;
   height: 100%;
+  /* Background color extends to full viewport including status bar area on mobile */
+  background: var(--bg);
   /* Gradual and beautiful theme transitions for html element */
   transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
               color var(--theme-transition-duration) var(--theme-transition-easing);
