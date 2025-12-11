@@ -1730,15 +1730,15 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
                         {/* Opening */}
                         <div className="space-y-2">
                         <p className="text-xs leading-relaxed transition-colors duration-200">
-                        <span className="text-foreground">Hello, I&apos;m Raf. I am currently designing AI softwares across early stage teams and enterprise retail. </span>
+                        <span className="text-foreground">Hello, I&apos;m Raf. I am designing AI softwares across early stage teams and enterprise retail. </span>
                         <span className="text-muted-foreground">I&apos;ve spent almost a decade designing across startups and large organizations.</span>
                         </p>
                         </div>
 
                            {/* Today */}
                            <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        I care deeply about products, systems, and experiences that feel fast, logical, and emotionally considered.
-                        </p>
+                           I care about contributing to products, systems and experiences that feel fast, logical and emotionally considered, especially in domains where clarity directly shapes performance and impact.
+                           </p>
                         {/* <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
 Before that, I contributed and shipped design systems, developer tools, and product design foundations across teams like Theoriq, Coinbase, Zalando, Voiceflow and more.
                         </p> */}
