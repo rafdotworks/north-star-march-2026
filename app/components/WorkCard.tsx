@@ -121,14 +121,14 @@ export const WorkCard = memo(function WorkCard({
     setFailedImages(prev => new Set(prev).add(src))
   }, [])
   return (
-    <div className="contents">
+    <div className="flex flex-col md:contents">
       {/* ========================================================================
        * ROW 1: YEAR + ROLE + CONTRACT TYPE + TITLE
        * ======================================================================== */}
 
       {/* Year, role and contract type label - left column (sticky on desktop) */}
       <div
-        className="type-caption text-left md:text-right pt-6 md:pt-8 first:pt-0 md:sticky md:top-12 md:bg-background self-baseline"
+        className="type-caption text-left md:text-right pt-2 md:pt-8 first:md:pt-0 md:sticky md:top-12 md:bg-background self-baseline"
         style={{ zIndex: Z_INDEX_BASE + projectIndex }}
       >
         <div>{year}</div>
@@ -137,7 +137,7 @@ export const WorkCard = memo(function WorkCard({
       </div>
 
       {/* Title - right column */}
-      <h2 className="type-title pt-3 md:pt-8 first:pt-0 self-baseline">
+      <h2 className="type-title pt-6 md:pt-8 first:pt-0 self-baseline -order-1 md:order-none">
         {title}
       </h2>
 
@@ -149,7 +149,7 @@ export const WorkCard = memo(function WorkCard({
       <div className="hidden md:block" />
 
       {/* Description - right column */}
-      <p className="type-body">
+      <p className="type-body mt-3 md:mt-0">
         {descriptionLines.map((line, index) => (
           <React.Fragment key={index}>
             {line}
@@ -166,7 +166,7 @@ export const WorkCard = memo(function WorkCard({
       <div className="hidden md:block" />
 
       {/* Full-width vertical media stack - right column */}
-      <div className="mt-3 md:mt-4 mb-16 md:mb-10 flex flex-col gap-3 md:gap-4">
+      <div className="mt-5 md:mt-4 mb-16 md:mb-10 flex flex-col gap-3 md:gap-4">
         {images.map((src, idx) => {
           const isVideo = /\.(mov|mp4|webm)$/i.test(src)
           const hasFailed = failedImages.has(src)

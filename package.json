@@ -11,21 +11,15 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.56",
     "@ai-sdk/react": "^2.0.81",
-    "@react-three/drei": "^9.114.0",
-    "@react-three/fiber": "^8.18.0",
-    "@react-three/postprocessing": "^3.0.4",
     "@vercel/analytics": "^1.5.0",
     "ai": "^5.0.81",
     "framer-motion": "latest",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.548.0",
     "next": "^15.5.7",
-    "postprocessing": "^6.38.0",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^10.1.0",
-    "styled-jsx": "^5.1.7",
-    "three": "^0.181.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {

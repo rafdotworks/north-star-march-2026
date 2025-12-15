@@ -68,7 +68,6 @@ The app uses Next.js App Router with the following structure:
 
 - Dark mode: Based on system preference (`darkMode: "media"`)
 - Custom font variables: `--font-ronzino`, `--font-edu-marist`
-- Custom animations: `slow-pulse`, `twinkle`
 - HSL-based color system with CSS variables
 
 ### Next.js Configuration
