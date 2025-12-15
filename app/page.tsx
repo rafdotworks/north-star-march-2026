@@ -134,8 +134,8 @@ export default function Page() {
                 <p className="type-body">
                   I&apos;ve spent almost a decade designing across startups and large organizations.
                   <br/>
-                  I care about collaboratively shaping opinionated, fast and emotionally considered products.
-                </p>
+                  I care about building opinionated and emotionally considered products with passionate people.
+                  </p>
 
                 {/* Location & Lifestyle */}
                 <p className="type-body">

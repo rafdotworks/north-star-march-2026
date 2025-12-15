@@ -103,7 +103,7 @@ export const PictureImage: React.FC<PictureImageProps> = ({
       <source srcSet={fallback.gif} type="image/gif" />
       {/* Fallback img element - required by picture element spec */}
       <img
-        src={fallback.gif}
+        src={fallback.webp}
         alt={alt}
         width={width}
         height={height}
