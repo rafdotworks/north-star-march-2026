@@ -120,6 +120,7 @@ export const WorkCard = memo(function WorkCard({
   const handleImageError = useCallback((src: string) => {
     setFailedImages(prev => new Set(prev).add(src))
   }, [])
+
   return (
     <div className="flex flex-col md:contents">
       {/* ========================================================================

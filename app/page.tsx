@@ -17,50 +17,19 @@ import {
   IMAGE_ALT_TEXT
 } from "@/app/config/portfolioConfig"
 
-// ============================================================================
-// THEME TOGGLE (disabled - uncomment to enable scroll-based color inversion)
-// ============================================================================
-// import { useSystemTheme } from "@/hooks/use-system-theme"
-// const SCROLL_THEME_THRESHOLD = 0.5
-//
-// Inside component:
-// const { prefersDark, isReady } = useSystemTheme()
-// const [isThemeToggled, setIsThemeToggled] = useState<boolean>(false)
-//
-// useEffect(() => {
-//   const handleScroll = () => {
-//     if (!ticking.current) {
-//       requestAnimationFrame(() => {
-//         const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
-//         const scrollProgress = window.scrollY / scrollHeight
-//         setIsThemeToggled(scrollProgress >= SCROLL_THEME_THRESHOLD)
-//         ticking.current = false
-//       })
-//       ticking.current = true
-//     }
-//   }
-//   window.addEventListener('scroll', handleScroll, { passive: true })
-//   return () => window.removeEventListener('scroll', handleScroll)
-// }, [])
-//
-// // XOR logic: invert theme when scroll crosses threshold
-// const effectiveTheme = isReady ? (prefersDark !== isThemeToggled) : prefersDark
-//
-// useEffect(() => {
-//   if (typeof document !== 'undefined' && isReady) {
-//     const theme = effectiveTheme ? "dark" : "light"
-//     document.documentElement.setAttribute('data-theme', theme)
-//   }
-// }, [effectiveTheme, isReady])
-// ============================================================================
+import { useSystemTheme } from "@/hooks/use-system-theme"
+
+const SCROLL_THEME_THRESHOLD = 0.98
 
 const PRIORITY_IMAGE_COUNT = 3
 
 export default function Page() {
   const timezoneMessage = useTimezoneMessage()
+  const { prefersDark, isReady } = useSystemTheme()
 
   // Scroll-based hero blur with eased progress
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [isThemeToggled, setIsThemeToggled] = useState(false)
   const ticking = useRef(false)
 
   useEffect(() => {
@@ -84,6 +53,11 @@ export default function Page() {
             setScrollProgress(1 - Math.pow(1 - progress, 2))
           }
 
+          // Theme toggle at page end
+          const scrollHeight = document.documentElement.scrollHeight - viewportHeight
+          const totalProgress = scrollY / scrollHeight
+          setIsThemeToggled(totalProgress >= SCROLL_THEME_THRESHOLD)
+
           ticking.current = false
         })
         ticking.current = true
@@ -93,6 +67,15 @@ export default function Page() {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // XOR logic: invert theme when at page end
+  const effectiveTheme = isReady ? (prefersDark !== isThemeToggled) : prefersDark
+
+  useEffect(() => {
+    if (typeof document !== 'undefined' && isReady) {
+      document.documentElement.setAttribute('data-theme', effectiveTheme ? "dark" : "light")
+    }
+  }, [effectiveTheme, isReady])
 
   // Derived values from scroll progress - beautiful eased transitions
   const heroBlur = scrollProgress * 24
@@ -132,9 +115,9 @@ export default function Page() {
 
                 {/* Experience */}
                 <p className="type-body">
-                  I&apos;ve spent almost a decade designing across startups and large organizations.
-                  <br/>
-                  I care about building opinionated and emotionally considered products with passionate people.
+                  I&apos;ve spent 9+ years designing across startups and large organizations.
+                  <br className="hidden md:block"/>
+                  <span className="block mt-3 md:mt-0 md:inline">I care about building opinionated and emotionally considered products with passionate people.</span>
                   </p>
 
                 {/* Location & Lifestyle */}
@@ -145,7 +128,7 @@ export default function Page() {
                 </p>
 
                 {/* Contact Links */}
-                <nav className="flex flex-col gap-1 group/nav pt-2">
+                <nav className="flex flex-col items-start gap-1 group/nav pt-2">
                   <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
                   <FooterLink href="mailto:raf@raf.works" label="Email" />
                   {/* <FooterLink href="/cv" label="CV" /> */}
@@ -164,11 +147,20 @@ export default function Page() {
         {/* Spacer for hero - allows hero to be visible before works */}
         <div className="h-screen" />
 
-        {/* Soft gradient transition as works come in */}
+        {/* Scroll-reactive gradient transition as works come in */}
         <div
-          className="h-40 -mt-40 relative z-10"
+          className="h-48 -mt-48 relative z-10"
           style={{
-            background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)'
+            background: `linear-gradient(to bottom,
+              transparent 0%,
+              hsla(var(--background) / ${0.3 + scrollProgress * 0.7}) 25%,
+              hsla(var(--background) / ${0.6 + scrollProgress * 0.4}) 50%,
+              hsla(var(--background) / ${0.85 + scrollProgress * 0.15}) 75%,
+              hsl(var(--background)) 100%
+            )`,
+            opacity: Math.min(1, 0.4 + scrollProgress * 1.2),
+            transform: `translateY(${(1 - Math.min(1, scrollProgress * 1.5)) * 16}px)`,
+            transition: 'opacity 100ms ease-out',
           }}
         />
 
@@ -203,8 +195,8 @@ export default function Page() {
               {/* Bottom divider */}
               <div className="col-span-1 md:col-span-2 border-t border-border/20 my-6 md:my-8" />
 
-              {/* Footer hero - spans both columns, content at bottom */}
-              <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row md:items-end gap-0 md:gap-8 lg:gap-16 min-h-[50vh] justify-end py-[10vh] md:pt-[20vh] md:pb-[10vh]">
+              {/* Footer hero - spans both columns, centered like main hero */}
+              <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row md:items-center gap-0 md:gap-8 lg:gap-16 min-h-screen justify-center py-[15vh]">
                 {/* Empty left column for grid alignment */}
                 <div className="hidden md:block md:w-[180px] lg:w-[200px] flex-shrink-0" />
 
@@ -213,7 +205,6 @@ export default function Page() {
                   {/* Principles */}
                   <div className="space-y-1">
                     <p className="type-caption">— How you do anything is how you do everything</p>
-                    <p className="type-caption">— Always happy, never satisfied</p>
                     <p className="type-caption">— Progress over movement</p>
                   </div>
 

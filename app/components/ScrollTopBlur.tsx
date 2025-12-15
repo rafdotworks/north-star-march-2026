@@ -9,8 +9,9 @@
  * BEHAVIOR:
  * - Hidden at page load (opacity 0)
  * - Begins appearing at 70% scroll progress (approaching footer)
- * - Fully visible by 90% scroll progress (at footer)
- * - Covers and hides the lingering sticky label from the last project
+ * - Fully visible by 95% scroll progress (at footer)
+ * - Blur intensity ramps up with opacity
+ * - Subtle glow accent matches bottom blur visual language
  *
  * PERFORMANCE:
  * - Uses requestAnimationFrame for smooth scroll handling
@@ -20,40 +21,32 @@
 
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
 /** Scroll progress (0-1) at which fade begins */
-const FADE_START = 0.75
+const FADE_START = 0.65
 
 /** Scroll progress (0-1) at which component is fully visible */
-const FADE_END = 0.98
+const FADE_END = 0.85
 
-/** Blur amount for backdrop filter (reduced for accessibility) */
-const BLUR_AMOUNT = 60
-const BLUR_AMOUNT_REDUCED = 0
+/** Maximum glow opacity */
+const MAX_GLOW_OPACITY = 0.04
 
-/** Saturation adjustment for backdrop filter */
-const SATURATION = "1.02"
+// ============================================================================
+// EASING FUNCTIONS
+// ============================================================================
+
+function easeInCubic(t: number): number {
+  return t * t * t
+}
 
 export function ScrollTopBlur() {
-  const [opacity, setOpacity] = useState(0)
-  const [isVisible, setIsVisible] = useState(false)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
   const ticking = useRef(false)
-
-  // Check for reduced motion preference
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const mql = window.matchMedia("(prefers-reduced-motion: reduce)")
-    setPrefersReducedMotion(mql.matches)
-    const onChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
-    mql.addEventListener("change", onChange)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -62,27 +55,8 @@ export function ScrollTopBlur() {
           const scrollY = window.scrollY
           const windowHeight = window.innerHeight
           const documentHeight = document.documentElement.scrollHeight
-
-          // Calculate scroll progress (0 to 1)
-          const scrollProgress = scrollY / (documentHeight - windowHeight)
-
-          // Calculate opacity based on scroll progress
-          let newOpacity = 0
-
-          if (scrollProgress >= FADE_END) {
-            newOpacity = 1
-            setIsVisible(true)
-          } else if (scrollProgress > FADE_START) {
-            const fadeRange = FADE_END - FADE_START
-            const fadeProgress = (scrollProgress - FADE_START) / fadeRange
-            newOpacity = fadeProgress
-            setIsVisible(true)
-          } else {
-            newOpacity = 0
-            setIsVisible(false)
-          }
-
-          setOpacity(newOpacity)
+          const progress = scrollY / (documentHeight - windowHeight)
+          setScrollProgress(progress)
           ticking.current = false
         })
         ticking.current = true
@@ -97,25 +71,67 @@ export function ScrollTopBlur() {
     }
   }, [])
 
-  // Don't render if not visible
-  if (!isVisible && opacity === 0) {
+  // Calculate derived values with easing
+  const { opacity, glowOpacity } = useMemo(() => {
+    if (scrollProgress <= FADE_START) {
+      return { opacity: 0, glowOpacity: 0 }
+    }
+
+    const fadeRange = FADE_END - FADE_START
+    const fadeProgress = Math.min(1, (scrollProgress - FADE_START) / fadeRange)
+
+    // Use cubic ease-in for smooth, natural appearance
+    const opacity = easeInCubic(fadeProgress)
+
+    // Glow increases with scroll progress
+    const glowOpacity = MAX_GLOW_OPACITY * fadeProgress
+
+    return { opacity, glowOpacity }
+  }, [scrollProgress])
+
+  // Don't render when effectively invisible
+  if (opacity < 0.01) {
     return null
   }
 
-  const blurAmount = prefersReducedMotion ? BLUR_AMOUNT_REDUCED : BLUR_AMOUNT
-
   return (
     <div
-      className="pointer-events-none fixed top-0 left-0 right-0 z-[25]"
+      className="pointer-events-none fixed top-0 left-0 right-0 z-[50]"
       style={{
-        height: "200px",
-        opacity: opacity,
-        background: "linear-gradient(to bottom, hsl(var(--background)) 0%, hsl(var(--background)) 60%, hsla(var(--background) / 0.9) 80%, hsla(var(--background) / 0) 100%)",
-        backdropFilter: `blur(${blurAmount}px) saturate(${SATURATION})`,
-        WebkitBackdropFilter: `blur(${blurAmount}px) saturate(${SATURATION})`,
-        maskImage: "linear-gradient(to bottom, black 0%, black 50%, rgba(0,0,0,0.7) 75%, transparent 100%)",
-        WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 50%, rgba(0,0,0,0.7) 75%, transparent 100%)",
+        height: "min(35vh, 250px)",
+        opacity,
+        transition: "opacity 150ms ease-out",
       }}
-    />
+    >
+      {/* Soft gradient fade - no hard edges */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(to bottom,
+            hsl(var(--background)) 0%,
+            hsl(var(--background)) 40%,
+            hsla(var(--background) / 0.8) 55%,
+            hsla(var(--background) / 0.4) 75%,
+            hsla(var(--background) / 0) 100%
+          )`,
+        }}
+      />
+
+      {/* Subtle glow accent */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2"
+        style={{
+          width: "70%",
+          height: "50%",
+          background: `radial-gradient(ellipse at center top,
+            hsla(var(--accent) / ${glowOpacity}) 0%,
+            transparent 70%
+          )`,
+          filter: "blur(30px)",
+          opacity: glowOpacity > 0 ? 1 : 0,
+          transition: "opacity 200ms ease-out",
+        }}
+      />
+    </div>
   )
 }
