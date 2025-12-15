@@ -110,7 +110,7 @@ export default function Page() {
                 <p className="type-body-primary">
                   Hello, I&apos;m Raf.
                   <br/>
-                  I design AI software.
+                  I design AI softwares and systems.
                 </p>
 
                 {/* Experience */}
