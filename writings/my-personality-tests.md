@@ -13,7 +13,7 @@ The Enneagram describes nine personality types, each driven by distinct motivati
 
 **Type: 8 - The Challenger**
 - Description: Eights are strong, assertive, and decisive, with a natural ability to lead and confront challenges. They value independence and strive to make an impact.
-- Personal Insight: This fits me because I thrive on taking charge and pushing forward, especially in tough situations, though I'm learning to balance my intensity with openness.
+- Personal Insight: This fits me because I thrive on taking charge and pushing forward.
 
 ## 16 Personalities Test
 Based on the Myers-Briggs Type Indicator, this test identifies 16 personality types through four key traits.

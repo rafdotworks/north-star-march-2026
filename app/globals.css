@@ -6,79 +6,35 @@
 
 /* ============================================================================
  * SEMANTIC TYPOGRAPHY CLASSES
- * Centralized typography styles for consistent use across components.
- * These classes consolidate size, weight, color, and line-height.
- *
- * OPACITY SCALE (consolidated from 7 to 3 levels):
- *   /40 = subtle (inactive, tertiary)
- *   /60 = muted (secondary content)
- *   /80 = readable (primary secondary content)
+ * Simplified 4-class system: caption, body, body-primary, title
  * ============================================================================ */
 @layer components {
-  /* Labels: uppercase, smallest text (10px) */
+  /* Caption: quiet text - principles, timestamps, meta (11px) */
   .type-caption {
-    font-size: var(--text-2xs);
-    line-height: var(--leading-tight);
-    @apply text-muted-foreground/60 font-light uppercase tracking-wider;
-  }
-
-  /* Metadata: year, role, contract type (11px) */
-  .type-meta {
-    font-size: var(--text-xs);
-    line-height: var(--leading-normal);
+    font-size: 11px;
+    line-height: 1.5;
     @apply text-muted-foreground/60 font-light;
   }
 
-  /* Small body: descriptions, list items (12px) */
-  .type-body-sm {
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
+  /* Body: default text - descriptions, secondary content (12px) */
+  .type-body {
+    font-size: 12px;
+    line-height: 1.5;
     @apply text-muted-foreground/60;
   }
 
-  /* Body: modal content, paragraphs (14px) */
-  .type-body {
-    font-size: var(--text-base);
-    line-height: var(--leading-normal);
-    @apply text-foreground/80;
-  }
-
-  /* Navigation: interactive links (14px mobile, 12px desktop) */
-  .type-nav {
-    font-size: var(--text-base);
-    line-height: var(--leading-normal);
-    @apply text-muted-foreground/40;
-  }
-  @media (min-width: 768px) {
-    .type-nav {
-      font-size: var(--text-sm);
-    }
-  }
-
-  /* Link: footer links, always 12px */
-  .type-link {
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
-    @apply text-muted-foreground/40;
+  /* Body Primary: emphasized text - hero intro (12px) */
+  .type-body-primary {
+    font-size: 12px;
+    line-height: 1.5;
+    @apply text-foreground;
   }
 
   /* Title: work card titles (14px) */
   .type-title {
-    font-size: var(--text-base);
-    line-height: var(--leading-tight);
+    font-size: 14px;
+    line-height: 1.25;
     @apply text-foreground font-normal font-edu-marist;
-  }
-
-  /* Heading: hero name, page titles */
-  .type-heading {
-    font-size: var(--text-xl);
-    line-height: var(--leading-tight);
-    @apply font-light text-foreground tracking-wide font-edu-marist;
-  }
-  @media (min-width: 768px) {
-    .type-heading {
-      font-size: var(--text-2xl);
-    }
   }
 }
 

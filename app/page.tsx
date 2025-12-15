@@ -1,26 +1,11 @@
-/**
- * ============================================================================
- * MAIN HOMEPAGE - app/page.tsx
- * ============================================================================
- *
- * Two-column grid layout inspired by ryhan.me, showcasing work in a clean,
- * editorial style with significant whitespace and elegant typography.
- *
- * LAYOUT:
- * - Left column: Labels, role, contract type, metadata (narrow, right-aligned)
- * - Right column: Content (wider, left-aligned)
- * - Responsive: Stacks to single column on mobile
- *
- * CONTENT:
- * - Header: Name, title, location, social links
- * - Divider: Horizontal line
- * - Works: All portfolio projects with role, contract type, title, description (with year), image
- */
-
 "use client"
 
-import React, { useEffect, useState, useCallback, useRef } from "react"
-import { useSystemTheme } from "@/hooks/use-system-theme"
+import React, { useEffect, useState, useRef } from "react"
+import FooterLink from "@/app/components/FooterLink"
+import { WorkCard } from "@/app/components/WorkCard"
+import { ScrollBottomBlur } from "@/app/components/ScrollBottomBlur"
+import { ScrollTopBlur } from "@/app/components/ScrollTopBlur"
+import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 import {
   PROJECT_ORDER,
   PROJECTS,
@@ -31,53 +16,74 @@ import {
   PROJECT_DISPLAY_NAMES,
   IMAGE_ALT_TEXT
 } from "@/app/config/portfolioConfig"
-import { ContentGrid } from "./components/ContentGrid"
-import { WorkCard } from "./components/WorkCard"
-import { SectionDivider } from "./components/SectionDivider"
-import { ScrollBottomBlur } from "./components/ScrollBottomBlur"
-import { ScrollTopBlur } from "./components/ScrollTopBlur"
-import NavigationItem from "./components/NavigationItem"
-import FooterLink from "./components/FooterLink"
-import SideTray from "./new/components/SideTray"
-import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 
 // ============================================================================
-// CONSTANTS
+// THEME TOGGLE (disabled - uncomment to enable scroll-based color inversion)
+// ============================================================================
+// import { useSystemTheme } from "@/hooks/use-system-theme"
+// const SCROLL_THEME_THRESHOLD = 0.5
+//
+// Inside component:
+// const { prefersDark, isReady } = useSystemTheme()
+// const [isThemeToggled, setIsThemeToggled] = useState<boolean>(false)
+//
+// useEffect(() => {
+//   const handleScroll = () => {
+//     if (!ticking.current) {
+//       requestAnimationFrame(() => {
+//         const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+//         const scrollProgress = window.scrollY / scrollHeight
+//         setIsThemeToggled(scrollProgress >= SCROLL_THEME_THRESHOLD)
+//         ticking.current = false
+//       })
+//       ticking.current = true
+//     }
+//   }
+//   window.addEventListener('scroll', handleScroll, { passive: true })
+//   return () => window.removeEventListener('scroll', handleScroll)
+// }, [])
+//
+// // XOR logic: invert theme when scroll crosses threshold
+// const effectiveTheme = isReady ? (prefersDark !== isThemeToggled) : prefersDark
+//
+// useEffect(() => {
+//   if (typeof document !== 'undefined' && isReady) {
+//     const theme = effectiveTheme ? "dark" : "light"
+//     document.documentElement.setAttribute('data-theme', theme)
+//   }
+// }, [effectiveTheme, isReady])
 // ============================================================================
 
-/** Scroll threshold for theme toggle (0-1, where 0.5 = 50% scroll) */
-const SCROLL_THEME_THRESHOLD = 0.5
-
-/** Number of projects to prioritize for image loading */
 const PRIORITY_IMAGE_COUNT = 3
 
-/**
- * Main Page Component
- */
 export default function Page() {
-  // Theme system integration
-  const { prefersDark, isReady } = useSystemTheme()
-
-  // Scroll-based theme toggle (triggers at 50% scroll)
-  const [isThemeToggled, setIsThemeToggled] = useState<boolean>(false)
-
-  // Timezone message
   const timezoneMessage = useTimezoneMessage()
 
-  // Navigation state management
-  const [selectedArticle, setSelectedArticle] = useState<"about" | "writing" | null>(null)
-  const [selectedWritingArticle, setSelectedWritingArticle] = useState<string | null>(null)
-
-  // Scroll-based theme toggle at threshold (throttled with rAF)
+  // Scroll-based hero blur with eased progress
+  const [scrollProgress, setScrollProgress] = useState(0)
   const ticking = useRef(false)
 
   useEffect(() => {
     const handleScroll = () => {
       if (!ticking.current) {
         requestAnimationFrame(() => {
-          const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
-          const scrollProgress = window.scrollY / scrollHeight
-          setIsThemeToggled(scrollProgress >= SCROLL_THEME_THRESHOLD)
+          const scrollY = window.scrollY
+          const viewportHeight = window.innerHeight
+
+          // Slower, sweeter transition: 20vh to 90vh (hero lingers longer)
+          const transitionStart = viewportHeight * 0.2
+          const transitionEnd = viewportHeight * 0.9
+
+          if (scrollY <= transitionStart) {
+            setScrollProgress(0)
+          } else if (scrollY >= transitionEnd) {
+            setScrollProgress(1)
+          } else {
+            const progress = (scrollY - transitionStart) / (transitionEnd - transitionStart)
+            // Gentle ease-out curve - hero fades slowly, sweetly
+            setScrollProgress(1 - Math.pow(1 - progress, 2))
+          }
+
           ticking.current = false
         })
         ticking.current = true
@@ -88,150 +94,142 @@ export default function Page() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // XOR logic: invert theme when scroll crosses threshold
-  // prefersDark=true + isThemeToggled=false → dark
-  // prefersDark=true + isThemeToggled=true → light (inverted)
-  const effectiveTheme = isReady ? (prefersDark !== isThemeToggled) : prefersDark
-
-  // Apply theme to html element
-  useEffect(() => {
-    if (typeof document !== 'undefined' && isReady) {
-      const theme = effectiveTheme ? "dark" : "light"
-      document.documentElement.setAttribute('data-theme', theme)
-    }
-  }, [effectiveTheme, isReady])
-
-  // Event handlers for navigation
-  const handleNavClick = useCallback((articleId: "about" | "works" | "writing") => {
-    setSelectedArticle(articleId === "works" ? null : articleId)
-  }, [])
-
-  const handleSideTrayClose = useCallback(() => {
-    if (selectedArticle === "writing") {
-      // Close the entire writing tray (both list and article views)
-      setSelectedArticle(null)
-      setSelectedWritingArticle(null)
-    } else {
-      setSelectedArticle(null)
-    }
-  }, [selectedArticle])
+  // Derived values from scroll progress - beautiful eased transitions
+  const heroBlur = scrollProgress * 24
+  const heroScale = 1 - (scrollProgress * 0.1)
+  const heroOpacity = 1 - (scrollProgress * 0.8)
+  const heroY = scrollProgress * -40
 
   return (
-    <>
-      <ContentGrid>
-      {/* ========================================================================
-         * HEADER SECTION
-         * ======================================================================== */}
+    <div className="min-h-screen bg-background text-foreground">
+      {/* ================================================================
+       * HERO SECTION - Fixed in background, blurs beautifully on scroll
+       * ================================================================ */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <div
+          className="min-h-screen flex items-center"
+          style={{
+            filter: `blur(${heroBlur}px)`,
+            transform: `scale(${heroScale}) translateY(${heroY}px)`,
+            opacity: heroOpacity,
+            willChange: 'filter, transform, opacity'
+          }}
+        >
+          {/* Use same container and grid as works section for alignment */}
+          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20">
+            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16">
+              {/* Empty left column for grid alignment */}
+              <div className="hidden md:block" />
 
-      {/* Header wrapper - spans both columns, uses flex for baseline alignment, takes 80% viewport height */}
-      <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row md:items-baseline gap-0 md:gap-8 lg:gap-16 min-h-[80vh] justify-center md:justify-start py-[10vh] md:pt-[20vh] md:pb-[20vh]">
-        {/* Name - left column, right-aligned, baseline-aligned with title */}
-        <div className="text-left md:text-right md:w-[180px] lg:w-[200px] flex-shrink-0">
-          <h1 className="type-heading">
-            Raf V.
-          </h1>
-        </div>
+              {/* Hero content - right column, aligns with project titles */}
+              <div className="space-y-5">
+                {/* Greeting & Role */}
+                <p className="type-body-primary">
+                  Hello, I&apos;m Raf.
+                  <br/>
+                  I design AI software.
+                </p>
 
-        {/* Title, about text, and links - right column, baseline-aligned with name */}
-        <div className="flex flex-col flex-1">
-          {/* Title - baseline-aligned with "Raf. V" */}
-          <span className="text-xs md:text-sm text-muted-foreground/60 font-light leading-tight mb-4 md:mb-5 text-shimmer">
-            AI Senior Product Designer
-          </span>
+                {/* Experience */}
+                <p className="type-body">
+                  I&apos;ve spent almost a decade designing across startups and large organizations.
+                  <br/>
+                  I care about collaboratively shaping opinionated, fast and emotionally considered products.
+                </p>
 
+                {/* Location & Lifestyle */}
+                <p className="type-body">
+                  Born on the Amalfi Coast. Based in Toronto.
+                  <br/>
+                  Moving to London UK in Q2 2026.
+                </p>
 
-          {/* Navigation items */}
-          <nav className="flex flex-col gap-0 group/nav">
-            <NavigationItem
-              label="About"
-              articleId="about"
-              onClick={handleNavClick}
-              ariaLabel="About Raf"
-            />
-            <NavigationItem
-              label="Writing"
-              articleId="writing"
-              onClick={handleNavClick}
-              ariaLabel="View Writing"
-            />
-          </nav>
-        </div>
-      </div>
-
-      {/* ========================================================================
-       * SECTION DIVIDER
-       * ======================================================================== */}
-      <SectionDivider />
-
-      {/* ========================================================================
-       * WORKS SECTION - Wrapper contains sticky elements
-       * ======================================================================== */}
-      <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16 gap-y-1 md:gap-y-2">
-        {PROJECT_ORDER.map((projectKey, index) => {
-          const project = PROJECTS[projectKey]
-          const images = project.images
-          const title = PROJECT_DISPLAY_NAMES[projectKey] || projectKey
-          const altText = IMAGE_ALT_TEXT[images[0]] || `${title} project showcase`
-
-          return (
-            <WorkCard
-              key={projectKey}
-              year={PROJECT_YEARS[projectKey] || ""}
-              role={PROJECT_ROLES[projectKey] || ""}
-              contractType={PROJECT_CONTRACT_TYPES[projectKey] || ""}
-              title={title}
-              description={PROJECT_CAPTIONS[projectKey]}
-              images={images}
-              altText={altText}
-              priority={index < PRIORITY_IMAGE_COUNT}
-              projectIndex={index}
-            />
-          )
-        })}
-
-        {/* Divider inside works wrapper */}
-        <div className="col-span-1 md:col-span-2 border-t border-border/20 my-6 md:my-8" />
-
-        {/* Spacer to let sticky label scroll away */}
-        <div className="col-span-1 md:col-span-2 h-[50vh]" />
-      </div>
-
-      {/* ========================================================================
-       * FOOTER SECTION - HERO-STYLE WITH CONTENT AT BOTTOM
-       * ======================================================================== */}
-
-      {/* Footer hero - spans both columns, content at bottom */}
-      <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row md:items-end gap-0 md:gap-8 lg:gap-16 min-h-[50vh] justify-end py-[10vh] md:pt-[20vh] md:pb-[10vh]">
-        {/* Empty left column for grid alignment */}
-        <div className="hidden md:block md:w-[180px] lg:w-[200px] flex-shrink-0" />
-
-        {/* Footer content - right column, md:flex-1 for width on desktop only */}
-        <div className="flex flex-col md:flex-1">
-          <p className="type-body-sm transition-colors duration-200">
-            {timezoneMessage}
-          </p>
-
-          {/* Footer links */}
-          <nav className="flex flex-row gap-5 group/nav pt-3">
-            <FooterLink href="https://www.linkedin.com/in/raffaelevitaledesign/" label="LinkedIn" external />
-            <FooterLink href="mailto:raf@raf.works" label="Email" />
-            <FooterLink href="https://x.com/lfgraf" label="X" external />
-          </nav>
+                {/* Contact Links */}
+                <nav className="flex flex-col gap-1 group/nav pt-2">
+                  <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
+                  <FooterLink href="mailto:raf@raf.works" label="Email" />
+                  {/* <FooterLink href="/cv" label="CV" /> */}
+                  <FooterLink href="https://x.com/lfgraf" label="X" external />
+                </nav>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      </ContentGrid>
 
-      {/* Scroll-based blur effects */}
+      {/* ================================================================
+       * SCROLLABLE CONTENT - Works section scrolls over hero
+       * ================================================================ */}
+      <main className="relative z-10 pointer-events-none">
+        {/* Spacer for hero - allows hero to be visible before works */}
+        <div className="h-screen" />
+
+        {/* Soft gradient transition as works come in */}
+        <div
+          className="h-40 -mt-40 relative z-10"
+          style={{
+            background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)'
+          }}
+        />
+
+        {/* Works section with solid background */}
+        <div className="bg-background min-h-screen pointer-events-auto">
+          <div className="w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-20 py-12 md:py-20">
+            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16 gap-y-1 md:gap-y-2">
+
+              {/* Works */}
+              {PROJECT_ORDER.map((projectKey, index) => {
+                const project = PROJECTS[projectKey]
+                const images = project.images
+                const title = PROJECT_DISPLAY_NAMES[projectKey] || projectKey
+                const altText = IMAGE_ALT_TEXT[images[0]] || `${title} project showcase`
+
+                return (
+                  <WorkCard
+                    key={projectKey}
+                    year={PROJECT_YEARS[projectKey] || ""}
+                    role={PROJECT_ROLES[projectKey] || ""}
+                    contractType={PROJECT_CONTRACT_TYPES[projectKey] || ""}
+                    title={title}
+                    description={PROJECT_CAPTIONS[projectKey]}
+                    images={images}
+                    altText={altText}
+                    priority={index < PRIORITY_IMAGE_COUNT}
+                    projectIndex={index}
+                  />
+                )
+              })}
+
+              {/* Bottom divider */}
+              <div className="col-span-1 md:col-span-2 border-t border-border/20 my-6 md:my-8" />
+
+              {/* Footer hero - spans both columns, content at bottom */}
+              <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row md:items-end gap-0 md:gap-8 lg:gap-16 min-h-[50vh] justify-end py-[10vh] md:pt-[20vh] md:pb-[10vh]">
+                {/* Empty left column for grid alignment */}
+                <div className="hidden md:block md:w-[180px] lg:w-[200px] flex-shrink-0" />
+
+                {/* Footer content - right column */}
+                <div className="flex flex-col md:flex-1">
+                  {/* Principles */}
+                  <div className="space-y-1">
+                    <p className="type-caption">— How you do anything is how you do everything</p>
+                    <p className="type-caption">— Always happy, never satisfied</p>
+                    <p className="type-caption">— Progress over movement</p>
+                  </div>
+
+                  <p className="type-caption transition-colors duration-200 mt-10">
+                    {timezoneMessage}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Scroll blur effects */}
       <ScrollBottomBlur />
       <ScrollTopBlur />
-
-      {/* SideTray component for About and Writing */}
-      <SideTray
-        articleId={selectedArticle === "writing" ? selectedWritingArticle : selectedArticle === "about" ? "about" : null}
-        onClose={handleSideTrayClose}
-        isWritingMode={selectedArticle === "writing"}
-        onArticleSelect={selectedArticle === "writing" ? setSelectedWritingArticle : undefined}
-      />
-    </>
+    </div>
   )
 }

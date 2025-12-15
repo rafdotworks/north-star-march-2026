@@ -128,7 +128,7 @@ export const WorkCard = memo(function WorkCard({
 
       {/* Year, role and contract type label - left column (sticky on desktop) */}
       <div
-        className="type-meta text-left md:text-right pt-6 md:pt-8 first:pt-0 md:sticky md:top-12 md:bg-background self-baseline"
+        className="type-caption text-left md:text-right pt-6 md:pt-8 first:pt-0 md:sticky md:top-12 md:bg-background self-baseline"
         style={{ zIndex: Z_INDEX_BASE + projectIndex }}
       >
         <div>{year}</div>
@@ -149,7 +149,7 @@ export const WorkCard = memo(function WorkCard({
       <div className="hidden md:block" />
 
       {/* Description - right column */}
-      <p className="type-body-sm mt-1">
+      <p className="type-body">
         {descriptionLines.map((line, index) => (
           <React.Fragment key={index}>
             {line}

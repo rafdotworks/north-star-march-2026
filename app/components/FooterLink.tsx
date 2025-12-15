@@ -22,7 +22,7 @@ function FooterLink({ href, label, ariaLabel, external = false }: FooterLinkProp
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="type-link group/link inline-flex items-center gap-1 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 visited:text-muted-foreground/40 active:text-muted-foreground/60 focus:text-muted-foreground/40 focus:outline-none"
+      className="type-caption group/link inline-flex items-center gap-1 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 visited:text-muted-foreground/40 active:text-muted-foreground/60 focus:text-muted-foreground/40 focus:outline-none"
       aria-label={ariaLabel || label}
       style={linkStyle}
     >

@@ -76,7 +76,7 @@ const LOCATIONS: Record<string, {
  * Change this value to switch between cities.
  * Valid values: "toronto", "newyork", "london", "lisbon"
  */
-const CURRENT_CITY: keyof typeof LOCATIONS = "toronto";
+const CURRENT_CITY: keyof typeof LOCATIONS = "london";
 
 // ============================================================================
 // EXPORTS
