@@ -512,17 +512,17 @@ export const PROJECT_DISPLAY_NAMES: Record<string, string> = {
  * ```
  */
 export const PROJECT_CAPTIONS: Record<string, string> = {
-  cb: "Designed advanced developer tools for the CDP team.\n\nLed the SQL Playground experience and contributed to Embedded Wallets and ETH payment.",
-  vf: "Owned landing page activation and onboarding design.\n\nSimplified workflows, reduced friction for users deploying AI Agents , and improved foundational UX across the platform.",
-  theo: "Shaped the core product from early idea to 140k users across product, brand and marketing.\n\nBuilt the design system, validated with users, managed stakeholders and more.",
+  cb: "Powerful onchain infrastructure existed, but early interactions felt slow, opaque, and costly.\n\nLed the SQL Playground experience and contributed to Embedded Wallets and ETH payment.",
+  vf: "Worked directly with the CEO to improve activation, onboarding, and early growth surfaces for AI agent workflows.",
+  theo: "AI agents already worked, but teams couldn’t trust them with real assets.\n\n I shaped the product design, system, and brand from zero to make agent behavior legible, governable, and shippable.",
   atlas:
-    "Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products. Introduced clearer navigation, cleaner purchase and listing flows, and a scalable design system for a fast-moving product.\n\nDesigned and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
+    "Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products.\n\nDesigned and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
   curbcut:
     "Designed calm, legible data tools that made accessibility insights usable for everyone.",
   zalando:
     "Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.\n\nHelped teams adopt consistent patterns and improved usability for enterprise-scale workflows.",
   earlyworks:
-    "A mix of freelance with startups and agencies. Built brands, interfaces and websites. Selected clients: w.ai, Revolut, web3ops, Artscapy, Lyfe, Tela, Ethos, JazzX and more",
+    "A mix of freelance with startups and agencies. Built brands, interfaces and websites. Selected clients: w.ai, Revolut, web3ops, Artscapy, Lyfe, Tela, Ethos, JazzX. Industries: AI, gaming, Web3, B2B, Finance, Saas",
 };
 
 // ============================================================================
@@ -612,7 +612,25 @@ export function getHighlightedWorkEntry(projectKey: string | null): { section: s
   return PROJECT_TO_WORK_MAP[projectKey] || null
 }
 
+// ============================================================================
+// PROJECT STORIES - Full case study availability
+// ============================================================================
 
-
-
+/**
+ * PROJECT_HAS_STORY: Tracks which projects have full story content.
+ *
+ * @remarks
+ * When true, a "Read the full story" button appears after the project description.
+ * Story content is loaded from `/stories/[projectKey].md` via the `/api/story/[id]` endpoint.
+ *
+ * @example
+ * ```ts
+ * PROJECT_HAS_STORY["theo"] // true - has full story
+ * PROJECT_HAS_STORY["zalando"] // undefined/false - no story
+ * ```
+ */
+export const PROJECT_HAS_STORY: Record<string, boolean> = {
+  theo: false,
+  cb: false,
+}
 

@@ -68,7 +68,7 @@
     --leading-normal: 1.5;  /* all body text, descriptions */
 
     /* Theme transition properties - gradual, elegant */
-    --theme-transition-duration: 1.2s;
+    --theme-transition-duration: 1s;
     --theme-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
 
     transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
@@ -83,22 +83,43 @@
     --neutral-h: 220; /* cool gray ramp */
     --neutral-s: 10%;
 
-    /* — Light surfaces (practical hsl() variables) */
-    --bg: hsl(var(--neutral-h) var(--neutral-s) 99%);
-    --bg-muted: hsl(var(--neutral-h) var(--neutral-s) 97%);
-    --bg-subtle: hsl(var(--neutral-h) var(--neutral-s) 95%);
+    /* ================================================================
+     * THEME BLEND SYSTEM
+     * Gradual interpolation between light and dark using color-mix()
+     * --theme-blend: 0% = light, 100% = dark (controlled by JS)
+     * ================================================================ */
+    --theme-blend: 0%;
 
-    /* — Content (practical hsl() variables) */
-    --fg: hsl(var(--neutral-h) 15% 10%);
-    --fg-muted: hsl(var(--neutral-h) 10% 35%);
-    --fg-inverse: hsl(var(--neutral-h) 10% 99%);
+    /* Base light colors (constant) */
+    --bg-light: hsl(220 10% 99%);
+    --bg-muted-light: hsl(220 10% 97%);
+    --fg-light: hsl(220 15% 10%);
+    --fg-muted-light: hsl(220 10% 35%);
+    --border-light: hsl(220 12% 86%);
+
+    /* Base dark colors (constant) */
+    --bg-dark: hsl(220 14% 8%);
+    --bg-muted-dark: hsl(220 14% 10%);
+    --fg-dark: hsl(220 15% 95%);
+    --fg-muted-dark: hsl(220 10% 70%);
+    --border-dark: hsl(220 12% 18%);
+
+    /* Interpolated colors using color-mix (oklab for perceptual smoothness) */
+    --bg: color-mix(in oklab, var(--bg-light), var(--bg-dark) var(--theme-blend));
+    --bg-muted: color-mix(in oklab, var(--bg-muted-light), var(--bg-muted-dark) var(--theme-blend));
+    --bg-subtle: color-mix(in oklab, hsl(220 10% 95%), hsl(220 14% 12%) var(--theme-blend));
+
+    /* Interpolated content colors */
+    --fg: color-mix(in oklab, var(--fg-light), var(--fg-dark) var(--theme-blend));
+    --fg-muted: color-mix(in oklab, var(--fg-muted-light), var(--fg-muted-dark) var(--theme-blend));
+    --fg-inverse: color-mix(in oklab, hsl(220 10% 99%), hsl(220 15% 6%) var(--theme-blend));
 
     /* — Components (practical hsl() variables) */
     --card: var(--bg);
     --popover: var(--bg);
-    --border-color: hsl(var(--neutral-h) 12% 86%);
-    --border-strong: hsl(var(--neutral-h) 12% 80%);
-    --input-bg: hsl(var(--neutral-h) 12% 92%);
+    --border-color: color-mix(in oklab, var(--border-light), var(--border-dark) var(--theme-blend));
+    --border-strong: color-mix(in oklab, hsl(220 12% 80%), hsl(220 12% 24%) var(--theme-blend));
+    --input-bg: color-mix(in oklab, hsl(220 12% 92%), hsl(220 12% 14%) var(--theme-blend));
     --ring-color: hsl(var(--accent-h) 90% 60%);
 
     /* — Brand / States (practical hsl() variables) */
@@ -189,44 +210,12 @@
 
   @media (prefers-color-scheme: dark) {
     :root {
-      /* Preserve transitions in dark mode */
-      transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
-                  color var(--theme-transition-duration) var(--theme-transition-easing),
-                  border-color var(--theme-transition-duration) var(--theme-transition-easing);
+      /* Dark mode users start at 100% blend (full dark) */
+      --theme-blend: 100%;
 
-      /* Practical dark variables */
-      --bg: hsl(var(--neutral-h) 14% 8%);
-      --bg-muted: hsl(var(--neutral-h) 14% 10%);
-      --bg-subtle: hsl(var(--neutral-h) 14% 12%);
-
-      --fg: hsl(var(--neutral-h) 15% 95%);
-      --fg-muted: hsl(var(--neutral-h) 10% 70%);
-      --fg-inverse: hsl(var(--neutral-h) 15% 6%);
-
-      --card: hsl(var(--neutral-h) 14% 8.5%);
-      --popover: hsl(var(--neutral-h) 14% 9%);
-      --border-color: hsl(var(--neutral-h) 12% 18%);
-      --border-strong: hsl(var(--neutral-h) 12% 24%);
-      --input-bg: hsl(var(--neutral-h) 12% 14%);
-      --ring-color: hsl(var(--accent-h) 95% 66%);
-
-      --primary-color: hsl(var(--accent-h) 85% 70%);
-      --primary-foreground-color: hsl(var(--neutral-h) 10% 6%);
-      --secondary-color: hsl(var(--neutral-h) 12% 16%);
-      --secondary-foreground-color: hsl(var(--neutral-h) 12% 92%);
-      --accent-color: hsl(var(--accent-h) 50% 20%);
-      --accent-foreground-color: hsl(var(--accent-h) 90% 84%);
-      --success: hsl(145 55% 52%);
-      --warning: hsl(40 90% 58%);
-      --destructive-color: hsl(0 72% 60%);
-
-      --code-fg: hsl(var(--neutral-h) 18% 86%);
-      --code-bg: hsl(var(--neutral-h) 14% 10%);
-      --code-accent: var(--primary-color);
-
-      /* Tailwind-consumed tokens (dark) */
+      /* Tailwind-consumed tokens (dark) - needed for Tailwind utilities */
       --background: var(--neutral-h) 14% 8%;
-      --background-rgb: 20 23 28; /* approximate RGB for overlays */
+      --background-rgb: 20 23 28;
       --foreground: var(--neutral-h) 15% 95%;
       --card: var(--neutral-h) 14% 8.5%;
       --card-foreground: var(--neutral-h) 15% 95%;
@@ -244,38 +233,35 @@
       --destructive-foreground: var(--neutral-h) 10% 6%;
       --border: var(--neutral-h) 12% 18%;
       --input: var(--neutral-h) 12% 14%;
-  --ring: var(--accent-h) 95% 66%;
+      --ring: var(--accent-h) 95% 66%;
 
-  /* Legacy mappings (dark) */
-  --bg-primary: var(--bg);
-  --bg-secondary: var(--bg-muted);
-  --text-primary: var(--fg);
-  --text-secondary: var(--fg-muted);
-  --accent-primary: var(--primary-color);
-  --accent-hover: var(--primary-color);
+      /* Dark mode specific adjustments */
+      --ring-color: hsl(var(--accent-h) 95% 66%);
+      --primary-color: hsl(var(--accent-h) 85% 70%);
+      --primary-foreground-color: hsl(var(--neutral-h) 10% 6%);
+      --secondary-color: hsl(var(--neutral-h) 12% 16%);
+      --secondary-foreground-color: hsl(var(--neutral-h) 12% 92%);
+      --accent-color: hsl(var(--accent-h) 50% 20%);
+      --accent-foreground-color: hsl(var(--accent-h) 90% 84%);
+      --code-fg: hsl(var(--neutral-h) 18% 86%);
+      --code-bg: hsl(var(--neutral-h) 14% 10%);
 
-  /* Navigation Colors (mapped to primary by default) */
-  --nav-work: var(--primary-color);
-  --nav-about: var(--primary-color);
-  --nav-projects: var(--primary-color);
-  --nav-contact: var(--primary-color);
+      /* Scrollbar (dark) */
+      --scrollbar-color: rgba(255, 255, 255, 0.1);
+      --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
 
-  /* Scrollbar (dark) */
-  --scrollbar-color: rgba(255, 255, 255, 0.1);
-  --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
-
-  /* Atmospheric depth (dark) - deeper, cooler */
-  --vignette-color: hsl(var(--neutral-h) 30% 0% / 0.12);
-  --vignette-intensity: 0.6;
-  --glow-color: hsl(var(--accent-h) 30% 60% / 0.03);
-  --glow-position: 50% 40%;
-  --glow-size: 100% 60%;
-  --wash-hue: var(--accent-h);
-  --wash-saturation: 15%;
-  --wash-lightness: 20%;
-  --wash-opacity: 0.025;
-  --grain-opacity: 0.03;
-  --grain-blend: overlay;
+      /* Atmospheric depth (dark) */
+      --vignette-color: hsl(var(--neutral-h) 30% 0% / 0.12);
+      --vignette-intensity: 0.6;
+      --glow-color: hsl(var(--accent-h) 30% 60% / 0.03);
+      --glow-position: 50% 40%;
+      --glow-size: 100% 60%;
+      --wash-hue: var(--accent-h);
+      --wash-saturation: 15%;
+      --wash-lightness: 20%;
+      --wash-opacity: 0.025;
+      --grain-opacity: 0.03;
+      --grain-blend: overlay;
     }
   }
 }

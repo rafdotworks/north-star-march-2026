@@ -108,11 +108,11 @@ export function ScrollTopBlur() {
         className="absolute inset-0"
         style={{
           background: `linear-gradient(to bottom,
-            hsl(var(--background)) 0%,
-            hsl(var(--background)) 40%,
-            hsla(var(--background) / 0.8) 55%,
-            hsla(var(--background) / 0.4) 75%,
-            hsla(var(--background) / 0) 100%
+            var(--bg) 0%,
+            var(--bg) 40%,
+            color-mix(in srgb, var(--bg), transparent 20%) 55%,
+            color-mix(in srgb, var(--bg), transparent 60%) 75%,
+            transparent 100%
           )`,
         }}
       />

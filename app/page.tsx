@@ -14,23 +14,44 @@ import {
   PROJECT_ROLES,
   PROJECT_CONTRACT_TYPES,
   PROJECT_DISPLAY_NAMES,
-  IMAGE_ALT_TEXT
+  IMAGE_ALT_TEXT,
+  PROJECT_HAS_STORY
 } from "@/app/config/portfolioConfig"
+import SideTray from "@/app/new/components/SideTray"
 
 import { useSystemTheme } from "@/hooks/use-system-theme"
 
-const SCROLL_THEME_THRESHOLD = 0.98
+// Theme blend scroll range (85% to 100% of page)
+const THEME_BLEND_START = 0.85
+const THEME_BLEND_END = 1.0
 
 const PRIORITY_IMAGE_COUNT = 3
+
+// Smooth easing function for natural feel
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
 
 export default function Page() {
   const timezoneMessage = useTimezoneMessage()
   const { prefersDark, isReady } = useSystemTheme()
 
+  // Story tray state
+  const [selectedStory, setSelectedStory] = useState<string | null>(null)
+
+  // Writing tray state
+  const [isWritingOpen, setIsWritingOpen] = useState(false)
+  const [selectedWritingArticle, setSelectedWritingArticle] = useState<string | null>(null)
+
   // Scroll-based hero blur with eased progress
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [isThemeToggled, setIsThemeToggled] = useState(false)
   const ticking = useRef(false)
+  const prefersDarkRef = useRef(prefersDark)
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    prefersDarkRef.current = prefersDark
+  }, [prefersDark])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,10 +74,26 @@ export default function Page() {
             setScrollProgress(1 - Math.pow(1 - progress, 2))
           }
 
-          // Theme toggle at page end
+          // Continuous theme blend based on scroll position
           const scrollHeight = document.documentElement.scrollHeight - viewportHeight
           const totalProgress = scrollY / scrollHeight
-          setIsThemeToggled(totalProgress >= SCROLL_THEME_THRESHOLD)
+
+          let themeBlend = 0
+          if (totalProgress >= THEME_BLEND_START) {
+            themeBlend = (totalProgress - THEME_BLEND_START) / (THEME_BLEND_END - THEME_BLEND_START)
+            themeBlend = Math.min(1, Math.max(0, themeBlend))
+          }
+
+          // Apply easing for smoother feel
+          const easedBlend = easeInOutCubic(themeBlend)
+
+          // Set CSS custom property for color-mix interpolation
+          // Light mode: 0% → 100% (scroll to dark)
+          // Dark mode: 100% → 0% (scroll to light) - invert the blend
+          const finalBlend = prefersDarkRef.current
+            ? (1 - easedBlend) * 100  // Dark mode: start at 100%, go to 0%
+            : easedBlend * 100         // Light mode: start at 0%, go to 100%
+          document.documentElement.style.setProperty('--theme-blend', `${finalBlend}%`)
 
           ticking.current = false
         })
@@ -65,17 +102,19 @@ export default function Page() {
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // Initial calculation
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // XOR logic: invert theme when at page end
-  const effectiveTheme = isReady ? (prefersDark !== isThemeToggled) : prefersDark
-
+  // Set initial theme blend based on system preference
   useEffect(() => {
-    if (typeof document !== 'undefined' && isReady) {
-      document.documentElement.setAttribute('data-theme', effectiveTheme ? "dark" : "light")
+    if (isReady && typeof document !== 'undefined') {
+      // CSS handles initial --theme-blend via media query
+      // This ensures it's set correctly on first load
+      const initialBlend = prefersDark ? '100%' : '0%'
+      document.documentElement.style.setProperty('--theme-blend', initialBlend)
     }
-  }, [effectiveTheme, isReady])
+  }, [isReady, prefersDark])
 
   // Derived values from scroll progress - beautiful eased transitions
   const heroBlur = scrollProgress * 24
@@ -84,7 +123,7 @@ export default function Page() {
   const heroY = scrollProgress * -40
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--fg)' }}>
       {/* ================================================================
        * HERO SECTION - Fixed in background, blurs beautifully on scroll
        * ================================================================ */}
@@ -153,10 +192,10 @@ export default function Page() {
           style={{
             background: `linear-gradient(to bottom,
               transparent 0%,
-              hsla(var(--background) / ${0.3 + scrollProgress * 0.7}) 25%,
-              hsla(var(--background) / ${0.6 + scrollProgress * 0.4}) 50%,
-              hsla(var(--background) / ${0.85 + scrollProgress * 0.15}) 75%,
-              hsl(var(--background)) 100%
+              color-mix(in srgb, var(--bg), transparent ${70 - scrollProgress * 70}%) 25%,
+              color-mix(in srgb, var(--bg), transparent ${40 - scrollProgress * 40}%) 50%,
+              color-mix(in srgb, var(--bg), transparent ${15 - scrollProgress * 15}%) 75%,
+              var(--bg) 100%
             )`,
             opacity: Math.min(1, 0.4 + scrollProgress * 1.2),
             transform: `translateY(${(1 - Math.min(1, scrollProgress * 1.5)) * 16}px)`,
@@ -165,7 +204,7 @@ export default function Page() {
         />
 
         {/* Works section with solid background */}
-        <div className="bg-background min-h-screen pointer-events-auto">
+        <div className="min-h-screen pointer-events-auto" style={{ backgroundColor: 'var(--bg)' }}>
           <div className="w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-20 py-12 md:py-20">
             <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16 gap-y-1 md:gap-y-2">
 
@@ -188,6 +227,8 @@ export default function Page() {
                     altText={altText}
                     priority={index < PRIORITY_IMAGE_COUNT}
                     projectIndex={index}
+                    hasStory={PROJECT_HAS_STORY[projectKey] || false}
+                    onReadStory={() => setSelectedStory(projectKey)}
                   />
                 )
               })}
@@ -202,8 +243,14 @@ export default function Page() {
 
                 {/* Footer content - right column */}
                 <div className="flex flex-col md:flex-1">
-                  {/* Principles */}
+                  {/* Writing & Principles */}
                   <div className="space-y-1">
+                    <span
+                      onClick={() => setIsWritingOpen(true)}
+                      className="type-caption text-muted-foreground/60 hover:text-muted-foreground transition-colors duration-200 cursor-pointer block"
+                    >
+                      Writing
+                    </span>
                     <p className="type-caption">— How you do anything is how you do everything</p>
                     <p className="type-caption">— Progress over movement</p>
                   </div>
@@ -221,6 +268,24 @@ export default function Page() {
       {/* Scroll blur effects */}
       <ScrollBottomBlur />
       <ScrollTopBlur />
+
+      {/* Story side tray */}
+      <SideTray
+        articleId={selectedStory}
+        onClose={() => setSelectedStory(null)}
+        apiBasePath="/api/story"
+      />
+
+      {/* Writing side tray */}
+      <SideTray
+        articleId={isWritingOpen ? selectedWritingArticle : null}
+        onClose={() => {
+          setIsWritingOpen(false)
+          setSelectedWritingArticle(null)
+        }}
+        isWritingMode={isWritingOpen}
+        onArticleSelect={setSelectedWritingArticle}
+      />
     </div>
   )
 }

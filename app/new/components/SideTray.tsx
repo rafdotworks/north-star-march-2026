@@ -62,7 +62,10 @@ import FooterLink from "@/app/components/FooterLink"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { EASING } from "@/components/animations/constants"
 import { markdownComponents } from "@/app/components/markdown/markdownComponents"
+import { storyMarkdownComponents } from "@/app/components/markdown/storyMarkdownComponents"
+import { StoryHeader } from "@/app/components/story"
 import { allWritings } from "@/app/config/writingsConfig"
+import type { StoryFrontmatter } from "@/app/types/story"
 
 /**
  * Props for SideTray component.
@@ -94,20 +97,25 @@ interface SideTrayProps {
   onClose: () => void
   isWritingMode?: boolean
   onArticleSelect?: (articleId: string | null) => void
+  /** API base path for fetching content (default: "/api/article") */
+  apiBasePath?: string
 }
 
 /**
  * Parsed article content structure.
- * 
+ *
  * @interface ArticleContent
  * @property {string} title - Article title from frontmatter
  * @property {string} date - Article date from frontmatter
  * @property {string} content - Article markdown content (without frontmatter)
+ * @property {StoryFrontmatter} [frontmatter] - Full frontmatter for stories
  */
 interface ArticleContent {
   title: string
   date: string
   content: string
+  /** Full frontmatter for story rendering */
+  frontmatter?: StoryFrontmatter
 }
 
 // ============================================================================
@@ -184,17 +192,18 @@ const trayVariants = {
     transition: {
       x: {
         type: "spring" as const,
-        stiffness: 300,
-        damping: 35,
-        duration: 0.5
+        stiffness: 180,
+        damping: 28,
+        mass: 1,
+        duration: 0.7
       },
       scale: {
-        duration: 0.6,
+        duration: 0.8,
         ease: EASING.elastic,
         delay: 0.1
       },
       rotateY: {
-        duration: 0.7,
+        duration: 0.9,
         ease: EASING.spring,
         delay: 0.05
       }
@@ -207,7 +216,7 @@ const trayVariants = {
     opacity: 0,
     transition: {
       opacity: {
-        duration: 0.3,
+        duration: 0.35,
         ease: EASING.smooth
       }
     }
@@ -465,7 +474,7 @@ const viewTransitionVariants = {
  * const { content, isLoading, error, loadArticle } = useArticleLoader()
  * loadArticle("working-philosophy")
  */
-function useArticleLoader() {
+function useArticleLoader(apiBasePath: string = "/api/article") {
   const [content, setContent] = useState<ArticleContent | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -475,7 +484,7 @@ function useArticleLoader() {
     setError(null)
 
     try {
-      const response = await fetch(`/api/article/${articleId}`)
+      const response = await fetch(`${apiBasePath}/${articleId}`)
 
       if (!response.ok) {
         throw new Error(`Failed to load article: ${response.status}`)
@@ -495,7 +504,16 @@ function useArticleLoader() {
         date: typeof parsed.data.date === 'string'
           ? parsed.data.date
           : parsed.data.date?.toLocaleDateString() || "",
-        content: parsed.content
+        content: parsed.content,
+        // Include full frontmatter for story rendering
+        frontmatter: {
+          title: parsed.data.title || "Untitled",
+          role: parsed.data.role,
+          company: parsed.data.company,
+          year: parsed.data.year,
+          heroImage: parsed.data.heroImage,
+          heroAlt: parsed.data.heroAlt,
+        }
       })
     } catch (err) {
       console.error("Error loading article:", err)
@@ -504,7 +522,7 @@ function useArticleLoader() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [apiBasePath])
 
   const resetContent = useCallback(() => {
     setContent(null)
@@ -549,15 +567,15 @@ function useArticleLoader() {
  * @param {SideTrayProps} props - Component props
  * @returns {JSX.Element} The SideTray component
  */
-function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }: SideTrayProps) {
+function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, apiBasePath = "/api/article" }: SideTrayProps) {
   // ============================================================================
   // HOOKS & STATE
   // ============================================================================
-  
+
   /**
    * Article loading hook - manages fetching, parsing, and state for articles.
    */
-  const { content, isLoading, error, loadArticle, resetContent } = useArticleLoader()
+  const { content, isLoading, error, loadArticle, resetContent } = useArticleLoader(apiBasePath)
   
   /**
    * Current view mode within the tray.
@@ -661,7 +679,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
  * - Exit: ~0.3s smooth fade-only (no slide) for responsive dismissal
  */
   const mobileTrayVariants = {
-    hidden: { 
+    hidden: {
       y: "100%",
       scale: 0.96,
       opacity: 0.8
@@ -672,10 +690,10 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
       opacity: 1,
       transition: {
         type: "spring" as const,
-        stiffness: 320,
-        damping: 38,
-        mass: 0.85,
-        duration: 0.5
+        stiffness: 200,
+        damping: 32,
+        mass: 1,
+        duration: 0.65
       }
     },
     exit: {
@@ -684,7 +702,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
       opacity: 0,
       transition: {
         opacity: {
-          duration: 0.3,
+          duration: 0.35,
           ease: EASING.smooth
         }
       }
@@ -1029,12 +1047,36 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
   }, [isMobile, isWritingMode, articleId, onClose]) // Removed isScrollDismissing - now using ref
 
   // ============================================================================
+  // BODY SCROLL LOCK
+  // ============================================================================
+
+  /**
+   * Locks body scroll when tray is open.
+   * Prevents background page from scrolling while tray content remains scrollable.
+   */
+  useEffect(() => {
+    const shouldShow = isWritingMode || articleId !== null
+    if (!shouldShow) return
+
+    // Store scroll position before locking
+    const scrollY = window.scrollY
+
+    // Lock body scroll - simpler approach that doesn't cause jumps
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      // Restore scroll
+      document.body.style.overflow = ''
+    }
+  }, [isWritingMode, articleId])
+
+  // ============================================================================
   // PULL-TO-REFRESH PREVENTION
   // ============================================================================
-  
+
   /**
    * Prevents browser pull-to-refresh when modal is open.
-   * 
+   *
    * Adds CSS and JS prevention to body/document to disable pull-to-refresh
    * behavior that could interfere with drag-to-dismiss.
    */
@@ -1042,27 +1084,27 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
     // Calculate value here to avoid dependency on variable declared later
     const shouldShow = isWritingMode || articleId !== null
     if (!isMobile || !shouldShow) return
-    
+
     // Prevent pull-to-refresh on body
     const originalStyle = document.body.style.overscrollBehaviorY
     document.body.style.overscrollBehaviorY = 'none'
-    
+
     // Prevent default touchmove when at top of page
     const preventPullToRefresh = (e: TouchEvent) => {
       if (window.scrollY === 0 && e.touches[0].clientY > 0) {
         // Only prevent if we're at the top and trying to scroll down
         const touch = e.touches[0]
         const startY = touch.clientY
-        
+
         // Check if this is a pull-to-refresh gesture (starting near top)
         if (startY < 100) {
           e.preventDefault()
         }
       }
     }
-    
+
     document.addEventListener('touchmove', preventPullToRefresh, { passive: false })
-    
+
     return () => {
       document.body.style.overscrollBehaviorY = originalStyle
       document.removeEventListener('touchmove', preventPullToRefresh)
@@ -1176,7 +1218,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
             <motion.div
               ref={writingListBackdropRef}
               key="writing-list-backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'bg-background/90 backdrop-blur-xl' : 'bg-background/40 backdrop-blur-2xl'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -1387,7 +1429,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
             <motion.div
               ref={mainBackdropRef}
               key="backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'bg-background/95 backdrop-blur-sm' : 'bg-background/50 backdrop-blur-md'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'bg-background/90 backdrop-blur-xl' : 'bg-background/40 backdrop-blur-2xl'}`}
               style={isMobile ? {
                 overscrollBehavior: 'none',
                 touchAction: 'none'
@@ -1542,8 +1584,8 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect }
                 </svg>
               </motion.button>
 
-              {/* Back button for article view */}
-              {viewMode === 'article' && articleId !== "all" && (
+              {/* Back button for article view - only in writing mode */}
+              {viewMode === 'article' && articleId !== "all" && isWritingMode && (
                 <motion.button
                   onClick={() => {
                     if (isWritingMode && onArticleSelect) {
@@ -1826,7 +1868,7 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                       </motion.button>
                     </motion.div>
                   ) : content ? (
-                    // Article content with sophisticated transitions
+                    // Article/Story content with sophisticated transitions
                     <motion.div
                       key="article"
                       variants={activeViewTransitionVariants}
@@ -1835,7 +1877,20 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                       exit="exit"
                       className="space-y-6"
                     >
-                      <ReactMarkdown components={markdownComponents}>
+                      {/* Story header for story content */}
+                      {apiBasePath === "/api/story" && content.frontmatter && (
+                        <StoryHeader
+                          frontmatter={content.frontmatter}
+                          isMobile={isMobile}
+                        />
+                      )}
+                      <ReactMarkdown
+                        components={
+                          apiBasePath === "/api/story"
+                            ? storyMarkdownComponents
+                            : markdownComponents
+                        }
+                      >
                         {content.content}
                       </ReactMarkdown>
                     </motion.div>

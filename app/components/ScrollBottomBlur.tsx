@@ -135,13 +135,13 @@ export function ScrollBottomBlur() {
         className="absolute inset-0"
         style={{
           background: `linear-gradient(to top,
-            hsl(var(--background)) 0%,
-            hsl(var(--background)) 15%,
-            hsla(var(--background) / 0.95) 30%,
-            hsla(var(--background) / 0.8) 50%,
-            hsla(var(--background) / 0.4) 70%,
-            hsla(var(--background) / 0.1) 85%,
-            hsla(var(--background) / 0) 100%
+            var(--bg) 0%,
+            var(--bg) 15%,
+            color-mix(in srgb, var(--bg), transparent 5%) 30%,
+            color-mix(in srgb, var(--bg), transparent 20%) 50%,
+            color-mix(in srgb, var(--bg), transparent 60%) 70%,
+            color-mix(in srgb, var(--bg), transparent 90%) 85%,
+            transparent 100%
           )`,
           backdropFilter: `blur(${blurAmount}px) saturate(${SATURATION})`,
           WebkitBackdropFilter: `blur(${blurAmount}px) saturate(${SATURATION})`,

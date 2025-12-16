@@ -80,6 +80,8 @@ interface WorkCardProps {
   altText: string
   priority?: boolean
   projectIndex?: number
+  hasStory?: boolean
+  onReadStory?: () => void
 }
 
 /**
@@ -100,7 +102,9 @@ export const WorkCard = memo(function WorkCard({
   images,
   altText,
   priority = false,
-  projectIndex = 0
+  projectIndex = 0,
+  hasStory = false,
+  onReadStory
 }: WorkCardProps) {
   // Track failed images to show fallback
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
@@ -129,35 +133,44 @@ export const WorkCard = memo(function WorkCard({
 
       {/* Year, role and contract type label - left column (sticky on desktop) */}
       <div
-        className="type-caption text-left md:text-right pt-2 md:pt-8 first:md:pt-0 md:sticky md:top-12 md:bg-background self-baseline"
-        style={{ zIndex: Z_INDEX_BASE + projectIndex }}
+        className="type-caption text-left md:text-right pt-2 md:pt-8 first:md:pt-0 md:sticky md:top-12 self-baseline"
+        style={{ zIndex: Z_INDEX_BASE + projectIndex, backgroundColor: 'var(--bg)' }}
       >
         <div>{year}</div>
         <div className="mt-0.5">{role}</div>
         <div className="mt-0.5">{contractType}</div>
       </div>
 
-      {/* Title - right column */}
-      <h2 className="type-title pt-6 md:pt-8 first:pt-0 self-baseline -order-1 md:order-none">
-        {title}
-      </h2>
+      {/* Title + Description - right column (combined to avoid grid row gap) */}
+      <div className="pt-6 md:pt-8 first:pt-0 -order-1 md:order-none self-baseline">
+        <h2 className="type-title">
+          {title}
+        </h2>
+        <p className="type-body mt-2">
+          {descriptionLines.map((line, index) => (
+            <React.Fragment key={index}>
+              {line}
+              {index < descriptionLines.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </p>
+      </div>
 
-      {/* ========================================================================
-         * ROW 2: EMPTY + DESCRIPTION
-         * ======================================================================== */}
+      {/* Read the full story link - only shows for projects with stories */}
+      {hasStory && onReadStory && (
+        <>
+          {/* Empty left column */}
+          <div className="hidden md:block" />
 
-      {/* Empty left column */}
-      <div className="hidden md:block" />
-
-      {/* Description - right column */}
-      <p className="type-body mt-3 md:mt-0">
-        {descriptionLines.map((line, index) => (
-          <React.Fragment key={index}>
-            {line}
-            {index < descriptionLines.length - 1 && <br />}
-          </React.Fragment>
-        ))}
-      </p>
+          {/* Link - right column */}
+          <span
+            onClick={onReadStory}
+            className="type-body text-muted-foreground/60 hover:text-muted-foreground mt-3 md:mt-2 transition-colors duration-200 cursor-pointer inline-block"
+          >
+            Read the full story
+          </span>
+        </>
+      )}
 
       {/* ========================================================================
          * ROW 3: EMPTY + IMAGE GALLERY (VERTICAL STACK, FULL WIDTH)
