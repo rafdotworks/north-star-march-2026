@@ -1218,16 +1218,16 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
             <motion.div
               ref={writingListBackdropRef}
               key="writing-list-backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'bg-background/90 backdrop-blur-xl' : 'bg-background/40 backdrop-blur-2xl'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'backdrop-blur-xl' : 'backdrop-blur-2xl'}`}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
               onClick={onClose}
-              style={isMobile ? {
-                overscrollBehavior: 'none',
-                touchAction: 'none'
-              } : {}}
+              style={{
+                backgroundColor: isMobile ? 'color-mix(in srgb, var(--bg), transparent 10%)' : 'color-mix(in srgb, var(--bg), transparent 60%)',
+                ...(isMobile ? { overscrollBehavior: 'none', touchAction: 'none' } : {})
+              }}
               onAnimationStart={(definition) => {
                 // Disable pointer events when exit animation starts
                 // This allows hover events to work immediately after closing
@@ -1245,7 +1245,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
             <motion.div
               ref={writingListTrayRef}
               key="writing-list-tray"
-              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/100 border-t border-border/20' : 'bg-background'} transition-colors duration-200 z-50`}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 border-t border-border/20' : ''} transition-colors duration-200 z-50`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
@@ -1259,6 +1259,9 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
               style={isMobile ? {
+                // Theme-aware colors
+                backgroundColor: 'var(--bg)',
+                color: 'var(--fg)',
                 // Cover full viewport including safe areas
                 top: 0,
                 left: 0,
@@ -1273,7 +1276,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                 // Visual feedback during drag
                 opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
                 scale: dragY > 0 ? Math.max(0.95, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.1) : 1,
-              } : { transformStyle: "preserve-3d", perspective: "1200px" }}
+              } : { backgroundColor: 'var(--bg)', color: 'var(--fg)', transformStyle: "preserve-3d", perspective: "1200px" }}
             >
               <motion.div
                 className="h-full flex flex-col"
@@ -1301,7 +1304,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                       className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200"
                       animate={{
                         backgroundColor: dragY > 0 
-                          ? 'hsl(var(--muted-foreground))' 
+                          ? 'var(--fg-muted)' 
                           : 'hsl(var(--muted))',
                         width: dragY > 0 ? 48 : 48,
                       }}
@@ -1330,23 +1333,23 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                     border: 'none',
                     outline: 'none',
                     boxShadow: 'none',
-                    color: 'hsl(var(--muted-foreground))',
+                    color: 'var(--fg-muted)',
                     WebkitTapHighlightColor: 'transparent',
                     cursor: 'pointer',
                     opacity: 0.6
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'hsl(var(--foreground))'
+                    e.currentTarget.style.color = 'var(--fg)'
                     e.currentTarget.style.opacity = '1'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.color = 'var(--fg-muted)'
                     e.currentTarget.style.opacity = '0.6'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
                     e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.color = 'var(--fg-muted)'
                     e.currentTarget.style.opacity = '0.6'
                   }}
                 >
@@ -1402,8 +1405,18 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/60 md:hover:!text-foreground'}`}>{article.title}</p>
-                            <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
+                            <p
+                              className="text-xs transition-colors duration-200"
+                              style={{ color: i < 2 ? 'var(--fg)' : 'var(--fg-muted)' }}
+                            >
+                              {article.title}
+                            </p>
+                            <p
+                              className="text-xs transition-colors duration-200"
+                              style={{ color: 'var(--fg-muted)' }}
+                            >
+                              {article.date}
+                            </p>
                           </motion.div>
                           {i === 1 && (
                             <div className="pt-1 pb-1">
@@ -1429,11 +1442,11 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
             <motion.div
               ref={mainBackdropRef}
               key="backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'bg-background/90 backdrop-blur-xl' : 'bg-background/40 backdrop-blur-2xl'}`}
-              style={isMobile ? {
-                overscrollBehavior: 'none',
-                touchAction: 'none'
-              } : {}}
+              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'backdrop-blur-xl' : 'backdrop-blur-2xl'}`}
+              style={{
+                backgroundColor: isMobile ? 'color-mix(in srgb, var(--bg), transparent 10%)' : 'color-mix(in srgb, var(--bg), transparent 60%)',
+                ...(isMobile ? { overscrollBehavior: 'none', touchAction: 'none' } : {})
+              }}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
@@ -1449,14 +1462,14 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
             />
 
             {/* Side tray with 3D perspective and mobile optimization */}
-            {/* 
+            {/*
             Mobile: Full-screen bottom sheet covering entire viewport
             Desktop: Right-side panel with fixed width
             */}
             <motion.div
               ref={mainTrayRef}
               key="tray"
-              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 bg-background/100 border-t border-border/20' : 'bg-background'} transition-colors duration-200`}
+              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 border-t border-border/20' : ''} transition-colors duration-200`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
@@ -1470,6 +1483,9 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
               style={{
+                // Theme-aware colors
+                backgroundColor: 'var(--bg)',
+                color: 'var(--fg)',
                 ...(isMobile ? {
                   // Cover full viewport including safe areas
                   top: 0,
@@ -1516,7 +1532,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                     className="w-12 h-1.5 rounded-full bg-muted transition-colors duration-200"
                     animate={{
                       backgroundColor: dragY > 0 
-                        ? 'hsl(var(--muted-foreground))' 
+                        ? 'var(--fg-muted)' 
                         : 'hsl(var(--muted))',
                       width: dragY > 0 ? 48 : 48,
                     }}
@@ -1545,24 +1561,24 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                   border: 'none',
                   outline: 'none',
                   boxShadow: 'none',
-                  color: 'hsl(var(--muted-foreground))',
+                  color: 'var(--fg-muted)',
                   WebkitTapHighlightColor: 'transparent',
                   cursor: 'pointer',
                   opacity: 0.6,
                   ...blurStyle
                 }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'hsl(var(--foreground))'
+                    e.currentTarget.style.color = 'var(--fg)'
                     e.currentTarget.style.opacity = '1'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.color = 'var(--fg-muted)'
                     e.currentTarget.style.opacity = '0.6'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
                     e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.color = 'var(--fg-muted)'
                     e.currentTarget.style.opacity = '0.6'
                   }}
               >
@@ -1605,20 +1621,20 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    color: 'hsl(var(--muted-foreground))',
+                    color: 'var(--fg-muted)',
                     WebkitTapHighlightColor: 'transparent',
                     cursor: 'pointer',
                     ...blurStyle
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'hsl(var(--foreground))'
+                    e.currentTarget.style.color = 'var(--fg)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.color = 'var(--fg-muted)'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
-                    e.currentTarget.style.color = 'hsl(var(--muted-foreground))'
+                    e.currentTarget.style.color = 'var(--fg-muted)'
                   }}
                 >
                   {/* Minimal arrow icon */}
@@ -1678,8 +1694,18 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/60 md:hover:!text-foreground'}`}>{article.title}</p>
-                            <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
+                            <p
+                              className="text-xs transition-colors duration-200"
+                              style={{ color: i < 2 ? 'var(--fg)' : 'var(--fg-muted)' }}
+                            >
+                              {article.title}
+                            </p>
+                            <p
+                              className="text-xs transition-colors duration-200"
+                              style={{ color: 'var(--fg-muted)' }}
+                            >
+                              {article.date}
+                            </p>
                           </motion.div>
                           {i === 1 && (
                             <div className="pt-1 pb-1">
@@ -1836,8 +1862,18 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
-                            <p className={`text-xs transition-colors duration-200 ${i < 2 ? 'text-foreground' : 'text-muted-foreground md:group-hover/writings:text-muted-foreground/60 md:hover:!text-foreground'}`}>{article.title}</p>
-                            <p className="text-xs text-muted-foreground transition-colors duration-200">{article.date}</p>
+                            <p
+                              className="text-xs transition-colors duration-200"
+                              style={{ color: i < 2 ? 'var(--fg)' : 'var(--fg-muted)' }}
+                            >
+                              {article.title}
+                            </p>
+                            <p
+                              className="text-xs transition-colors duration-200"
+                              style={{ color: 'var(--fg-muted)' }}
+                            >
+                              {article.date}
+                            </p>
                           </motion.div>
                           {i === 1 && (
                             <div className="pt-1 pb-1">

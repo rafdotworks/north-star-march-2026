@@ -13,28 +13,30 @@
   .type-caption {
     font-size: 11px;
     line-height: 1.5;
-    @apply text-muted-foreground/60 font-light;
+    color: var(--fg-muted);
+    @apply font-light;
   }
 
   /* Body: default text - descriptions, secondary content (12px) */
   .type-body {
     font-size: 12px;
     line-height: 1.5;
-    @apply text-muted-foreground/60;
+    color: var(--fg-muted);
   }
 
   /* Body Primary: emphasized text - hero intro (12px) */
   .type-body-primary {
     font-size: 12px;
     line-height: 1.5;
-    @apply text-foreground;
+    color: var(--fg);
   }
 
   /* Title: work card titles (14px) */
   .type-title {
     font-size: 14px;
     line-height: 1.25;
-    @apply text-foreground font-normal font-edu-marist;
+    color: var(--fg);
+    @apply font-normal font-edu-marist;
   }
 }
 
@@ -103,6 +105,14 @@
     --fg-dark: hsl(220 15% 95%);
     --fg-muted-dark: hsl(220 10% 70%);
     --border-dark: hsl(220 12% 18%);
+
+    /* Atmospheric base values (light) */
+    --vignette-color-light: hsl(var(--neutral-h) 20% 0% / 0.03);
+    --glow-color-light: hsl(var(--neutral-h) 10% 100% / 0.02);
+
+    /* Atmospheric base values (dark) */
+    --vignette-color-dark: hsl(var(--neutral-h) 30% 0% / 0.12);
+    --glow-color-dark: hsl(var(--accent-h) 30% 60% / 0.03);
 
     /* Interpolated colors using color-mix (oklab for perceptual smoothness) */
     --bg: color-mix(in oklab, var(--bg-light), var(--bg-dark) var(--theme-blend));
@@ -185,26 +195,29 @@
 
     /* ================================================================
      * ATMOSPHERIC DEPTH & GRAIN EFFECTS
-     * Subtle visual layers that adapt to theme
+     * Interpolated to match theme blend for smooth scroll transitions
      * ================================================================ */
 
-    /* Vignette (soft edge darkening) */
-    --vignette-color: hsl(var(--neutral-h) 20% 0% / 0.03);
-    --vignette-intensity: 0.4;
+    /* Numeric theme blend for calc() (0-1, set by JS) */
+    --theme-blend-num: 0;
 
-    /* Ambient glow (soft center illumination) */
-    --glow-color: hsl(var(--neutral-h) 10% 100% / 0.02);
+    /* Vignette (interpolated) */
+    --vignette-color: color-mix(in oklab, var(--vignette-color-light), var(--vignette-color-dark) var(--theme-blend));
+    --vignette-intensity: calc(0.4 + (0.6 - 0.4) * var(--theme-blend-num));
+
+    /* Ambient glow (interpolated color, static position/size) */
+    --glow-color: color-mix(in oklab, var(--glow-color-light), var(--glow-color-dark) var(--theme-blend));
     --glow-position: 50% 30%;
     --glow-size: 120% 80%;
 
-    /* Color wash (subtle tint overlay) */
+    /* Color wash (interpolated opacity) */
     --wash-hue: var(--neutral-h);
     --wash-saturation: 8%;
     --wash-lightness: 50%;
-    --wash-opacity: 0.015;
+    --wash-opacity: calc(0.015 + (0.025 - 0.015) * var(--theme-blend-num));
 
-    /* Film grain */
-    --grain-opacity: 0.025;
+    /* Film grain (interpolated) */
+    --grain-opacity: calc(0.025 + (0.03 - 0.025) * var(--theme-blend-num));
     --grain-blend: multiply;
   }
 
@@ -212,6 +225,7 @@
     :root {
       /* Dark mode users start at 100% blend (full dark) */
       --theme-blend: 100%;
+      --theme-blend-num: 1;
 
       /* Tailwind-consumed tokens (dark) - needed for Tailwind utilities */
       --background: var(--neutral-h) 14% 8%;
@@ -250,17 +264,7 @@
       --scrollbar-color: rgba(255, 255, 255, 0.1);
       --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
 
-      /* Atmospheric depth (dark) */
-      --vignette-color: hsl(var(--neutral-h) 30% 0% / 0.12);
-      --vignette-intensity: 0.6;
-      --glow-color: hsl(var(--accent-h) 30% 60% / 0.03);
-      --glow-position: 50% 40%;
-      --glow-size: 100% 60%;
-      --wash-hue: var(--accent-h);
-      --wash-saturation: 15%;
-      --wash-lightness: 20%;
-      --wash-opacity: 0.025;
-      --grain-opacity: 0.03;
+      /* Grain blend mode can't be interpolated - keep as dark override */
       --grain-blend: overlay;
     }
   }

@@ -45,6 +45,13 @@ const eduMarist = localFont({
   display: "swap",
 });
 
+/** Monospace font - CoFo Sans Mono */
+const cofoSansMono = localFont({
+  src: "../public/fonts/CoFoSansMono-Regular.ttf",
+  variable: "--font-mono",
+  display: "swap",
+});
+
 // ============================================================================
 // SEO METADATA
 // ============================================================================
@@ -130,7 +137,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${ronzino.variable} ${eduMarist.variable}`}
+      className={`${ronzino.variable} ${eduMarist.variable} ${cofoSansMono.variable}`}
       suppressHydrationWarning
     >
       <head />

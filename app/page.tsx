@@ -21,8 +21,8 @@ import SideTray from "@/app/new/components/SideTray"
 
 import { useSystemTheme } from "@/hooks/use-system-theme"
 
-// Theme blend scroll range (85% to 100% of page)
-const THEME_BLEND_START = 0.85
+// Theme blend scroll range (95% to 100% of page)
+const THEME_BLEND_START = 0.95
 const THEME_BLEND_END = 1.0
 
 const PRIORITY_IMAGE_COUNT = 3
@@ -87,13 +87,15 @@ export default function Page() {
           // Apply easing for smoother feel
           const easedBlend = easeInOutCubic(themeBlend)
 
-          // Set CSS custom property for color-mix interpolation
+          // Set CSS custom properties for color-mix interpolation
           // Light mode: 0% → 100% (scroll to dark)
           // Dark mode: 100% → 0% (scroll to light) - invert the blend
           const finalBlend = prefersDarkRef.current
             ? (1 - easedBlend) * 100  // Dark mode: start at 100%, go to 0%
             : easedBlend * 100         // Light mode: start at 0%, go to 100%
           document.documentElement.style.setProperty('--theme-blend', `${finalBlend}%`)
+          // Numeric version for calc() operations (0-1)
+          document.documentElement.style.setProperty('--theme-blend-num', `${finalBlend / 100}`)
 
           ticking.current = false
         })
@@ -112,7 +114,9 @@ export default function Page() {
       // CSS handles initial --theme-blend via media query
       // This ensures it's set correctly on first load
       const initialBlend = prefersDark ? '100%' : '0%'
+      const initialBlendNum = prefersDark ? '1' : '0'
       document.documentElement.style.setProperty('--theme-blend', initialBlend)
+      document.documentElement.style.setProperty('--theme-blend-num', initialBlendNum)
     }
   }, [isReady, prefersDark])
 
@@ -123,7 +127,7 @@ export default function Page() {
   const heroY = scrollProgress * -40
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--fg)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--fg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
       {/* ================================================================
        * HERO SECTION - Fixed in background, blurs beautifully on scroll
        * ================================================================ */}
@@ -149,21 +153,7 @@ export default function Page() {
                 <p className="type-body-primary">
                   Hello, I&apos;m Raf.
                   <br/>
-                  I design AI softwares and systems.
-                </p>
-
-                {/* Experience */}
-                <p className="type-body">
-                  I&apos;ve spent 9+ years designing across startups and large organizations.
-                  <br className="hidden md:block"/>
-                  <span className="block mt-3 md:mt-0 md:inline">I care about building opinionated and emotionally considered products with passionate people.</span>
-                  </p>
-
-                {/* Location & Lifestyle */}
-                <p className="type-body">
-                  Born on the Amalfi Coast. Based in Toronto.
-                  <br/>
-                  Moving to London UK in Q2 2026.
+                  I design AI softwares and products.
                 </p>
 
                 {/* Contact Links */}
@@ -204,7 +194,7 @@ export default function Page() {
         />
 
         {/* Works section with solid background */}
-        <div className="min-h-screen pointer-events-auto" style={{ backgroundColor: 'var(--bg)' }}>
+        <div className="min-h-screen pointer-events-auto" style={{ backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
           <div className="w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-20 py-12 md:py-20">
             <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16 gap-y-1 md:gap-y-2">
 
@@ -233,32 +223,50 @@ export default function Page() {
                 )
               })}
 
-              {/* Bottom divider */}
-              <div className="col-span-1 md:col-span-2 border-t border-border/20 my-6 md:my-8" />
+            </div>
+          </div>
+        </div>
 
-              {/* Footer hero - spans both columns, centered like main hero */}
-              <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row md:items-center gap-0 md:gap-8 lg:gap-16 min-h-screen justify-center py-[15vh]">
-                {/* Empty left column for grid alignment */}
-                <div className="hidden md:block md:w-[180px] lg:w-[200px] flex-shrink-0" />
+        {/* ================================================================
+         * FOOTER SECTION - Independent full-viewport section like hero
+         * ================================================================ */}
+        <div className="min-h-screen flex items-center pointer-events-auto" style={{ backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20">
+            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16">
+              {/* Empty left column for grid alignment */}
+              <div className="hidden md:block" />
 
-                {/* Footer content - right column */}
-                <div className="flex flex-col md:flex-1">
-                  {/* Writing & Principles */}
-                  <div className="space-y-1">
-                    <span
-                      onClick={() => setIsWritingOpen(true)}
-                      className="type-caption text-muted-foreground/60 hover:text-muted-foreground transition-colors duration-200 cursor-pointer block"
-                    >
-                      Writing
-                    </span>
-                    <p className="type-caption">— How you do anything is how you do everything</p>
-                    <p className="type-caption">— Progress over movement</p>
-                  </div>
-
-                  <p className="type-caption transition-colors duration-200 mt-10">
-                    {timezoneMessage}
+              {/* Footer content - right column */}
+              <div className="space-y-5">
+                {/* Bio & Location */}
+                <div className="space-y-3">
+                  <p className="type-body">
+                    I&apos;ve spent 9+ years designing across startups and large organizations.
+                    <br className="hidden md:block"/>
+                    <span className="block mt-3 md:mt-0 md:inline opacity-80">I care about building opinionated and emotionally considered products with passionate people.</span>
+                  </p>
+                  <p className="type-body">
+                    Born on the Amalfi Coast. Based in Toronto.
+                    <br/>
+                    <span className="opacity-80">Moving to London UK in Q2 2026.</span>
                   </p>
                 </div>
+
+                {/* Writing & Principles */}
+                <div className="space-y-1 pt-5">
+                  <span
+                    onClick={() => setIsWritingOpen(true)}
+                    className="type-caption text-muted-foreground/60 hover:text-muted-foreground transition-colors duration-200 cursor-pointer block"
+                  >
+                    Writing
+                  </span>
+                  <p className="type-caption opacity-80">— How you do anything is how you do everything</p>
+                  <p className="type-caption opacity-80">— Progress over movement</p>
+                </div>
+
+                <p className="type-caption transition-colors duration-200 pt-3 font-[family-name:var(--font-mono)]">
+                  {timezoneMessage}
+                </p>
               </div>
             </div>
           </div>

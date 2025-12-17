@@ -49,7 +49,7 @@ export function AtmosphericLayers() {
           zIndex: 3,
           background: `hsla(var(--wash-hue), var(--wash-saturation), var(--wash-lightness), var(--wash-opacity))`,
           mixBlendMode: "overlay",
-          transition: "background 2s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: "background 1s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       />
 
@@ -64,7 +64,7 @@ export function AtmosphericLayers() {
             var(--glow-color) 0%,
             transparent 70%
           )`,
-          transition: "background 2s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: "background 1s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       />
     </>

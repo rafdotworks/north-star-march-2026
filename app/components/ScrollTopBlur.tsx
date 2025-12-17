@@ -28,10 +28,10 @@ import { useEffect, useState, useRef, useMemo } from "react"
 // ============================================================================
 
 /** Scroll progress (0-1) at which fade begins */
-const FADE_START = 0.65
+const FADE_START = 0.96
 
 /** Scroll progress (0-1) at which component is fully visible */
-const FADE_END = 0.85
+const FADE_END = 1.0
 
 /** Maximum glow opacity */
 const MAX_GLOW_OPACITY = 0.04
@@ -108,10 +108,10 @@ export function ScrollTopBlur() {
         className="absolute inset-0"
         style={{
           background: `linear-gradient(to bottom,
-            var(--bg) 0%,
-            var(--bg) 40%,
-            color-mix(in srgb, var(--bg), transparent 20%) 55%,
-            color-mix(in srgb, var(--bg), transparent 60%) 75%,
+            color-mix(in srgb, var(--bg), transparent 10%) 0%,
+            color-mix(in srgb, var(--bg), transparent 30%) 30%,
+            color-mix(in srgb, var(--bg), transparent 60%) 60%,
+            color-mix(in srgb, var(--bg), transparent 85%) 80%,
             transparent 100%
           )`,
         }}

@@ -134,7 +134,7 @@ export const WorkCard = memo(function WorkCard({
       {/* Year, role and contract type label - left column (sticky on desktop) */}
       <div
         className="type-caption text-left md:text-right pt-2 md:pt-8 first:md:pt-0 md:sticky md:top-12 self-baseline"
-        style={{ zIndex: Z_INDEX_BASE + projectIndex, backgroundColor: 'var(--bg)' }}
+        style={{ zIndex: Z_INDEX_BASE + projectIndex, backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}
       >
         <div>{year}</div>
         <div className="mt-0.5">{role}</div>
