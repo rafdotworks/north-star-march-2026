@@ -10,8 +10,8 @@
  * USAGE:
  * ```tsx
  * const timezoneMessage = useTimezoneMessage()
- * // Returns: "Raf is currently in Toronto (3 hours ahead) where it is 22°C and sunny" (Toronto uses Celsius)
- * // Or: "Raf is currently in New York (3 hours ahead) where it is 72°F and sunny" (New York uses Fahrenheit)
+ * // Returns: "Raf is currently in Toronto (3 hours ahead) where it's 22°C and sunny" (Toronto uses Celsius)
+ * // Or: "Raf is currently in New York (3 hours ahead) where it's 72°F and sunny" (New York uses Fahrenheit)
  * // Or: "Raf is currently in Toronto (3 hours ahead)" if weather unavailable
  * ```
  * 
@@ -45,6 +45,18 @@ interface WeatherData {
   tempC: number;
   tempF: number;
   description: string;
+}
+
+/**
+ * Structured location weather data for component consumption.
+ */
+export interface LocationWeatherData {
+  city: string
+  temperature: string         // Formatted with unit: "10°C" or "72°F"
+  temperatureValue: number    // Raw number for flexibility
+  description: string         // Weather description: "partly cloudy"
+  timezoneDiff: string        // "3 hours ahead" or "in your timezone"
+  isLoading: boolean          // True until initial data loads
 }
 
 /**
@@ -86,8 +98,8 @@ function usesFahrenheit(temperatureScale: "C" | "F"): boolean {
  * @returns {string} User-friendly timezone and weather message
  * 
  * @example
- * "Raf is currently in Toronto (3 hours ahead) where it is 22°C and sunny" (Toronto uses Celsius)
- * "Raf is currently in New York (3 hours ahead) where it is 72°F and sunny" (New York uses Fahrenheit)
+ * "Raf is currently in Toronto (3 hours ahead) where it's 22°C and sunny" (Toronto uses Celsius)
+ * "Raf is currently in New York (3 hours ahead) where it's 72°F and sunny" (New York uses Fahrenheit)
  * "Raf is currently in Toronto (3 hours ahead)" // if weather unavailable
  * "Raf is currently in Toronto (in your timezone)"
  */
@@ -97,7 +109,7 @@ export function useTimezoneMessage(): string {
   const { city, timezone: targetTimezone, coordinates, temperatureScale } = location
 
   // SSR guard - return consistent initial value to prevent hydration mismatch
-  const [timezoneMessage, setTimezoneMessage] = useState(`Raf is in ${city} until the end of the year.`)
+  const [timezoneMessage, setTimezoneMessage] = useState(`Raf is currently in ${city}.`)
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [timezoneDiff, setTimezoneDiff] = useState("")
 
@@ -211,7 +223,7 @@ export function useTimezoneMessage(): string {
     if (!timezoneDiff) return // Wait for initial timezone calculation
 
     // Build base message with location and timezone
-    let message = `Raf is in ${city} (${timezoneDiff})`
+    let message = `Raf is currently in ${city} (${timezoneDiff})`
     
     // Append weather if available
     if (weatherData) {
@@ -219,12 +231,133 @@ export function useTimezoneMessage(): string {
       const temperature = useFahrenheit 
         ? `${weatherData.tempF}°F`
         : `${weatherData.tempC}°C`
-      message += ` where it is ${temperature} and ${weatherData.description}`
+      message += ` where it's ${temperature} and ${weatherData.description}`
     }
     
     setTimezoneMessage(message)
   }, [timezoneDiff, weatherData, city, temperatureScale])
 
   return timezoneMessage
+}
+
+/**
+ * Hook that returns structured location and weather data for component consumption.
+ *
+ * @returns {LocationWeatherData} Structured weather and location data
+ *
+ * @example
+ * const { city, temperature, description, timezoneDiff, isLoading } = useLocationWeather()
+ * // city: "London"
+ * // temperature: "10°C"
+ * // description: "partly cloudy"
+ * // timezoneDiff: "in your timezone" or "3 hours ahead"
+ */
+export function useLocationWeather(): LocationWeatherData {
+  const location = getCurrentLocation()
+  const { city, timezone: targetTimezone, coordinates, temperatureScale } = location
+
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
+  const [timezoneDiff, setTimezoneDiff] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+
+  const calculateTimezoneDifference = (): string => {
+    const now = new Date()
+
+    const targetFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: targetTimezone,
+      hour: "2-digit",
+      hour12: false,
+      minute: "2-digit",
+    })
+
+    const targetParts = targetFormatter.formatToParts(now)
+    const targetHour = parseInt(targetParts.find(p => p.type === "hour")?.value || "0", 10)
+    const targetMinute = parseInt(targetParts.find(p => p.type === "minute")?.value || "0", 10)
+    const targetTotalMinutes = targetHour * 60 + targetMinute
+
+    const userTotalMinutes = now.getHours() * 60 + now.getMinutes()
+
+    let differenceMinutes = targetTotalMinutes - userTotalMinutes
+
+    if (differenceMinutes > 12 * 60) {
+      differenceMinutes -= 24 * 60
+    } else if (differenceMinutes < -12 * 60) {
+      differenceMinutes += 24 * 60
+    }
+
+    const differenceHours = Math.round(differenceMinutes / 60)
+
+    if (differenceHours === 0) {
+      return "in your timezone"
+    } else if (differenceHours > 0) {
+      return `${differenceHours} hour${differenceHours !== 1 ? 's' : ''} ahead`
+    } else {
+      return `${Math.abs(differenceHours)} hour${Math.abs(differenceHours) !== 1 ? 's' : ''} behind`
+    }
+  }
+
+  // Effect 1: Update timezone difference
+  useEffect(() => {
+    const updateTimezone = () => {
+      setTimezoneDiff(calculateTimezoneDifference())
+    }
+
+    updateTimezone()
+    const interval = setInterval(updateTimezone, TIMEZONE_UPDATE_INTERVAL)
+
+    return () => clearInterval(interval)
+  }, [targetTimezone])
+
+  // Effect 2: Fetch weather data
+  useEffect(() => {
+    const abortController = new AbortController()
+
+    const fetchWeather = async () => {
+      try {
+        const response = await fetch(
+          `/api/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`,
+          { signal: abortController.signal }
+        )
+
+        if (!response.ok) {
+          setIsLoading(false)
+          return
+        }
+
+        const data: WeatherData = await response.json()
+        setWeatherData(data)
+        setIsLoading(false)
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        setIsLoading(false)
+      }
+    }
+
+    fetchWeather()
+    const interval = setInterval(fetchWeather, TIMEZONE_UPDATE_INTERVAL)
+
+    return () => {
+      abortController.abort()
+      clearInterval(interval)
+    }
+  }, [coordinates.lat, coordinates.lon])
+
+  // Format temperature with unit
+  const useFahrenheit = usesFahrenheit(temperatureScale)
+  const temperatureValue = weatherData
+    ? (useFahrenheit ? weatherData.tempF : weatherData.tempC)
+    : 0
+  const temperature = weatherData
+    ? `${temperatureValue}°${useFahrenheit ? 'F' : 'C'}`
+    : ''
+
+  return {
+    city,
+    temperature,
+    temperatureValue,
+    description: weatherData?.description || '',
+    timezoneDiff,
+    isLoading: isLoading && !timezoneDiff,
+  }
 }
 

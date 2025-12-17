@@ -165,9 +165,9 @@ export default function Page() {
               <div className="space-y-5">
                 {/* Greeting & Role */}
                 <p className="type-body-primary">
-                  Hello, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>
+                  Hello, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>.
                   <br/>
-                  I design AI softwares and products
+                  I design AI softwares and products.
                 </p>
 
                 {/* Contact Links */}
@@ -258,32 +258,44 @@ export default function Page() {
                 {/* Bio & Location */}
                 <div className="space-y-3">
                   <p className="type-body">
-                    I&apos;ve spent 9+ years designing across startups and large organizations.
+                  9+ years of experience across startups and large organizations.
                     <br className="hidden md:block"/>
-                    <span className="block mt-3 md:mt-0 md:inline opacity-80">I care about building opinionated and emotionally considered products with passionate people.</span>
+                    <span className="block mt-3 md:mt-0 md:inline opacity-80">Accountable from ambiguity to outcomes.
+
+                    </span>
+                    <br className="hidden md:block"/>
+                    <span className="block mt-3 md:mt-0 md:inline opacity-80">Opinionated work, shaped with people who care.
+
+                    </span>
+
                   </p>
                   <p className="type-body">
-                    Born on the Amalfi Coast. Based in Toronto.
+                  Moving to London, UK, in Q2 2026. 
                     <br/>
-                    <span className="opacity-80">Moving to London UK in Q2 2026.</span>
+                    <span className="opacity-80">Born on the Amalfi Coast, Italy, in the 90s. <br className="hidden md:block"/>Based in <span className="line-through opacity-50">Lisbon</span> <span className="line-through opacity-50">NYC</span> Toronto, Canada.</span>
                   </p>
                 </div>
+
+              
 
                 {/* Writing & Principles */}
                 <div className="space-y-1 pt-5">
                   <span
                     onClick={() => setIsWritingOpen(true)}
-                    className="type-caption opacity-60 dark:opacity-80 hover:opacity-100 transition-colors duration-200 cursor-pointer block"
+                    className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
                   >
                     Writing
                   </span>
-                  <p className="type-caption opacity-80 dark:opacity-90">— How you do anything is how you do everything</p>
-                  <p className="type-caption opacity-80 dark:opacity-90">— Progress over movement</p>
+                  <p className="type-caption opacity-80 dark:opacity-90"><span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">I</span>How you do anything is how you do everything.</p>
+                  <p className="type-caption opacity-80 dark:opacity-90"><span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">II</span>Progress over movement.</p>
+                  <p className="type-caption opacity-80 dark:opacity-90"><span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">III</span>Yoga mat, coffee shops and quiet spaces.</p>
+
                 </div>
 
-                <p className="type-caption transition-colors duration-200 pt-3 font-[family-name:var(--font-mono)]">
+                <p className="type-caption opacity-50 transition-colors duration-200 pt-5 font-[family-name:var(--font-mono)]">
                   {timezoneMessage}
                 </p>
+                
               </div>
             </div>
           </div>
