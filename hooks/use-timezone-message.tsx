@@ -97,7 +97,7 @@ export function useTimezoneMessage(): string {
   const { city, timezone: targetTimezone, coordinates, temperatureScale } = location
 
   // SSR guard - return consistent initial value to prevent hydration mismatch
-  const [timezoneMessage, setTimezoneMessage] = useState(`Raf is in ${city} this week`)
+  const [timezoneMessage, setTimezoneMessage] = useState(`Raf is in ${city} until the end of the year.`)
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [timezoneDiff, setTimezoneDiff] = useState("")
 
@@ -211,7 +211,7 @@ export function useTimezoneMessage(): string {
     if (!timezoneDiff) return // Wait for initial timezone calculation
 
     // Build base message with location and timezone
-    let message = `Raf is in ${city} this week (${timezoneDiff})`
+    let message = `Raf is in ${city} (${timezoneDiff})`
     
     // Append weather if available
     if (weatherData) {

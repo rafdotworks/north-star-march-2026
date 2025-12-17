@@ -106,6 +106,15 @@
     --fg-muted-dark: hsl(220 10% 70%);
     --border-dark: hsl(220 12% 18%);
 
+    /* ================================================================
+     * MODAL/TRAY COLORS - System theme based (not scroll-blended)
+     * These use the user's system preference, ignoring scroll-based blend
+     * ================================================================ */
+    --modal-bg: var(--bg-light);
+    --modal-fg: var(--fg-light);
+    --modal-fg-muted: var(--fg-muted-light);
+    --modal-border: var(--border-light);
+
     /* Atmospheric base values (light) */
     --vignette-color-light: hsl(var(--neutral-h) 20% 0% / 0.03);
     --glow-color-light: hsl(var(--neutral-h) 10% 100% / 0.02);
@@ -226,6 +235,12 @@
       /* Dark mode users start at 100% blend (full dark) */
       --theme-blend: 100%;
       --theme-blend-num: 1;
+
+      /* Modal colors override for dark mode */
+      --modal-bg: var(--bg-dark);
+      --modal-fg: var(--fg-dark);
+      --modal-fg-muted: var(--fg-muted-dark);
+      --modal-border: var(--border-dark);
 
       /* Tailwind-consumed tokens (dark) - needed for Tailwind utilities */
       --background: var(--neutral-h) 14% 8%;

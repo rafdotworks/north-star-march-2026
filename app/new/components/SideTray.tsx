@@ -407,32 +407,23 @@ const closeButtonVariants = {
 const viewTransitionVariants = {
   initial: {
     opacity: 0,
-    scale: 0.96,
-    y: 12,
-    rotateX: -5,
-    filter: "blur(12px)"
+    filter: "blur(8px)"
   },
   animate: {
     opacity: 1,
-    scale: 1,
-    y: 0,
-    rotateX: 0,
     filter: "blur(0px)",
     transition: {
-      duration: 0.7,
-      ease: EASING.elastic,
-      staggerChildren: 0.08,
-      delayChildren: 0.15
+      duration: 0.4,
+      ease: EASING.smooth,
+      staggerChildren: 0.06,
+      delayChildren: 0.1
     }
   },
   exit: {
     opacity: 0,
-    scale: 0.96,
-    y: 8,
-    rotateX: 5,
-    filter: "blur(8px)",
+    filter: "blur(4px)",
     transition: {
-      duration: 0.3,
+      duration: 0.25,
       ease: EASING.smooth
     }
   }
@@ -1225,7 +1216,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               exit="exit"
               onClick={onClose}
               style={{
-                backgroundColor: isMobile ? 'color-mix(in srgb, var(--bg), transparent 10%)' : 'color-mix(in srgb, var(--bg), transparent 60%)',
+                backgroundColor: isMobile ? 'color-mix(in srgb, var(--modal-bg), transparent 10%)' : 'color-mix(in srgb, var(--modal-bg), transparent 60%)',
                 ...(isMobile ? { overscrollBehavior: 'none', touchAction: 'none' } : {})
               }}
               onAnimationStart={(definition) => {
@@ -1259,9 +1250,9 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
               style={isMobile ? {
-                // Theme-aware colors
-                backgroundColor: 'var(--bg)',
-                color: 'var(--fg)',
+                // Theme-aware colors (system preference based, not scroll-blended)
+                backgroundColor: 'var(--modal-bg)',
+                color: 'var(--modal-fg)',
                 // Cover full viewport including safe areas
                 top: 0,
                 left: 0,
@@ -1276,7 +1267,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                 // Visual feedback during drag
                 opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
                 scale: dragY > 0 ? Math.max(0.95, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.1) : 1,
-              } : { backgroundColor: 'var(--bg)', color: 'var(--fg)', transformStyle: "preserve-3d", perspective: "1200px" }}
+              } : { backgroundColor: 'var(--modal-bg)', color: 'var(--modal-fg)', transformStyle: "preserve-3d", perspective: "1200px" }}
             >
               <motion.div
                 className="h-full flex flex-col"
@@ -1333,23 +1324,23 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                     border: 'none',
                     outline: 'none',
                     boxShadow: 'none',
-                    color: 'var(--fg-muted)',
+                    color: 'var(--modal-fg-muted)',
                     WebkitTapHighlightColor: 'transparent',
                     cursor: 'pointer',
                     opacity: 0.6
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--fg)'
+                    e.currentTarget.style.color = 'var(--modal-fg)'
                     e.currentTarget.style.opacity = '1'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'var(--fg-muted)'
+                    e.currentTarget.style.color = 'var(--modal-fg-muted)'
                     e.currentTarget.style.opacity = '0.6'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
                     e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.color = 'var(--fg-muted)'
+                    e.currentTarget.style.color = 'var(--modal-fg-muted)'
                     e.currentTarget.style.opacity = '0.6'
                   }}
                 >
@@ -1407,13 +1398,13 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                           >
                             <p
                               className="text-xs transition-colors duration-200"
-                              style={{ color: i < 2 ? 'var(--fg)' : 'var(--fg-muted)' }}
+                              style={{ color: i < 2 ? 'var(--modal-fg)' : 'var(--modal-fg-muted)' }}
                             >
                               {article.title}
                             </p>
                             <p
-                              className="text-xs transition-colors duration-200"
-                              style={{ color: 'var(--fg-muted)' }}
+                              className="text-[10px] font-light transition-colors duration-200"
+                              style={{ color: 'var(--modal-fg-muted)', opacity: 0.7 }}
                             >
                               {article.date}
                             </p>
@@ -1444,7 +1435,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               key="backdrop"
               className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'backdrop-blur-xl' : 'backdrop-blur-2xl'}`}
               style={{
-                backgroundColor: isMobile ? 'color-mix(in srgb, var(--bg), transparent 10%)' : 'color-mix(in srgb, var(--bg), transparent 60%)',
+                backgroundColor: isMobile ? 'color-mix(in srgb, var(--modal-bg), transparent 10%)' : 'color-mix(in srgb, var(--modal-bg), transparent 60%)',
                 ...(isMobile ? { overscrollBehavior: 'none', touchAction: 'none' } : {})
               }}
               variants={backdropVariants}
@@ -1483,9 +1474,9 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
               style={{
-                // Theme-aware colors
-                backgroundColor: 'var(--bg)',
-                color: 'var(--fg)',
+                // Theme-aware colors (system preference based, not scroll-blended)
+                backgroundColor: 'var(--modal-bg)',
+                color: 'var(--modal-fg)',
                 ...(isMobile ? {
                   // Cover full viewport including safe areas
                   top: 0,
@@ -1568,17 +1559,17 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                   ...blurStyle
                 }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--fg)'
+                    e.currentTarget.style.color = 'var(--modal-fg)'
                     e.currentTarget.style.opacity = '1'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'var(--fg-muted)'
+                    e.currentTarget.style.color = 'var(--modal-fg-muted)'
                     e.currentTarget.style.opacity = '0.6'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
                     e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.color = 'var(--fg-muted)'
+                    e.currentTarget.style.color = 'var(--modal-fg-muted)'
                     e.currentTarget.style.opacity = '0.6'
                   }}
               >
@@ -1621,20 +1612,20 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    color: 'var(--fg-muted)',
+                    color: 'var(--modal-fg-muted)',
                     WebkitTapHighlightColor: 'transparent',
                     cursor: 'pointer',
                     ...blurStyle
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--fg)'
+                    e.currentTarget.style.color = 'var(--modal-fg)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'var(--fg-muted)'
+                    e.currentTarget.style.color = 'var(--modal-fg-muted)'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = 'none'
-                    e.currentTarget.style.color = 'var(--fg-muted)'
+                    e.currentTarget.style.color = 'var(--modal-fg-muted)'
                   }}
                 >
                   {/* Minimal arrow icon */}
@@ -1696,13 +1687,13 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                           >
                             <p
                               className="text-xs transition-colors duration-200"
-                              style={{ color: i < 2 ? 'var(--fg)' : 'var(--fg-muted)' }}
+                              style={{ color: i < 2 ? 'var(--modal-fg)' : 'var(--modal-fg-muted)' }}
                             >
                               {article.title}
                             </p>
                             <p
-                              className="text-xs transition-colors duration-200"
-                              style={{ color: 'var(--fg-muted)' }}
+                              className="text-[10px] font-light transition-colors duration-200"
+                              style={{ color: 'var(--modal-fg-muted)', opacity: 0.7 }}
                             >
                               {article.date}
                             </p>
@@ -1864,13 +1855,13 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                           >
                             <p
                               className="text-xs transition-colors duration-200"
-                              style={{ color: i < 2 ? 'var(--fg)' : 'var(--fg-muted)' }}
+                              style={{ color: i < 2 ? 'var(--modal-fg)' : 'var(--modal-fg-muted)' }}
                             >
                               {article.title}
                             </p>
                             <p
-                              className="text-xs transition-colors duration-200"
-                              style={{ color: 'var(--fg-muted)' }}
+                              className="text-[10px] font-light transition-colors duration-200"
+                              style={{ color: 'var(--modal-fg-muted)', opacity: 0.7 }}
                             >
                               {article.date}
                             </p>

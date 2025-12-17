@@ -256,12 +256,12 @@ export default function Page() {
                 <div className="space-y-1 pt-5">
                   <span
                     onClick={() => setIsWritingOpen(true)}
-                    className="type-caption text-muted-foreground/60 hover:text-muted-foreground transition-colors duration-200 cursor-pointer block"
+                    className="type-caption opacity-60 dark:opacity-80 hover:opacity-100 transition-colors duration-200 cursor-pointer block"
                   >
                     Writing
                   </span>
-                  <p className="type-caption opacity-80">— How you do anything is how you do everything</p>
-                  <p className="type-caption opacity-80">— Progress over movement</p>
+                  <p className="type-caption opacity-80 dark:opacity-90">— How you do anything is how you do everything</p>
+                  <p className="type-caption opacity-80 dark:opacity-90">— Progress over movement</p>
                 </div>
 
                 <p className="type-caption transition-colors duration-200 pt-3 font-[family-name:var(--font-mono)]">
