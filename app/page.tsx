@@ -165,9 +165,9 @@ export default function Page() {
               <div className="space-y-5">
                 {/* Greeting & Role */}
                 <p className="type-body-primary">
-                  Hello, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>.
+                  Hello, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>
                   <br/>
-                  I design AI softwares and products.
+                  I design AI softwares and products
                 </p>
 
                 {/* Contact Links */}
