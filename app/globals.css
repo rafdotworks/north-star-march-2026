@@ -529,8 +529,7 @@ body::after {
     var(--vignette-color) 100%
   );
   opacity: var(--vignette-intensity);
-  transition: opacity var(--theme-transition-duration) var(--theme-transition-easing),
-              background var(--theme-transition-duration) var(--theme-transition-easing);
+  /* No transition - responds instantly to JS-controlled --theme-blend */
 }
 
 /* Accessibility: Reduce effects for users who prefer reduced motion */

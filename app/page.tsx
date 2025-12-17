@@ -5,6 +5,7 @@ import FooterLink from "@/app/components/FooterLink"
 import { WorkCard } from "@/app/components/WorkCard"
 import { ScrollBottomBlur } from "@/app/components/ScrollBottomBlur"
 import { ScrollTopBlur } from "@/app/components/ScrollTopBlur"
+import { SectionDivider } from "@/app/components/SectionDivider"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 import {
   PROJECT_ORDER,
@@ -21,15 +22,20 @@ import SideTray from "@/app/new/components/SideTray"
 
 import { useSystemTheme } from "@/hooks/use-system-theme"
 
-// Theme blend scroll range (95% to 100% of page)
-const THEME_BLEND_START = 0.95
+// Theme blend scroll range (85% to 100% of page)
+const THEME_BLEND_START = 0.85
 const THEME_BLEND_END = 1.0
 
 const PRIORITY_IMAGE_COUNT = 3
 
-// Smooth easing function for natural feel
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+// Ease-in for theme blend: gradual start, accelerates toward end (scrolling down)
+function easeInQuad(t: number): number {
+  return t * t
+}
+
+// Ease-out for theme blend: immediate response, gradual finish (scrolling up)
+function easeOutQuad(t: number): number {
+  return 1 - (1 - t) * (1 - t)
 }
 
 export default function Page() {
@@ -47,6 +53,7 @@ export default function Page() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const ticking = useRef(false)
   const prefersDarkRef = useRef(prefersDark)
+  const lastScrollY = useRef(0)
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -78,14 +85,21 @@ export default function Page() {
           const scrollHeight = document.documentElement.scrollHeight - viewportHeight
           const totalProgress = scrollY / scrollHeight
 
+          // Detect scroll direction
+          const isScrollingDown = scrollY > lastScrollY.current
+          lastScrollY.current = scrollY
+
           let themeBlend = 0
           if (totalProgress >= THEME_BLEND_START) {
             themeBlend = (totalProgress - THEME_BLEND_START) / (THEME_BLEND_END - THEME_BLEND_START)
             themeBlend = Math.min(1, Math.max(0, themeBlend))
           }
 
-          // Apply easing for smoother feel
-          const easedBlend = easeInOutCubic(themeBlend)
+          // Apply directional easing for delightful feel
+          // Down: gradual start → decisive finish | Up: immediate response → gradual return
+          const easedBlend = isScrollingDown
+            ? easeInQuad(themeBlend)
+            : easeOutQuad(themeBlend)
 
           // Set CSS custom properties for color-mix interpolation
           // Light mode: 0% → 100% (scroll to dark)
@@ -151,7 +165,7 @@ export default function Page() {
               <div className="space-y-5">
                 {/* Greeting & Role */}
                 <p className="type-body-primary">
-                  Hello, I&apos;m Raf.
+                  Hello, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>.
                   <br/>
                   I design AI softwares and products.
                 </p>
@@ -222,6 +236,9 @@ export default function Page() {
                   />
                 )
               })}
+
+              {/* Divider before footer */}
+              <SectionDivider />
 
             </div>
           </div>
