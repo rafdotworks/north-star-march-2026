@@ -22,15 +22,15 @@ import SideTray from "@/app/new/components/SideTray"
 
 import { useSystemTheme } from "@/hooks/use-system-theme"
 
-// Theme blend scroll range (85% to 100% of page)
-const THEME_BLEND_START = 0.85
+// Theme blend scroll range (93% to 100% of page) - shorter range for snappier transition
+const THEME_BLEND_START = 0.93
 const THEME_BLEND_END = 1.0
 
 const PRIORITY_IMAGE_COUNT = 3
 
-// Ease-in for theme blend: gradual start, accelerates toward end (scrolling down)
-function easeInQuad(t: number): number {
-  return t * t
+// Ease-out cubic for theme blend: immediate response, smooth finish (eliminates hesitation)
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3)
 }
 
 // Ease-out for theme blend: immediate response, gradual finish (scrolling up)
@@ -96,9 +96,9 @@ export default function Page() {
           }
 
           // Apply directional easing for delightful feel
-          // Down: gradual start → decisive finish | Up: immediate response → gradual return
+          // Down: immediate response → smooth finish | Up: immediate response → gradual return
           const easedBlend = isScrollingDown
-            ? easeInQuad(themeBlend)
+            ? easeOutCubic(themeBlend)
             : easeOutQuad(themeBlend)
 
           // Set CSS custom properties for color-mix interpolation
