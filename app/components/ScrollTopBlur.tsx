@@ -8,9 +8,9 @@
  *
  * BEHAVIOR:
  * - Hidden at page load (opacity 0)
- * - Begins appearing at 70% scroll progress (approaching footer)
- * - Fully visible by 95% scroll progress (at footer)
- * - Blur intensity ramps up with opacity
+ * - Begins appearing at 93% scroll progress (synced with theme blend)
+ * - Fully visible by 100% scroll progress (at footer)
+ * - Uses easeOutCubic to match theme transition timing
  * - Subtle glow accent matches bottom blur visual language
  *
  * PERFORMANCE:
@@ -27,8 +27,8 @@ import { useEffect, useState, useRef, useMemo } from "react"
 // CONSTANTS
 // ============================================================================
 
-/** Scroll progress (0-1) at which fade begins */
-const FADE_START = 0.96
+/** Scroll progress (0-1) at which fade begins - synced with theme blend */
+const FADE_START = 0.93
 
 /** Scroll progress (0-1) at which component is fully visible */
 const FADE_END = 1.0
@@ -40,8 +40,8 @@ const MAX_GLOW_OPACITY = 0.04
 // EASING FUNCTIONS
 // ============================================================================
 
-function easeInCubic(t: number): number {
-  return t * t * t
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3)
 }
 
 export function ScrollTopBlur() {
@@ -80,8 +80,8 @@ export function ScrollTopBlur() {
     const fadeRange = FADE_END - FADE_START
     const fadeProgress = Math.min(1, (scrollProgress - FADE_START) / fadeRange)
 
-    // Use cubic ease-in for smooth, natural appearance
-    const opacity = easeInCubic(fadeProgress)
+    // Use cubic ease-out to match theme blend timing
+    const opacity = easeOutCubic(fadeProgress)
 
     // Glow increases with scroll progress
     const glowOpacity = MAX_GLOW_OPACITY * fadeProgress
@@ -100,7 +100,7 @@ export function ScrollTopBlur() {
       style={{
         height: "min(35vh, 250px)",
         opacity,
-        transition: "opacity 150ms ease-out",
+        // No CSS transition - responds instantly to JS-driven opacity (matches theme blend)
       }}
     >
       {/* Soft gradient fade - no hard edges */}
@@ -129,7 +129,7 @@ export function ScrollTopBlur() {
           )`,
           filter: "blur(30px)",
           opacity: glowOpacity > 0 ? 1 : 0,
-          transition: "opacity 200ms ease-out",
+          // No CSS transition - instant response at all scroll speeds
         }}
       />
     </div>

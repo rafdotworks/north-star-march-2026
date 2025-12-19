@@ -248,7 +248,7 @@ export default function Page() {
          * FOOTER SECTION - Independent full-viewport section like hero
          * ================================================================ */}
         <div className="min-h-screen flex items-center pointer-events-auto" style={{ backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20">
+          <div className="w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-20">
             <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16">
               {/* Empty left column for grid alignment */}
               <div className="hidden md:block" />
