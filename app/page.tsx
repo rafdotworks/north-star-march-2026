@@ -23,21 +23,10 @@ import SideTray from "@/app/new/components/SideTray"
 
 import { useSystemTheme } from "@/hooks/use-system-theme"
 
-// Theme blend scroll range (93% to 100% of page) - shorter range for snappier transition
-const THEME_BLEND_START = 0.93
-const THEME_BLEND_END = 1.0
+// Theme blend threshold: instant snap at 93% scroll
+const THEME_BLEND_THRESHOLD = 0.93
 
 const PRIORITY_IMAGE_COUNT = 3
-
-// Ease-out cubic for theme blend: immediate response, smooth finish (eliminates hesitation)
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3)
-}
-
-// Ease-out for theme blend: immediate response, gradual finish (scrolling up)
-function easeOutQuad(t: number): number {
-  return 1 - (1 - t) * (1 - t)
-}
 
 export default function Page() {
   const timezoneMessage = useTimezoneMessage()
@@ -54,7 +43,6 @@ export default function Page() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const ticking = useRef(false)
   const prefersDarkRef = useRef(prefersDark)
-  const lastScrollY = useRef(0)
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -82,32 +70,19 @@ export default function Page() {
             setScrollProgress(1 - Math.pow(1 - progress, 2))
           }
 
-          // Continuous theme blend based on scroll position
+          // Binary theme blend based on scroll position: instant snap at threshold
           const scrollHeight = document.documentElement.scrollHeight - viewportHeight
           const totalProgress = scrollY / scrollHeight
 
-          // Detect scroll direction
-          const isScrollingDown = scrollY > lastScrollY.current
-          lastScrollY.current = scrollY
-
-          let themeBlend = 0
-          if (totalProgress >= THEME_BLEND_START) {
-            themeBlend = (totalProgress - THEME_BLEND_START) / (THEME_BLEND_END - THEME_BLEND_START)
-            themeBlend = Math.min(1, Math.max(0, themeBlend))
-          }
-
-          // Apply directional easing for delightful feel
-          // Down: immediate response → smooth finish | Up: immediate response → gradual return
-          const easedBlend = isScrollingDown
-            ? easeOutCubic(themeBlend)
-            : easeOutQuad(themeBlend)
+          // Binary threshold: 0 or 1 (instant snap at 93%)
+          const themeBlend = totalProgress >= THEME_BLEND_THRESHOLD ? 1 : 0
 
           // Set CSS custom properties for color-mix interpolation
           // Light mode: 0% → 100% (scroll to dark)
           // Dark mode: 100% → 0% (scroll to light) - invert the blend
           const finalBlend = prefersDarkRef.current
-            ? (1 - easedBlend) * 100  // Dark mode: start at 100%, go to 0%
-            : easedBlend * 100         // Light mode: start at 0%, go to 100%
+            ? (1 - themeBlend) * 100  // Dark mode: 100% or 0%
+            : themeBlend * 100         // Light mode: 0% or 100%
           document.documentElement.style.setProperty('--theme-blend', `${finalBlend}%`)
           // Numeric version for calc() operations (0-1)
           document.documentElement.style.setProperty('--theme-blend-num', `${finalBlend / 100}`)
@@ -168,8 +143,8 @@ export default function Page() {
                 <p className="type-body-primary">
                   Hello, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>.
                   <br/>
-                  I design AI softwares and products.
-                </p>
+                  I design clarity for the age of AI.
+                  </p>
 
                 {/* Contact Links */}
                 <nav className="flex flex-col items-start gap-1 group/nav pt-2">

@@ -131,8 +131,8 @@ export const FOOTER_CONFIG: FooterConfig = {
   writing: {
     sectionLabel: "Writing",
     principles: [
-      { number: "I", text: "How you do anything is how you do everything." },
-      { number: "II", text: "Progress over movement." },
+      { number: "I", text: "Progress over movement." },
+      { number: "II", text: "How you do anything is how you do everything." },
       { number: "III", text: "Yoga mat, coffee shops and quiet spaces." },
     ],
   },

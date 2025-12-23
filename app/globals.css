@@ -69,8 +69,8 @@
     --leading-tight: 1.25;  /* headings, compact text */
     --leading-normal: 1.5;  /* all body text, descriptions */
 
-    /* Theme transition properties - gradual, elegant */
-    --theme-transition-duration: 1s;
+    /* Theme transition properties - smooth, symmetrical (identical in both directions) */
+    --theme-transition-duration: 0.3s;
     --theme-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
 
     transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
