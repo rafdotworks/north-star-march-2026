@@ -25,7 +25,7 @@
  */
 
 import type { Components } from "react-markdown"
-import { ExternalLink } from "lucide-react"
+import { ExternalLinkIcon } from "@/app/components/icons/ExternalLinkIcon"
 
 /**
  * Custom ReactMarkdown components for consistent typography.
@@ -79,7 +79,7 @@ export const markdownComponents: Components = {
       >
         {children}
         {isExternal && (
-          <ExternalLink size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
+          <ExternalLinkIcon size={12} className="hidden md:block w-[10px] h-[10px] opacity-0 md:-ml-1 md:group-hover/link:opacity-70 md:group-hover/link:ml-0 transition-all duration-200" />
         )}
       </a>
     )

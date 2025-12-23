@@ -1,7 +1,7 @@
 "use client"
 
 import React, { memo, CSSProperties } from "react"
-import { ExternalLink } from "lucide-react"
+import { ExternalLinkIcon } from "@/app/components/icons/ExternalLinkIcon"
 
 interface FooterLinkProps {
   href: string
@@ -27,7 +27,7 @@ function FooterLink({ href, label, ariaLabel, external = false }: FooterLinkProp
       style={linkStyle}
     >
       {label}
-      <ExternalLink
+      <ExternalLinkIcon
         size={10}
         className="hidden md:block w-[8px] h-[8px] opacity-0 -ml-0.5 group-hover/link:opacity-50 group-hover/link:ml-0 transition-all duration-300"
       />

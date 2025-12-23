@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Play } from "lucide-react"
+import { PlayIcon } from "@/app/components/icons/PlayIcon"
 import { EASING } from "@/components/animations/constants"
 
 interface VimeoEmbedProps {
@@ -93,9 +93,9 @@ export function VimeoEmbed({ url, aspectRatio = "16/9" }: VimeoEmbedProps) {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2, ease: EASING.smooth }}
                 >
-                  <Play
-                    className="w-6 h-6 text-foreground ml-1"
-                    fill="currentColor"
+                  <PlayIcon
+                    size={24}
+                    className="text-foreground ml-1"
                   />
                 </motion.div>
               </motion.div>

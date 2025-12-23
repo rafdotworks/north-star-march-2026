@@ -260,23 +260,23 @@ export type ProjectKey = (typeof PROJECT_KEYS)[number];
 export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
   // Current/recent work (2024-2025)
   atlas: {
-    images: ["/work/atlas-2.png", "/work/videos/atlas-ptv.mov"], // Crypto marketplace, NFT era
+    images: ["/work/atlas.webp", "/work/atlas-2.png", "/work/videos/atlas-ptv.mov"], // Crypto marketplace, NFT era
   },
   cb: {
     images: ["/work/cb-1.webp", "/work/cb.webp"], // Coinbase Developer Platform
   },
   vf: {
-    images: ["/work/vf-0.png", "/work/vf-01.png", "/work/vf-03.webp"], // Voiceflow product redesign
+    images: ["/work/vf.webp"], // Voiceflow product redesign
   },
   defituna: {
     images: ["/work/defituna-1.png", "/work/videos/defi-tuna.mov"], // DeFi project (fixed: removed duplicate)
   },
   theo: {
-    images: ["/work/theo-1.png", "/work/videos/theo-prod.mov", "/work/theo-brand.png", "/work/theo-web.webp", "/work/theo-mobile.webp"], // Theoriq - AI platform, founding designer
+    images: ["/work/theo.webp", "/work/studio 02.png", "/work/theo-sb.webp", "/work/theo-web.png"], // Theoriq - AI platform, founding designer
   },
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools (fixed: removed duplicate)
-  zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
+  zalando: { images: ["/work/zal.webp"] }, // B2B design system
   earlyworks: { images: ["/work/early-works.webp"] }, // Early brand work
   nationalArchives: { images: ["/work/us.webp"] }, // Early brand work (fixed: removed duplicate)
 };
@@ -390,7 +390,7 @@ export const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
 export const IMAGE_ALT_TEXT: Record<string, string> = {
   "/work/cb-1.webp": "Coinbase Developer Platform interface showing API documentation and developer tools",
   "/work/theo-1.png": "Theoriq AI platform dashboard with agent management and workflow visualization",
-  "/work/vf-0.png": "Voiceflow conversation design interface with flowchart-style dialog editor",
+  "/work/vf.webp": "Voiceflow conversation design interface with flowchart-style dialog editor",
   "/work/atlas-2.png": "Atlas crypto marketplace featuring NFT collections and digital asset trading interface",
   "/work/defituna-1.png": "DeFi Tuna decentralized finance platform with yield farming and staking features",
   "/work/curbcutos.png": "CurbCut accessibility data visualization tool showing urban mobility metrics",

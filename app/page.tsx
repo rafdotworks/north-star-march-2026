@@ -18,6 +18,7 @@ import {
   IMAGE_ALT_TEXT,
   PROJECT_HAS_STORY
 } from "@/app/config/portfolioConfig"
+import { FOOTER_CONFIG } from "@/app/config/footerConfig"
 import SideTray from "@/app/new/components/SideTray"
 
 import { useSystemTheme } from "@/hooks/use-system-theme"
@@ -255,41 +256,69 @@ export default function Page() {
 
               {/* Footer content - right column */}
               <div className="space-y-5">
-                {/* Bio & Location */}
-                <div className="space-y-3">
+                {/* SECTION 1: About (Bio) */}
+                <div className="space-y-1">
+                  {/* Static header - no interactivity */}
+                  <span className="type-caption opacity-50 dark:opacity-70 block">
+                    {FOOTER_CONFIG.bio.sectionLabel}
+                  </span>
+                  {/* Bio content */}
                   <p className="type-body">
-                  9+ years of experience across startups and large organizations.
-                    <br className="hidden md:block"/>
-                    <span className="block mt-3 md:mt-0 md:inline opacity-80">Accountable from ambiguity to outcomes.
-
-                    </span>
-                    <br className="hidden md:block"/>
-                    <span className="block mt-3 md:mt-0 md:inline opacity-80">Opinionated work, shaped with people who care.
-
-                    </span>
-
-                  </p>
-                  <p className="type-body">
-                  Moving to London, UK, in Q2 2026. 
-                    <br/>
-                    <span className="opacity-80">Born on the Amalfi Coast, Italy, in the 90s. <br className="hidden md:block"/>Based in <span className="line-through opacity-50">Lisbon</span> <span className="line-through opacity-50">NYC</span> Toronto, Canada.</span>
+                    {FOOTER_CONFIG.bio.paragraphs.map((paragraph, index) => (
+                      <React.Fragment key={index}>
+                        {index > 0 && <><br className="hidden md:block"/></>}
+                        <span
+                          className={`${index === 0 ? '' : 'block mt-3 md:mt-0 md:inline'} ${paragraph.isSecondary ? 'opacity-80' : ''}`}
+                        >
+                          {paragraph.text}
+                        </span>
+                      </React.Fragment>
+                    ))}
                   </p>
                 </div>
 
-              
+                {/* SECTION 2: Location */}
+                <div className="space-y-1">
+                  {/* Static header - no interactivity */}
+                  <span className="type-caption opacity-50 dark:opacity-70 block">
+                    {FOOTER_CONFIG.location.sectionLabel}
+                  </span>
+                  {/* Location content */}
+                  <p className="type-body">
+                    {FOOTER_CONFIG.location.info.futureMove}
+                    <br/>
+                    <span className="opacity-80">
+                      {FOOTER_CONFIG.location.info.origin} <br className="hidden md:block"/>
+                      Based in {FOOTER_CONFIG.location.info.currentBases.map((base, index) => (
+                        <React.Fragment key={index}>
+                          {index > 0 && ' '}
+                          <span className={base.isPrevious ? 'line-through opacity-50' : ''}>
+                            {base.city}
+                          </span>
+                        </React.Fragment>
+                      ))}.
+                    </span>
+                  </p>
+                </div>
 
-                {/* Writing & Principles */}
-                <div className="space-y-1 pt-5">
+                {/* SECTION 3: Writing (existing clickable section) */}
+                <div className="space-y-1">
+                  {/* Clickable header - keeps all interactivity */}
                   <span
                     onClick={() => setIsWritingOpen(true)}
                     className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
                   >
-                    Writing
+                    {FOOTER_CONFIG.writing.sectionLabel}
                   </span>
-                  <p className="type-caption opacity-80 dark:opacity-90"><span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">I</span>How you do anything is how you do everything.</p>
-                  <p className="type-caption opacity-80 dark:opacity-90"><span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">II</span>Progress over movement.</p>
-                  <p className="type-caption opacity-80 dark:opacity-90"><span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">III</span>Yoga mat, coffee shops and quiet spaces.</p>
-
+                  {/* Writing principles */}
+                  {FOOTER_CONFIG.writing.principles.map((principle, index) => (
+                    <p key={index} className="type-caption opacity-80 dark:opacity-90">
+                      <span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">
+                        {principle.number}
+                      </span>
+                      {principle.text}
+                    </p>
+                  ))}
                 </div>
 
                 <p className="type-caption opacity-50 transition-colors duration-200 pt-5 font-[family-name:var(--font-mono)]">

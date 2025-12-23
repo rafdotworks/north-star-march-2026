@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { type UIMessage } from 'ai'
 import { motion } from 'framer-motion'
-import { X } from 'lucide-react'
+import { XIcon } from './icons'
 import Link from 'next/link'
 import { ChatMessages } from './ChatMessages'
 import { ChatInput } from './ChatInput'
@@ -140,7 +140,7 @@ export default function AgentPage() {
             className="text-[hsl(220,10%,40%)] hover:text-[hsl(220,15%,10%)] transition-colors duration-300"
             aria-label="Close and return home"
           >
-            <X size={20} strokeWidth={1.5} />
+            <XIcon size={20} />
           </Link>
         </div>
 

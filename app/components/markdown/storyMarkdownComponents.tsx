@@ -1,7 +1,7 @@
 "use client"
 
 import type { Components } from "react-markdown"
-import { ExternalLink } from "lucide-react"
+import { ExternalLinkIcon } from "@/app/components/icons/ExternalLinkIcon"
 import { StoryImage } from "@/app/components/story/StoryImage"
 import { VimeoEmbed } from "@/app/components/story/VimeoEmbed"
 import { StorySectionDivider } from "@/app/components/story/StorySectionDivider"
@@ -89,7 +89,7 @@ export const storyMarkdownComponents: Components = {
       >
         {children}
         {isExternal && (
-          <ExternalLink
+          <ExternalLinkIcon
             size={10}
             className="hidden md:block opacity-0 md:group-hover/link:opacity-70 transition-opacity duration-200"
           />

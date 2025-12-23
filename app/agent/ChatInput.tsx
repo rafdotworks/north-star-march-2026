@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, KeyboardEvent, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowUp } from 'lucide-react'
+import { ArrowUpIcon } from './icons'
 
 interface ChatInputProps {
   onSend: (message: string) => void
@@ -85,7 +85,7 @@ export const ChatInput = memo(function ChatInput({ onSend, disabled, placeholder
                 className="flex-shrink-0 w-12 h-12 rounded-xl bg-[hsl(226,92%,66%)] hover:bg-[hsl(226,85%,70%)] text-white flex items-center justify-center transition-all duration-300 shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.35)] disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Send message"
               >
-                <ArrowUp size={20} strokeWidth={2} />
+                <ArrowUpIcon size={20} />
               </motion.button>
             )}
           </AnimatePresence>
