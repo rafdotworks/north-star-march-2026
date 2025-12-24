@@ -56,9 +56,9 @@ export default function Page() {
           const scrollY = window.scrollY
           const viewportHeight = window.innerHeight
 
-          // Slower, sweeter transition: 20vh to 90vh (hero lingers longer)
-          const transitionStart = viewportHeight * 0.2
-          const transitionEnd = viewportHeight * 0.9
+          // Dramatic, slower transition: 10vh to 95vh (hero lingers longer, fades deeper)
+          const transitionStart = viewportHeight * 0.1
+          const transitionEnd = viewportHeight * 0.95
 
           if (scrollY <= transitionStart) {
             setScrollProgress(0)
@@ -66,8 +66,8 @@ export default function Page() {
             setScrollProgress(1)
           } else {
             const progress = (scrollY - transitionStart) / (transitionEnd - transitionStart)
-            // Gentle ease-out curve - hero fades slowly, sweetly
-            setScrollProgress(1 - Math.pow(1 - progress, 2))
+            // Dramatic cubic ease-out - hero lingers longer, accelerates beautifully
+            setScrollProgress(1 - Math.pow(1 - progress, 3))
           }
 
           // Binary theme blend based on scroll position: instant snap at threshold
@@ -110,11 +110,11 @@ export default function Page() {
     }
   }, [isReady, prefersDark])
 
-  // Derived values from scroll progress - beautiful eased transitions
-  const heroBlur = scrollProgress * 24
-  const heroScale = 1 - (scrollProgress * 0.1)
+  // Derived values from scroll progress - dramatic eased transitions
+  const heroBlur = scrollProgress * 32
+  const heroScale = 1 - (scrollProgress * 0.12)
   const heroOpacity = 1 - (scrollProgress * 0.8)
-  const heroY = scrollProgress * -40
+  const heroY = scrollProgress * -48
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--fg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
@@ -141,7 +141,7 @@ export default function Page() {
               <div className="space-y-5">
                 {/* Greeting & Role */}
                 <p className="type-body-primary">
-                  Hello, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>.
+                  Hi, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>.
                   <br/>
                   I design products for the age of AI.
                   </p>
@@ -172,12 +172,12 @@ export default function Page() {
           style={{
             background: `linear-gradient(to bottom,
               transparent 0%,
-              color-mix(in srgb, var(--bg), transparent ${70 - scrollProgress * 70}%) 25%,
-              color-mix(in srgb, var(--bg), transparent ${40 - scrollProgress * 40}%) 50%,
-              color-mix(in srgb, var(--bg), transparent ${15 - scrollProgress * 15}%) 75%,
+              color-mix(in srgb, var(--bg), transparent ${65 - scrollProgress * 65}%) 25%,
+              color-mix(in srgb, var(--bg), transparent ${35 - scrollProgress * 35}%) 50%,
+              color-mix(in srgb, var(--bg), transparent ${10 - scrollProgress * 10}%) 75%,
               var(--bg) 100%
             )`,
-            opacity: Math.min(1, 0.4 + scrollProgress * 1.2),
+            opacity: Math.min(1, 0.5 + scrollProgress * 1.3),
             transform: `translateY(${(1 - Math.min(1, scrollProgress * 1.5)) * 16}px)`,
             transition: 'opacity 100ms ease-out',
           }}

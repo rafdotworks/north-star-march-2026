@@ -1,6 +1,6 @@
 "use client"
 
-import React, { memo, CSSProperties } from "react"
+import React, { memo } from "react"
 import { ExternalLinkIcon } from "@/app/components/icons/ExternalLinkIcon"
 
 interface FooterLinkProps {
@@ -10,26 +10,19 @@ interface FooterLinkProps {
   external?: boolean
 }
 
-// Extract style to constant to prevent object recreation on each render
-const linkStyle: CSSProperties = {
-  WebkitTapHighlightColor: 'transparent',
-  transition: 'color var(--theme-transition-duration, 2s) var(--theme-transition-easing, ease)'
-}
-
 function FooterLink({ href, label, ariaLabel, external = false }: FooterLinkProps) {
   return (
     <a
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="type-caption group/link inline-flex items-center gap-1 md:group-hover/nav:text-muted-foreground/30 md:hover:!text-muted-foreground/60 visited:text-muted-foreground/40 active:text-muted-foreground/60 focus:text-muted-foreground/40 focus:outline-none"
+      className="type-caption group/link inline-flex items-center gap-1 w-fit text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/15 hover:!text-muted-foreground visited:text-muted-foreground/40 md:group-hover/nav:visited:text-muted-foreground/15 active:text-muted-foreground focus-visible:text-muted-foreground/40 transition-colors duration-200 focus:outline-none"
       aria-label={ariaLabel || label}
-      style={linkStyle}
     >
       {label}
       <ExternalLinkIcon
         size={10}
-        className="hidden md:block w-[8px] h-[8px] opacity-0 -ml-0.5 group-hover/link:opacity-50 group-hover/link:ml-0 transition-all duration-300"
+        className="hidden md:block w-[8px] h-[8px] opacity-0 -ml-0.5 group-hover/link:opacity-100 group-hover/link:ml-0 group-hover/link:animate-pulse-subtle transition-[margin] duration-300"
       />
     </a>
   )
