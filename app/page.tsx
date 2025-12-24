@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useRef } from "react"
+import { useReducedMotion } from "framer-motion"
 import FooterLink from "@/app/components/FooterLink"
 import { WorkCard } from "@/app/components/WorkCard"
 import { ScrollBottomBlur } from "@/app/components/ScrollBottomBlur"
@@ -43,6 +44,12 @@ export default function Page() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const ticking = useRef(false)
   const prefersDarkRef = useRef(prefersDark)
+
+  // Footer scroll-based blur with eased progress
+  const [footerScrollProgress, setFooterScrollProgress] = useState(0)
+  const [footerRevealProgress, setFooterRevealProgress] = useState(0)
+  const footerRef = useRef<HTMLDivElement>(null)
+  const prefersReduced = useReducedMotion()
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -87,6 +94,29 @@ export default function Page() {
           // Numeric version for calc() operations (0-1)
           document.documentElement.style.setProperty('--theme-blend-num', `${finalBlend / 100}`)
 
+          // Unified footer effects based on total page scroll progress
+          // Both blur AND reveal use the same 85%-100% range
+          const FOOTER_START = 0.85  // Start after last project divider
+          const FOOTER_END = 1.0     // Complete at page end
+
+          let footerEffectProgress = 0
+          if (totalProgress <= FOOTER_START) {
+            footerEffectProgress = 1  // Fully blurred/hidden
+          } else if (totalProgress >= FOOTER_END) {
+            footerEffectProgress = 0  // Fully sharp/revealed
+          } else {
+            // Map 85%-100% scroll to 1→0 (inverted: starts blurred, ends sharp)
+            const effectRange = FOOTER_END - FOOTER_START
+            const progressInRange = totalProgress - FOOTER_START
+            const rawProgress = progressInRange / effectRange
+            // Inverted: 1 (blurred) → 0 (sharp)
+            footerEffectProgress = 1 - rawProgress
+          }
+
+          // Use SAME progress for both effects
+          setFooterScrollProgress(footerEffectProgress)
+          setFooterRevealProgress(1 - footerEffectProgress)  // Inverted for reveal mask
+
           ticking.current = false
         })
         ticking.current = true
@@ -116,6 +146,11 @@ export default function Page() {
   const heroOpacity = 1 - (scrollProgress * 0.8)
   const heroY = scrollProgress * -48
 
+  // Footer blur derived values - subtle, readable effect
+  const footerBlur = prefersReduced ? 0 : footerScrollProgress * 16  // Max 16px (vs hero's 32px)
+  const footerOpacity = Math.max(0.2, 1 - (footerScrollProgress * 0.6))  // Fade 60%, min 20%
+  const footerY = footerScrollProgress * -24  // Subtle upward drift (vs hero's -48px)
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--fg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
       {/* ================================================================
@@ -133,12 +168,9 @@ export default function Page() {
         >
           {/* Use same container and grid as works section for alignment */}
           <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20">
-            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16">
-              {/* Empty left column for grid alignment */}
-              <div className="hidden md:block" />
-
+            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
               {/* Hero content - right column, aligns with project titles */}
-              <div className="space-y-5">
+              <div className="space-y-5 md:col-start-2">
                 {/* Greeting & Role */}
                 <p className="type-body-primary">
                   Hi, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>.
@@ -185,8 +217,8 @@ export default function Page() {
 
         {/* Works section with solid background */}
         <div className="min-h-screen pointer-events-auto" style={{ backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-          <div className="w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-20 py-12 md:py-20">
-            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16 gap-y-1 md:gap-y-2">
+          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20 py-12 md:py-20">
+            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16 gap-y-1 md:gap-y-2">
 
               {/* Works */}
               {PROJECT_ORDER.map((projectKey, index) => {
@@ -223,14 +255,37 @@ export default function Page() {
         {/* ================================================================
          * FOOTER SECTION - Independent full-viewport section like hero
          * ================================================================ */}
-        <div className="min-h-screen flex items-center pointer-events-auto" style={{ backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-          <div className="w-full max-w-[1400px] mx-auto px-0 sm:px-4 md:px-20">
-            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] gap-x-8 md:gap-x-16">
-              {/* Empty left column for grid alignment */}
-              <div className="hidden md:block" />
-
+        <div
+          ref={footerRef}
+          className="min-h-screen flex items-center pointer-events-auto"
+          style={{
+            backgroundColor: 'var(--bg)',
+            transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)',
+            filter: `blur(${footerBlur}px)`,
+            opacity: footerOpacity,
+            transform: `translateY(${footerY}px)`,
+            willChange: 'filter, opacity, transform'
+          }}>
+          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20">
+            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
               {/* Footer content - right column */}
-              <div className="space-y-5">
+              <div
+                className="space-y-5 md:col-start-2"
+                style={{
+                  maskImage: `linear-gradient(to bottom,
+                    black 0%,
+                    black ${footerRevealProgress * 100}%,
+                    rgba(0,0,0,0.7) ${footerRevealProgress * 100 + 15}%,
+                    rgba(0,0,0,0.4) 100%
+                  )`,
+                  WebkitMaskImage: `linear-gradient(to bottom,
+                    black 0%,
+                    black ${footerRevealProgress * 100}%,
+                    rgba(0,0,0,0.7) ${footerRevealProgress * 100 + 15}%,
+                    rgba(0,0,0,0.4) 100%
+                  )`
+                }}
+              >
                 {/* SECTION 1: About (Bio) */}
                 <div className="space-y-1">
                   {/* Static header - no interactivity */}
@@ -241,10 +296,8 @@ export default function Page() {
                   <p className="type-body">
                     {FOOTER_CONFIG.bio.paragraphs.map((paragraph, index) => (
                       <React.Fragment key={index}>
-                        {index > 0 && <><br className="hidden md:block"/></>}
-                        <span
-                          className={`${index === 0 ? '' : 'block mt-3 md:mt-0 md:inline'} ${paragraph.isSecondary ? 'opacity-80' : ''}`}
-                        >
+                        {index > 0 && <br />}
+                        <span className={paragraph.isSecondary ? 'opacity-80' : ''}>
                           {paragraph.text}
                         </span>
                       </React.Fragment>
@@ -263,7 +316,7 @@ export default function Page() {
                     {FOOTER_CONFIG.location.info.futureMove}
                     <br/>
                     <span className="opacity-80">
-                      {FOOTER_CONFIG.location.info.origin} <br className="hidden md:block"/>
+                      {FOOTER_CONFIG.location.info.origin} <br />
                       Based in {FOOTER_CONFIG.location.info.currentBases.map((base, index) => (
                         <React.Fragment key={index}>
                           {index > 0 && ' '}
