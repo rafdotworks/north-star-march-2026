@@ -152,7 +152,7 @@ export default function Page() {
   const footerY = footerScrollProgress * -24  // Subtle upward drift (vs hero's -48px)
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--fg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+    <div className="min-h-screen -mx-[max(16px,calc(env(safe-area-inset-left,0px)+16px))] sm:mx-0" style={{ backgroundColor: 'var(--bg)', color: 'var(--fg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
       {/* ================================================================
        * HERO SECTION - Fixed in background, blurs beautifully on scroll
        * ================================================================ */}
