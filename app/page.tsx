@@ -143,7 +143,7 @@ export default function Page() {
                 <p className="type-body-primary">
                   Hello, I&apos;m <span className="font-[family-name:var(--font-edu-marist)]">Raf</span>.
                   <br/>
-                  I design clarity for the age of AI.
+                  I design products for the age of AI.
                   </p>
 
                 {/* Contact Links */}
