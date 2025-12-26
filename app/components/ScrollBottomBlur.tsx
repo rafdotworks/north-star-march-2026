@@ -118,6 +118,11 @@ export function ScrollBottomBlur() {
     return { opacity, blurAmount, glowOpacity }
   }, [scrollProgress, prefersReducedMotion, isMobile])
 
+  // Don't render on mobile at all
+  if (isMobile) {
+    return null
+  }
+
   // Don't render when effectively invisible
   if (opacity < 0.01) {
     return null
@@ -125,12 +130,9 @@ export function ScrollBottomBlur() {
 
   return (
     <div
-      className="pointer-events-none fixed left-0 right-0 z-[25]"
+      className="pointer-events-none fixed bottom-0 left-0 right-0 z-[25]"
       style={{
-        bottom: `calc(-1 * env(safe-area-inset-bottom, 0px))`,
-        height: isMobile
-          ? `calc(min(65vh, 550px) + env(safe-area-inset-bottom, 0px))`
-          : `calc(min(50vh, 400px) + env(safe-area-inset-bottom, 0px))`,
+        height: "min(50vh, 400px)",
         opacity,
         transition: "opacity 150ms ease-out",
       }}
@@ -139,24 +141,15 @@ export function ScrollBottomBlur() {
       <div
         className="absolute inset-0"
         style={{
-          background: isMobile
-            ? `linear-gradient(to top,
-                var(--bg) 0%,
-                var(--bg) 25%,
-                color-mix(in srgb, var(--bg), transparent 3%) 40%,
-                color-mix(in srgb, var(--bg), transparent 15%) 60%,
-                color-mix(in srgb, var(--bg), transparent 50%) 80%,
-                transparent 100%
-              )`
-            : `linear-gradient(to top,
-                var(--bg) 0%,
-                var(--bg) 15%,
-                color-mix(in srgb, var(--bg), transparent 5%) 30%,
-                color-mix(in srgb, var(--bg), transparent 20%) 50%,
-                color-mix(in srgb, var(--bg), transparent 60%) 70%,
-                color-mix(in srgb, var(--bg), transparent 90%) 85%,
-                transparent 100%
-              )`,
+          background: `linear-gradient(to top,
+            var(--bg) 0%,
+            var(--bg) 15%,
+            color-mix(in srgb, var(--bg), transparent 5%) 30%,
+            color-mix(in srgb, var(--bg), transparent 20%) 50%,
+            color-mix(in srgb, var(--bg), transparent 60%) 70%,
+            color-mix(in srgb, var(--bg), transparent 90%) 85%,
+            transparent 100%
+          )`,
           backdropFilter: `blur(${blurAmount}px) saturate(${SATURATION})`,
           WebkitBackdropFilter: `blur(${blurAmount}px) saturate(${SATURATION})`,
           maskImage: "linear-gradient(to top, black 0%, black 20%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.4) 70%, transparent 100%)",
