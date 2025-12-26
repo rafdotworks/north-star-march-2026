@@ -118,7 +118,7 @@ export const FOOTER_CONFIG: FooterConfig = {
   location: {
     sectionLabel: "Location",
     info: {
-      futureMove: "Moving to London, UK, in Q2 2026.",
+      futureMove: "Relocating to London, UK.",
       origin: "Born on the Amalfi Coast, Italy, in the 90s.",
       currentBases: [
         { city: "Lisbon", isPrevious: true },
@@ -133,7 +133,7 @@ export const FOOTER_CONFIG: FooterConfig = {
     principles: [
       { number: "I", text: "Progress over movement." },
       { number: "II", text: "How you do anything is how you do everything." },
-      { number: "III", text: "Yoga mat, coffee shops and quiet spaces." },
+      { number: "III", text: "Calm joy. Yoga mats. Quiet places." },
     ],
   },
 };

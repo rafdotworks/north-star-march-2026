@@ -123,9 +123,10 @@ export function ScrollBottomBlur() {
 
   return (
     <div
-      className="pointer-events-none fixed bottom-0 left-0 right-0 z-[25]"
+      className="pointer-events-none fixed left-0 right-0 z-[25]"
       style={{
-        height: "min(50vh, 400px)",
+        bottom: `calc(-1 * env(safe-area-inset-bottom, 0px))`,
+        height: `calc(min(50vh, 400px) + env(safe-area-inset-bottom, 0px))`,
         opacity,
         transition: "opacity 150ms ease-out",
       }}
