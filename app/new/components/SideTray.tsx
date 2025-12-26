@@ -1887,7 +1887,7 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                       <p className="text-xs text-muted-foreground transition-colors duration-200">{error}</p>
                       <motion.button
                         onClick={() => articleId && loadArticle(articleId)}
-                        className="mt-4 text-xs text-primary hover:text-foreground transition-colors duration-200 underline"
+                        className="mt-4 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 underline"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
