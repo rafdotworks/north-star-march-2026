@@ -1350,7 +1350,7 @@ export default function WorksPanel({ isOpen, onClose }: WorksPanelProps) {
                                   }
                             }
                           >
-                            Theoriq · Founding Product Designer
+                            Theoriq · Founding Designer, Design Engineer
                           </motion.p>
                         </motion.div>
                         <motion.div

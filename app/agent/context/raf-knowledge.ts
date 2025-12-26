@@ -104,7 +104,7 @@ export const rafKnowledge = {
     theoriq: {
       year: 2024-2025,
       company: "Theoriq",
-      role: "Founding Product Designer - AI and Crypto Agents",
+      role: "Founding Designer, Design Engineer - AI and Crypto Agents",
       location: "Toronto, Canada",
       description: "From a PDF to 140,000 active users in 6 months leading product, brand and marketing",
       highlights: [

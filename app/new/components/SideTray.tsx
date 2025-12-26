@@ -1729,7 +1729,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                           <div className="space-y-1.5">
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2024–2025</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Theoriq · Founding Product Designer</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Theoriq · Founding Designer, Design Engineer</p>
                             </div>
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2023–2024</span>

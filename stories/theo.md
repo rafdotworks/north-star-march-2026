@@ -1,6 +1,6 @@
 ---
 title: Theoriq
-role: Founding Product Designer
+role: Founding Designer, Design Engineer
 company: Theoriq
 year: 2024–2025
 ---
