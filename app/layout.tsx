@@ -25,7 +25,6 @@ import "./globals.css";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
 import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
-import { AtmosphericLayers } from "./components/AtmosphericLayers";
 
 // ============================================================================
 // FONT CONFIGURATION
@@ -166,9 +165,6 @@ export default function RootLayout({
             </filter>
           </defs>
         </svg>
-
-        {/* Atmospheric depth layers (glow + color wash) */}
-        <AtmosphericLayers />
 
         <div className="mobile-gutter">{children}</div>
         <Analytics />

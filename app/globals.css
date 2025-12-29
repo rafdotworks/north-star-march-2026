@@ -115,14 +115,6 @@
     --modal-fg-muted: var(--fg-muted-light);
     --modal-border: var(--border-light);
 
-    /* Atmospheric base values (light) */
-    --vignette-color-light: hsl(var(--neutral-h) 20% 0% / 0.03);
-    --glow-color-light: hsl(var(--neutral-h) 10% 100% / 0.02);
-
-    /* Atmospheric base values (dark) */
-    --vignette-color-dark: hsl(var(--neutral-h) 30% 0% / 0.12);
-    --glow-color-dark: hsl(var(--accent-h) 30% 60% / 0.03);
-
     /* Interpolated colors using color-mix (oklab for perceptual smoothness) */
     --bg: color-mix(in oklab, var(--bg-light), var(--bg-dark) var(--theme-blend));
     --bg-muted: color-mix(in oklab, var(--bg-muted-light), var(--bg-muted-dark) var(--theme-blend));
@@ -203,27 +195,12 @@
     --scrollbar-hover-color: rgba(0, 0, 0, 0.12);
 
     /* ================================================================
-     * ATMOSPHERIC DEPTH & GRAIN EFFECTS
+     * FILM GRAIN EFFECT
      * Interpolated to match theme blend for smooth scroll transitions
      * ================================================================ */
 
     /* Numeric theme blend for calc() (0-1, set by JS) */
     --theme-blend-num: 0;
-
-    /* Vignette (interpolated) */
-    --vignette-color: color-mix(in oklab, var(--vignette-color-light), var(--vignette-color-dark) var(--theme-blend));
-    --vignette-intensity: calc(0.4 + (0.6 - 0.4) * var(--theme-blend-num));
-
-    /* Ambient glow (interpolated color, static position/size) */
-    --glow-color: color-mix(in oklab, var(--glow-color-light), var(--glow-color-dark) var(--theme-blend));
-    --glow-position: 50% 30%;
-    --glow-size: 120% 80%;
-
-    /* Color wash (interpolated opacity) */
-    --wash-hue: var(--neutral-h);
-    --wash-saturation: 8%;
-    --wash-lightness: 50%;
-    --wash-opacity: calc(0.015 + (0.025 - 0.015) * var(--theme-blend-num));
 
     /* Film grain (interpolated) */
     --grain-opacity: calc(0.025 + (0.03 - 0.025) * var(--theme-blend-num));
@@ -362,16 +339,7 @@
   --scrollbar-color: rgba(255, 255, 255, 0.1);
   --scrollbar-hover-color: rgba(255, 255, 255, 0.2);
 
-  /* Atmospheric depth (dark) */
-  --vignette-color: hsl(var(--neutral-h) 30% 0% / 0.12);
-  --vignette-intensity: 0.6;
-  --glow-color: hsl(var(--accent-h) 30% 60% / 0.03);
-  --glow-position: 50% 40%;
-  --glow-size: 100% 60%;
-  --wash-hue: var(--accent-h);
-  --wash-saturation: 15%;
-  --wash-lightness: 20%;
-  --wash-opacity: 0.025;
+  /* Film grain (dark) */
   --grain-opacity: 0.03;
   --grain-blend: overlay;
 }
@@ -445,16 +413,7 @@
   --scrollbar-color: rgba(0, 0, 0, 0.08);
   --scrollbar-hover-color: rgba(0, 0, 0, 0.12);
 
-  /* Atmospheric depth (light) */
-  --vignette-color: hsl(var(--neutral-h) 20% 0% / 0.03);
-  --vignette-intensity: 0.4;
-  --glow-color: hsl(var(--neutral-h) 10% 100% / 0.02);
-  --glow-position: 50% 30%;
-  --glow-size: 120% 80%;
-  --wash-hue: var(--neutral-h);
-  --wash-saturation: 8%;
-  --wash-lightness: 50%;
-  --wash-opacity: 0.015;
+  /* Film grain (light) */
   --grain-opacity: 0.025;
   --grain-blend: multiply;
 }
@@ -497,8 +456,8 @@ body {
 }
 
 /* ============================================================================
- * ATMOSPHERIC OVERLAY LAYERS
- * Subtle grain and vignette effects using pseudo-elements
+ * FILM GRAIN OVERLAY
+ * Subtle texture effect using body::before pseudo-element
  * ============================================================================ */
 
 /* Film grain overlay */
@@ -515,27 +474,9 @@ body::before {
               mix-blend-mode var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
-/* Vignette overlay */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 80% 80% at 50% 50%,
-    transparent 0%,
-    transparent 40%,
-    var(--vignette-color) 100%
-  );
-  opacity: var(--vignette-intensity);
-  /* No transition - responds instantly to JS-controlled --theme-blend */
-}
-
 /* Accessibility: Reduce effects for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  body::before,
-  body::after {
+  body::before {
     display: none;
   }
 }
