@@ -110,10 +110,25 @@ export const WorkCard = memo(function WorkCard({
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   // Memoize description parsing to avoid recalculation on each render
-  const descriptionLines = useMemo(
-    () => description.split('\n').filter(line => line.trim() !== ''),
-    [description]
-  )
+  // Split description into intro (shown above images) and conclusion (shown below images)
+  const descriptionBlocks = useMemo(() => {
+    // Split by double newline to get distinct paragraphs
+    const blocks = description.split('\n\n').filter(block => block.trim() !== '')
+
+    // If only one block, show it all at the top (no split)
+    if (blocks.length <= 1) {
+      return { intro: description, conclusion: null }
+    }
+
+    // Otherwise, last block is conclusion
+    const lastBlock = blocks[blocks.length - 1]
+    const introBlocks = blocks.slice(0, -1)
+
+    return {
+      intro: introBlocks.join('\n\n'),
+      conclusion: lastBlock
+    }
+  }, [description])
 
   // Memoize event handler to prevent new function creation on each render
   const preventDefault = useCallback((e: React.SyntheticEvent) => {
@@ -133,7 +148,7 @@ export const WorkCard = memo(function WorkCard({
 
       {/* Year, role and contract type label - left column (sticky on desktop) */}
       <div
-        className="type-caption text-left md:text-right pt-2 md:pt-8 first:md:pt-0 md:sticky md:top-12 self-baseline"
+        className="type-caption text-left md:text-right pt-2 md:pt-8 first:md:pt-0 md:sticky md:top-12 self-baseline -order-1 md:order-none"
         style={{ zIndex: Z_INDEX_BASE + projectIndex, backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}
       >
         <div>{year}</div>
@@ -141,16 +156,23 @@ export const WorkCard = memo(function WorkCard({
         <div className="mt-0.5">{contractType}</div>
       </div>
 
-      {/* Title + Description - right column (combined to avoid grid row gap) */}
-      <div className="pt-6 md:pt-8 first:pt-0 -order-1 md:order-none self-baseline">
+      {/* Title only - appears first on mobile with -order-2 */}
+      <div className="pt-6 md:pt-8 first:pt-0 -order-2 md:order-none self-baseline">
         <h2 className="type-title">
           {title}
         </h2>
-        <p className="type-body mt-2">
-          {descriptionLines.map((line, index) => (
+      </div>
+
+      {/* Empty left column for desktop grid */}
+      <div className="hidden md:block" />
+
+      {/* Description intro - natural order (0) appears third on mobile */}
+      <div className="pt-2 md:pt-0 self-baseline">
+        <p className="type-body">
+          {descriptionBlocks.intro.split('\n').filter(line => line.trim()).map((line, index, arr) => (
             <React.Fragment key={index}>
               {line}
-              {index < descriptionLines.length - 1 && <br />}
+              {index < arr.length - 1 && <br />}
             </React.Fragment>
           ))}
         </p>
@@ -222,6 +244,24 @@ export const WorkCard = memo(function WorkCard({
           )
         })}
       </div>
+
+      {/* Conclusion text (last paragraph) - shown after images */}
+      {descriptionBlocks.conclusion && (
+        <>
+          {/* Empty left column */}
+          <div className="hidden md:block" />
+
+          {/* Conclusion paragraph - right column */}
+          <p className="type-body -mt-8 md:-mt-6 mb-16 md:mb-10">
+            {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
+              <React.Fragment key={index}>
+                {line}
+                {index < arr.length - 1 && <br />}
+              </React.Fragment>
+            ))}
+          </p>
+        </>
+      )}
     </div>
   )
 })

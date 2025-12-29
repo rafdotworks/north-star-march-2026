@@ -512,17 +512,17 @@ export const PROJECT_DISPLAY_NAMES: Record<string, string> = {
  * ```
  */
 export const PROJECT_CAPTIONS: Record<string, string> = {
-  cb: "Powerful onchain infrastructure existed, but early interactions felt slow, opaque, and costly.\n\nLed the SQL Playground experience and contributed to Embedded Wallets and ETH payment.",
-  vf: "Worked directly with the CEO to improve activation, onboarding, and early growth surfaces for AI agent workflows.",
-  theo: "AI agents already worked, but teams couldn’t trust them with real assets.\n\n I shaped the product design, system, and brand from zero to make agent behavior legible, governable, and shippable.",
+  cb: "Onchain infrastructure was emerging across Coinbase's product suite, but early interactions felt slow and hard to reason about.\nI led the SQL Playground and contributed to Embedded Wallets, extending the same clarity-first approach to Pay with USDC.\n\nThe result was a developer experience that made complex systems feel understandable and usable immediately.",
+  vf: "Voiceflow Enabled Teams to Build AI Agents Faster.\nBy reframing early activation around time-to-first-value and redesigning onboarding, I helped improve new user activation and early success rates, contributing to a more efficient path from signup to working AI agent for a product trusted by ~200k+ users and 4,000+ teams globally.",
+  theo: "AI agents started to emerge, but were not yet governable with real assets.\nI designed Theoriq across product, brand, and go-to-market from zero, defining Infinity Hub as the marketplace for agents and collectives, and Infinity Studio as the environment where those agents could be crafted, inspected, and controlled.\n\nThe outcome was deployable blockchain-based AI systems teams could reason about. 140k active users in six months.",
   atlas:
-    "Led product design for an early NFT marketplace, shaping transaction and analytics patterns new to Web3 products.\n\nDesigned and built for a decentralized finance project, enabling traders to borrow, lend and trade securely.",
+    "Atlas was an early NFT marketplace with few established UX patterns.\nI led product design by shaping transaction and analytics flows that made decentralized trading, borrowing, and lending legible and safe.\n\nThe result was a Web3 experience users could reason about before committing value.",
   curbcut:
-    "Designed calm, legible data tools that made accessibility insights usable for everyone.",
+    "Accessibility data was available, but hard to interpret.\nI designed calm, legible data tools that made accessibility insights understandable and usable for everyone.",
   zalando:
-    "Established Zalando's first unified B2B design system, unifying multiple teams under one shared language.\n\nHelped teams adopt consistent patterns and improved usability for enterprise-scale workflows.",
+    "Zalando's B2B products were scaling, but patterns fragmented across teams.\nI established the company's first unified B2B design system, creating a shared language that improved usability and cross-team alignment at enterprise scale.",
   earlyworks:
-    "A mix of freelance with startups and agencies. Built brands, interfaces and websites. Selected clients: w.ai, Revolut, web3ops, Artscapy, Lyfe, Tela, Ethos, JazzX. Industries: AI, gaming, Web3, B2B, Finance, Saas",
+    "A mix of freelance work with startups and agencies across emerging and fast-moving domains.\nI built brands, interfaces, and websites for early-stage products where clarity mattered more than polish.\n\nSelected clients included Revolut, w.ai, web3ops, Artscapy, Lyfe, Tela, Ethos, and JazzX.\n\nIndustries spanned AI, fintech, Web3, B2B, gaming, and SaaS.",
 };
 
 // ============================================================================
