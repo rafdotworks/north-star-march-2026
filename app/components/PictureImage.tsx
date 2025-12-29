@@ -66,6 +66,13 @@ export const PictureImage: React.FC<PictureImageProps> = ({
   draggable,
   ...restProps
 }) => {
+  // Safety check: Don't try to render external URLs (like Vimeo) as images
+  // These should be handled by their specific embed components
+  if (src.startsWith("http://") || src.startsWith("https://")) {
+    console.warn(`PictureImage received external URL: ${src}. This should be handled by a specific embed component.`);
+    return null;
+  }
+
   // Check if this image needs format fallback
   const fallback = getImageFallback(src);
 

@@ -26,6 +26,12 @@ import { PictureImage } from "../PictureImage";
 import { motion } from "framer-motion";
 import { WorkImageHover } from "./WorkImageHover";
 import { VideoPlayButton } from "./VideoPlayButton";
+import { VimeoInlineEmbed } from "../VimeoInlineEmbed";
+
+/** Helper function to detect if src is a Vimeo URL */
+const isVimeoUrl = (src: string): boolean => {
+  return src.includes("vimeo.com") || src.includes("player.vimeo.com");
+};
 
 /** Props for WorkImageContainer component */
 interface WorkImageContainerProps {
@@ -197,37 +203,46 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
     ? "bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.05)_0%,rgba(0,0,0,0.18)_55%,rgba(0,0,0,0.25)_100%)]"
     : "bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.08)_40%,rgba(255,255,255,0)_80%)]";
 
+  // Check if src is a Vimeo URL for inline embed
+  const isInlineVimeo = isVimeoUrl(src);
+
   return (
     <WorkImageHover
-      hasVideo={hasVideo}
+      hasVideo={hasVideo && !isInlineVimeo} // Don't show play button for inline videos
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={hasVideo ? onVideoClick : undefined}
+      onClick={hasVideo && !isInlineVimeo ? onVideoClick : undefined}
       variant={variant}
       className={className}
     >
-      <PictureImage
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        className={imageClasses}
-        style={imageStyle}
-        onLoad={onLoad}
-        loading={loading}
-        priority={priority}
-        placeholder={placeholder}
-        blurDataURL={blurDataURL}
-        sizes={sizes}
-        quality={quality}
-      />
-      <motion.div
-        className={`pointer-events-none absolute inset-0 ${overlayBackgroundClass}`}
-        variants={overlayVariants}
-        initial="rest"
-        animate={isHovered ? "hover" : "rest"}
-      />
-      {hasVideo && <VideoPlayButton onClick={onVideoClick} />}
+      {isInlineVimeo ? (
+        <VimeoInlineEmbed videoUrl={src} className="w-full h-full" />
+      ) : (
+        <PictureImage
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          className={imageClasses}
+          style={imageStyle}
+          onLoad={onLoad}
+          loading={loading}
+          priority={priority}
+          placeholder={placeholder}
+          blurDataURL={blurDataURL}
+          sizes={sizes}
+          quality={quality}
+        />
+      )}
+      {!isInlineVimeo && (
+        <motion.div
+          className={`pointer-events-none absolute inset-0 ${overlayBackgroundClass}`}
+          variants={overlayVariants}
+          initial="rest"
+          animate={isHovered ? "hover" : "rest"}
+        />
+      )}
+      {hasVideo && !isInlineVimeo && <VideoPlayButton onClick={onVideoClick} />}
     </WorkImageHover>
   );
 };

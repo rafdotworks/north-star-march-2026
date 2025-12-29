@@ -272,7 +272,7 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
     images: ["/work/defituna-1.png", "/work/videos/defi-tuna.mov"], // DeFi project (fixed: removed duplicate)
   },
   theo: {
-    images: ["/work/theo.webp", "/work/theo-1.png", "/work/theo-sb.webp", "/work/theo-web.png"], // Theoriq - AI platform, founding designer
+    images: ["/work/theo.webp", "/work/theo-1.png", "/work/videos/theoriq-demo.mov", "/work/theo-web.png"], // Theoriq - AI platform, founding designer, 3rd item is video, "/work/theo-sb.webp" removed
   },
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools (fixed: removed duplicate)

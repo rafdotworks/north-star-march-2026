@@ -65,7 +65,7 @@ function LazyVideo({ src }: { src: string }) {
       loop
       playsInline
       preload="none"
-      className="w-full h-auto object-contain"
+      className="w-full h-auto object-contain rounded-sm"
     />
   )
 }
