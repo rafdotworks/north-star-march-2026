@@ -1824,7 +1824,7 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                         <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
                         <FooterLink href="mailto:raf@raf.works" label="Email" />
                         <FooterLink href="/cv" label="CV" />
-                        <FooterLink href="https://x.com/lfgraf" label="X" external />
+                        <FooterLink href="https://x.com/rafdotworks" label="X" external />
                       </nav>
 
                     </motion.div>

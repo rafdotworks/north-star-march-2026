@@ -177,7 +177,7 @@ export default function Dec2025Page() {
           <nav className="flex flex-row gap-5 group/nav pt-3">
             <FooterLink href="https://www.linkedin.com/in/raffaelevitaledesign/" label="LinkedIn" external />
             <FooterLink href="mailto:raf@raf.works" label="Email" />
-            <FooterLink href="https://x.com/lfgraf" label="X" external />
+            <FooterLink href="https://x.com/rafdotworks" label="X" external />
           </nav>
         </div>
       </div>

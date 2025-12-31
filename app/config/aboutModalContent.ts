@@ -113,7 +113,7 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
     },
     x: {
       label: "X",
-      href: "https://x.com/lfgraf",
+      href: "https://x.com/rafdotworks",
       ariaLabel: "Raf on X",
     },
     email: {

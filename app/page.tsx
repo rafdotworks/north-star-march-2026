@@ -181,7 +181,7 @@ export default function Page() {
                   <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
                   <FooterLink href="mailto:raf@raf.works" label="Email" />
                   {/* <FooterLink href="/cv" label="CV" /> */}
-                  <FooterLink href="https://x.com/lfgraf" label="X" external />
+                  <FooterLink href="https://x.com/rafdotworks" label="X" external />
                 </nav>
               </div>
             </div>

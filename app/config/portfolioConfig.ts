@@ -175,7 +175,7 @@ export const MOBILE_CONTACT_LINKS = [
     openInNewTab: true,
   },
   {
-    href: "https://x.com/lfgraf",
+    href: "https://x.com/rafdotworks",
     label: "X",
     ariaLabel: "Raf on X",
     openInNewTab: true,

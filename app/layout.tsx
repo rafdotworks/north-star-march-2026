@@ -112,7 +112,7 @@ export const metadata: Metadata = {
     title: "Raf V. - AI Senior Product Designer",
     description:
       "Blending design, code, and systems thinking to craft interfaces where people and intelligent agents collaborate  with clarity, taste, and intent.",
-    creator: "@lfgraf",
+    creator: "@rafdotworks",
     images: ["/og-image.png"],
   },
 };
