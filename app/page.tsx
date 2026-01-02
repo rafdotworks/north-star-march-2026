@@ -53,8 +53,8 @@ export default function Page() {
   const footerRef = useRef<HTMLDivElement>(null)
   const prefersReduced = useReducedMotion()
 
-  // Metadata opacity for project cards
-  const [metadataOpacityValues, setMetadataOpacityValues] = useState<number[]>([])
+  // Metadata blur + opacity for project cards
+  const [metadataOpacityValues, setMetadataOpacityValues] = useState<Array<{ blur: number; opacity: number }>>([])
   const metadataRefs = useRef<(HTMLDivElement | null)[]>([])
 
   // Keep refs in sync with state for scroll handler
@@ -153,13 +153,13 @@ export default function Page() {
           setFooterRevealProgress(1 - footerEffectProgress)  // Inverted for reveal mask
 
           // ========================================================================
-          // METADATA OPACITY FADE EFFECT - Subtle fade as next project metadata approaches
+          // METADATA BLUR + OPACITY EFFECT - Blur + fade as next project metadata approaches
           // ========================================================================
-          // Calculate opacity for each project's metadata based on proximity to next
-          const opacityValues = metadataRefs.current.map((metadataEl, index) => {
+          // Calculate blur + opacity for each project's metadata based on proximity to next
+          const effectValues = metadataRefs.current.map((metadataEl, index) => {
             // Skip if mobile, reduced motion, or no element
             if (!metadataEl || isMobileRef.current || prefersReducedRef.current) {
-              return 1  // Fully visible
+              return { blur: 0, opacity: 1 }  // Fully visible, no blur
             }
 
             const rect = metadataEl.getBoundingClientRect()
@@ -167,28 +167,31 @@ export default function Page() {
 
             // Get next metadata element
             const nextMetadataEl = metadataRefs.current[index + 1]
-            if (!nextMetadataEl) return 1  // Last item, stay fully visible
+            if (!nextMetadataEl) return { blur: 0, opacity: 1 }  // Last item, no effects
 
             const nextRect = nextMetadataEl.getBoundingClientRect()
             const nextMetadataTop = nextRect.top
 
             // Calculate distance from next metadata to overlap point
-            const triggerDistance = 50  // Start fade at 50px away
+            const triggerDistance = 50  // Start effects at 50px away
             const overlapPoint = stickyPosition + rect.height
             const distanceToOverlap = nextMetadataTop - overlapPoint
 
             if (distanceToOverlap > triggerDistance) {
-              return 1  // Too far, fully visible
+              return { blur: 0, opacity: 1 }  // Too far, no effects
             } else if (distanceToOverlap <= 0) {
-              return 0  // Fully overlapped, transparent
+              return { blur: 4, opacity: 0 }  // Fully overlapped, max blur + transparent
             } else {
-              // Progressive fade: 1 (visible) → 0 (transparent) as distance closes
-              const progress = distanceToOverlap / triggerDistance
-              return progress  // 1 when far, 0 when close
+              // Progressive effects: both increase as distance closes
+              const progress = 1 - (distanceToOverlap / triggerDistance)
+              return {
+                blur: progress * 4,      // 0px → 4px blur
+                opacity: 1 - progress    // 1 → 0 opacity (fade to dark)
+              }
             }
           })
 
-          setMetadataOpacityValues(opacityValues)
+          setMetadataOpacityValues(effectValues)
 
           ticking.current = false
         })
@@ -298,6 +301,9 @@ export default function Page() {
                 const title = PROJECT_DISPLAY_NAMES[projectKey] || projectKey
                 const altText = IMAGE_ALT_TEXT[images[0]] || `${title} project showcase`
 
+                // Get blur + opacity effects for this project
+                const effects = metadataOpacityValues[index] || { blur: 0, opacity: 1 }
+
                 return (
                   <WorkCard
                     key={projectKey}
@@ -312,7 +318,8 @@ export default function Page() {
                     projectIndex={index}
                     hasStory={PROJECT_HAS_STORY[projectKey] || false}
                     onReadStory={() => setSelectedStory(projectKey)}
-                    metadataOpacity={metadataOpacityValues[index] !== undefined ? metadataOpacityValues[index] : 1}
+                    metadataBlur={effects.blur}
+                    metadataOpacity={effects.opacity}
                     metadataRef={(el) => { metadataRefs.current[index] = el }}
                   />
                 )

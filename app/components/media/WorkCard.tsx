@@ -82,6 +82,7 @@ interface WorkCardProps {
   projectIndex?: number
   hasStory?: boolean
   onReadStory?: () => void
+  metadataBlur?: number  // Blur intensity for metadata (0-4px)
   metadataOpacity?: number  // Opacity value for metadata (0-1, where 1 = visible, 0 = transparent)
   metadataRef?: (el: HTMLDivElement | null) => void  // Ref callback for scroll calculation
 }
@@ -107,6 +108,7 @@ export const WorkCard = memo(function WorkCard({
   projectIndex = 0,
   hasStory = false,
   onReadStory,
+  metadataBlur,
   metadataOpacity,
   metadataRef
 }: WorkCardProps) {
@@ -157,7 +159,8 @@ export const WorkCard = memo(function WorkCard({
         style={{
           zIndex: Z_INDEX_BASE + projectIndex,
           backgroundColor: 'var(--bg)',
-          transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), filter 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s cubic-bezier(0.4, 0, 0.2, 1)',
+          filter: metadataBlur ? `blur(${metadataBlur}px)` : undefined,
           opacity: metadataOpacity !== undefined ? metadataOpacity : 1
         }}
       >
