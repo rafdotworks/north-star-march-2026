@@ -100,16 +100,17 @@ export const FOOTER_CONFIG: FooterConfig = {
   bio: {
     sectionLabel: "About",
     paragraphs: [
+    
       {
-        text: "9+ years designing and building products across startups and large organizations.",
+        text: "Strongest where ambiguity is high and quality matters.",
         isSecondary: false,
       },
       {
-        text: "I’ve led 0 → 1 and scale work on complex, high-leverage systems across early-stage and post-IPO teams.",
+        text: "9+ years designing high-leverage systems across startups and public companies.",
         isSecondary: true,
       },
       {
-        text: "I partner best with founders and leaders who think long-term, move decisively, and care deeply about people and quality.",
+        text: "I work best with founders and leaders who think long-term, move with intent, and care about people as much as outcomes.",
         isSecondary: true,
       },
     ],
