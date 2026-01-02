@@ -20,7 +20,7 @@ import {
   PROJECT_HAS_STORY
 } from "@/app/config/portfolioConfig"
 import { FOOTER_CONFIG } from "@/app/config/footerConfig"
-import SideTray from "@/app/new/components/SideTray"
+import SideTray from "@/app/components/SideTray"
 
 import { useSystemTheme } from "@/hooks/use-system-theme"
 
