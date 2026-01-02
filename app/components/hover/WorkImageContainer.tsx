@@ -22,11 +22,11 @@
  */
 
 import React, { useState } from "react";
-import { PictureImage } from "../PictureImage";
+import { PictureImage } from "../media/PictureImage";
 import { motion } from "framer-motion";
 import { WorkImageHover } from "./WorkImageHover";
 import { VideoPlayButton } from "./VideoPlayButton";
-import { VimeoInlineEmbed } from "../VimeoInlineEmbed";
+import { VimeoInlineEmbed } from "../media/VimeoInlineEmbed";
 
 /** Helper function to detect if src is a Vimeo URL */
 const isVimeoUrl = (src: string): boolean => {

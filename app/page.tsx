@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState, useRef } from "react"
 import { useReducedMotion } from "framer-motion"
-import FooterLink from "@/app/components/FooterLink"
-import { WorkCard } from "@/app/components/WorkCard"
-import { ScrollBottomBlur } from "@/app/components/ScrollBottomBlur"
-import { ScrollTopBlur } from "@/app/components/ScrollTopBlur"
-import { SectionDivider } from "@/app/components/SectionDivider"
+import FooterLink from "@/app/components/layout/FooterLink"
+import { WorkCard } from "@/app/components/media/WorkCard"
+import { ScrollBottomBlur } from "@/app/components/layout/ScrollBottomBlur"
+import { ScrollTopBlur } from "@/app/components/layout/ScrollTopBlur"
+import { SectionDivider } from "@/app/components/layout/SectionDivider"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 import {
   PROJECT_ORDER,
@@ -20,7 +20,7 @@ import {
   PROJECT_HAS_STORY
 } from "@/app/config/portfolioConfig"
 import { FOOTER_CONFIG } from "@/app/config/footerConfig"
-import SideTray from "@/app/components/SideTray"
+import SideTray from "@/app/components/page-specific/SideTray"
 
 import { useSystemTheme } from "@/hooks/use-system-theme"
 
@@ -286,8 +286,14 @@ export default function Page() {
               >
                 {/* SECTION 1: About (Bio) */}
                 <div className="space-y-1">
-                  {/* Static header - no interactivity */}
-                  <span className="type-caption opacity-50 dark:opacity-70 block">
+                  {/* Clickable header - opens personal blueprint in writing tray */}
+                  <span
+                    onClick={() => {
+                      setIsWritingOpen(true)
+                      setSelectedWritingArticle("personal-blueprint")
+                    }}
+                    className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
+                  >
                     {FOOTER_CONFIG.bio.sectionLabel}
                   </span>
                   {/* Bio content */}

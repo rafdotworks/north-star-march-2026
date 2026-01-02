@@ -24,7 +24,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
-import { ConsoleEasterEgg } from "./components/ConsoleEasterEgg";
+import { ConsoleEasterEgg } from "./components/effects/ConsoleEasterEgg";
 
 // ============================================================================
 // FONT CONFIGURATION

@@ -62,8 +62,8 @@ import {
 import { WorkImageContainer } from "@/app/components/hover"; // Work image with hover effects
 import useAnimationLevel from "@/hooks/useAnimationLevel"; // Animation preference detection
 import { pageTurnVariants } from "@/components/animations/imageTransitions"; // Blur-to-focus animation variants
-import { AboutModalContent } from "@/app/components/AboutModalContent"; // Localized About modal content
-import { BlueprintContent } from "@/app/components/BlueprintContent"; // Blueprint content for modal
+import { AboutModalContent } from "@/app/components/modal/AboutModalContent"; // Localized About modal content
+import { BlueprintContent } from "@/app/components/modal/BlueprintContent"; // Blueprint content for modal
 
 // Import portfolio configuration and utilities
 import {

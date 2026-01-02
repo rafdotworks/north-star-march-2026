@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { initConsoleEasterEgg } from "../utils/consoleEasterEgg";
+import { initConsoleEasterEgg } from "../../utils/consoleEasterEgg";
 
 export const ConsoleEasterEgg = () => {
   useEffect(() => {

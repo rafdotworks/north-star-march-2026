@@ -59,9 +59,9 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from "react"
-import SideTray from "@/app/components/SideTray"
+import SideTray from "@/app/components/page-specific/SideTray"
 import WorksPanel from "./components/WorksPanel"
-import NavigationItem from "@/app/components/NavigationItem"
+import NavigationItem from "@/app/components/layout/NavigationItem"
 import TimezoneMessage from "./components/TimezoneMessage"
 import { useSystemTheme } from "@/hooks/use-system-theme"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
