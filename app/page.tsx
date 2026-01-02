@@ -8,6 +8,7 @@ import { ScrollBottomBlur } from "@/app/components/layout/ScrollBottomBlur"
 import { ScrollTopBlur } from "@/app/components/layout/ScrollTopBlur"
 import { SectionDivider } from "@/app/components/layout/SectionDivider"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   PROJECT_ORDER,
   PROJECTS,
@@ -32,6 +33,7 @@ const PRIORITY_IMAGE_COUNT = 3
 export default function Page() {
   const timezoneMessage = useTimezoneMessage()
   const { prefersDark, isReady } = useSystemTheme()
+  const isMobile = useIsMobile()
 
   // Story tray state
   const [selectedStory, setSelectedStory] = useState<string | null>(null)
@@ -51,10 +53,25 @@ export default function Page() {
   const footerRef = useRef<HTMLDivElement>(null)
   const prefersReduced = useReducedMotion()
 
-  // Keep ref in sync with state
+  // Metadata opacity for project cards
+  const [metadataOpacityValues, setMetadataOpacityValues] = useState<number[]>([])
+  const metadataRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  // Keep refs in sync with state for scroll handler
+  const isMobileRef = useRef(isMobile)
+  const prefersReducedRef = useRef(prefersReduced)
+
   useEffect(() => {
     prefersDarkRef.current = prefersDark
   }, [prefersDark])
+
+  useEffect(() => {
+    isMobileRef.current = isMobile
+  }, [isMobile])
+
+  useEffect(() => {
+    prefersReducedRef.current = prefersReduced
+  }, [prefersReduced])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -134,6 +151,44 @@ export default function Page() {
           // Use SAME progress for both effects
           setFooterScrollProgress(footerEffectProgress)
           setFooterRevealProgress(1 - footerEffectProgress)  // Inverted for reveal mask
+
+          // ========================================================================
+          // METADATA OPACITY FADE EFFECT - Subtle fade as next project metadata approaches
+          // ========================================================================
+          // Calculate opacity for each project's metadata based on proximity to next
+          const opacityValues = metadataRefs.current.map((metadataEl, index) => {
+            // Skip if mobile, reduced motion, or no element
+            if (!metadataEl || isMobileRef.current || prefersReducedRef.current) {
+              return 1  // Fully visible
+            }
+
+            const rect = metadataEl.getBoundingClientRect()
+            const stickyPosition = 48 // md:top-12 = 48px
+
+            // Get next metadata element
+            const nextMetadataEl = metadataRefs.current[index + 1]
+            if (!nextMetadataEl) return 1  // Last item, stay fully visible
+
+            const nextRect = nextMetadataEl.getBoundingClientRect()
+            const nextMetadataTop = nextRect.top
+
+            // Calculate distance from next metadata to overlap point
+            const triggerDistance = 50  // Start fade at 50px away
+            const overlapPoint = stickyPosition + rect.height
+            const distanceToOverlap = nextMetadataTop - overlapPoint
+
+            if (distanceToOverlap > triggerDistance) {
+              return 1  // Too far, fully visible
+            } else if (distanceToOverlap <= 0) {
+              return 0  // Fully overlapped, transparent
+            } else {
+              // Progressive fade: 1 (visible) → 0 (transparent) as distance closes
+              const progress = distanceToOverlap / triggerDistance
+              return progress  // 1 when far, 0 when close
+            }
+          })
+
+          setMetadataOpacityValues(opacityValues)
 
           ticking.current = false
         })
@@ -257,6 +312,8 @@ export default function Page() {
                     projectIndex={index}
                     hasStory={PROJECT_HAS_STORY[projectKey] || false}
                     onReadStory={() => setSelectedStory(projectKey)}
+                    metadataOpacity={metadataOpacityValues[index] !== undefined ? metadataOpacityValues[index] : 1}
+                    metadataRef={(el) => { metadataRefs.current[index] = el }}
                   />
                 )
               })}

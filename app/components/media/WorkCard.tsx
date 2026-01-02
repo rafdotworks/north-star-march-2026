@@ -82,6 +82,8 @@ interface WorkCardProps {
   projectIndex?: number
   hasStory?: boolean
   onReadStory?: () => void
+  metadataOpacity?: number  // Opacity value for metadata (0-1, where 1 = visible, 0 = transparent)
+  metadataRef?: (el: HTMLDivElement | null) => void  // Ref callback for scroll calculation
 }
 
 /**
@@ -104,7 +106,9 @@ export const WorkCard = memo(function WorkCard({
   priority = false,
   projectIndex = 0,
   hasStory = false,
-  onReadStory
+  onReadStory,
+  metadataOpacity,
+  metadataRef
 }: WorkCardProps) {
   // Track failed images to show fallback
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
@@ -148,8 +152,14 @@ export const WorkCard = memo(function WorkCard({
 
       {/* Year, role and contract type label - left column (sticky on desktop) */}
       <div
+        ref={metadataRef}
         className="type-caption text-left md:text-right pt-2 md:pt-8 first:md:pt-0 md:sticky md:top-12 self-baseline -order-1 md:order-none"
-        style={{ zIndex: Z_INDEX_BASE + projectIndex, backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}
+        style={{
+          zIndex: Z_INDEX_BASE + projectIndex,
+          backgroundColor: 'var(--bg)',
+          transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s cubic-bezier(0.4, 0, 0.2, 1)',
+          opacity: metadataOpacity !== undefined ? metadataOpacity : 1
+        }}
       >
         <div>{year}</div>
         <div className="mt-0.5">{role}</div>
