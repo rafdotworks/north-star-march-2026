@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {},
+  // images: {} - Using Next.js default image handling
   async redirects() {
     return [
       {

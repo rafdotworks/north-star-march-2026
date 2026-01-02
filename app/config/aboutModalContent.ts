@@ -52,11 +52,6 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
         {
           text: "I care about clarity, systems, and the stories products tell.",
         },
-       
-        // {
-        //   text: "What makes things feel right?",
-        //   isEmphasized: true,
-        // },
         {
           text: "You can find me on {linkedin}, on {x}, and always via email at {email}.",
 
