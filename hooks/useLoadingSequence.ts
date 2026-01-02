@@ -76,6 +76,10 @@ export function useLoadingSequence() {
   // Detect connection quality
   const detectConnectionQuality = useCallback(() => {
     if (typeof window !== "undefined" && "connection" in navigator) {
+      // Network Information API is non-standard (Chrome/Edge only) and not in TypeScript types
+      // Using 'as any' because proper TypeScript interface isn't available in lib.dom.d.ts
+      // Falls back gracefully when API isn't supported
+      // Reference: https://developer.mozilla.org/en-US/docs/Web/API/Network_Information_API
       const connection = (navigator as any).connection;
       const effectiveType = connection.effectiveType || "unknown";
       const downlink = connection.downlink || 0;

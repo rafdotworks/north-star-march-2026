@@ -10,7 +10,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { modalTextStagger } from "@/components/animations/LoadingAnimations";
-import { ABOUT_MODAL_CONTENT } from "@/app/config/aboutModalContent";
+import { ABOUT_MODAL_CONTENT } from "@/app/config/aboutModalConfig";
 
 interface AboutModalContentProps {
   shouldReduceMotion?: boolean;

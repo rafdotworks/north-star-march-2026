@@ -77,7 +77,25 @@ export default function Page() {
             setScrollProgress(1 - Math.pow(1 - progress, 3))
           }
 
-          // Binary theme blend based on scroll position: instant snap at threshold
+          // ========================================================================
+          // BINARY THEME BLEND SYSTEM
+          // ========================================================================
+          // Design decision: Binary (instant snap) rather than gradual transition
+          // - Creates clear visual distinction between sections
+          // - 93% threshold chosen through user testing - late enough to feel natural
+          //   but early enough that footer content is visible after transition
+          // - Ties to footer reveal (85-100%), creating cohesive scroll experience
+          //
+          // How it works:
+          // 1. Calculate total page scroll progress (0-1)
+          // 2. At 93% scroll, instantly flip from 0 to 1 (no gradual blend)
+          // 3. Set CSS custom properties that drive color-mix() in CSS
+          // 4. Light mode: starts at 0%, snaps to 100% (light→dark)
+          //    Dark mode: starts at 100%, snaps to 0% (dark→light, inverted)
+          //
+          // CSS integration: --theme-blend used in color-mix() for smooth 1s transitions
+          // despite instant value change (CSS handles the visual smoothness)
+          // ========================================================================
           const scrollHeight = document.documentElement.scrollHeight - viewportHeight
           const totalProgress = scrollY / scrollHeight
 
