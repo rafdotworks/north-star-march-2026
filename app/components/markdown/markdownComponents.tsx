@@ -45,16 +45,16 @@ import { ExternalLinkIcon } from "@/app/components/icons/ExternalLinkIcon"
  */
 export const markdownComponents: Components = {
   h1: ({ children }) => (
-    <h1 className="text-base font-light text-foreground tracking-wider mb-6 mt-8 transition-colors duration-200">{children}</h1>
+    <h1 className="font-edu-marist text-base font-light text-foreground tracking-wider mb-6 mt-8 transition-colors duration-200">{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-sm font-normal text-foreground/80 mb-4 mt-7 transition-colors duration-200">{children}</h2>
+    <h2 className="font-edu-marist text-sm font-normal text-foreground/80 mb-4 mt-7 transition-colors duration-200">{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-xs font-medium text-foreground/80 mb-3 mt-5 transition-colors duration-200">{children}</h3>
+    <h3 className="font-edu-marist text-xs font-medium text-foreground/80 mb-3 mt-5 transition-colors duration-200">{children}</h3>
   ),
   p: ({ children }) => (
-    <p className="text-xs text-muted-foreground mb-4 leading-[1.5] transition-colors duration-200">{children}</p>
+    <p className="text-xs text-muted-foreground mb-4 leading-[1.9] transition-colors duration-200">{children}</p>
   ),
   ul: ({ children }) => (
     <ul className="text-xs text-muted-foreground mb-4 ml-4 space-y-2 list-disc list-inside transition-colors duration-200">{children}</ul>
@@ -63,7 +63,7 @@ export const markdownComponents: Components = {
     <ol className="text-xs text-muted-foreground mb-4 ml-4 space-y-2 list-decimal list-inside transition-colors duration-200">{children}</ol>
   ),
   li: ({ children }) => (
-    <li className="text-xs text-muted-foreground leading-[1.5] transition-colors duration-200">{children}</li>
+    <li className="text-xs text-muted-foreground leading-[1.9] transition-colors duration-200">{children}</li>
   ),
   a: ({ href, children }) => {
     const isExternal = href?.startsWith('http://') || href?.startsWith('https://')

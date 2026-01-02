@@ -101,15 +101,15 @@ export const FOOTER_CONFIG: FooterConfig = {
     sectionLabel: "About",
     paragraphs: [
       {
-        text: "9+ years of experience across startups and large organizations.",
+        text: "9+ years designing and building products across startups and large organizations.",
         isSecondary: false,
       },
       {
-        text: "Accountable from ambiguity to outcomes.",
+        text: "I’ve led 0 → 1 and scale work on complex, high-leverage systems across early-stage and post-IPO teams.",
         isSecondary: true,
       },
       {
-        text: "Opinionated work, shaped with people who care.",
+        text: "I partner best with founders and leaders who think long-term, move decisively, and care deeply about people and quality.",
         isSecondary: true,
       },
     ],

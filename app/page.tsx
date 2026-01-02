@@ -173,7 +173,7 @@ export default function Page() {
               <div className="space-y-5 md:col-start-2">
                 {/* Greeting & Role */}
                 <p className="type-body-primary">
- <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs products for the age of AI.
+ <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs products for the age of A.I.
                   </p>
 
                 {/* Contact Links */}

@@ -24,17 +24,17 @@ function isVimeoUrl(url: string): boolean {
 export const storyMarkdownComponents: Components = {
   // Headings - section titles for story
   h1: ({ children }) => (
-    <h1 className="text-sm font-normal text-foreground tracking-wide mb-4 mt-10 first:mt-0 transition-colors duration-200">
+    <h1 className="font-edu-marist text-sm font-normal text-foreground tracking-wide mb-4 mt-10 first:mt-0 transition-colors duration-200">
       {children}
     </h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-xs font-normal text-foreground/90 mb-3 mt-8 transition-colors duration-200">
+    <h2 className="font-edu-marist text-xs font-normal text-foreground/90 mb-3 mt-8 transition-colors duration-200">
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-xs font-medium text-foreground/80 mb-2 mt-6 transition-colors duration-200">
+    <h3 className="font-edu-marist text-xs font-medium text-foreground/80 mb-2 mt-6 transition-colors duration-200">
       {children}
     </h3>
   ),
@@ -52,7 +52,7 @@ export const storyMarkdownComponents: Components = {
     }
 
     return (
-      <p className="text-xs text-muted-foreground mb-4 leading-[1.6] transition-colors duration-200">
+      <p className="text-xs text-muted-foreground mb-4 leading-[1.9] transition-colors duration-200">
         {children}
       </p>
     )
@@ -70,7 +70,7 @@ export const storyMarkdownComponents: Components = {
     </ol>
   ),
   li: ({ children }) => (
-    <li className="text-xs text-muted-foreground leading-[1.6] transition-colors duration-200 pl-1">
+    <li className="text-xs text-muted-foreground leading-[1.9] transition-colors duration-200 pl-1">
       {children}
     </li>
   ),
