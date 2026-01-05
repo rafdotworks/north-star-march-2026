@@ -393,8 +393,14 @@ export default function Page() {
 
                 {/* SECTION 2: Location */}
                 <div className="space-y-1">
-                  {/* Static header - no interactivity */}
-                  <span className="type-caption opacity-50 dark:opacity-70 block">
+                  {/* Clickable header - opens "moving-to-europe" article */}
+                  <span
+                    onClick={() => {
+                      setIsWritingOpen(true)
+                      setSelectedWritingArticle("moving-to-europe")
+                    }}
+                    className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
+                  >
                     {FOOTER_CONFIG.location.sectionLabel}
                   </span>
                   {/* Location content */}

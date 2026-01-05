@@ -215,7 +215,7 @@ export const WorkCard = memo(function WorkCard({
       <div className="hidden md:block" />
 
       {/* Full-width vertical media stack - right column */}
-      <div className="mt-5 md:mt-4 mb-16 md:mb-10 flex flex-col gap-3 md:gap-4">
+      <div className="mt-5 md:mt-1 mb-16 md:mb-10 flex flex-col gap-3 md:gap-4">
         {images.map((src, idx) => {
           const isVideo = /\.(mov|mp4|webm)$/i.test(src)
           const hasFailed = failedImages.has(src)

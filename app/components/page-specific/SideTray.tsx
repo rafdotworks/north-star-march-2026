@@ -65,7 +65,11 @@ import { EASING } from "@/components/animations/constants"
 import { markdownComponents } from "@/app/components/markdown/markdownComponents"
 import { storyMarkdownComponents } from "@/app/components/markdown/storyMarkdownComponents"
 import { StoryHeader } from "@/app/components/story"
-import { allWritings } from "@/app/config/writingsConfig"
+import {
+  allWritings,
+  writings,
+  personalNotes
+} from "@/app/config/writingsConfig"
 import type { StoryFrontmatter } from "@/app/types/story"
 
 /**
@@ -211,15 +215,13 @@ const trayVariants = {
     }
   },
   exit: {
-    x: 0,
-    scale: 1,
-    rotateY: 0,
+    x: "100%",
+    scale: 0.98,
+    rotateY: -5,
     opacity: 0,
     transition: {
-      opacity: {
-        duration: 0.35,
-        ease: EASING.smooth
-      }
+      duration: 0.5,
+      ease: EASING.gentle
     }
   }
 } as const
@@ -632,6 +634,12 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
       border: 'var(--border-color)',
     }
   }, [useOppositeTheme, prefersDark])
+
+  /**
+   * Personal Notes section expanded/collapsed state.
+   * Default: collapsed (false) to give immediate focus to Writings section.
+   */
+  const [personalNotesExpanded, setPersonalNotesExpanded] = useState(false)
 
   /**
    * Refs for backdrop elements to disable pointer events during exit animation.
@@ -1466,6 +1474,8 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               {/* Back button for article view - only in writing mode */}
               {viewMode === 'article' && articleId !== "all" && isWritingMode && (
                 <motion.button
+                  initial={{ opacity: 0, x: -10, filter: 'blur(4px)' }}
+                  animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                   onClick={() => {
                     if (isWritingMode && onArticleSelect) {
                       // For writing mode, go back to list
@@ -1478,7 +1488,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                   className={`absolute ${isMobile ? 'top-4 left-4' : 'top-6 left-6'} z-10 p-2 group`}
                   whileHover={{ scale: 1.02, x: -1 }}
                   whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.3, ease: EASING.gentle }}
+                  transition={{ duration: 0.4, ease: EASING.gentle }}
                   aria-label="Back to list"
                   style={{
                     background: 'transparent',
@@ -1532,18 +1542,28 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               >
                 <AnimatePresence mode="wait">
                   {viewMode === 'writing-list' ? (
-                    // Writing list view
+                    // Writing list view with both sections
                     <motion.div
                       key="writing-list"
                       variants={activeViewTransitionVariants}
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="space-y-4 group/writings"
                     >
-                      {allWritings.map((article, i) => (
-                        <React.Fragment key={article.id}>
+                      {/* WRITINGS SECTION */}
+                      <motion.span
+                        initial={{ opacity: 0, filter: 'blur(4px)' }}
+                        animate={{ opacity: 0.5, filter: 'blur(0px)' }}
+                        transition={{ duration: 0.4 }}
+                        className="type-caption opacity-50 dark:opacity-70 block mb-2"
+                      >
+                        Writings
+                      </motion.span>
+
+                      <div className="space-y-4">
+                        {writings.map((article, i) => (
                           <motion.div
+                            key={article.id}
                             custom={i}
                             variants={activeListItemVariants}
                             initial="hidden"
@@ -1553,7 +1573,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                                 onArticleSelect(article.id)
                               }
                             }}
-                            className="cursor-pointer space-y-1 transition-opacity duration-200"
+                            className="cursor-pointer space-y-1"
                             whileHover={{ x: 4, opacity: 1 }}
                             transition={{ duration: 0.2, ease: EASING.smooth }}
                           >
@@ -1570,13 +1590,90 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                               {article.date}
                             </p>
                           </motion.div>
-                          {i === 1 && (
-                            <div className="pt-1 pb-1">
-                              <hr style={{ borderColor: trayColors.border, opacity: 0.3 }} className="transition-colors duration-200" />
-                            </div>
+                        ))}
+                      </div>
+
+                      {/* PERSONAL NOTES SECTION - Collapsible */}
+                      <div className="mt-8">
+                        <motion.button
+                          initial={{ opacity: 0, filter: 'blur(4px)' }}
+                          animate={{ opacity: 0.5, filter: 'blur(0px)' }}
+                          transition={{ duration: 0.4, delay: 0.2 }}
+                          onClick={() => setPersonalNotesExpanded(!personalNotesExpanded)}
+                          className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            padding: 0,
+                            WebkitTapHighlightColor: 'transparent',
+                            color: trayColors.fgMuted,
+                          }}
+                        >
+                          <span>Personal Notes</span>
+                          <svg
+                            width="6"
+                            height="6"
+                            viewBox="0 0 8 8"
+                            fill="none"
+                            stroke="currentColor"
+                            className={isMobile ? "opacity-50 cursor-pointer" : "opacity-0 group-hover/notes:opacity-50 transition-opacity duration-200 cursor-pointer"}
+                            style={{
+                              transform: personalNotesExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
+                            }}
+                          >
+                            <path
+                              d="M2 1L5 4L2 7"
+                              strokeWidth="1"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </motion.button>
+
+                        <AnimatePresence>
+                          {personalNotesExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, filter: 'blur(4px)' }}
+                              animate={{ opacity: 1, filter: 'blur(0px)' }}
+                              exit={{ opacity: 0, filter: 'blur(4px)' }}
+                              transition={{ duration: 0.4, ease: EASING.smooth }}
+                              className="space-y-4"
+                            >
+                              {personalNotes.map((article, i) => (
+                                <motion.div
+                                  key={article.id}
+                                  custom={i + writings.length}
+                                  variants={activeListItemVariants}
+                                  initial="hidden"
+                                  animate="visible"
+                                  onClick={() => {
+                                    if (onArticleSelect) {
+                                      onArticleSelect(article.id)
+                                    }
+                                  }}
+                                  className="cursor-pointer space-y-1"
+                                  whileHover={{ x: 4, opacity: 1 }}
+                                  transition={{ duration: 0.2, ease: EASING.smooth }}
+                                >
+                                  <p
+                                    className="text-xs transition-colors duration-200"
+                                    style={{ color: i < 1 ? trayColors.fg : trayColors.fgMuted }}
+                                  >
+                                    {article.title}
+                                  </p>
+                                  <p
+                                    className="text-[10px] font-light transition-colors duration-200"
+                                    style={{ color: trayColors.fgMuted, opacity: 0.7 }}
+                                  >
+                                    {article.date}
+                                  </p>
+                                </motion.div>
+                              ))}
+                            </motion.div>
                           )}
-                        </React.Fragment>
-                      ))}
+                        </AnimatePresence>
+                      </div>
                     </motion.div>
                   ) : viewMode === 'about' ? (
                     // About content with sophisticated transitions
@@ -1750,18 +1847,37 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                     // Error state
                     <motion.div
                       key="error"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
+                      initial={{ opacity: 0, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, filter: 'blur(4px)' }}
+                      transition={{ duration: 0.4, ease: EASING.smooth }}
                       className="text-center py-8"
                     >
-                      <p className="text-xs text-muted-foreground mb-2 transition-colors duration-200">Unable to load this article</p>
-                      <p className="text-xs text-muted-foreground transition-colors duration-200">{error}</p>
+                      <p className="text-xs mb-2" style={{ color: trayColors.fgMuted }}>
+                        Unable to load this article
+                      </p>
+                      <p className="text-[10px] font-light" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>
+                        {error}
+                      </p>
                       <motion.button
                         onClick={() => articleId && loadArticle(articleId)}
-                        className="mt-4 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 underline"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        className="mt-4 text-xs type-caption cursor-pointer"
+                        style={{
+                          color: trayColors.fgMuted,
+                          background: 'transparent',
+                          border: 'none',
+                          padding: 0,
+                          textDecoration: 'underline',
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ duration: 0.2 }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = trayColors.fg
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = trayColors.fgMuted
+                        }}
                       >
                         Try again
                       </motion.button>
