@@ -282,10 +282,37 @@ export default function Page() {
     }
   }, [isReady, prefersDark])
 
-  // Derived values from scroll progress - dramatic eased transitions
-  const heroBlur = scrollProgress * 32
-  const heroScale = 1 - (scrollProgress * 0.12)
-  const heroOpacity = 1 - (scrollProgress * 0.8)
+  // Derived values from scroll progress - three-phase transition with linger
+  // Phase 1 (0-40%): Build up quickly | Phase 2 (40-70%): LINGER at peak | Phase 3 (70-100%): Dramatic exit
+  let heroBlur: number
+  let heroOpacity: number
+  let heroScale: number
+
+  if (scrollProgress < 0.4) {
+    // Phase 1: Build up blur quickly to maximum (0-40%)
+    const phase1Progress = scrollProgress / 0.4
+    const easedProgress = 1 - Math.pow(1 - phase1Progress, 2)  // Ease out curve
+
+    heroBlur = easedProgress * 32           // 0px → 32px
+    heroOpacity = 1 - (easedProgress * 0.05)  // 100% → 95% (minimal fade)
+    heroScale = 1 - (easedProgress * 0.03)    // 100% → 97% (subtle shrink)
+
+  } else if (scrollProgress < 0.7) {
+    // Phase 2: LINGER at peak values (40-70%) - appreciation time for blur effect
+    heroBlur = 32        // Hold at maximum blur
+    heroOpacity = 0.95   // Hold near full visibility
+    heroScale = 0.97     // Hold minimal shrink
+
+  } else {
+    // Phase 3: Dramatic exit to reveal projects (70-100%)
+    const phase3Progress = (scrollProgress - 0.7) / 0.3
+
+    heroBlur = 32                                   // Keep max blur throughout
+    heroOpacity = 0.95 - (phase3Progress * 0.75)    // 95% → 20% (rapid fade)
+    heroScale = 0.97 - (phase3Progress * 0.09)      // 97% → 88% (accelerated shrink)
+  }
+
+  // Y translation stays linear throughout (maintains scroll responsiveness)
   const heroY = scrollProgress * -48
 
   // Footer blur derived values - subtle, readable effect
