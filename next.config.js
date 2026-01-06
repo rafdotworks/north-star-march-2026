@@ -14,6 +14,11 @@ const nextConfig = {
         destination: "/",
         permanent: true,
       },
+      {
+        source: "/writings/:slug",
+        destination: "/?writings=:slug",
+        permanent: true,
+      },
     ];
   },
 };

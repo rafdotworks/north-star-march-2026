@@ -204,6 +204,72 @@ export default function Page() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // ============================================================================
+  // URL SYNCING FOR WRITING MODAL
+  // ============================================================================
+  // Enables shareable URLs for articles while preserving modal UX
+  //
+  // HOW IT WORKS:
+  // 1. Direct link (/?writings=personal-blueprint) auto-opens modal
+  // 2. Clicking article in modal updates URL for sharing
+  // 3. Browser back/forward buttons work naturally
+  // 4. Modal preserves smooth animations from footer clicks
+  //
+  // BENEFIT: Best of both worlds - elegant modal + shareable links!
+  // ============================================================================
+
+  // Effect 1: Read URL on mount and auto-open modal if query param present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const writingSlug = params.get('writings')
+
+    // If URL contains ?writings=slug, open modal automatically
+    if (writingSlug) {
+      setIsWritingOpen(true)
+      setSelectedWritingArticle(writingSlug)
+    }
+  }, [])
+
+  // Effect 2: Update URL when modal state changes (for sharing)
+  useEffect(() => {
+    if (isWritingOpen && selectedWritingArticle) {
+      // Article selected → Add query param
+      // Example: raf.works → raf.works/?writings=personal-blueprint
+      const newUrl = `/?writings=${selectedWritingArticle}`
+      window.history.pushState({}, '', newUrl)
+    } else if (!isWritingOpen) {
+      // Modal closed → Remove query param
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('writings')) {
+        window.history.pushState({}, '', '/') // Clean URL
+      }
+    }
+  }, [isWritingOpen, selectedWritingArticle])
+
+  // Effect 3: Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      // Read URL after back/forward button click
+      const params = new URLSearchParams(window.location.search)
+      const writingSlug = params.get('writings')
+
+      // Sync modal state with URL
+      if (writingSlug) {
+        // URL has param → Open modal with that article
+        setIsWritingOpen(true)
+        setSelectedWritingArticle(writingSlug)
+      } else {
+        // URL has no param → Close modal
+        setIsWritingOpen(false)
+        setSelectedWritingArticle(null)
+      }
+    }
+
+    // Listen for browser navigation events
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
   // Set initial theme blend based on system preference
   useEffect(() => {
     if (isReady && typeof document !== 'undefined') {

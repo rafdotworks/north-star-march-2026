@@ -1280,9 +1280,17 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
   // ============================================================================
   // MARKDOWN RENDERING COMPONENTS
   // ============================================================================
-  // 
-  // Markdown components are imported from shared file.
+  //
+  // Markdown components are conditionally applied based on API path:
+  // - Regular articles: markdownComponents (from markdownComponents.tsx)
+  // - Story articles: storyMarkdownComponents (from storyMarkdownComponents.tsx)
+  //
+  // Both share unified base styles (spacing, opacity, typography) from
+  // markdownBaseStyles.tsx for consistency across all markdown content.
+  //
   // @see app/components/markdown/markdownComponents.tsx
+  // @see app/components/markdown/storyMarkdownComponents.tsx
+  // @see app/components/markdown/markdownBaseStyles.tsx
 
   // Determine if we should show the tray
   // Show tray if: writing mode (always show), or articleId is set (normal mode)

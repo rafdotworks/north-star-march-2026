@@ -1,10 +1,35 @@
 "use client"
 
 import type { Components } from "react-markdown"
-import { ExternalLinkIcon } from "@/app/components/icons/ExternalLinkIcon"
 import { StoryImage } from "@/app/components/story/StoryImage"
 import { VimeoEmbed } from "@/app/components/story/VimeoEmbed"
 import { StorySectionDivider } from "@/app/components/story/StorySectionDivider"
+import {
+  BaseLinkComponent,
+  baseTextClasses,
+  baseSpacingClasses,
+  baseOpacityClasses
+} from "./markdownBaseStyles"
+
+/**
+ * ============================================================================
+ * STORY MARKDOWN COMPONENTS - app/components/markdown/storyMarkdownComponents.tsx
+ * ============================================================================
+ *
+ * Story-specific markdown components with rich media support.
+ * Extends base markdown styling (from markdownBaseStyles) with:
+ * - Image support with blur-on-load and captions (StoryImage)
+ * - Vimeo video embeds (VimeoEmbed)
+ * - Beautiful section dividers (StorySectionDivider)
+ * - Paragraph detection for proper image wrapping
+ *
+ * STYLING:
+ * Uses unified base styles (spacing, opacity, typography) for consistency
+ * with regular articles, while adding story-specific features.
+ *
+ * Used by:
+ * - app/components/page-specific/SideTray.tsx (when API path includes /story)
+ */
 
 /**
  * Detects if a URL is a Vimeo URL
@@ -12,15 +37,6 @@ import { StorySectionDivider } from "@/app/components/story/StorySectionDivider"
 function isVimeoUrl(url: string): boolean {
   return url.includes("vimeo.com")
 }
-
-/**
- * Story-specific markdown components
- *
- * Extends base markdown components with:
- * - Image support with blur-on-load and captions
- * - Vimeo video embeds
- * - Beautiful section dividers
- */
 export const storyMarkdownComponents: Components = {
   // Headings - section titles for story
   h1: ({ children }) => (
@@ -58,45 +74,25 @@ export const storyMarkdownComponents: Components = {
     )
   },
 
-  // Lists
+  // Lists - unified spacing with base styles
   ul: ({ children }) => (
-    <ul className="text-xs text-muted-foreground mb-4 ml-4 space-y-1.5 list-disc list-outside transition-colors duration-200">
+    <ul className={`${baseTextClasses.body} ${baseSpacingClasses.list} list-disc list-outside`}>
       {children}
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="text-xs text-muted-foreground mb-4 ml-4 space-y-1.5 list-decimal list-outside transition-colors duration-200">
+    <ol className={`${baseTextClasses.body} ${baseSpacingClasses.list} list-decimal list-outside`}>
       {children}
     </ol>
   ),
   li: ({ children }) => (
-    <li className="text-xs text-muted-foreground leading-[1.9] transition-colors duration-200 pl-1">
+    <li className={`${baseTextClasses.body} ${baseSpacingClasses.listItem}`}>
       {children}
     </li>
   ),
 
-  // Links
-  a: ({ href, children }) => {
-    const isExternal =
-      href?.startsWith("http://") || href?.startsWith("https://")
-    return (
-      <a
-        href={href}
-        target={isExternal ? "_blank" : undefined}
-        rel={isExternal ? "noopener noreferrer" : undefined}
-        className="group/link inline-flex items-center gap-1 text-xs text-muted-foreground md:hover:!text-foreground transition-colors duration-200"
-        style={{ WebkitTapHighlightColor: "transparent" }}
-      >
-        {children}
-        {isExternal && (
-          <ExternalLinkIcon
-            size={10}
-            className="hidden md:block opacity-0 md:group-hover/link:opacity-70 transition-opacity duration-200"
-          />
-        )}
-      </a>
-    )
-  },
+  // Links - unified component from base styles
+  a: BaseLinkComponent,
 
   // Images - with blur-on-load and optional caption
   img: ({ src, alt, title }) => {
@@ -117,16 +113,16 @@ export const storyMarkdownComponents: Components = {
   // Section dividers
   hr: () => <StorySectionDivider />,
 
-  // Blockquotes
+  // Blockquotes - unified with opacity hierarchy
   blockquote: ({ children }) => (
-    <blockquote className="text-xs text-muted-foreground border-l border-border/50 pl-4 my-6 italic transition-colors duration-200">
+    <blockquote className={`${baseTextClasses.body} border-l border-border/40 pl-4 ${baseSpacingClasses.blockquote} ${baseOpacityClasses.secondary} italic`}>
       {children}
     </blockquote>
   ),
 
-  // Code
+  // Code - unified with opacity hierarchy
   code: ({ children }) => (
-    <code className="text-[10px] bg-muted/50 px-1.5 py-0.5 rounded text-foreground font-mono transition-colors duration-200">
+    <code className={`${baseTextClasses.code} bg-muted/80 px-1.5 py-0.5 rounded ${baseOpacityClasses.code}`}>
       {children}
     </code>
   ),
