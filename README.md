@@ -1,12 +1,11 @@
 # raf.works
 
-A sophisticated Next.js 15 portfolio website for Raf, a designer and design engineer. Features elegant animations, an interactive image carousel, and an AI-powered chat agent to discuss work and experience.
+A sophisticated Next.js 15 portfolio website for Raf, an AI designer. Features elegant animations and an interactive image carousel.
 
 ## Features
 
 - **Interactive Image Carousel** - Showcases work with smooth transitions and video support
 - **Adaptive Loading Sequence** - Network-aware loading strategy for optimal performance
-- **AI Chat Agent** - Interactive chat powered by OpenAI to discuss Raf's work and experience
 - **Responsive Design** - Mobile-first approach with iOS safe area support
 - **Custom Animations** - Built with Framer Motion for sophisticated reveals and transitions
 - **Multiple Layout Modes** - Traditional portfolio view and minimal text-based layout
@@ -17,7 +16,6 @@ A sophisticated Next.js 15 portfolio website for Raf, a designer and design engi
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS with custom fonts (Ronzino, Edu Marist)
 - **Animations**: Framer Motion
-- **AI Integration**: Vercel AI SDK with OpenAI
 - **Analytics**: Vercel Analytics
 
 ## Getting Started
@@ -40,15 +38,12 @@ cd raf.works
 npm install
 ```
 
-3. Set up environment variables:
+3. Set up environment variables (optional):
 ```bash
 cp .env.example .env.local
 ```
 
-Add your OpenAI API key to `.env.local`:
-```
-OPENAI_API_KEY=your_api_key_here
-```
+Add environment variables to `.env.local` as needed.
 
 4. Run the development server:
 ```bash
@@ -76,16 +71,10 @@ raf.works/
 │   ├── globals.css               # Global styles & CSS variables
 │   ├── q3-2025/                  # Previous landing page version
 │   │   └── page.tsx              # Previous portfolio (carousel/slideshow)
-│   ├── agent/                    # AI chat interface
-│   │   ├── page.tsx              # Chat page
-│   │   ├── ChatMessages.tsx      # Message display component
-│   │   ├── ChatInput.tsx         # Input component
-│   │   └── context/              # AI agent knowledge base
-│   ├── new/                      # Components for main page
-│   │   └── components/           # SideTray and WorksPanel components
 │   ├── api/
-│   │   ├── chat/                 # AI chat API endpoint
-│   │   └── article/              # Article content API
+│   │   ├── article/              # Article content API
+│   │   ├── story/                # Story content API
+│   │   └── weather/              # Weather data API
 │   └── components/               # App-specific components
 │       └── hover/                # Hover effect components
 ├── components/                   # Shared components
@@ -107,8 +96,6 @@ raf.works/
 
 - **`/`** - Main minimal portfolio entry point (text-based layout)
 - **`/q3-2025`** - Previous portfolio version (image carousel/slideshow)
-- **`/agent`** - AI chat interface to discuss Raf's work
-- **`/raf`** - Additional portfolio page
 - **`/deck`** - Redirects to Figma presentation
 
 ## Architecture Highlights
@@ -125,13 +112,6 @@ Centralized in [`components/animations/LoadingAnimations.tsx`](components/animat
 - Slow connections: Sequential, prioritized loading
 - Progressive stages: text → images → navigation
 
-### AI Chat Agent
-[`app/api/chat/route.ts`](app/api/chat/route.ts) implements:
-- Streaming responses using Vercel AI SDK
-- In-memory rate limiting (10 messages/10 minutes per IP)
-- Context-aware responses using knowledge base
-- Error handling with user-friendly messages
-
 ### Styling Approach
 - **Tailwind CSS** for utility-first styling
 - **CSS Custom Properties** for theme variables (dark mode via system preference)
@@ -140,10 +120,9 @@ Centralized in [`components/animations/LoadingAnimations.tsx`](components/animat
 
 ## Environment Variables
 
-Required environment variables (see `.env.example`):
+Optional environment variables (see `.env.example`):
 
 ```bash
-OPENAI_API_KEY=           # OpenAI API key for chat agent
 OPENWEATHERMAP_API_KEY=   # OpenWeatherMap API key for weather data (get free key at https://openweathermap.org/api)
 ```
 

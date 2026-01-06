@@ -9,10 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.56",
-    "@ai-sdk/react": "^2.0.81",
     "@vercel/analytics": "^1.5.0",
-    "ai": "^5.0.81",
     "framer-motion": "latest",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.548.0",

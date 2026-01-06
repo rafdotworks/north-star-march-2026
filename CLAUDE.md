@@ -20,7 +20,6 @@ npm run lint     # Run ESLint
 - **Framework**: Next.js 15 with App Router
 - **Styling**: Tailwind CSS with custom fonts (Ronzino, Edu Marist, CoFo Sans Mono)
 - **Animations**: Framer Motion
-- **AI Integration**: OpenAI SDK (chat agent feature)
 - **Analytics**: Vercel Analytics
 - **TypeScript**: Strict mode enabled
 
@@ -34,7 +33,6 @@ The app uses Next.js App Router with feature-based component organization:
 - [app/page.tsx](app/page.tsx) - Main minimal portfolio homepage (~380 lines)
 - [app/layout.tsx](app/layout.tsx) - Root layout with fonts, metadata, analytics
 - [app/error.tsx](app/error.tsx) - Global error boundary (moved from root in cleanup)
-- [app/agent/](app/agent/) - AI chat assistant feature
 - [app/q3-2025/](app/q3-2025/), [app/nov-2025/](app/nov-2025/), [app/dec-2025/](app/dec-2025/) - Archived homepage variants
 
 **Component Organization (Feature-Based):**
