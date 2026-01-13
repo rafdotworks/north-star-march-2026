@@ -57,9 +57,9 @@ const cofoSansMono = localFont({
 
 /** Site metadata for SEO and social sharing */
 export const metadata: Metadata = {
-  title: "Raf - AI Designer",
+  title: "Raf - AI Product Designer",
   description:
-    "Blending design, code, and systems thinking to craft interfaces where people and intelligent agents collaborate  with clarity, taste, and intent.",
+    "Product designer and design-engineer with 8+ years of experience focused on clarity, decision-making, and human judgment in AI-driven systems.",
   keywords: [
     "design systems",
     "AI/agent UX",
@@ -92,9 +92,9 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Raf - AI Designer",
+    title: "Raf - AI Product Designer",
     description:
-      "With 7+ years in product design and systems thinking, Raf now focuses on how humans and intelligent agents collaborate with clarity and intent.",
+      "Product designer and design-engineer with 8+ years of experience focused on clarity, decision-making, and human judgment in AI-driven systems.",
     url: "https://raf.works",
     siteName: "Raf V. - Personal Website",
     images: [
@@ -109,9 +109,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Raf - AI Designer",
+    title: "Raf - AI Product Designer",
     description:
-      "Blending design, code, and systems thinking to craft interfaces where people and intelligent agents collaborate  with clarity, taste, and intent.",
+      "Product designer and design-engineer with 8+ years of experience focused on clarity, decision-making, and human judgment in AI-driven systems.",
     creator: "@rafdotworks",
     images: ["/og-image.png"],
   },
