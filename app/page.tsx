@@ -525,11 +525,13 @@ export default function Page() {
                   </span>
                   {/* Writing principles */}
                   {FOOTER_CONFIG.writing.principles.map((principle, index) => (
-                    <p key={index} className="type-caption opacity-80 dark:opacity-90">
+                    <p key={index} className="type-body">
                       <span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">
                         {principle.number}
                       </span>
-                      {principle.text}
+                      <span className={index > 0 ? 'opacity-80' : ''}>
+                        {principle.text}
+                      </span>
                     </p>
                   ))}
                 </div>

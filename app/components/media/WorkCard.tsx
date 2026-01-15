@@ -66,6 +66,7 @@ function LazyVideo({ src }: { src: string }) {
       playsInline
       preload="none"
       className="w-full h-auto object-contain rounded-sm"
+      aria-label="Project showcase video"
     />
   )
 }
@@ -200,7 +201,16 @@ export const WorkCard = memo(function WorkCard({
           {/* Link - right column */}
           <span
             onClick={onReadStory}
-            className="type-body text-muted-foreground/60 hover:text-muted-foreground mt-3 md:mt-2 transition-colors duration-200 cursor-pointer inline-block"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onReadStory?.()
+              }
+            }}
+            className="type-body text-muted-foreground/60 hover:text-muted-foreground focus-visible:text-muted-foreground focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:rounded-sm mt-3 md:mt-2 transition-colors duration-200 cursor-pointer inline-block"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             Read the full story
           </span>
