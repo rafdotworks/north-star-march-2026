@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import { useReducedMotion } from "framer-motion"
 import FooterLink from "@/app/components/layout/FooterLink"
 import { WorkCard } from "@/app/components/media/WorkCard"
@@ -60,6 +60,31 @@ export default function Page() {
   // Keep refs in sync with state for scroll handler
   const isMobileRef = useRef(isMobile)
   const prefersReducedRef = useRef(prefersReduced)
+
+  // ============================================================================
+  // MEMOIZED STYLES - Prevent object recreation on every render
+  // ============================================================================
+  const containerStyle = useMemo(() => ({
+    backgroundColor: 'var(--bg)',
+    color: 'var(--fg)',
+    transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), color 1s cubic-bezier(0.4, 0, 0.2, 1)'
+  }), [])
+
+  const worksSectionStyle = useMemo(() => ({
+    backgroundColor: 'var(--bg)',
+    transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)'
+  }), [])
+
+  // ============================================================================
+  // STABLE CALLBACKS - Prevent function recreation on every render
+  // ============================================================================
+  const handleReadStory = useCallback((projectKey: string) => {
+    setSelectedStory(projectKey)
+  }, [])
+
+  const setMetadataRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
+    metadataRefs.current[index] = el
+  }, [])
 
   useEffect(() => {
     prefersDarkRef.current = prefersDark
@@ -321,7 +346,7 @@ export default function Page() {
   const footerY = footerScrollProgress * -24  // Subtle upward drift (vs hero's -48px)
 
   return (
-    <div className="min-h-screen -mx-[max(16px,calc(env(safe-area-inset-left,0px)+16px))] sm:mx-0" style={{ backgroundColor: 'var(--bg)', color: 'var(--fg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+    <div className="min-h-screen -mx-[max(16px,calc(env(safe-area-inset-left,0px)+16px))] sm:mx-0" style={containerStyle}>
       {/* ================================================================
        * HERO SECTION - Fixed in background, blurs beautifully on scroll
        * ================================================================ */}
@@ -341,15 +366,14 @@ export default function Page() {
               {/* Hero content - right column, aligns with project titles */}
               <div className="space-y-5 md:col-start-2">
                 {/* Greeting & Role */}
-                <p className="type-body-primary">
- <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs products for the age of A.I.
-                  </p>
+                <p className="type-body">
+                  <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs AI products beyond the model.
+                </p>
 
-                {/* Contact Links */}
-                <nav className="flex flex-col items-start gap-1 group/nav pt-2">
+                {/* Contact Links - Horizontal Layout */}
+                <nav className="flex items-center gap-4 group/nav">
                   <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
                   <FooterLink href="mailto:raf@raf.works" label="Email" />
-                  {/* <FooterLink href="/cv" label="CV" /> */}
                   <FooterLink href="https://x.com/rafdotworks" label="X" external />
                 </nav>
               </div>
@@ -383,7 +407,7 @@ export default function Page() {
         />
 
         {/* Works section with solid background */}
-        <div className="min-h-screen pointer-events-auto" style={{ backgroundColor: 'var(--bg)', transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+        <div className="min-h-screen pointer-events-auto" style={worksSectionStyle}>
           <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20 py-12 md:py-20">
             <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16 gap-y-1 md:gap-y-2">
 
@@ -410,10 +434,10 @@ export default function Page() {
                     priority={index < PRIORITY_IMAGE_COUNT}
                     projectIndex={index}
                     hasStory={PROJECT_HAS_STORY[projectKey] || false}
-                    onReadStory={() => setSelectedStory(projectKey)}
+                    onReadStory={() => handleReadStory(projectKey)}
                     metadataBlur={effects.blur}
                     metadataOpacity={effects.opacity}
-                    metadataRef={(el) => { metadataRefs.current[index] = el }}
+                    metadataRef={setMetadataRef(index)}
                   />
                 )
               })}
