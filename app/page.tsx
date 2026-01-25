@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import { useReducedMotion } from "framer-motion"
-import FooterLink from "@/app/components/layout/FooterLink"
 import { WorkCard } from "@/app/components/media/WorkCard"
 import { ScrollBottomBlur } from "@/app/components/layout/ScrollBottomBlur"
 import { ScrollTopBlur } from "@/app/components/layout/ScrollTopBlur"
 import { SectionDivider } from "@/app/components/layout/SectionDivider"
+import FooterLink from "@/app/components/layout/FooterLink"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
@@ -364,18 +364,32 @@ export default function Page() {
           <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20">
             <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
               {/* Hero content - right column, aligns with project titles */}
-              <div className="space-y-5 md:col-start-2">
-                {/* Greeting & Role */}
-                <p className="type-body">
-                  <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs AI products beyond the model.
-                </p>
+              <div className="md:col-start-2">
+                {/* Single column flowing layout with subtle first-line emphasis */}
+                <div className="space-y-4 max-w-[600px]">
+                  <p className="type-body">
+                    <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs for AI systems that learn, fail, and evolve.
+                  </p>
+                  
+                  <p className="type-body">
+                    Specializing in interaction models where uncertainty is the design constraint, not a bug to fix.
+                    <br/>
+                    <span className="opacity-80">
+                      I prototype AI behavior to test edge cases, make model reasoning legible, and build trust in autonomous systems.
+                    </span>
+                    <br/>
+                    <span className="opacity-80">
+                      Currently Staff UX Designer for recommendation experiences at Walmart.
+                    </span>
+                  </p>
 
-                {/* Contact Links - Horizontal Layout */}
-                <nav className="flex items-center gap-4 group/nav">
-                  <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
-                  <FooterLink href="mailto:raf@raf.works" label="Email" />
-                  <FooterLink href="https://x.com/rafdotworks" label="X" external />
-                </nav>
+                  {/* Contact Links - Horizontal Layout */}
+                  <nav className="flex items-center gap-4 group/nav pt-2">
+                    <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
+                    <FooterLink href="mailto:raf@raf.works" label="Email" />
+                    <FooterLink href="https://x.com/rafdotworks" label="X" external />
+                  </nav>
+                </div>
               </div>
             </div>
           </div>

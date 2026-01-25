@@ -288,3 +288,6 @@ export const WorkCard = memo(function WorkCard({
     </div>
   )
 })
+
+// Display name for React DevTools debugging
+WorkCard.displayName = 'WorkCard'

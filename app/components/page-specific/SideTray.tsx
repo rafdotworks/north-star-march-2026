@@ -227,6 +227,54 @@ const trayVariants = {
 } as const
 
 /**
+ * Mobile-optimized animation variants.
+ * 
+ * Enhanced multi-dimensional animation for smoother, more inspiring entrance.
+ * Slides up from bottom with scale, opacity, and refined spring physics.
+ * 
+ * ANIMATION ENHANCEMENTS:
+ * - y: Slides up from 100% (off-screen bottom) to 0
+ * - scale: Subtle zoom-in effect (0.96 → 1.0) for materialization
+ * - opacity: Smooth fade-in (0.8 → 1.0) for elegant appearance
+ * - Spring physics: Refined parameters (stiffness: 200, damping: 32) for smoother motion
+ * - Exit: Keeps panel in place (y: 0, scale: 1) and only fades out opacity for elegant dismissal
+ * 
+ * TIMING:
+ * - Entrance: ~0.5s with natural spring physics for fluid motion
+ * - Exit: ~0.3s smooth fade-only (no slide) for responsive dismissal
+ */
+const mobileTrayVariants = {
+  hidden: {
+    y: "100%",
+    scale: 0.96,
+    opacity: 0.8
+  },
+  visible: {
+    y: 0,
+    scale: 1,
+    opacity: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 200,
+      damping: 32,
+      mass: 1,
+      duration: 0.65
+    }
+  },
+  exit: {
+    y: 0,
+    scale: 1,
+    opacity: 0,
+    transition: {
+      opacity: {
+        duration: 0.35,
+        ease: EASING.smooth
+      }
+    }
+  }
+} as const
+
+/**
  * Content fade-in animation variants.
  * 
  * Creates a smooth blur-to-focus effect when content loads.
@@ -709,55 +757,8 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
   // ============================================================================
   // RESPONSIVE ANIMATION VARIANTS
   // ============================================================================
+  // mobileTrayVariants is defined at module level for performance optimization
   
-  /**
-   * Mobile-optimized animation variants.
-   * 
-   * Enhanced multi-dimensional animation for smoother, more inspiring entrance.
-   * Slides up from bottom with scale, opacity, and refined spring physics.
-   * 
-   * ANIMATION ENHANCEMENTS:
-   * - y: Slides up from 100% (off-screen bottom) to 0
-   * - scale: Subtle zoom-in effect (0.96 → 1.0) for materialization
-   * - opacity: Smooth fade-in (0.8 → 1.0) for elegant appearance
- * - Spring physics: Refined parameters (stiffness: 320, damping: 38) for smoother motion
- * - Exit: Keeps panel in place (y: 0, scale: 1) and only fades out opacity for elegant dismissal
- * 
- * TIMING:
- * - Entrance: ~0.5s with natural spring physics for fluid motion
- * - Exit: ~0.3s smooth fade-only (no slide) for responsive dismissal
- */
-  const mobileTrayVariants = {
-    hidden: {
-      y: "100%",
-      scale: 0.96,
-      opacity: 0.8
-    },
-    visible: {
-      y: 0,
-      scale: 1,
-      opacity: 1,
-      transition: {
-        type: "spring" as const,
-        stiffness: 200,
-        damping: 32,
-        mass: 1,
-        duration: 0.65
-      }
-    },
-    exit: {
-      y: 0,
-      scale: 1,
-      opacity: 0,
-      transition: {
-        opacity: {
-          duration: 0.35,
-          ease: EASING.smooth
-        }
-      }
-    }
-  } as const
-
   /**
    * Selects appropriate animation variants based on device and accessibility preferences.
    * 
@@ -1930,4 +1931,9 @@ Before that, I contributed and shipped design systems, developer tools, and prod
 }
 
 // Memoize to prevent re-renders when parent state changes
-export default memo(SideTray)
+const MemoizedSideTray = memo(SideTray)
+
+// Display name for React DevTools debugging
+MemoizedSideTray.displayName = 'SideTray'
+
+export default MemoizedSideTray
