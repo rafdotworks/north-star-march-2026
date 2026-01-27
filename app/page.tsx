@@ -366,20 +366,22 @@ export default function Page() {
               {/* Hero content - right column, aligns with project titles */}
               <div className="md:col-start-2">
                 {/* Single column flowing layout with subtle first-line emphasis */}
+                
                 <div className="space-y-4 max-w-[600px]">
-                  <p className="type-body">
+                  {/* <p className="type-body">
                     Most AI interfaces assume the model is right.
-                  </p>
+                  </p> */}
                   
                   <p className="type-body">
-                    <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs for trust when it's wrong and beyond.
+                    <span className="font-[family-name:var(--font-edu-marist)] text-sm">Raf</span> designs and builds AI products.
                   </p>
-                  
-                  <p className="type-body">
+
+                  {/* third line */}
+                  {/* <p className="type-body">
                     <span className="opacity-80">
                       Staff Product Designer at Walmart Seller, currently designing AI recommendation systems at marketplace scale.
                     </span>
-                  </p>
+                  </p> */}
 
                   {/* Contact Links - Horizontal Layout */}
                   <nav className="flex items-center gap-4 group/nav pt-2">

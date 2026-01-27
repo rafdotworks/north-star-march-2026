@@ -102,17 +102,18 @@ export const FOOTER_CONFIG: FooterConfig = {
     paragraphs: [
     
       {
-        text: "Strongest where ambiguity is high and quality matters.",
+        text: "Staff Product Designer at Walmart Seller, currently designing AI recommendation systems at marketplace scale.",
         isSecondary: false,
+      },
+      {
+        text: "I design AI interfaces that handle uncertainty, building trust in high-stakes systems where models can be wrong.",
+        isSecondary: true,
       },
       {
         text: "9+ years designing high-leverage systems across startups and public companies.",
         isSecondary: true,
       },
-      {
-        text: "I work best with founders and leaders who think long-term, move with intent, and care about people as much as outcomes.",
-        isSecondary: true,
-      },
+     
     ],
   },
 

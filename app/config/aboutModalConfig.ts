@@ -62,15 +62,16 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Craft",
       paragraphs: [
         {
-          text: "Strongest where ambiguity is high and quality matters.",
+          text: "Staff Product Designer at Walmart Seller, currently designing AI recommendation systems at marketplace scale.",
           isHighlighted: true,
+        },
+        {
+          text: "I design AI interfaces that handle uncertainty, edge cases, and evolving behavior—building trust in high-stakes systems where models can be wrong.",
         },
         {
           text: "9+ years across startups and public companies. I work best with founders and leaders who think long-term, move with intent, and care about people as much as outcomes.",
         },
-        {
-          text: "I prototype to decide, not to decorate. I push back when something won't work. I write code when it moves faster.",
-        },
+       
         
       ],
     },
