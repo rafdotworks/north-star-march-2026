@@ -230,6 +230,7 @@ export const LOADING_STAGES: string[] = [
  * This is the source of truth for project identifiers.
  */
 export const PROJECT_KEYS = [
+  // "currentwork", // temporarily disabled
   "theo",
   "cb",
   "vf",
@@ -258,7 +259,10 @@ export type ProjectKey = (typeof PROJECT_KEYS)[number];
  * ```
  */
 export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
-  // Current/recent work (2024-2025)
+  // Current/recent work (2024-2026)
+  // currentwork: {
+  //   images: ["/work/current-work.gif"], // Work in progress - placeholder for future GIF
+  // },
   atlas: {
     images: ["/work/atlas.webp", "/work/atlas-2.png", "/work/videos/atlas-ptv.mov"], // Crypto marketplace, NFT era
   },
@@ -272,12 +276,19 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
     images: ["/work/defituna-1.png", "/work/videos/defi-tuna.mov"], // DeFi project (fixed: removed duplicate)
   },
   theo: {
-    images: ["/work/theo.webp", "/work/theo-1.png", "/work/videos/theoriq-demo.mov", "/work/theo-web.png"], // Theoriq - AI platform, founding designer, 3rd item is video, "/work/theo-sb.webp" removed
+    images: ["/work/theo-1.png", "/work/videos/theoriq-demo.mov", "/work/theo-web.png"], // Theoriq - AI platform, founding designer, 2nd item is video
   },
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools (fixed: removed duplicate)
-  zalando: { images: ["/work/zal.webp"] }, // B2B design system
-  earlyworks: { images: ["/work/early-works.webp"] }, // Early brand work
+  zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
+  earlyworks: { 
+    images: [
+      "/work/early-works.webp", 
+      "/work/atlas.webp", 
+      "/work/atlas-2.png", 
+      "/work/zalando-dodont.png"
+    ] 
+  }, // Early brand work, now includes crypto platforms and Zalando
   nationalArchives: { images: ["/work/us.webp"] }, // Early brand work (fixed: removed duplicate)
 };
 
@@ -349,12 +360,11 @@ export const PROJECT_ALIAS: Record<string, string> = {
  * ```
  */
 export const PROJECT_ORDER: ProjectKey[] = [
+  // "currentwork", // Current work (2026) - temporarily disabled
   "theo", // Theoriq (2024)
   "cb", // Coinbase (2025)
   "vf", // Voiceflow (2025)
-  "atlas", // Atlas (2020)
-  "zalando", // Zalando (2022)
-  "earlyworks", // Early work (2017-2019)
+  "earlyworks", // Early work (2017-2019), now includes Atlas and Zalando
 ];
 
 /**
@@ -388,8 +398,10 @@ export const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
  * @see {@link app/utils/portfolioUtils.ts#getAltText} for usage
  */
 export const IMAGE_ALT_TEXT: Record<string, string> = {
+  // "/work/current-work.gif": "Work in progress placeholder - animated preview of current project",
   "/work/cb-1.webp": "Coinbase Developer Platform interface showing API documentation and developer tools",
   "/work/theo-1.png": "Theoriq AI platform dashboard with agent management and workflow visualization",
+  "/work/theo-web.png": "Theoriq web platform interface showcasing AI agent marketplace and workflow builder",
   "/work/vf.webp": "Voiceflow conversation design interface with flowchart-style dialog editor",
   "/work/atlas-2.png": "Atlas crypto marketplace featuring NFT collections and digital asset trading interface",
   "/work/defituna-1.png": "DeFi Tuna decentralized finance platform with yield farming and staking features",
@@ -415,6 +427,7 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
  * ```
  */
 export const PROJECT_ROLES: Record<string, string> = {
+  // currentwork: "Work in Progress",
   theo: "Founding Designer, Design Engineer",
   cb: "Senior Product Designer",
   vf: "Senior Product Designer",
@@ -437,6 +450,7 @@ export const PROJECT_ROLES: Record<string, string> = {
  * ```
  */
 export const PROJECT_CONTRACT_TYPES: Record<string, string> = {
+  // currentwork: "Ongoing",
   theo: "Full-time",
   cb: "Contract",
   vf: "Contract",
@@ -459,6 +473,7 @@ export const PROJECT_CONTRACT_TYPES: Record<string, string> = {
  * ```
  */
 export const PROJECT_YEARS: Record<string, string> = {
+  // currentwork: "2026",
   theo: "2024-25",
   cb: "Q3-Q4 2025",
   vf: "Q1-Q2 2025",
@@ -481,6 +496,7 @@ export const PROJECT_YEARS: Record<string, string> = {
  * ```
  */
 export const PROJECT_DISPLAY_NAMES: Record<string, string> = {
+  // currentwork: "Current Work",
   theo: "Theoriq",
   cb: "Coinbase Developer Platform",
   vf: "Voiceflow",
@@ -512,6 +528,7 @@ export const PROJECT_DISPLAY_NAMES: Record<string, string> = {
  * ```
  */
 export const PROJECT_CAPTIONS: Record<string, string> = {
+  // currentwork: "Work in progress.\n\nMore details coming soon.",
   cb: "Onchain infrastructure was emerging across Coinbase's product suite, but early interactions felt slow and hard to reason about.\nI led the SQL Playground and contributed to Embedded Wallets, extending the same clarity-first approach to Pay with USDC.\n\nThe result was a developer experience that made complex systems feel understandable and usable immediately.",
   vf: "Voiceflow Enabled Teams to Build AI Agents Faster.\nBy reframing early activation around time-to-first-value and redesigning onboarding, I helped improve new user activation and early success rates, contributing to a more efficient path from signup to working AI agent for a product trusted by ~200k+ users and 4,000+ teams globally.",
   theo: "AI agents started to emerge, but were not yet governable with real assets.\nI designed Theoriq across product, brand, and go-to-market from zero, defining Infinity Hub as the marketplace for agents and collectives, and Infinity Studio as the environment where those agents could be crafted, inspected, and controlled.\n\nThe outcome was deployable blockchain-based AI systems teams could reason about. 140k active users in six months.",
@@ -583,6 +600,7 @@ export const PRELOAD_IMAGES = IMAGE_SOURCES.slice(
  * @see app/new/components/WorksPanel.tsx for usage (component location unchanged)
  */
 export const PROJECT_TO_WORK_MAP: Record<string, { section: 'fulltime' | 'contract' | 'studio', identifier: string }> = {
+  // 'currentwork': { section: 'fulltime', identifier: '2024–2025' }, // Maps to most recent work entry
   'theo': { section: 'fulltime', identifier: '2024–2025' },
   'cb': { section: 'contract', identifier: '2025' }, // Coinbase
   'vf': { section: 'contract', identifier: '2025' }, // Voiceflow (first 2025 entry)
