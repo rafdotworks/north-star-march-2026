@@ -284,7 +284,6 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
   earlyworks: { 
     images: [
       "/work/early-works.webp", 
-      "/work/atlas.webp", 
       "/work/atlas-2.png", 
       "/work/zalando-dodont.png"
     ] 
@@ -529,9 +528,9 @@ export const PROJECT_DISPLAY_NAMES: Record<string, string> = {
  */
 export const PROJECT_CAPTIONS: Record<string, string> = {
   // currentwork: "Work in progress.\n\nMore details coming soon.",
-  cb: "Onchain infrastructure was emerging across Coinbase's product suite, but early interactions felt slow and hard to reason about.\nI led the SQL Playground and contributed to Embedded Wallets, extending the same clarity-first approach to Pay with USDC.\n\nThe result was a developer experience that made complex systems feel understandable and usable immediately.",
-  vf: "Voiceflow Enabled Teams to Build AI Agents Faster.\nBy reframing early activation around time-to-first-value and redesigning onboarding, I helped improve new user activation and early success rates, contributing to a more efficient path from signup to working AI agent for a product trusted by ~200k+ users and 4,000+ teams globally.",
-  theo: "AI agents started to emerge, but were not yet governable with real assets.\nI designed Theoriq across product, brand, and go-to-market from zero, defining Infinity Hub as the marketplace for agents and collectives, and Infinity Studio as the environment where those agents could be crafted, inspected, and controlled.\n\nThe outcome was deployable blockchain-based AI systems teams could reason about. 140k active users in six months.",
+  cb: "Coinbase was rolling out onchain infrastructure across its developer platform. The tech worked. But early interactions felt slow and hard to reason about.\n\nDevelopers couldn't tell if something was processing, broken, or just taking time. That ambiguity kills trust.\n\nI led SQL Playground, Embedded Wallets and contributed to Developer Platform redesign, Pay with USDC, and more applying the same principle: clarity first. Clear loading states. Predictable feedback. Early prototypes. No guessing.\n\nDesigned SQL-based query interfaces informed by developer interviews, optimizing for discoverability and error prevention. Collaborated with engineering to design within technical realities rather than idealized flows.\n\nResult: Shipped three surfaces in three months. Developers could finally tell what was happening and trust it.",
+  vf: "Voiceflow had 200,000+ users across 4,000+ teams, but new signups weren't converting. The problem wasn't the product: it was the gap between \"I signed up\" and \"I built something that works.\"\n\nI reframed onboarding around time-to-first-value. Not features. Not tutorials. Just: how fast can someone go from zero to a working AI agent?\n\nRedesigned early activation to collapse that timeline. Clearer entry points. Smarter defaults. Less guessing. Designed interaction patterns that made LLM behavior predictable and trustworthy, helping users understand when agents would succeed or fail.\n\nResult: New user activation improved. More teams got to their first agent faster. The product already worked—now it worked sooner.",
+  theo: "AI agents were emerging, but trust mechanisms for operating with real assets didn't exist. How do you let an agent move real crypto without losing it all?\n\nI joined as founding designer and owned end-to-end UX from zero. Designed Infinity Studio (the workspace where developers could test, inspect, and control agents) and Infinity Hub (the marketplace where they could find proven agents). The principle: trust through constraint—not \"give developers every option,\" but give them predictable outcomes.\n\nPartnered with CEO and founding team to translate experimental AI infrastructure into product vision. Also shaped brand and go-to-market.\n\nResult: Scaled from 0 to 140K users in 6 months. 40% created their first strategy after Studio launch. The patterns we built are still the foundation.",
   atlas:
     "Atlas was an early NFT marketplace with few established UX patterns.\nI led product design by shaping transaction and analytics flows that made decentralized trading, borrowing, and lending legible and safe.\n\nThe result was a Web3 experience users could reason about before committing value.",
   curbcut:
@@ -539,7 +538,7 @@ export const PROJECT_CAPTIONS: Record<string, string> = {
   zalando:
     "Zalando's B2B products were scaling, but patterns fragmented across teams.\nI established the company's first unified B2B design system, creating a shared language that improved usability and cross-team alignment at enterprise scale.",
   earlyworks:
-    "A mix of freelance work with startups and agencies across emerging and fast-moving domains.\nI built brands, interfaces, and websites for early-stage products where clarity mattered more than polish.\n\nSelected clients included Revolut, w.ai, web3ops, Artscapy, Lyfe, Tela, Ethos, and JazzX.\n\nIndustries spanned AI, fintech, Web3, B2B, gaming, and SaaS.",
+    "A mix of freelance work with startups and agencies across emerging and fast-moving domains. I built brands, interfaces, and websites for early-stage products where clarity mattered more than polish.\n\nSelected clients: Zalando, DeFi Tuna, Atlas, CurbCutOS, Travelnest, Frequency (Berachain), Graceview.ai, JazzX AI (Microsoft), CurbCutOS, Artscapy, Kerubin and more.",
 };
 
 // ============================================================================

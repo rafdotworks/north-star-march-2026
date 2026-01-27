@@ -368,18 +368,16 @@ export default function Page() {
                 {/* Single column flowing layout with subtle first-line emphasis */}
                 <div className="space-y-4 max-w-[600px]">
                   <p className="type-body">
-                    <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs for AI systems that learn, fail, and evolve.
+                    Most AI interfaces assume the model is right.
                   </p>
                   
                   <p className="type-body">
-                    Specializing in interaction models where uncertainty is the design constraint, not a bug to fix.
-                    <br/>
+                    <span className="font-[family-name:var(--font-edu-marist)]">Raf</span> designs for trust when it's wrong and beyond.
+                  </p>
+                  
+                  <p className="type-body">
                     <span className="opacity-80">
-                      I prototype AI behavior to test edge cases, make model reasoning legible, and build trust in autonomous systems.
-                    </span>
-                    <br/>
-                    <span className="opacity-80">
-                      Currently Staff UX Designer for recommendation experiences at Walmart.
+                      Staff Product Designer at Walmart Seller, currently designing AI recommendation systems at marketplace scale.
                     </span>
                   </p>
 

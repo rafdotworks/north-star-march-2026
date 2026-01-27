@@ -62,17 +62,14 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Craft",
       paragraphs: [
         {
-          text: "Eight years designing and engineering products that connect logic with feeling.",
+          text: "Strongest where ambiguity is high and quality matters.",
           isHighlighted: true,
         },
         {
-          text: "Built systems, shaped languages, scaled products.",
+          text: "9+ years across startups and public companies. I work best with founders and leaders who think long-term, move with intent, and care about people as much as outcomes.",
         },
         {
-          text: "I most recently built at Coinbase, Voiceflow, Theoriq, Zalando and many more startups.",
-        },
-        {
-          text: "2025 has been a year of exploration working as a designer and engineer across new surfaces and technologies.",
+          text: "I prototype to decide, not to decorate. I push back when something won't work. I write code when it moves faster.",
         },
         
       ],
