@@ -271,7 +271,6 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
       "/work/cb-1.webp",
       "/work/cb-dash.png",
       "/work/cb-sql.png",
-      "/work/cbd-sql.png",
       "/work/cb.webp"
     ], // Coinbase Developer Platform
   },
@@ -605,7 +604,7 @@ export const PROJECT_INTERLEAVED_CAPTIONS: Record<string, InterleavedCaption> = 
       "I led SQL Playground, Embedded Wallets and contributed to Developer Platform redesign, Pay with USDC, and more applying the same principle: clarity first. Clear loading states. Predictable feedback. Early prototypes. No guessing.",
       "Designed SQL-based query interfaces informed by developer interviews, optimizing for discoverability and error prevention. Collaborated with engineering to design within technical realities rather than idealized flows.",
     ],
-    conclusion: "Result: Shipped different surfaces in three months. Developers could finally tell what was happening and trust it.",
+    conclusion: "Result: Shipped different surfaces within Developer Platform. Developers could finally tell what was happening and trust it.",
   },
   vf: {
     intro: "Voiceflow had 200,000+ users across 4,000+ teams, but new signups weren't converting. The problem wasn't the product: it was the gap between \"I signed up\" and \"I built something that works.\"",
