@@ -23,6 +23,7 @@
 
 import React, { memo, useMemo, useCallback, useState, useRef, useEffect } from "react"
 import { PictureImage } from "./PictureImage"
+import type { InterleavedCaption } from "@/app/config/portfolioConfig"
 
 /** Base z-index for sticky label stacking */
 const Z_INDEX_BASE = 10
@@ -77,6 +78,7 @@ interface WorkCardProps {
   contractType: string
   title: string
   description: string
+  interleavedDescription?: InterleavedCaption  // Optional interleaved text structure for long descriptions
   images: string[]
   altText: string
   priority?: boolean
@@ -103,6 +105,7 @@ export const WorkCard = memo(function WorkCard({
   contractType,
   title,
   description,
+  interleavedDescription,
   images,
   altText,
   priority = false,
@@ -117,14 +120,26 @@ export const WorkCard = memo(function WorkCard({
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   // Memoize description parsing to avoid recalculation on each render
-  // Split description into intro (shown above images) and conclusion (shown below images)
+  // If interleavedDescription is provided, use that structure
+  // Otherwise, split description into intro (shown above images) and conclusion (shown below images)
   const descriptionBlocks = useMemo(() => {
+    // Use interleaved structure if provided
+    if (interleavedDescription) {
+      return {
+        intro: interleavedDescription.intro,
+        chunks: interleavedDescription.chunks,
+        conclusion: interleavedDescription.conclusion,
+        isInterleaved: true
+      }
+    }
+
+    // Fallback to default split behavior
     // Split by double newline to get distinct paragraphs
     const blocks = description.split('\n\n').filter(block => block.trim() !== '')
 
     // If only one block, show it all at the top (no split)
     if (blocks.length <= 1) {
-      return { intro: description, conclusion: null }
+      return { intro: description, conclusion: null, isInterleaved: false }
     }
 
     // Otherwise, last block is conclusion
@@ -133,9 +148,10 @@ export const WorkCard = memo(function WorkCard({
 
     return {
       intro: introBlocks.join('\n\n'),
-      conclusion: lastBlock
+      conclusion: lastBlock,
+      isInterleaved: false
     }
-  }, [description])
+  }, [description, interleavedDescription])
 
   // Memoize event handler to prevent new function creation on each render
   const preventDefault = useCallback((e: React.SyntheticEvent) => {
@@ -218,71 +234,240 @@ export const WorkCard = memo(function WorkCard({
       )}
 
       {/* ========================================================================
-         * ROW 3: EMPTY + IMAGE GALLERY (VERTICAL STACK, FULL WIDTH)
+         * ROW 3: IMAGE GALLERY (VERTICAL STACK) WITH OPTIONAL INTERLEAVED TEXT
          * ======================================================================== */}
 
-      {/* Empty left column */}
-      <div className="hidden md:block" />
-
-      {/* Full-width vertical media stack - right column */}
-      <div className="mt-5 md:mt-1 mb-16 md:mb-10 flex flex-col gap-3 md:gap-4">
-        {images.map((src, idx) => {
-          const isVideo = /\.(mov|mp4|webm)$/i.test(src)
-          const hasFailed = failedImages.has(src)
-
-          return (
-            <div
-              key={`${src}-${idx}`}
-              className="relative w-full select-none"
-              onDragStart={preventDefault}
-              onContextMenu={preventDefault}
-            >
-              {isVideo ? (
-                <LazyVideo src={src} />
-              ) : hasFailed ? (
-                // Fallback for failed images - maintains aspect ratio
-                <div
-                  className="w-full aspect-[3/2] rounded-sm"
-                  style={{ background: IMAGE_ERROR_FALLBACK }}
-                  aria-label={`${altText} - Image unavailable`}
-                />
-              ) : (
-                <PictureImage
-                  src={src}
-                  alt={`${altText} - Image ${idx + 1}`}
-                  width={1200}
-                  height={800}
-                  sizes="(max-width: 768px) 100vw, 800px"
-                  className="w-full h-auto object-contain pointer-events-none rounded-sm"
-                  loading={priority ? "eager" : "lazy"}
-                  priority={priority}
-                  quality={85}
-                  placeholder="blur"
-                  blurDataURL={BLUR_PLACEHOLDER}
-                  draggable={false}
-                  onError={() => handleImageError(src)}
-                />
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Conclusion text (last paragraph) - shown after images */}
-      {descriptionBlocks.conclusion && (
+      {/* Render images with interleaved text chunks if using interleaved format */}
+      {descriptionBlocks.isInterleaved && descriptionBlocks.chunks ? (
         <>
+          {/* First image - no text before it */}
+          {images.length > 0 && (
+            <>
+              {/* Empty left column */}
+              <div className="hidden md:block" />
+
+              {/* First image */}
+              <div className="mt-6 md:mt-1">
+                {(() => {
+                  const src = images[0]
+                  const isVideo = /\.(mov|mp4|webm)$/i.test(src)
+                  const hasFailed = failedImages.has(src)
+
+                  return (
+                    <div
+                      key={`${src}-0`}
+                      className="relative w-full select-none"
+                      onDragStart={preventDefault}
+                      onContextMenu={preventDefault}
+                    >
+                      {isVideo ? (
+                        <LazyVideo src={src} />
+                      ) : hasFailed ? (
+                        <div
+                          className="w-full aspect-[3/2] rounded-sm"
+                          style={{ background: IMAGE_ERROR_FALLBACK }}
+                          aria-label={`${altText} - Image unavailable`}
+                        />
+                      ) : (
+                        <PictureImage
+                          src={src}
+                          alt={`${altText} - Image 1`}
+                          width={1200}
+                          height={800}
+                          sizes="(max-width: 768px) 100vw, 800px"
+                          className="w-full h-auto object-contain pointer-events-none rounded-sm"
+                          loading={priority ? "eager" : "lazy"}
+                          priority={priority}
+                          quality={85}
+                          placeholder="blur"
+                          blurDataURL={BLUR_PLACEHOLDER}
+                          draggable={false}
+                          onError={() => handleImageError(src)}
+                        />
+                      )}
+                    </div>
+                  )
+                })()}
+              </div>
+            </>
+          )}
+
+          {/* Remaining images with text chunks before each */}
+          {images.slice(1).map((src, idx) => {
+            const actualIdx = idx + 1
+            const chunkIdx = idx
+            const textChunk = descriptionBlocks.chunks?.[chunkIdx]
+            const isVideo = /\.(mov|mp4|webm)$/i.test(src)
+            const hasFailed = failedImages.has(src)
+
+            return (
+              <React.Fragment key={`interleaved-${src}-${actualIdx}`}>
+                {/* Text chunk before this image */}
+                {textChunk && (
+                  <>
+                    {/* Empty left column */}
+                    <div className="hidden md:block" />
+
+                    {/* Text chunk */}
+                    <p className="type-body mt-6 md:mt-4">
+                      {textChunk.split('\n').filter(line => line.trim()).map((line, lineIdx, arr) => (
+                        <React.Fragment key={lineIdx}>
+                          {line}
+                          {lineIdx < arr.length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                    </p>
+                  </>
+                )}
+
+                {/* Empty left column */}
+                <div className="hidden md:block" />
+
+                {/* Image */}
+                <div className="mt-6 md:mt-3">
+                  <div
+                    className="relative w-full select-none"
+                    onDragStart={preventDefault}
+                    onContextMenu={preventDefault}
+                  >
+                    {isVideo ? (
+                      <LazyVideo src={src} />
+                    ) : hasFailed ? (
+                      <div
+                        className="w-full aspect-[3/2] rounded-sm"
+                        style={{ background: IMAGE_ERROR_FALLBACK }}
+                        aria-label={`${altText} - Image unavailable`}
+                      />
+                    ) : (
+                      <PictureImage
+                        src={src}
+                        alt={`${altText} - Image ${actualIdx + 1}`}
+                        width={1200}
+                        height={800}
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        className="w-full h-auto object-contain pointer-events-none rounded-sm"
+                        loading={priority && actualIdx < 3 ? "eager" : "lazy"}
+                        priority={priority && actualIdx < 3}
+                        quality={85}
+                        placeholder="blur"
+                        blurDataURL={BLUR_PLACEHOLDER}
+                        draggable={false}
+                        onError={() => handleImageError(src)}
+                      />
+                    )}
+                  </div>
+                </div>
+              </React.Fragment>
+            )
+          })}
+
+          {/* Render any remaining text chunks that don't have corresponding images */}
+          {descriptionBlocks.chunks && images.length > 0 && (
+            <>
+              {descriptionBlocks.chunks.slice(images.length - 1).map((textChunk, idx) => (
+                <React.Fragment key={`remaining-chunk-${idx}`}>
+                  {/* Empty left column */}
+                  <div className="hidden md:block" />
+
+                  {/* Remaining text chunk */}
+                  <p className="type-body mt-6 md:mt-4">
+                    {textChunk.split('\n').filter(line => line.trim()).map((line, lineIdx, arr) => (
+                      <React.Fragment key={lineIdx}>
+                        {line}
+                        {lineIdx < arr.length - 1 && <br />}
+                      </React.Fragment>
+                    ))}
+                  </p>
+                </React.Fragment>
+              ))}
+            </>
+          )}
+
+          {/* Conclusion text (shown after remaining text chunks) */}
+          {descriptionBlocks.conclusion && (
+            <>
+              {/* Empty left column */}
+              <div className="hidden md:block" />
+
+              {/* Conclusion paragraph */}
+              <p className="type-body mt-6 md:mt-4 mb-12 md:mb-10">
+                {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
+                  <React.Fragment key={index}>
+                    {line}
+                    {index < arr.length - 1 && <br />}
+                  </React.Fragment>
+                ))}
+              </p>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Default layout: all images, then conclusion */}
           {/* Empty left column */}
           <div className="hidden md:block" />
 
-          {/* Conclusion paragraph - right column */}
-          <p className="type-body -mt-8 md:-mt-6 mb-16 md:mb-10">
-            {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
-              <React.Fragment key={index}>
-                {line}
-                {index < arr.length - 1 && <br />}
-              </React.Fragment>
-            ))}
-          </p>
+          {/* Full-width vertical media stack - right column */}
+          <div className="mt-6 md:mt-1 mb-12 md:mb-10 flex flex-col gap-3 md:gap-4">
+            {images.map((src, idx) => {
+              const isVideo = /\.(mov|mp4|webm)$/i.test(src)
+              const hasFailed = failedImages.has(src)
+
+              return (
+                <div
+                  key={`${src}-${idx}`}
+                  className="relative w-full select-none"
+                  onDragStart={preventDefault}
+                  onContextMenu={preventDefault}
+                >
+                  {isVideo ? (
+                    <LazyVideo src={src} />
+                  ) : hasFailed ? (
+                    // Fallback for failed images - maintains aspect ratio
+                    <div
+                      className="w-full aspect-[3/2] rounded-sm"
+                      style={{ background: IMAGE_ERROR_FALLBACK }}
+                      aria-label={`${altText} - Image unavailable`}
+                    />
+                  ) : (
+                    <PictureImage
+                      src={src}
+                      alt={`${altText} - Image ${idx + 1}`}
+                      width={1200}
+                      height={800}
+                      sizes="(max-width: 768px) 100vw, 800px"
+                      className="w-full h-auto object-contain pointer-events-none rounded-sm"
+                      loading={priority ? "eager" : "lazy"}
+                      priority={priority}
+                      quality={85}
+                      placeholder="blur"
+                      blurDataURL={BLUR_PLACEHOLDER}
+                      draggable={false}
+                      onError={() => handleImageError(src)}
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Conclusion text (last paragraph) - shown after images */}
+          {descriptionBlocks.conclusion && (
+            <>
+              {/* Empty left column */}
+              <div className="hidden md:block" />
+
+              {/* Conclusion paragraph - right column */}
+              <p className="type-body -mt-8 md:-mt-6 mb-12 md:mb-10">
+                {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
+                  <React.Fragment key={index}>
+                    {line}
+                    {index < arr.length - 1 && <br />}
+                  </React.Fragment>
+                ))}
+              </p>
+            </>
+          )}
         </>
       )}
     </div>

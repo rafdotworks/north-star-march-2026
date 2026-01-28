@@ -13,6 +13,7 @@ import {
   PROJECT_ORDER,
   PROJECTS,
   PROJECT_CAPTIONS,
+  PROJECT_INTERLEAVED_CAPTIONS,
   PROJECT_YEARS,
   PROJECT_ROLES,
   PROJECT_CONTRACT_TYPES,
@@ -443,6 +444,7 @@ export default function Page() {
                     contractType={PROJECT_CONTRACT_TYPES[projectKey] || ""}
                     title={title}
                     description={PROJECT_CAPTIONS[projectKey]}
+                    interleavedDescription={PROJECT_INTERLEAVED_CAPTIONS[projectKey]}
                     images={images}
                     altText={altText}
                     priority={index < PRIORITY_IMAGE_COUNT}
