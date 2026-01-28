@@ -374,7 +374,7 @@ export default function Page() {
                   </p> */}
                   
                   <p className="type-body">
-                    <span className="font-[family-name:var(--font-edu-marist)] text-sm">Raf</span> designs and builds AI products.
+                    <span className="font-[family-name:var(--font-edu-marist)] text-sm">Raf</span> designs and builds AI products that work at scale.
                   </p>
 
                   {/* third line */}
