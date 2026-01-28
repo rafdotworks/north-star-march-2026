@@ -283,11 +283,10 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
   },
   theo: {
     images: [
-      "/work/theo-1.png",
       "/work/t-studio.png",
-      "/work/t-json.png",
-      "/work/t-hubandbuild.png",
       "/work/videos/theoriq-demo.mov",
+      //"/work/t-json.png",
+      "/work/t-hubandbuild.png",,
       "/work/theo-web.png"
     ], // Theoriq - AI platform, founding designer, video is 5th item
   },
@@ -552,7 +551,7 @@ export const PROJECT_CAPTIONS: Record<string, string> = {
   // currentwork: "Work in progress.\n\nMore details coming soon.",
   cb: "Coinbase was rolling out onchain infrastructure across its developer platform. The tech worked. But early interactions felt slow and hard to reason about.\n\nDevelopers couldn't tell if something was processing, broken, or just taking time. That ambiguity kills trust.\n\nI led SQL Playground, Embedded Wallets and contributed to Developer Platform redesign, Pay with USDC, and more applying the same principle: clarity first. Clear loading states. Predictable feedback. Early prototypes. No guessing.\n\nDesigned SQL-based query interfaces informed by developer interviews, optimizing for discoverability and error prevention. Collaborated with engineering to design within technical realities rather than idealized flows.\n\nResult: Shipped different surfaces in three months. Developers could finally tell what was happening and trust it.",
   vf: "Voiceflow had 200,000+ users across 4,000+ teams, but new signups weren't converting. The problem wasn't the product: it was the gap between \"I signed up\" and \"I built something that works.\"\n\nI reframed onboarding around time-to-first-value. Not features. Not tutorials. Just: how fast can someone go from zero to a working AI agent?\n\nRedesigned early activation to collapse that timeline. Clearer entry points. Smarter defaults. Less guessing. Designed interaction patterns that made LLM behavior predictable and trustworthy, helping users understand when agents would succeed or fail.\n\nResult: New user activation improved. More teams got to their first agent faster. The product already worked—now it worked sooner.",
-  theo: "AI agents were emerging, but trust mechanisms for operating with real assets didn't exist. How do you let an agent move real crypto without losing it all?\n\nI joined as founding designer and owned end-to-end UX from zero. Designed Infinity Studio (the workspace where developers could test, inspect, and control agents) and Infinity Hub (the marketplace where agents can be shared). Partnered with CEO and founding team to translate experimental AI infrastructure into product vision. Also shaped brand and go-to-market.\n\nResult: Scaled from 0 to 140K users in 6 months. 40% created their first strategy after Studio launch. The patterns we built are still the foundation.",
+  theo: "AI agents were emerging, but trust mechanisms for operating with real assets didn't exist. How do you confidently let an agent move real crypto?\n\nI joined as founding designer and owned end-to-end UX from zero. Designed Infinity Studio (the workspace where developers could test, inspect, and control agents) and Infinity Hub (the marketplace where agents can be shared). Partnered with CEO and founding team to translate experimental AI infrastructure into product vision. Also shaped brand and go-to-market.\n\nResult: Scaled from 0 to 140K users in 6 months. 40% created their first strategy after Studio launch. The patterns we built are still the foundation.",
   atlas:
     "Atlas was an early NFT marketplace with few established UX patterns.\nI led product design by shaping transaction and analytics flows that made decentralized trading, borrowing, and lending legible and safe.\n\nThe result was a Web3 experience users could reason about before committing value.",
   curbcut:
@@ -617,7 +616,7 @@ export const PROJECT_INTERLEAVED_CAPTIONS: Record<string, InterleavedCaption> = 
     conclusion: "Result: New user activation improved. More teams got to their first agent faster. The product already worked—now it worked sooner.",
   },
   theo: {
-    intro: "AI agents were emerging, but trust mechanisms for operating with real assets didn't exist. How do you let an agent move real crypto without losing it all?",
+    intro: "AI agents were emerging, but trust mechanisms for operating with real assets didn't exist. How do you confidently let an agent move real crypto?",
     chunks: [
       "I joined as founding designer and owned end-to-end UX from zero. Designed Infinity Studio (the workspace where developers could test, inspect, and control agents) and Infinity Hub (the marketplace where agents can be shared). Partnered with CEO and founding team to translate experimental AI infrastructure into product vision. Also shaped brand and go-to-market.",
     ],
