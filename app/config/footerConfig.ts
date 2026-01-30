@@ -64,13 +64,13 @@ export interface WritingPrinciple {
  * Complete footer configuration structure.
  */
 export interface FooterConfig {
-  bio: {
+  bio?: {
     /** Section header label */
     sectionLabel: string;
     /** Array of bio paragraphs */
     paragraphs: BioParagraph[];
   };
-  location: {
+  location?: {
     /** Section header label */
     sectionLabel: string;
     /** Location details */
@@ -97,6 +97,7 @@ export interface FooterConfig {
  * - Writing section with principles
  */
 export const FOOTER_CONFIG: FooterConfig = {
+  /*
   bio: {
     sectionLabel: "About",
     paragraphs: [
@@ -119,6 +120,7 @@ export const FOOTER_CONFIG: FooterConfig = {
       ],
     },
   },
+  */
 
   writing: {
     sectionLabel: "Writings",

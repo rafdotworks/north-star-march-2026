@@ -558,7 +558,7 @@ export const PROJECT_CAPTIONS: Record<string, string> = {
   zalando:
     "Zalando's B2B products were scaling, but patterns fragmented across teams.\nI established the company's first unified B2B design system, creating a shared language that improved usability and cross-team alignment at enterprise scale.",
   earlyworks:
-    "A mix of freelance work with startups and agencies across emerging and fast-moving domains. I built brands, interfaces, and websites for early-stage products where clarity mattered more than polish.\n\nSelected clients: Zalando, DeFi Tuna, Atlas, CurbCutOS, Travelnest, Frequency (Berachain), Graceview.ai, JazzX AI (Microsoft), CurbCutOS, Artscapy, Kerubin and more.",
+    "A mix of freelance work with startups and agencies across emerging and fast-moving domains. I built brands, interfaces, and websites for early-stage products where clarity mattered more than polish.\n\nSelected clients: Voiceflow (AI Agents), Atlas (NFT Marketplace), Zalando (B2B Design System), JazzX AI (Microsoft), CurbCutOS, Artscapy.",
 };
 
 // ============================================================================

@@ -348,7 +348,7 @@ export default function Page() {
   const footerY = footerScrollProgress * -24  // Subtle upward drift (vs hero's -48px)
 
   return (
-    <div className="min-h-screen -mx-[max(16px,calc(env(safe-area-inset-left,0px)+16px))] sm:mx-0" style={containerStyle}>
+    <div className="min-h-screen -mx-[max(16px,calc(env(safe-area-inset-left,0px)+16px))] sm:mx-0 overflow-x-hidden" style={containerStyle}>
       {/* ================================================================
        * HERO SECTION - Fixed in background, blurs beautifully on scroll
        * ================================================================ */}
@@ -369,21 +369,25 @@ export default function Page() {
               <div className="md:col-start-2">
                 {/* Single column flowing layout with subtle first-line emphasis */}
                 
-                <div className="space-y-4 max-w-[600px]">
+                <div className="space-y-2 max-w-[600px]">
                   {/* <p className="type-body">
                     Most AI interfaces assume the model is right.
                   </p> */}
                   
+                  {/* Line 1: Primary statement */}
                   <p className="type-body">
                     <span className="font-[family-name:var(--font-edu-marist)] text-sm">Raf</span> designs and builds AI products that work at scale.
                   </p>
 
-                  {/* third line */}
-                  {/* <p className="type-body">
-                    <span className="opacity-80">
-                      Staff Product Designer at Walmart Seller, currently designing AI recommendation systems at marketplace scale.
-                    </span>
-                  </p> */}
+                  {/* Line 2: Current work context */}
+                  <p className="type-body opacity-75">
+                    Currently designing the AI recommendation systems for Sellers at Walmart and more.
+                  </p>
+
+                  {/* Line 3: Bio and location metadata */}
+                  <p className="type-caption opacity-60 tracking-tight -mt-2">
+                    Born on the Amalfi Coast, Italy. Based in <span className="line-through opacity-50">Lisbon</span> <span className="line-through opacity-50">NYC</span> Toronto, Canada.
+                  </p>
 
                   {/* Contact Links - Horizontal Layout */}
                   <nav className="flex items-center gap-4 group/nav pt-2">
@@ -424,7 +428,7 @@ export default function Page() {
 
         {/* Works section with solid background */}
         <div className="min-h-screen pointer-events-auto" style={worksSectionStyle}>
-          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20 py-12 md:py-20">
+          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20 py-12 md:py-20 overflow-hidden md:overflow-visible">
             <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16 gap-y-1 md:gap-y-2">
 
               {/* Works */}
@@ -502,58 +506,62 @@ export default function Page() {
                 }}
               >
                 {/* SECTION 1: About (Bio) */}
-                <div className="space-y-1">
-                  {/* Clickable header - opens personal blueprint in writing tray */}
-                  <span
-                    onClick={() => {
-                      setIsWritingOpen(true)
-                      setSelectedWritingArticle("personal-blueprint")
-                    }}
-                    className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
-                  >
-                    {FOOTER_CONFIG.bio.sectionLabel}
-                  </span>
-                  {/* Bio content */}
-                  <p className="type-body">
-                    {FOOTER_CONFIG.bio.paragraphs.map((paragraph, index) => (
-                      <React.Fragment key={index}>
-                        {index > 0 && <br />}
-                        <span className={paragraph.isSecondary ? 'opacity-80' : ''}>
-                          {paragraph.text}
-                        </span>
-                      </React.Fragment>
-                    ))}
-                  </p>
-                </div>
-
-                {/* SECTION 2: Location */}
-                <div className="space-y-1">
-                  {/* Clickable header - opens "moving-to-europe" article */}
-                  <span
-                    onClick={() => {
-                      setIsWritingOpen(true)
-                      setSelectedWritingArticle("moving-to-europe")
-                    }}
-                    className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
-                  >
-                    {FOOTER_CONFIG.location.sectionLabel}
-                  </span>
-                  {/* Location content */}
-                  <p className="type-body">
-                    {FOOTER_CONFIG.location.info.futureMove}{' '}
-                    <span className="opacity-80">
-                      {FOOTER_CONFIG.location.info.origin}{' '}
-                      Based in {FOOTER_CONFIG.location.info.currentBases.map((base, index) => (
+                {FOOTER_CONFIG.bio && (
+                  <div className="space-y-1">
+                    {/* Clickable header - opens personal blueprint in writing tray */}
+                    <span
+                      onClick={() => {
+                        setIsWritingOpen(true)
+                        setSelectedWritingArticle("personal-blueprint")
+                      }}
+                      className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
+                    >
+                      {FOOTER_CONFIG.bio.sectionLabel}
+                    </span>
+                    {/* Bio content */}
+                    <p className="type-body">
+                      {FOOTER_CONFIG.bio.paragraphs.map((paragraph, index) => (
                         <React.Fragment key={index}>
-                          {index > 0 && ' '}
-                          <span className={base.isPrevious ? 'line-through opacity-50' : ''}>
-                            {base.city}
+                          {index > 0 && <br />}
+                          <span className={paragraph.isSecondary ? 'opacity-80' : ''}>
+                            {paragraph.text}
                           </span>
                         </React.Fragment>
-                      ))}.
+                      ))}
+                    </p>
+                  </div>
+                )}
+
+                {/* SECTION 2: Location */}
+                {FOOTER_CONFIG.location && (
+                  <div className="space-y-1">
+                    {/* Clickable header - opens "moving-to-europe" article */}
+                    <span
+                      onClick={() => {
+                        setIsWritingOpen(true)
+                        setSelectedWritingArticle("moving-to-europe")
+                      }}
+                      className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
+                    >
+                      {FOOTER_CONFIG.location.sectionLabel}
                     </span>
-                  </p>
-                </div>
+                    {/* Location content */}
+                    <p className="type-body">
+                      {FOOTER_CONFIG.location.info.futureMove}{' '}
+                      <span className="opacity-80">
+                        {FOOTER_CONFIG.location.info.origin}{' '}
+                        Based in {FOOTER_CONFIG.location.info.currentBases.map((base, index) => (
+                          <React.Fragment key={index}>
+                            {index > 0 && ' '}
+                            <span className={base.isPrevious ? 'line-through opacity-50' : ''}>
+                              {base.city}
+                            </span>
+                          </React.Fragment>
+                        ))}.
+                      </span>
+                    </p>
+                  </div>
+                )}
 
                 {/* SECTION 3: Writing (existing clickable section) */}
                 <div className="space-y-1">

@@ -24,7 +24,6 @@
 import React, { memo, useMemo, useCallback, useState, useRef, useEffect } from "react"
 import { PictureImage } from "./PictureImage"
 import { DragCarousel } from "./DragCarousel"
-import { useIsMobile } from "@/hooks/use-mobile"
 import type { InterleavedCaption } from "@/app/config/portfolioConfig"
 
 /** Base z-index for sticky label stacking */
@@ -123,8 +122,7 @@ export const WorkCard = memo(function WorkCard({
   // Track failed images to show fallback
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
-  // Determine if carousel should be used (desktop + mobile)
-  const isMobile = useIsMobile()
+  // Determine if carousel should be used
   const shouldUseCarousel = displayMode === 'carousel'
 
   // Memoize description parsing to avoid recalculation on each render
@@ -417,7 +415,7 @@ export const WorkCard = memo(function WorkCard({
 
           {/* Carousel or vertical stack - right column */}
           {shouldUseCarousel ? (
-            <DragCarousel className="mt-6 md:mt-1" isMobile={isMobile}>
+            <DragCarousel className="mt-6 md:mt-1 mb-6 md:mb-1">
               {images.map((src, idx) => {
                 const isVideo = /\.(mov|mp4|webm)$/i.test(src)
                 const hasFailed = failedImages.has(src)
@@ -425,7 +423,7 @@ export const WorkCard = memo(function WorkCard({
                 return (
                   <div
                     key={`${src}-${idx}`}
-                    className="relative w-[800px] flex-shrink-0 select-none"
+                    className="relative w-[85vw] sm:w-full sm:max-w-[800px] flex-shrink-0 select-none"
                     onDragStart={preventDefault}
                     onContextMenu={preventDefault}
                   >
@@ -513,7 +511,7 @@ export const WorkCard = memo(function WorkCard({
               {/* Conclusion paragraph - right column */}
               <p className={`type-body mb-12 md:mb-10 ${
                 shouldUseCarousel
-                  ? 'mt-6 md:mt-1'     // Matches carousel top spacing (consistent above/below)
+                  ? 'mt-0'             // No top margin, carousel has bottom margin now
                   : '-mt-8 md:-mt-6'   // Negative margin for stack (pulls up from stack's bottom margin)
               }`}>
                 {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
