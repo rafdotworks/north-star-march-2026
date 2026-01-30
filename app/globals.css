@@ -573,6 +573,24 @@ pre {
   .pr-safe {
     padding-right: env(safe-area-inset-right, 0px);
   }
+
+  /* Carousel utilities - hide scrollbar while maintaining functionality */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Scroll snap utilities for native carousel behavior */
+  .scroll-snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll-snap-center {
+    scroll-snap-align: center;
+  }
 }
 
 /* Frosted, full-bleed mobile header with soft bottom fade */

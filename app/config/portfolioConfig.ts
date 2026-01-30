@@ -230,7 +230,7 @@ export const LOADING_STAGES: string[] = [
  * This is the source of truth for project identifiers.
  */
 export const PROJECT_KEYS = [
-  // "currentwork", // temporarily disabled
+  "currentwork",
   "theo",
   "cb",
   "vf",
@@ -260,9 +260,9 @@ export type ProjectKey = (typeof PROJECT_KEYS)[number];
  */
 export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
   // Current/recent work (2024-2026)
-  // currentwork: {
-  //   images: ["/work/current-work.gif"], // Work in progress - placeholder for future GIF
-  // },
+  currentwork: {
+    images: ["/work/currently.webp"], // Current AI work - animated preview
+  },
   atlas: {
     images: ["/work/atlas.webp", "/work/atlas-2.png", "/work/videos/atlas-ptv.mov"], // Crypto marketplace, NFT era
   },
@@ -285,7 +285,7 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
       "/work/t-studio.png",
       "/work/videos/theoriq-demo.mov",
       //"/work/t-json.png",
-      "/work/t-hubandbuild.png",,
+      "/work/t-hubandbuild.png",
       "/work/theo-web.png"
     ], // Theoriq - AI platform, founding designer, video is 5th item
   },
@@ -294,12 +294,12 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
   zalando: { images: ["/work/zalando-dodont.png"] }, // B2B design system
   earlyworks: { 
     images: [
-      "/work/us.png",
-      "/work/zalando-dodont.png",
-      "/work/defi-tuna-swap.png",
-      "/work/early-works.webp"
+      "/work/vf.webp",           // Voiceflow
+      "/work/atlas.webp",         // Atlas
+      "/work/zalando-dodont.png", // Zalando
+      "/work/early-works.webp"    // Early works
     ] 
-  }, // Early brand work, now includes National Archives, Zalando, DeFi Tuna, and more
+  }, // Early brand work: Voiceflow, Atlas, Zalando, and early works
   nationalArchives: { images: ["/work/us.webp"] }, // Early brand work (fixed: removed duplicate)
 };
 
@@ -371,11 +371,10 @@ export const PROJECT_ALIAS: Record<string, string> = {
  * ```
  */
 export const PROJECT_ORDER: ProjectKey[] = [
-  // "currentwork", // Current work (2026) - temporarily disabled
+  "currentwork", // Current work (2026)
   "theo", // Theoriq (2024)
   "cb", // Coinbase (2025)
-  "vf", // Voiceflow (2025)
-  "earlyworks", // Early work (2017-2019), now includes Atlas and Zalando
+  "earlyworks", // Early work (2017-2019), now includes Voiceflow, Atlas, Zalando, and more
 ];
 
 /**
@@ -409,7 +408,7 @@ export const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
  * @see {@link app/utils/portfolioUtils.ts#getAltText} for usage
  */
 export const IMAGE_ALT_TEXT: Record<string, string> = {
-  // "/work/current-work.gif": "Work in progress placeholder - animated preview of current project",
+  "/work/currently.webp": "Current AI work - animated preview of AI assistant interface",
   "/work/cb-1.webp": "Coinbase Developer Platform interface showing API documentation and developer tools",
   "/work/cb-dash.png": "Coinbase Developer Platform dashboard with navigation and project overview",
   "/work/cb-sql.png": "Coinbase SQL AI Playground interface for querying blockchain data",
@@ -421,6 +420,7 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
   "/work/theo-web.png": "Theoriq web platform interface showcasing AI agent marketplace and workflow builder",
   "/work/vf.webp": "Voiceflow conversation design interface with flowchart-style dialog editor",
   "/work/atlas-2.png": "Atlas crypto marketplace featuring NFT collections and digital asset trading interface",
+  "/work/atlas.webp": "Atlas crypto marketplace featuring NFT collections and digital asset trading interface",
   "/work/defituna-1.png": "DeFi Tuna decentralized finance platform with yield farming and staking features",
   "/work/defi-tuna-swap.png": "DeFi Tuna swap interface showing token exchange functionality with transaction details",
   "/work/curbcutos.png": "CurbCut accessibility data visualization tool showing urban mobility metrics",
@@ -446,7 +446,7 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
  * ```
  */
 export const PROJECT_ROLES: Record<string, string> = {
-  // currentwork: "Work in Progress",
+  currentwork: "Work in Progress",
   theo: "Founding Designer, Design Engineer",
   cb: "Senior Product Designer",
   vf: "Senior Product Designer",
@@ -469,7 +469,7 @@ export const PROJECT_ROLES: Record<string, string> = {
  * ```
  */
 export const PROJECT_CONTRACT_TYPES: Record<string, string> = {
-  // currentwork: "Ongoing",
+  currentwork: "Ongoing",
   theo: "Full-time",
   cb: "Contract",
   vf: "Contract",
@@ -492,7 +492,7 @@ export const PROJECT_CONTRACT_TYPES: Record<string, string> = {
  * ```
  */
 export const PROJECT_YEARS: Record<string, string> = {
-  // currentwork: "2026",
+  currentwork: "2026",
   theo: "2024-25",
   cb: "Q3-Q4 2025",
   vf: "Q1-Q2 2025",
@@ -515,7 +515,7 @@ export const PROJECT_YEARS: Record<string, string> = {
  * ```
  */
 export const PROJECT_DISPLAY_NAMES: Record<string, string> = {
-  // currentwork: "Current Work",
+  currentwork: "Current Work",
   theo: "Theoriq",
   cb: "Coinbase Developer Platform",
   vf: "Voiceflow",
@@ -547,7 +547,7 @@ export const PROJECT_DISPLAY_NAMES: Record<string, string> = {
  * ```
  */
 export const PROJECT_CAPTIONS: Record<string, string> = {
-  // currentwork: "Work in progress.\n\nMore details coming soon.",
+  currentwork: "Work in progress.\n\nMore details coming soon.",
   cb: "Coinbase was rolling out onchain infrastructure across its developer platform. The tech worked. But early interactions felt slow and hard to reason about.\n\nDevelopers couldn't tell if something was processing, broken, or just taking time. That ambiguity kills trust.\n\nI led SQL Playground, Embedded Wallets and contributed to Developer Platform redesign, Pay with USDC, and more applying the same principle: clarity first. Clear loading states. Predictable feedback. Early prototypes. No guessing.\n\nDesigned SQL-based query interfaces informed by developer interviews, optimizing for discoverability and error prevention. Collaborated with engineering to design within technical realities rather than idealized flows.\n\nResult: Shipped different surfaces in three months. Developers could finally tell what was happening and trust it.",
   vf: "Voiceflow had 200,000+ users across 4,000+ teams, but new signups weren't converting. The problem wasn't the product: it was the gap between \"I signed up\" and \"I built something that works.\"\n\nI reframed onboarding around time-to-first-value. Not features. Not tutorials. Just: how fast can someone go from zero to a working AI agent?\n\nRedesigned early activation to collapse that timeline. Clearer entry points. Smarter defaults. Less guessing. Designed interaction patterns that made LLM behavior predictable and trustworthy, helping users understand when agents would succeed or fail.\n\nResult: New user activation improved. More teams got to their first agent faster. The product already worked—now it worked sooner.",
   theo: "AI agents were emerging, but trust mechanisms for operating with real assets didn't exist. How do you confidently let an agent move real crypto?\n\nI joined as founding designer and owned end-to-end UX from zero. Designed Infinity Studio (the workspace where developers could test, inspect, and control agents) and Infinity Hub (the marketplace where agents can be shared). Partnered with CEO and founding team to translate experimental AI infrastructure into product vision. Also shaped brand and go-to-market.\n\nResult: Scaled from 0 to 140K users in 6 months. 40% created their first strategy after Studio launch. The patterns we built are still the foundation.",
@@ -578,6 +578,25 @@ export interface InterleavedCaption {
   intro: string       // First text block (shown before first image)
   chunks: string[]    // Text chunks to show after each subsequent image
   conclusion: string  // Final text block (shown after all images, or empty string)
+}
+
+/**
+ * Display mode for project images.
+ * - 'stack': Vertical stack of images (default)
+ * - 'carousel': Horizontal drag carousel (desktop only, reverts to stack on mobile)
+ */
+export type ProjectDisplayMode = 'stack' | 'carousel'
+
+/**
+ * PROJECT_DISPLAY_MODES: Display mode configuration for projects.
+ *
+ * @remarks
+ * Controls whether a project's images render as a vertical stack or horizontal carousel.
+ * Projects not in this map default to 'stack' mode.
+ * Carousel mode only applies on desktop (≥768px) - mobile always uses stack.
+ */
+export const PROJECT_DISPLAY_MODES: Record<string, ProjectDisplayMode> = {
+  earlyworks: 'carousel',
 }
 
 /**
@@ -681,7 +700,7 @@ export const PRELOAD_IMAGES = IMAGE_SOURCES.slice(
  * @see app/new/components/WorksPanel.tsx for usage (component location unchanged)
  */
 export const PROJECT_TO_WORK_MAP: Record<string, { section: 'fulltime' | 'contract' | 'studio', identifier: string }> = {
-  // 'currentwork': { section: 'fulltime', identifier: '2024–2025' }, // Maps to most recent work entry
+  'currentwork': { section: 'fulltime', identifier: '2024–2025' }, // Maps to most recent work entry
   'theo': { section: 'fulltime', identifier: '2024–2025' },
   'cb': { section: 'contract', identifier: '2025' }, // Coinbase
   'vf': { section: 'contract', identifier: '2025' }, // Voiceflow (first 2025 entry)

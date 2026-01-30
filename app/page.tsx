@@ -18,6 +18,7 @@ import {
   PROJECT_ROLES,
   PROJECT_CONTRACT_TYPES,
   PROJECT_DISPLAY_NAMES,
+  PROJECT_DISPLAY_MODES,
   IMAGE_ALT_TEXT,
   PROJECT_HAS_STORY
 } from "@/app/config/portfolioConfig"
@@ -454,6 +455,7 @@ export default function Page() {
                     metadataBlur={effects.blur}
                     metadataOpacity={effects.opacity}
                     metadataRef={setMetadataRef(index)}
+                    displayMode={PROJECT_DISPLAY_MODES[projectKey] || 'stack'}
                   />
                 )
               })}
@@ -538,10 +540,9 @@ export default function Page() {
                   </span>
                   {/* Location content */}
                   <p className="type-body">
-                    {FOOTER_CONFIG.location.info.futureMove}
-                    <br/>
+                    {FOOTER_CONFIG.location.info.futureMove}{' '}
                     <span className="opacity-80">
-                      {FOOTER_CONFIG.location.info.origin} <br />
+                      {FOOTER_CONFIG.location.info.origin}{' '}
                       Based in {FOOTER_CONFIG.location.info.currentBases.map((base, index) => (
                         <React.Fragment key={index}>
                           {index > 0 && ' '}

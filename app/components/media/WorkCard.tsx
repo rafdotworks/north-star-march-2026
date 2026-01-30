@@ -23,6 +23,8 @@
 
 import React, { memo, useMemo, useCallback, useState, useRef, useEffect } from "react"
 import { PictureImage } from "./PictureImage"
+import { DragCarousel } from "./DragCarousel"
+import { useIsMobile } from "@/hooks/use-mobile"
 import type { InterleavedCaption } from "@/app/config/portfolioConfig"
 
 /** Base z-index for sticky label stacking */
@@ -88,6 +90,7 @@ interface WorkCardProps {
   metadataBlur?: number  // Blur intensity for metadata (0-4px)
   metadataOpacity?: number  // Opacity value for metadata (0-1, where 1 = visible, 0 = transparent)
   metadataRef?: (el: HTMLDivElement | null) => void  // Ref callback for scroll calculation
+  displayMode?: 'stack' | 'carousel'  // Display mode for images (stack = vertical, carousel = horizontal drag)
 }
 
 /**
@@ -114,10 +117,15 @@ export const WorkCard = memo(function WorkCard({
   onReadStory,
   metadataBlur,
   metadataOpacity,
-  metadataRef
+  metadataRef,
+  displayMode = 'stack'
 }: WorkCardProps) {
   // Track failed images to show fallback
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+
+  // Determine if carousel should be used (desktop + mobile)
+  const isMobile = useIsMobile()
+  const shouldUseCarousel = displayMode === 'carousel'
 
   // Memoize description parsing to avoid recalculation on each render
   // If interleavedDescription is provided, use that structure
@@ -407,49 +415,94 @@ export const WorkCard = memo(function WorkCard({
           {/* Empty left column */}
           <div className="hidden md:block" />
 
-          {/* Full-width vertical media stack - right column */}
-          <div className="mt-6 md:mt-1 mb-12 md:mb-10 flex flex-col gap-3 md:gap-4">
-            {images.map((src, idx) => {
-              const isVideo = /\.(mov|mp4|webm)$/i.test(src)
-              const hasFailed = failedImages.has(src)
+          {/* Carousel or vertical stack - right column */}
+          {shouldUseCarousel ? (
+            <DragCarousel className="mt-6 md:mt-1" isMobile={isMobile}>
+              {images.map((src, idx) => {
+                const isVideo = /\.(mov|mp4|webm)$/i.test(src)
+                const hasFailed = failedImages.has(src)
 
-              return (
-                <div
-                  key={`${src}-${idx}`}
-                  className="relative w-full select-none"
-                  onDragStart={preventDefault}
-                  onContextMenu={preventDefault}
-                >
-                  {isVideo ? (
-                    <LazyVideo src={src} />
-                  ) : hasFailed ? (
-                    // Fallback for failed images - maintains aspect ratio
-                    <div
-                      className="w-full aspect-[3/2] rounded-sm"
-                      style={{ background: IMAGE_ERROR_FALLBACK }}
-                      aria-label={`${altText} - Image unavailable`}
-                    />
-                  ) : (
-                    <PictureImage
-                      src={src}
-                      alt={`${altText} - Image ${idx + 1}`}
-                      width={1200}
-                      height={800}
-                      sizes="(max-width: 768px) 100vw, 800px"
-                      className="w-full h-auto object-contain pointer-events-none rounded-sm"
-                      loading={priority ? "eager" : "lazy"}
-                      priority={priority}
-                      quality={85}
-                      placeholder="blur"
-                      blurDataURL={BLUR_PLACEHOLDER}
-                      draggable={false}
-                      onError={() => handleImageError(src)}
-                    />
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                return (
+                  <div
+                    key={`${src}-${idx}`}
+                    className="relative w-[800px] flex-shrink-0 select-none"
+                    onDragStart={preventDefault}
+                    onContextMenu={preventDefault}
+                  >
+                    {isVideo ? (
+                      <LazyVideo src={src} />
+                    ) : hasFailed ? (
+                      // Fallback for failed images - maintains aspect ratio
+                      <div
+                        className="w-full aspect-[3/2] rounded-sm"
+                        style={{ background: IMAGE_ERROR_FALLBACK }}
+                        aria-label={`${altText} - Image unavailable`}
+                      />
+                    ) : (
+                      <PictureImage
+                        src={src}
+                        alt={`${altText} - Image ${idx + 1}`}
+                        width={1200}
+                        height={800}
+                        sizes="800px"
+                        className="w-full h-auto object-contain pointer-events-none rounded-sm"
+                        loading={priority ? "eager" : "lazy"}
+                        priority={priority}
+                        quality={85}
+                        placeholder="blur"
+                        blurDataURL={BLUR_PLACEHOLDER}
+                        draggable={false}
+                        onError={() => handleImageError(src)}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </DragCarousel>
+          ) : (
+            <div className="mt-6 md:mt-1 mb-12 md:mb-10 flex flex-col gap-3 md:gap-4">
+              {images.map((src, idx) => {
+                const isVideo = /\.(mov|mp4|webm)$/i.test(src)
+                const hasFailed = failedImages.has(src)
+
+                return (
+                  <div
+                    key={`${src}-${idx}`}
+                    className="relative w-full select-none"
+                    onDragStart={preventDefault}
+                    onContextMenu={preventDefault}
+                  >
+                    {isVideo ? (
+                      <LazyVideo src={src} />
+                    ) : hasFailed ? (
+                      // Fallback for failed images - maintains aspect ratio
+                      <div
+                        className="w-full aspect-[3/2] rounded-sm"
+                        style={{ background: IMAGE_ERROR_FALLBACK }}
+                        aria-label={`${altText} - Image unavailable`}
+                      />
+                    ) : (
+                      <PictureImage
+                        src={src}
+                        alt={`${altText} - Image ${idx + 1}`}
+                        width={1200}
+                        height={800}
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        className="w-full h-auto object-contain pointer-events-none rounded-sm"
+                        loading={priority ? "eager" : "lazy"}
+                        priority={priority}
+                        quality={85}
+                        placeholder="blur"
+                        blurDataURL={BLUR_PLACEHOLDER}
+                        draggable={false}
+                        onError={() => handleImageError(src)}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
 
           {/* Conclusion text (last paragraph) - shown after images */}
           {descriptionBlocks.conclusion && (
@@ -458,7 +511,11 @@ export const WorkCard = memo(function WorkCard({
               <div className="hidden md:block" />
 
               {/* Conclusion paragraph - right column */}
-              <p className="type-body -mt-8 md:-mt-6 mb-12 md:mb-10">
+              <p className={`type-body mb-12 md:mb-10 ${
+                shouldUseCarousel
+                  ? 'mt-6 md:mt-1'     // Matches carousel top spacing (consistent above/below)
+                  : '-mt-8 md:-mt-6'   // Negative margin for stack (pulls up from stack's bottom margin)
+              }`}>
                 {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
                   <React.Fragment key={index}>
                     {line}
