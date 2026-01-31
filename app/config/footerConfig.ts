@@ -97,14 +97,25 @@ export interface FooterConfig {
  * - Writing section with principles
  */
 export const FOOTER_CONFIG: FooterConfig = {
-  /*
   bio: {
     sectionLabel: "About",
     paragraphs: [
       {
-        text: "Staff Product Designer at Walmart Seller, currently designing AI recommendation systems at marketplace scale.",
+        text: "Staff Product Designer at Walmart Seller",
         isSecondary: false,
       },
+      {
+        text: ", currently designing AI recommendation systems at marketplace scale.",
+        isSecondary: true,
+      },
+      // {
+      //   text: "I design AI interfaces that handle uncertainty, building trust in high-stakes systems where models can be wrong.",
+      //   isSecondary: true,
+      // },
+      // {
+      //   text: "9+ years designing high-leverage systems across startups and public companies.",
+      //   isSecondary: true,
+      // },
     ],
   },
 
@@ -120,7 +131,6 @@ export const FOOTER_CONFIG: FooterConfig = {
       ],
     },
   },
-  */
 
   writing: {
     sectionLabel: "Writings",

@@ -379,16 +379,6 @@ export default function Page() {
                     <span className="font-[family-name:var(--font-edu-marist)] text-sm">Raf</span> designs and builds AI products that work at scale.
                   </p>
 
-                  {/* Line 2: Current work context */}
-                  <p className="type-body opacity-75">
-                    Currently designing the AI recommendation systems for Sellers at Walmart and more.
-                  </p>
-
-                  {/* Line 3: Bio and location metadata */}
-                  <p className="type-caption opacity-60 tracking-tight -mt-2">
-                    Born on the Amalfi Coast, Italy. Based in <span className="line-through opacity-50">Lisbon</span> <span className="line-through opacity-50">NYC</span> Toronto, Canada.
-                  </p>
-
                   {/* Contact Links - Horizontal Layout */}
                   <nav className="flex items-center gap-4 group/nav pt-2">
                     <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
@@ -520,14 +510,18 @@ export default function Page() {
                     </span>
                     {/* Bio content */}
                     <p className="type-body">
-                      {FOOTER_CONFIG.bio.paragraphs.map((paragraph, index) => (
-                        <React.Fragment key={index}>
-                          {index > 0 && <br />}
-                          <span className={paragraph.isSecondary ? 'opacity-80' : ''}>
-                            {paragraph.text}
-                          </span>
-                        </React.Fragment>
-                      ))}
+                      {FOOTER_CONFIG.bio.paragraphs.map((paragraph, index) => {
+                        // Keep inline if text starts with punctuation (comma, period, etc.)
+                        const isInline = paragraph.text.match(/^[,;.!?]/)
+                        return (
+                          <React.Fragment key={index}>
+                            {index > 0 && !isInline && <br />}
+                            <span className={paragraph.isSecondary ? 'opacity-80' : ''}>
+                              {paragraph.text}
+                            </span>
+                          </React.Fragment>
+                        )
+                      })}
                     </p>
                   </div>
                 )}

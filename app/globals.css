@@ -31,9 +31,9 @@
     color: var(--fg);
   }
 
-  /* Title: work card titles (14px) */
+  /* Title: work card titles (16px) */
   .type-title {
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.25;
     color: var(--fg);
     @apply font-normal font-edu-marist;

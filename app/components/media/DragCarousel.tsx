@@ -44,7 +44,7 @@ export function DragCarousel({
       role="region"
       aria-label="Image carousel"
     >
-      <div className="flex gap-3 pb-2">
+      <div className="flex gap-3">
         {children}
       </div>
     </div>
