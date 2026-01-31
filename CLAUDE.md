@@ -80,8 +80,18 @@ app/components/
 - [app/config/aboutModalConfig.ts](app/config/aboutModalConfig.ts) - About modal copy (renamed for consistency)
 - [app/config/locationConfig.ts](app/config/locationConfig.ts) - Location and timezone data
 - [app/config/writingsConfig.ts](app/config/writingsConfig.ts) - Writing metadata
+- [app/config/typographyConfig.ts](app/config/typographyConfig.ts) - Typography system constants (NEW)
 
 ### Key Systems
+
+**Typography System** ([TYPOGRAPHY.md](TYPOGRAPHY.md), [app/config/typographyConfig.ts](app/config/typographyConfig.ts))
+- Golden Ratio scale (φ ≈ 1.618) with 14px anchor point
+- Enforced in Tailwind config: `text-xs` (12px), `text-sm` (14px), `text-xl` (22px), etc.
+- Three font families: Ronzino (body), Edu Marist (accent), CoFo Sans Mono (code)
+- Semantic classes: `.type-caption`, `.type-body`, `.type-body-primary`, `.type-title`
+- Three heading hierarchies: Primary (articles), Compact (modals), Minimal (stories)
+- See [TYPOGRAPHY.md](TYPOGRAPHY.md) for complete documentation
+- See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md#typography-quick-reference) for quick reference
 
 **Animation System** ([components/animations/LoadingAnimations.tsx](components/animations/LoadingAnimations.tsx))
 - Centralized animation configurations and easing curves
@@ -121,9 +131,10 @@ app/components/
 ### Styling
 
 - Dark mode: Based on system preference (`darkMode: "media"`)
-- Custom font variables: `--font-ronzino`, `--font-edu-marist`, `--font-cofo-sans-mono`
+- Typography: Golden Ratio scale enforced in Tailwind config (see [TYPOGRAPHY.md](TYPOGRAPHY.md))
+- Custom font variables: `--font-ronzino`, `--font-edu-marist`, `--font-mono`
 - HSL-based color system with CSS variables
-- Tailwind config optimized (removed duplicate patterns)
+- Tailwind config optimized with fontSize scale override
 
 ### Next.js Configuration
 
@@ -192,13 +203,28 @@ Follow the pattern in [components/animations/LoadingAnimations.tsx](components/a
 
 1. **Reading Files**: For large files like [app/page.tsx](app/page.tsx), use offset/limit parameters
 2. **Component Imports**: Use feature-based paths after reorganization (layout/, modal/, media/, etc.)
-3. **Configuration**: All configs in [app/config/](app/config/) use "Config" suffix (except landingPages.ts)
-4. **Styling**: Theme-aware components use `useSystemTheme()` hook and CSS variables
-5. **Mobile-First**: Base styles for mobile (< 768px), `sm:` prefix for desktop (≥ 768px)
-6. **Animations**: Respect `prefers-reduced-motion` using Framer Motion's `useReducedMotion()`
-7. **Type Safety**: Strict TypeScript - only acceptable `as any` is for non-standard browser APIs (documented)
+3. **Configuration**: All configs in [app/config/](app/config/) use "Config" suffix (except landingPages.ts, typographyConfig.ts)
+4. **Typography**: Use Golden Ratio scale - see [TYPOGRAPHY.md](TYPOGRAPHY.md) for complete system documentation
+5. **Styling**: Theme-aware components use `useSystemTheme()` hook and CSS variables
+6. **Mobile-First**: Base styles for mobile (< 768px), `md:` prefix for desktop (≥ 768px)
+7. **Animations**: Respect `prefers-reduced-motion` using Framer Motion's `useReducedMotion()`
+8. **Type Safety**: Strict TypeScript - only acceptable `as any` is for non-standard browser APIs (documented)
 
 ### Common Patterns
+
+**Typography:**
+```typescript
+// Use Tailwind utilities with Golden Ratio scale
+<h1 className="text-xl font-edu-marist">Title</h1>
+<p className="text-sm">Body text</p>
+
+// Use semantic classes for repeating patterns
+<p className="type-body">Work description</p>
+<span className="type-caption">2024 · Contract</span>
+
+// Special treatment for "Raf" name
+<span className="font-edu-marist text-xl">Raf</span>
+```
 
 **Theme-Aware Components:**
 ```typescript

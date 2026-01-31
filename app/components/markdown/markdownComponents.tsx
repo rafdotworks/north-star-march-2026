@@ -6,6 +6,15 @@
  * Custom ReactMarkdown components for consistent typography across the app.
  * Overrides default markdown rendering to match the design system.
  *
+ * TYPOGRAPHY HIERARCHY: PRIMARY (for full articles, long-form content)
+ * - h1: text-xl (22px) - Main article title
+ * - h2: text-lg (20px) - Section headings
+ * - h3: text-base (16px) - Subsection headings
+ * - h4: text-sm (14px) - Minor headings
+ * - p, li: text-sm (14px) - Body text
+ *
+ * See TYPOGRAPHY.md for complete typography system documentation.
+ *
  * USAGE:
  * ```tsx
  * import { markdownComponents } from "@/app/components/markdown/markdownComponents"
@@ -41,14 +50,15 @@ import {
 
 /**
  * Custom ReactMarkdown components for consistent typography.
- * 
- * TYPOGRAPHY SCALE:
- * - h1: text-base (16px) - Main headings
- * - h2: text-sm (14px) - Section headings
- * - h3: text-xs (12px) - Subsection headings
- * - p, li: text-xs (12px) - Body text
- * - code: text-[10px] (10px) - Inline code
- * 
+ *
+ * PRIMARY HIERARCHY (Golden Ratio scale, 14px anchor):
+ * - h1: text-xl (22px) - Main article title
+ * - h2: text-lg (20px) - Section headings
+ * - h3: text-base (16px) - Subsection headings
+ * - h4: text-sm (14px) - Minor headings
+ * - p, li: text-sm (14px) - Body text
+ * - code: text-2xs (10px) - Inline code
+ *
  * EXTERNAL LINK DETECTION:
  * Automatically detects http:// and https:// links and:
  * - Opens in new tab (target="_blank")
@@ -57,16 +67,16 @@ import {
  */
 export const markdownComponents: Components = {
   h1: ({ children }) => (
-    <h1 className="font-edu-marist text-base font-light text-foreground tracking-wider mb-6 mt-8 transition-colors duration-200">{children}</h1>
+    <h1 className="font-edu-marist text-xl font-light text-foreground tracking-wider mb-6 mt-8 transition-colors duration-200">{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="font-edu-marist text-sm font-normal text-foreground/80 mb-4 mt-7 transition-colors duration-200">{children}</h2>
+    <h2 className="font-edu-marist text-lg font-normal text-foreground/80 mb-4 mt-7 transition-colors duration-200">{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="font-edu-marist text-xs font-medium text-foreground/80 mb-3 mt-5 transition-colors duration-200">{children}</h3>
+    <h3 className="font-edu-marist text-base font-medium text-foreground/80 mb-3 mt-5 transition-colors duration-200">{children}</h3>
   ),
   p: ({ children }) => (
-    <p className="text-xs text-muted-foreground mb-4 leading-[1.9] transition-colors duration-200">{children}</p>
+    <p className="text-sm text-muted-foreground mb-4 leading-[1.65] transition-colors duration-200">{children}</p>
   ),
   ul: ({ children }) => (
     <ul className={`${baseTextClasses.body} ${baseSpacingClasses.list} list-disc list-outside`}>{children}</ul>

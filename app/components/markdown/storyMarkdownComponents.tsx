@@ -23,6 +23,14 @@ import {
  * - Beautiful section dividers (StorySectionDivider)
  * - Paragraph detection for proper image wrapping
  *
+ * TYPOGRAPHY HIERARCHY: MINIMAL (for story pages, constrained spaces)
+ * - h1: text-sm (14px) - Story title
+ * - h2: text-xs (12px) - Section headings
+ * - h3: text-xs (12px) - Subsection headings (same as h2)
+ * - p, li: text-xs (12px) - Body text
+ *
+ * See TYPOGRAPHY.md for complete typography system documentation.
+ *
  * STYLING:
  * Uses unified base styles (spacing, opacity, typography) for consistency
  * with regular articles, while adding story-specific features.

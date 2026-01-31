@@ -20,25 +20,26 @@ This design system follows a **minimal, elegant aesthetic** with:
 ## Table of Contents
 
 1. [Quick Reference (Copy-Paste Snippets)](#quick-reference-copy-paste-snippets)
-2. [Design Tokens](#design-tokens)
+2. [Typography Quick Reference](#typography-quick-reference)
+3. [Design Tokens](#design-tokens)
    - [Spacing](#spacing)
    - [Typography](#typography)
    - [Colors](#colors)
    - [Layout](#layout)
-3. [Responsive Patterns](#responsive-patterns)
+4. [Responsive Patterns](#responsive-patterns)
    - [Breakpoints](#breakpoints)
    - [Mobile-First Strategy](#mobile-first-strategy)
    - [Safe Area Handling](#safe-area-handling)
-4. [Theme System](#theme-system)
+5. [Theme System](#theme-system)
    - [Theme Detection](#theme-detection)
    - [Theme Application](#theme-application)
    - [Color Tokens](#color-tokens)
-5. [Component Patterns](#component-patterns)
+6. [Component Patterns](#component-patterns)
    - [Navigation Items](#navigation-items)
    - [Layout Containers](#layout-containers)
    - [Interactive Elements](#interactive-elements)
-6. [Animation & Transitions](#animation--transitions)
-7. [Accessibility Guidelines](#accessibility-guidelines)
+7. [Animation & Transitions](#animation--transitions)
+8. [Accessibility Guidelines](#accessibility-guidelines)
 
 ---
 
@@ -352,6 +353,154 @@ Typography uses a refined, minimal approach:
   creates comfortable reading rhythm for paragraphs.
 </p>
 ```
+
+---
+
+## Typography Quick Reference
+
+> **Full Documentation**: See [`TYPOGRAPHY.md`](TYPOGRAPHY.md) for comprehensive typography system documentation.
+
+### Golden Ratio Scale
+
+All text sizes use a **Golden Ratio scale** (φ ≈ 1.618) with a 14px anchor point. This scale is enforced in Tailwind config, ensuring consistency across the entire codebase.
+
+| Size | Pixels | Tailwind | CSS Variable | Common Use Cases |
+|------|--------|----------|--------------|------------------|
+| 2xs  | 10px   | `text-2xs` | `--text-2xs` | Labels, timestamps, section headers |
+| xs   | 12px   | `text-xs` | `--text-xs` | Metadata, captions, footer links |
+| sm   | 14px   | `text-sm` | `--text-sm` | Body text, navigation (anchor point) |
+| base | 16px   | `text-base` | `--text-base` | Modal content, emphasized text |
+| lg   | 20px   | `text-lg` | `--text-lg` | Subheadings |
+| xl   | 22px   | `text-xl` | `--text-xl` | Page titles, "Raf" name |
+| 2xl  | 26px   | `text-2xl` | `--text-2xl` | Hero text, large display |
+
+### Semantic Typography Classes
+
+Use semantic classes when meaning is more important than appearance:
+
+```tsx
+// Caption: Quiet, secondary text (12px, muted, light)
+<p className="type-caption">2024 · Contract</p>
+
+// Body: Default secondary content (14px, muted)
+<p className="type-body">Work description goes here.</p>
+
+// Body Primary: Emphasized content (14px, primary color)
+<p className="type-body-primary">Important intro text.</p>
+
+// Title: Work card titles (22px, Edu Marist)
+<h2 className="type-title">Project Name</h2>
+```
+
+### Font Families
+
+Three-tier font system:
+
+```tsx
+// Body font (Ronzino) - applied automatically
+<p className="text-sm">Default body text</p>
+
+// Accent font (Edu Marist) - for headings, emphasis
+<h1 className="font-edu-marist text-xl">Heading</h1>
+<span className="font-edu-marist text-xl">Raf</span>
+
+// Monospace font (CoFo Sans Mono) - for code
+<code className="font-mono text-xs">console.log()</code>
+```
+
+### Heading Hierarchies
+
+Choose the appropriate hierarchy based on context:
+
+#### Primary Hierarchy (Full Articles)
+```tsx
+<h1 className="text-xl font-edu-marist">Main Article Title</h1>
+<h2 className="text-lg font-edu-marist">Section Heading</h2>
+<h3 className="text-base font-semibold">Subsection</h3>
+```
+
+#### Compact Hierarchy (Modals, Side Panels)
+```tsx
+<h1 className="text-base font-edu-marist">Modal Title</h1>
+<h2 className="text-sm font-semibold">Section Heading</h2>
+<h3 className="text-xs font-semibold">Subsection</h3>
+```
+
+#### Minimal Hierarchy (Stories, Dense Layouts)
+```tsx
+<h1 className="text-sm font-edu-marist">Story Title</h1>
+<h2 className="text-xs font-semibold">Section</h2>
+<h3 className="text-xs font-semibold">Subsection</h3>
+```
+
+### Line Heights
+
+```tsx
+// Tight (1.25) - for headings, compact text
+<h1 className="text-xl leading-tight">Heading</h1>
+
+// Normal (1.5) - for UI elements, short text
+<p className="text-sm leading-[1.5]">UI text</p>
+
+// Relaxed (1.625) - for long-form content
+<article className="text-base leading-relaxed">Article content</article>
+```
+
+### Letter Spacing
+
+```tsx
+// Tight (-0.02em) - auto-applied with Edu Marist
+<span className="font-edu-marist">Tight spacing</span>
+
+// Body (-0.01em) - auto-applied globally to body element
+// No need to specify
+
+// Wide (0.025em) - for special emphasis
+<h1 className="text-base tracking-wide">Raf V.</h1>
+```
+
+### Common Patterns
+
+```tsx
+// Navigation items (mobile-first)
+<nav className="text-sm md:text-xs">Menu Item</nav>
+
+// Work descriptions
+<p className="type-body">Project description</p>
+
+// Hero intro (emphasized)
+<p className="type-body-primary">
+  <span className="font-edu-marist text-xl">Raf</span> designs products.
+</p>
+
+// Footer captions
+<span className="type-caption">2024 · Full-time</span>
+
+// Work card titles
+<h2 className="type-title">Project Name</h2>
+```
+
+### Implementation Files
+
+- **Tailwind Config**: [`tailwind.config.js`](tailwind.config.js) - fontSize scale override
+- **CSS Variables**: [`app/globals.css`](app/globals.css) lines 54-71 - CSS variables
+- **Semantic Classes**: [`app/globals.css`](app/globals.css) lines 11-42 - `.type-*` classes
+- **TypeScript Constants**: [`app/config/typographyConfig.ts`](app/config/typographyConfig.ts) - Programmatic access
+- **Font Loading**: [`app/layout.tsx`](app/layout.tsx) - Next.js font loading
+
+### Quick Lookup
+
+| Need | Use |
+|------|-----|
+| Tiny label | `text-2xs` (10px) |
+| Caption/meta | `text-xs` (12px) or `.type-caption` |
+| Body text | `text-sm` (14px) or `.type-body` |
+| Emphasized body | `text-base` (16px) or `.type-body-primary` |
+| Subheading | `text-lg` (20px) |
+| Main heading | `text-xl` (22px) or `.type-title` |
+| Hero text | `text-2xl` (26px) |
+| Accent font | `font-edu-marist` |
+| Code | `font-mono` |
 
 ---
 

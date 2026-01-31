@@ -9,32 +9,33 @@
  * Simplified 4-class system: caption, body, body-primary, title
  * ============================================================================ */
 @layer components {
-  /* Caption: quiet text - principles, timestamps, meta (11px) */
+  /* Caption: quiet text - principles, timestamps, meta (12px) */
   .type-caption {
-    font-size: 11px;
-    line-height: 1.5;
+    font-size: 12px;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
     color: var(--fg-muted);
     @apply font-light;
   }
 
-  /* Body: default text - descriptions, secondary content (12px) */
+  /* Body: default text - descriptions, secondary content (14px) */
   .type-body {
-    font-size: 12px;
-    line-height: 1.9;
+    font-size: 14px;
+    line-height: 1.65;
     color: var(--fg-muted);
   }
 
-  /* Body Primary: emphasized text - hero intro (12px) */
+  /* Body Primary: emphasized text - hero intro (14px) */
   .type-body-primary {
-    font-size: 12px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.65;
     color: var(--fg);
   }
 
-  /* Title: work card titles (16px) */
+  /* Title: work card titles (22px) */
   .type-title {
-    font-size: 16px;
-    line-height: 1.25;
+    font-size: 22px;
+    line-height: 1.3;
     color: var(--fg);
     @apply font-normal font-edu-marist;
   }
@@ -51,16 +52,16 @@
 @layer base {
   :root {
     /* ================================================================
-     * TYPOGRAPHY SCALE
+     * TYPOGRAPHY SCALE - Golden Ratio inspired (14px anchor, φ ≈ 1.618)
      * Centralized text sizes for consistency across all components
      * ================================================================ */
     --text-2xs: 10px;   /* labels, timestamps, uppercase section headers */
-    --text-xs: 11px;    /* metadata (year, role, contract type) */
-    --text-sm: 12px;    /* body text, descriptions, navigation */
-    --text-base: 14px;  /* modal content, emphasized body text */
-    --text-lg: 16px;    /* page titles, headings */
-    --text-xl: 18px;    /* hero name (mobile) */
-    --text-2xl: 20px;   /* hero name (desktop) */
+    --text-xs: 12px;    /* metadata (year, role, contract type) - was 11px */
+    --text-sm: 14px;    /* body text, descriptions, navigation - was 12px */
+    --text-base: 16px;  /* modal content, emphasized body text */
+    --text-lg: 20px;    /* subheadings - was 16px */
+    --text-xl: 22px;    /* page titles, headings - was 18px */
+    --text-2xl: 26px;   /* hero name (desktop), future full φ option - was 20px */
 
     /* ================================================================
      * LINE HEIGHTS

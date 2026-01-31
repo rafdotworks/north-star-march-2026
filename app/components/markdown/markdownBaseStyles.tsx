@@ -7,6 +7,14 @@
  * Provides consistent typography, spacing, and opacity hierarchy inspired
  * by the footer's well-balanced design principles.
  *
+ * TYPOGRAPHY HIERARCHY: COMPACT (for modal content, side panels)
+ * - h1: text-base (16px) - Modal title
+ * - h2: text-sm (14px) - Section headings
+ * - h3: text-xs (12px) - Subsection headings
+ * - p, li: text-xs (12px) - Body text
+ *
+ * See TYPOGRAPHY.md for complete typography system documentation.
+ *
  * EXPORTS:
  * - baseTextClasses: Shared text styling (size, color, line-height)
  * - baseSpacingClasses: Spacing configuration for lists, quotes, etc.
@@ -29,6 +37,13 @@ import { ExternalLinkIcon } from "@/app/components/icons/ExternalLinkIcon"
 /**
  * Base text styling shared across all markdown elements.
  * Uses site's color variables for theme awareness.
+ *
+ * COMPACT HIERARCHY (Golden Ratio scale):
+ * - h1: text-base (16px) - Modal title
+ * - h2: text-sm (14px) - Section headings
+ * - h3: text-xs (12px) - Subsection headings
+ * - p, li: text-xs (12px) - Body text
+ * - code: text-2xs (10px) - Inline code
  */
 export const baseTextClasses = {
   // Body text: 12px with generous line-height
@@ -40,7 +55,7 @@ export const baseTextClasses = {
   h3: "font-edu-marist text-xs font-medium text-foreground/80 transition-colors duration-200",
 
   // Inline code: Smaller size with monospace font
-  code: "text-[10px] font-mono text-foreground transition-colors duration-200",
+  code: "text-2xs font-mono text-foreground transition-colors duration-200",
 
   // Links: Match body text with hover state
   link: "text-xs text-muted-foreground transition-colors duration-200",

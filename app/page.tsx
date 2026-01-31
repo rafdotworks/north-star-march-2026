@@ -375,8 +375,8 @@ export default function Page() {
                   </p> */}
                   
                   {/* Line 1: Primary statement */}
-                  <p className="type-body">
-                    <span className="font-[family-name:var(--font-edu-marist)] text-sm">Raf</span> designs and builds AI products that work at scale.
+                  <p className="type-body-primary">
+                    <span className="font-edu-marist text-base">Raf</span> designs and builds AI products that work at scale.
                   </p>
 
                   {/* Contact Links - Horizontal Layout */}
@@ -569,7 +569,7 @@ export default function Page() {
                   {/* Writing principles */}
                   {FOOTER_CONFIG.writing.principles.map((principle, index) => (
                     <p key={index} className="type-body">
-                      <span className="opacity-50 italic font-[family-name:var(--font-edu-marist)] mr-1.5">
+                      <span className="opacity-50 italic font-edu-marist mr-1.5">
                         {principle.number}
                       </span>
                       <span className={index > 0 ? 'opacity-80' : ''}>

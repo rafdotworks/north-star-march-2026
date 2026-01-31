@@ -396,7 +396,7 @@ export const WorkCard = memo(function WorkCard({
               <div className="hidden md:block" />
 
               {/* Conclusion paragraph */}
-              <p className="type-body mt-6 md:mt-4 mb-12 md:mb-10">
+              <p className="type-body mt-6 md:mt-4 mb-20 md:mb-16">
                 {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
                   <React.Fragment key={index}>
                     {line}
@@ -458,7 +458,7 @@ export const WorkCard = memo(function WorkCard({
               })}
             </DragCarousel>
           ) : (
-            <div className="mt-6 md:mt-1 mb-12 md:mb-10 flex flex-col gap-3 md:gap-4">
+            <div className="mt-6 md:mt-1 mb-20 md:mb-16 flex flex-col gap-3 md:gap-4">
               {images.map((src, idx) => {
                 const isVideo = /\.(mov|mp4|webm)$/i.test(src)
                 const hasFailed = failedImages.has(src)
@@ -509,7 +509,7 @@ export const WorkCard = memo(function WorkCard({
               <div className="hidden md:block" />
 
               {/* Conclusion paragraph - right column */}
-              <p className={`type-body mb-12 md:mb-10 ${
+              <p className={`type-body mb-20 md:mb-16 ${
                 shouldUseCarousel
                   ? 'mt-0'             // No top margin, carousel has bottom margin now
                   : '-mt-8 md:-mt-6'   // Negative margin for stack (pulls up from stack's bottom margin)

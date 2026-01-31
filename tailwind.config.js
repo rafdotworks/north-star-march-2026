@@ -8,6 +8,18 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // Golden Ratio Typography Scale (φ ≈ 1.618, 14px anchor)
+      // Overrides Tailwind defaults to ensure consistency across codebase
+      // Maps directly to CSS variables in globals.css (--text-*)
+      fontSize: {
+        '2xs': '10px',  // --text-2xs: labels, timestamps, uppercase section headers
+        'xs': '12px',   // --text-xs: metadata (year, role), captions
+        'sm': '14px',   // --text-sm: body text, descriptions, navigation
+        'base': '16px', // --text-base: modal content, emphasized body text
+        'lg': '20px',   // --text-lg: subheadings
+        'xl': '22px',   // --text-xl: page titles, headings, "Raf" name
+        '2xl': '26px',  // --text-2xl: hero name (desktop), large display text
+      },
       fontFamily: {
         sans: ["var(--font-ronzino)"],
         serif: ["var(--font-ronzino)"],
