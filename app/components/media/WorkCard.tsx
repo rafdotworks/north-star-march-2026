@@ -415,7 +415,7 @@ export const WorkCard = memo(function WorkCard({
 
           {/* Carousel or vertical stack - right column */}
           {shouldUseCarousel ? (
-            <DragCarousel className="mt-6 md:mt-1 mb-6 md:mb-1">
+            <DragCarousel className="mt-6 mb-6 md:mb-1">
               {images.map((src, idx) => {
                 const isVideo = /\.(mov|mp4|webm)$/i.test(src)
                 const hasFailed = failedImages.has(src)
