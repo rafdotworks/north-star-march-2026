@@ -101,7 +101,7 @@ export const FOOTER_CONFIG: FooterConfig = {
     sectionLabel: "About",
     paragraphs: [
       {
-        text: "Senior AI Product Designer at Walmart Seller",
+        text: "Staff AI UX Designer at Walmart",
         isSecondary: false,
       },
       {
@@ -122,7 +122,7 @@ export const FOOTER_CONFIG: FooterConfig = {
   location: {
     sectionLabel: "Location",
     info: {
-      futureMove: "Relocating to London, UK.",
+      futureMove: "Relocating.",
       origin: "Born on the Amalfi Coast, Italy, in the 90s.",
       currentBases: [
         { city: "Lisbon", isPrevious: true },
