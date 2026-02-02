@@ -62,7 +62,7 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Craft",
       paragraphs: [
         {
-          text: "Staff Product Designer at Walmart Seller, currently designing AI recommendation systems at marketplace scale.",
+          text: "Senior AI Product Designer at Walmart Seller, currently designing AI recommendation systems at marketplace scale.",
           isHighlighted: true,
         },
         {

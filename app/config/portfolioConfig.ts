@@ -446,11 +446,11 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
  * ```
  */
 export const PROJECT_ROLES: Record<string, string> = {
-  currentwork: "Work in Progress",
-  theo: "Founding Designer",
-  cb: "Senior Product Designer",
-  vf: "Senior Product Designer",
-  atlas: "Senior Designer",
+  currentwork: "Staff AI Product Designer",
+  theo: "Founding AI Product Designer",
+  cb: "Senior AI Product Designer",
+  vf: "Senior AI Product Designer",
+  atlas: "Senior Product Designer",
   curbcut: "Product Designer",
   zalando: "Senior Design System Designer",
   earlyworks: "Designer",

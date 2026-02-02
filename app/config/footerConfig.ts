@@ -101,7 +101,7 @@ export const FOOTER_CONFIG: FooterConfig = {
     sectionLabel: "About",
     paragraphs: [
       {
-        text: "Staff Product Designer at Walmart Seller",
+        text: "Senior AI Product Designer at Walmart Seller",
         isSecondary: false,
       },
       {
