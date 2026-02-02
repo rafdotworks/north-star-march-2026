@@ -13,17 +13,37 @@
  * - h3: text-xs (12px) - Subsection headings
  * - p, li: text-xs (12px) - Body text
  *
+ * VERTICAL RHYTHM: Follows rhythm-paragraph and rhythm-list patterns
+ * - Paragraph spacing: 16px (space-y-4) for compact spaces
+ * - List spacing: 16px (space-y-4)
+ * - Blockquote spacing: 24px (my-6)
+ *
+ * MEASURE: Use prose-article-narrow for constrained spaces
+ * - Narrow: 45ch (~470px) works better in modals and side panels
+ * - See TYPOGRAPHY.md for complete measure documentation
+ *
  * See TYPOGRAPHY.md for complete typography system documentation.
  *
  * EXPORTS:
  * - baseTextClasses: Shared text styling (size, color, line-height)
- * - baseSpacingClasses: Spacing configuration for lists, quotes, etc.
+ * - baseSpacingClasses: Spacing configuration (matches VERTICAL_RHYTHM)
+ * - baseOpacityClasses: Opacity hierarchy for visual depth
  * - BaseLinkComponent: Unified link component with external detection
+ *
+ * USAGE (for modals/side panels):
+ * ```tsx
+ * // Compact hierarchy + narrow measure for constrained spaces
+ * <div className="prose-article-narrow p-6">
+ *   <ReactMarkdown components={compactMarkdownComponents}>
+ *     {content}
+ *   </ReactMarkdown>
+ * </div>
+ * ```
  *
  * DESIGN PRINCIPLES:
  * - Footer-inspired opacity hierarchy (90-95% for secondary elements)
- * - Generous line-height (1.9) for optimal readability
- * - Balanced spacing (16px between list items, 24px for blockquotes)
+ * - Generous line-height (1.9) for optimal readability in small text
+ * - Balanced spacing (follows 4px grid system)
  * - list-outside for better optical alignment
  * - Theme-aware colors via CSS variables
  *

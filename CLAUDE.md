@@ -85,12 +85,17 @@ app/components/
 ### Key Systems
 
 **Typography System** ([TYPOGRAPHY.md](TYPOGRAPHY.md), [app/config/typographyConfig.ts](app/config/typographyConfig.ts))
-- Golden Ratio scale (φ ≈ 1.618) with 14px anchor point
-- Enforced in Tailwind config: `text-xs` (12px), `text-sm` (14px), `text-xl` (22px), etc.
-- Three font families: Ronzino (body), Edu Marist (accent), CoFo Sans Mono (code)
-- Semantic classes: `.type-caption`, `.type-body`, `.type-body-primary`, `.type-title`
-- Three heading hierarchies: Primary (articles), Compact (modals), Minimal (stories)
-- See [TYPOGRAPHY.md](TYPOGRAPHY.md) for complete documentation
+- **Golden Ratio scale** (φ ≈ 1.618) with 14px anchor point: 10px, 12px, 14px, 16px, 20px, 22px, 26px
+- **Semantic labels** (NEW): Choose by meaning (Display, PageTitle, Heading, Body, Secondary, Caption) not size
+- **Vertical rhythm** (NEW): 4px base unit, 24px paragraph spacing, progressive heading spacing
+- **Measure constraints** (NEW): 65ch optimal, 45ch narrow, 80ch wide for readability
+- **Mobile adaptation** (NEW): Display scales down, navigation scales up, body stays same (14px anchor)
+- **Font families**: Ronzino (body), Edu Marist (accent), CoFo Sans Mono (code)
+- **Semantic CSS classes**: `.type-caption`, `.type-body`, `.type-body-primary`, `.type-title`
+- **Rhythm utilities**: `.rhythm-paragraph`, `.rhythm-section`, `.rhythm-heading`
+- **Prose utilities**: `.prose-article`, `.prose-narrow`, `.prose-wide`
+- **Three heading hierarchies**: Primary (articles), Compact (modals), Minimal (stories)
+- See [TYPOGRAPHY.md](TYPOGRAPHY.md) for complete system documentation
 - See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md#typography-quick-reference) for quick reference
 
 **Animation System** ([components/animations/LoadingAnimations.tsx](components/animations/LoadingAnimations.tsx))
@@ -212,18 +217,37 @@ Follow the pattern in [components/animations/LoadingAnimations.tsx](components/a
 
 ### Common Patterns
 
-**Typography:**
+**Typography (Enhanced with Semantic Labels):**
 ```typescript
-// Use Tailwind utilities with Golden Ratio scale
-<h1 className="text-xl font-edu-marist">Title</h1>
-<p className="text-sm">Body text</p>
+// ✅ PREFERRED: Use semantic labels from config (clear intent)
+import { SEMANTIC_TYPOGRAPHY } from '@/app/config/typographyConfig'
 
-// Use semantic classes for repeating patterns
+<h1 className={`${SEMANTIC_TYPOGRAPHY.pageTitle.mobile} md:${SEMANTIC_TYPOGRAPHY.pageTitle.desktop} font-edu-marist`}>
+  Title
+</h1>
+<p className={SEMANTIC_TYPOGRAPHY.body.mobile}>Body text</p>
+
+// ✅ Use semantic CSS classes for repeating patterns
 <p className="type-body">Work description</p>
 <span className="type-caption">2024 · Contract</span>
 
-// Special treatment for "Raf" name
-<span className="font-edu-marist text-xl">Raf</span>
+// ✅ Add measure constraints for readability
+<article className="prose-article mx-auto px-8">
+  <p>Content with optimal 65ch line length</p>
+</article>
+
+// ✅ Apply vertical rhythm
+<div className="rhythm-paragraph rhythm-heading">
+  <h1>Title</h1>
+  <p>Paragraph with automatic 24px spacing</p>
+</div>
+
+// ⚠️  LEGACY: Direct Tailwind classes (less clear intent)
+<h1 className="text-xl font-edu-marist">Title</h1>
+<p className="text-sm">Body text</p>
+
+// Special treatment for "Raf" name (Display typography)
+<span className="font-edu-marist text-xl md:text-2xl">Raf</span>
 ```
 
 **Theme-Aware Components:**

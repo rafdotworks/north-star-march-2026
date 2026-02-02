@@ -261,7 +261,7 @@ export type ProjectKey = (typeof PROJECT_KEYS)[number];
 export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
   // Current/recent work (2024-2026)
   currentwork: {
-    images: ["/work/currently.webp"], // Current AI work - animated preview
+    images: ["/work/current-ai.webp"], // Current AI work - animated preview
   },
   atlas: {
     images: ["/work/atlas.webp", "/work/atlas-2.png", "/work/videos/atlas-ptv.mov"], // Crypto marketplace, NFT era
@@ -408,7 +408,7 @@ export const IMAGE_SOURCES: string[] = PROJECT_ORDER.flatMap(
  * @see {@link app/utils/portfolioUtils.ts#getAltText} for usage
  */
 export const IMAGE_ALT_TEXT: Record<string, string> = {
-  "/work/currently.webp": "Current AI work - animated preview of AI assistant interface",
+  "/work/current-ai.webp": "Current AI work - animated preview of AI assistant interface",
   "/work/cb-1.webp": "Coinbase Developer Platform interface showing API documentation and developer tools",
   "/work/cb-dash.png": "Coinbase Developer Platform dashboard with navigation and project overview",
   "/work/cb-sql.png": "Coinbase SQL AI Playground interface for querying blockchain data",

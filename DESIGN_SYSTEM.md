@@ -488,6 +488,69 @@ Choose the appropriate hierarchy based on context:
 - **TypeScript Constants**: [`app/config/typographyConfig.ts`](app/config/typographyConfig.ts) - Programmatic access
 - **Font Loading**: [`app/layout.tsx`](app/layout.tsx) - Next.js font loading
 
+### Semantic Labels (New!)
+
+**Choose typography by meaning, not size.** See [`TYPOGRAPHY.md`](TYPOGRAPHY.md) for complete semantic typography documentation.
+
+| Semantic Label | Mobile | Desktop | Use Cases |
+|----------------|--------|---------|-----------|
+| **Display** | 22px (`text-xl`) | 26px (`text-2xl`) | Hero text, page hero names |
+| **Page Title** | 22px (`text-xl`) | 22px (`text-xl`) | Main page titles, work titles |
+| **Heading** | 16px (`text-base`) | 20px (`text-lg`) | Section headings |
+| **Subheading** | 14px (`text-sm`) | 16px (`text-base`) | Subsection headings |
+| **Body** | 14px (`text-sm`) | 14px (`text-sm`) | Main content, descriptions |
+| **Body Large** | 16px (`text-base`) | 16px (`text-base`) | Emphasized paragraphs |
+| **Secondary** | 14px (`text-sm`) | 12px (`text-xs`) | Navigation, metadata |
+| **Caption** | 12px (`text-xs`) | 10px (`text-2xs`) | Timestamps, fine print |
+
+**Usage**:
+```tsx
+import { SEMANTIC_TYPOGRAPHY } from '@/app/config/typographyConfig'
+
+<h1 className={`${SEMANTIC_TYPOGRAPHY.pageTitle.mobile} md:${SEMANTIC_TYPOGRAPHY.pageTitle.desktop}`}>
+  Title
+</h1>
+```
+
+### Vertical Rhythm (New!)
+
+**Consistent spacing based on 4px grid.** See [`TYPOGRAPHY.md`](TYPOGRAPHY.md) for complete vertical rhythm documentation.
+
+| Element | Spacing | Pixels | Utility Class |
+|---------|---------|--------|---------------|
+| Paragraph gap | `space-y-6` | 24px | `.rhythm-paragraph` |
+| Section gap | `space-y-8` | 32px | `.rhythm-section` |
+| List gap | `space-y-4` | 16px | `.rhythm-list` |
+| H1 below/above | `mb-6` / `mt-12` | 24px / 48px | `.rhythm-heading` |
+| H2 below/above | `mb-4` / `mt-8` | 16px / 32px | `.rhythm-heading` |
+| H3 below/above | `mb-3` / `mt-6` | 12px / 24px | `.rhythm-heading` |
+
+**Usage**:
+```tsx
+<article className="rhythm-paragraph rhythm-heading">
+  <h1>Title</h1>
+  <p>Paragraph with automatic 24px spacing.</p>
+  <p>Second paragraph.</p>
+</article>
+```
+
+### Measure (Line Length) (New!)
+
+**Optimal line length for readability.** See [`TYPOGRAPHY.md`](TYPOGRAPHY.md) for complete measure documentation.
+
+| Measure | Value | Tailwind | Use Cases |
+|---------|-------|----------|-----------|
+| **Narrow** | 45ch (~470px) | `max-w-prose-narrow` | Modals, side panels |
+| **Optimal** | 65ch (~680px) | `max-w-prose` | Body text, articles |
+| **Wide** | 80ch (~840px) | `max-w-prose-wide` | Technical content, code |
+
+**Usage**:
+```tsx
+<article className="prose-article mx-auto px-8">
+  <p>Content with optimal 65ch line length for readability.</p>
+</article>
+```
+
 ### Quick Lookup
 
 | Need | Use |
@@ -501,6 +564,8 @@ Choose the appropriate hierarchy based on context:
 | Hero text | `text-2xl` (26px) |
 | Accent font | `font-edu-marist` |
 | Code | `font-mono` |
+| **Prose container** | `prose-article` (measure + rhythm) |
+| **Rhythm spacing** | `.rhythm-paragraph` `.rhythm-heading` |
 
 ---
 

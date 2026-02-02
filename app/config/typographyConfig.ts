@@ -239,6 +239,401 @@ export type LetterSpacing = keyof typeof LETTER_SPACING
 export const TYPOGRAPHY_BREAKPOINT = 768 as const
 
 /**
+ * ============================================================================
+ * SEMANTIC TYPOGRAPHY LAYER
+ * ============================================================================
+ * 
+ * Maps semantic intent to responsive size classes.
+ * Choose typography by meaning (Display, Heading, Body) not by size number.
+ * 
+ * Usage:
+ * - Use semantic names when meaning matters more than exact size
+ * - Automatically handles mobile/desktop responsive sizing
+ * - Provides clear intent for future maintainers
+ */
+export const SEMANTIC_TYPOGRAPHY = {
+  /**
+   * DISPLAY: Largest, most prominent text
+   * Use for: Hero text, page hero names, largest emphasis
+   */
+  display: {
+    mobile: 'text-xl',   // 22px - Fits mobile screens without overwhelming
+    desktop: 'text-2xl', // 26px - Maximum impact on large screens
+    lineHeight: 'leading-tight', // 1.25 - Tight for large text
+    use: 'Hero text, page hero names, largest headings',
+  },
+  
+  /**
+   * PAGE TITLE: Main page identifier
+   * Use for: Main page titles, primary section titles
+   */
+  pageTitle: {
+    mobile: 'text-xl',   // 22px - Strong presence on mobile
+    desktop: 'text-xl',  // 22px - Consistent across devices
+    lineHeight: 'leading-tight', // 1.25
+    use: 'Main page titles, work card titles, primary headings',
+  },
+  
+  /**
+   * HEADING: Section headings
+   * Use for: Section headings, subsections, card headers
+   */
+  heading: {
+    mobile: 'text-base', // 16px - Readable hierarchy on mobile
+    desktop: 'text-lg',  // 20px - Clear hierarchy on desktop
+    lineHeight: 'leading-tight', // 1.25
+    use: 'Section headings, subsections, prominent labels',
+  },
+  
+  /**
+   * SUBHEADING: Minor headings
+   * Use for: Subsection headings, card titles, emphasized labels
+   */
+  subheading: {
+    mobile: 'text-sm',   // 14px - Compact but readable
+    desktop: 'text-base', // 16px - Slightly larger on desktop
+    lineHeight: 'leading-tight', // 1.25
+    use: 'Subsection headings, card titles, category labels',
+  },
+  
+  /**
+   * BODY: Primary content text
+   * Use for: Main content, descriptions, paragraphs
+   */
+  body: {
+    mobile: 'text-sm',   // 14px - Optimal for mobile reading
+    desktop: 'text-sm',  // 14px - Consistent (anchor point)
+    lineHeight: 'leading-[1.5]', // 1.5 - Balanced readability
+    use: 'Main content, descriptions, work descriptions',
+  },
+  
+  /**
+   * BODY LARGE: Emphasized content
+   * Use for: Emphasized paragraphs, intro text, callouts
+   */
+  bodyLarge: {
+    mobile: 'text-base', // 16px - Comfortable for longer reading
+    desktop: 'text-base', // 16px - Consistent
+    lineHeight: 'leading-relaxed', // 1.625 - More breathing room
+    use: 'Emphasized paragraphs, intro text, important content',
+  },
+  
+  /**
+   * SECONDARY: De-emphasized text
+   * Use for: Navigation, metadata, labels, supporting text
+   */
+  secondary: {
+    mobile: 'text-sm',   // 14px - Larger for tap targets on mobile
+    desktop: 'text-xs',  // 12px - Compact on desktop
+    lineHeight: 'leading-[1.5]', // 1.5
+    use: 'Navigation, metadata, labels, year/role indicators',
+  },
+  
+  /**
+   * CAPTION: Smallest text
+   * Use for: Timestamps, fine print, subtle metadata
+   */
+  caption: {
+    mobile: 'text-xs',   // 12px - Minimum readable size
+    desktop: 'text-2xs', // 10px - Very compact on desktop
+    lineHeight: 'leading-[1.4]', // 1.4 - Tighter for small text
+    use: 'Timestamps, fine print, copyright, subtle metadata',
+  },
+} as const
+
+/**
+ * Semantic Typography Type (for type safety)
+ */
+export type SemanticTypography = keyof typeof SEMANTIC_TYPOGRAPHY
+
+/**
+ * ============================================================================
+ * VERTICAL RHYTHM SYSTEM
+ * ============================================================================
+ * 
+ * Explicit spacing rules for consistent vertical rhythm.
+ * Base unit: 4px (Tailwind's default spacing unit)
+ * Line height reference: 1.5 (24px for 16px text)
+ * 
+ * Principles:
+ * - Paragraph spacing: 1.5× line-height (24px)
+ * - Section spacing: 2× line-height (32px)
+ * - Heading spacing: Progressive scale based on importance
+ */
+export const VERTICAL_RHYTHM = {
+  /**
+   * Base rhythm unit: 4px
+   * All spacing should be multiples of this unit
+   */
+  unit: 4,
+  
+  /**
+   * PARAGRAPH SPACING
+   * Gap between body paragraphs (1.5× line-height)
+   */
+  paragraph: {
+    gap: 'space-y-6',        // 24px between paragraphs
+    marginBottom: 'mb-6',     // 24px after paragraphs
+    use: 'Between body paragraphs, after paragraph blocks',
+    pixels: '24px',
+  },
+  
+  /**
+   * HEADING TO CONTENT SPACING
+   * Space below headings before content starts
+   */
+  headingToContent: {
+    h1: 'mb-6',  // 24px - Generous space for major headings
+    h2: 'mb-4',  // 16px - Moderate space for sections
+    h3: 'mb-3',  // 12px - Tight space for subsections
+    h4: 'mb-2',  // 8px - Minimal space for minor headings
+    use: 'Space below headings before content',
+  },
+  
+  /**
+   * CONTENT TO HEADING SPACING
+   * Space above headings after previous content (larger than below)
+   */
+  contentToHeading: {
+    h1: 'mt-12', // 48px - Major section break
+    h2: 'mt-8',  // 32px - Section break
+    h3: 'mt-6',  // 24px - Subsection break
+    h4: 'mt-4',  // 16px - Minor break
+    use: 'Space above headings after previous content',
+  },
+  
+  /**
+   * SECTION SPACING
+   * Large breaks between major sections
+   */
+  section: {
+    gap: 'space-y-8',        // 32px between sections (2× line-height)
+    marginBottom: 'mb-12',    // 48px after major sections
+    use: 'Between major sections, after section blocks',
+    pixels: '32px (gap), 48px (margin)',
+  },
+  
+  /**
+   * LIST SPACING
+   * Spacing for ul/ol elements and their items
+   */
+  list: {
+    gap: 'space-y-4',        // 16px between list items
+    marginBottom: 'mb-4',     // 16px after list
+    itemIndent: 'pl-5',      // 20px indent for list markers (list-outside)
+    use: 'Between list items, after lists',
+    pixels: '16px',
+  },
+  
+  /**
+   * BLOCKQUOTE SPACING
+   * Generous spacing for visual separation
+   */
+  blockquote: {
+    margin: 'my-6',          // 24px vertical margin
+    padding: 'pl-4',         // 16px left padding
+    use: 'Around blockquotes',
+    pixels: '24px (vertical)',
+  },
+} as const
+
+/**
+ * Vertical Rhythm Type (for type safety)
+ */
+export type VerticalRhythmSection = keyof typeof VERTICAL_RHYTHM
+
+/**
+ * ============================================================================
+ * MEASURE (LINE LENGTH) GUIDELINES
+ * ============================================================================
+ * 
+ * Optimal line length for readability based on typographic research.
+ * 
+ * Research findings:
+ * - 45-75 characters per line is optimal for body text
+ * - 65 characters is the sweet spot for most content
+ * - Lines too long/short both hurt readability and comprehension
+ */
+export const MEASURE_GUIDELINES = {
+  /**
+   * OPTIMAL MEASURE (65ch)
+   * Best for most body text and articles
+   */
+  optimal: {
+    value: '65ch',
+    pixels: '~680px at 14px',
+    className: 'max-w-prose',
+    use: 'Body text, articles, main content',
+    reason: 'Eye tracking research: 45-75 chars optimal for reading',
+    charRange: '60-70 characters',
+  },
+  
+  /**
+   * NARROW MEASURE (45ch)
+   * Best for constrained spaces
+   */
+  narrow: {
+    value: '45ch',
+    pixels: '~470px at 14px',
+    className: 'max-w-prose-narrow',
+    use: 'Modals, side trays, constrained spaces, mobile panels',
+    reason: 'Shorter lines work better in narrow containers',
+    charRange: '40-50 characters',
+  },
+  
+  /**
+   * WIDE MEASURE (80ch)
+   * Best for technical content
+   */
+  wide: {
+    value: '80ch',
+    pixels: '~840px at 14px',
+    className: 'max-w-prose-wide',
+    use: 'Technical content, code examples, wide layouts',
+    reason: 'Longer lines acceptable for scanning/reference material',
+    charRange: '75-85 characters',
+  },
+  
+  /**
+   * Tailwind utility classes (add to tailwind.config.js)
+   */
+  classes: {
+    narrow: 'max-w-prose-narrow',  // 45ch
+    optimal: 'max-w-prose',         // 65ch
+    wide: 'max-w-prose-wide',       // 80ch
+  },
+  
+  /**
+   * Pixel-based alternatives (for specific layouts)
+   */
+  pixelBased: {
+    reading: '680px',  // Matches 65ch at 14px body text
+    article: '720px',  // Slightly wider for articles with mixed content
+  },
+} as const
+
+/**
+ * Measure Type (for type safety)
+ */
+export type MeasureType = keyof typeof MEASURE_GUIDELINES.classes
+
+/**
+ * ============================================================================
+ * MOBILE ADAPTATION RULES
+ * ============================================================================
+ * 
+ * Explicit responsive behavior rules for typography.
+ * Documents when and how text scales between mobile and desktop.
+ * 
+ * Strategy:
+ * - Display text: Scale DOWN on mobile (prevent overwhelming)
+ * - Navigation text: Scale UP on mobile (larger tap targets)
+ * - Body text: Stay SAME (14px is optimal anchor point)
+ * - Most text: Stay same or minimal adjustment
+ */
+export const MOBILE_ADAPTATION = {
+  /**
+   * Breakpoint (matches hooks/use-mobile.tsx)
+   */
+  breakpoint: 768, // Mobile: < 768px, Desktop: >= 768px
+  
+  /**
+   * Overall scale strategy by semantic category
+   */
+  strategy: {
+    display: 'Scale DOWN on mobile (-4px)',
+    titles: 'Stay SAME size (22px)',
+    body: 'Stay SAME size (14px - anchor point)', 
+    secondary: 'Mobile LARGER (14px) for tap targets, desktop smaller (12px)',
+    caption: 'Mobile LARGER (12px), desktop smaller (10px)',
+    note: 'Most text stays same size. Only hero/display and interactive text adjust.',
+  },
+  
+  /**
+   * Specific element adjustments with rationale
+   */
+  adjustments: [
+    {
+      element: 'Hero name',
+      semantic: 'display',
+      desktop: 'text-2xl (26px)',
+      mobile: 'text-xl (22px)',
+      reason: 'Prevent overwhelming small screens, maintain hierarchy',
+    },
+    {
+      element: 'Navigation',
+      semantic: 'secondary',
+      desktop: 'text-xs (12px)',
+      mobile: 'text-sm (14px)',
+      reason: 'Larger tap targets on mobile (48px height minimum)',
+    },
+    {
+      element: 'Work card titles',
+      semantic: 'pageTitle',
+      desktop: 'text-xl (22px)',
+      mobile: 'text-xl (22px)',
+      reason: 'Visual hierarchy maintained across devices',
+    },
+    {
+      element: 'Body text',
+      semantic: 'body',
+      desktop: 'text-sm (14px)',
+      mobile: 'text-sm (14px)',
+      reason: '14px is optimal reading size for both mobile and desktop',
+    },
+    {
+      element: 'Captions/Metadata',
+      semantic: 'caption',
+      desktop: 'text-2xs (10px)',
+      mobile: 'text-xs (12px)',
+      reason: 'Minimum legible size, slightly larger on mobile',
+    },
+  ],
+  
+  /**
+   * Spacing adjustments for mobile/desktop
+   */
+  spacing: {
+    sectionGap: {
+      mobile: 'mb-12 (48px)',
+      desktop: 'mb-16 (64px)',
+      reason: 'Proportional to viewport size - mobile needs less space',
+    },
+    columnGap: {
+      mobile: 'mb-12 (48px) - stack vertically',
+      desktop: 'gap-16 (64px) - horizontal grid',
+      reason: 'Different layout strategies per device',
+    },
+    contentPadding: {
+      mobile: 'px-8 (32px)',
+      desktop: 'px-0 (grid system handles spacing)',
+      reason: 'Safe area handling on mobile, grid on desktop',
+    },
+  },
+  
+  /**
+   * Tap target requirements (mobile only)
+   */
+  tapTargets: {
+    minimum: '48px',  // Apple & Material Design guideline
+    recommended: '48px height × full width',
+    implementation: 'py-2 (16px) + text-sm (14px) + line-height (21px) = 51px ✓',
+    note: 'Add padding to text elements to create larger tap areas',
+  },
+} as const
+
+/**
+ * Mobile Adaptation Type (for type safety)
+ */
+export type MobileAdaptationElement = typeof MOBILE_ADAPTATION.adjustments[number]['element']
+
+/**
+ * ============================================================================
+ * HELPER FUNCTIONS
+ * ============================================================================
+ */
+
+/**
  * Helper function to get typography scale value
  */
 export function getTypographySize(size: TypographySize): string {

@@ -376,7 +376,7 @@ export default function Page() {
                   
                   {/* Line 1: Primary statement */}
                   <p className="type-body-primary">
-                    <span className="font-edu-marist text-base">Raf</span> designs and builds AI products that work at scale.
+                    <span className="font-edu-marist">Raf</span> designs and builds AI products that work at scale.
                   </p>
 
                   {/* Contact Links - Horizontal Layout */}

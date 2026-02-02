@@ -39,6 +39,92 @@
     color: var(--fg);
     @apply font-normal font-edu-marist;
   }
+
+  /* ========================================================================
+   * PROSE CONTAINERS - Optimal line length for readability
+   * Based on typographic research: 45-75 characters per line
+   * See TYPOGRAPHY.md and app/config/typographyConfig.ts for full guidelines
+   * ======================================================================== */
+  
+  /* Optimal measure (65ch) - best for most body text */
+  .prose-container {
+    max-width: 65ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* Narrow measure (45ch) - for constrained spaces */
+  .prose-narrow {
+    max-width: 45ch;
+  }
+  
+  /* Wide measure (80ch) - for technical content */
+  .prose-wide {
+    max-width: 80ch;
+  }
+
+  /* ========================================================================
+   * VERTICAL RHYTHM UTILITIES - Consistent spacing system
+   * Base unit: 4px. Paragraph spacing: 1.5× line-height (24px)
+   * See TYPOGRAPHY.md and app/config/typographyConfig.ts VERTICAL_RHYTHM
+   * ======================================================================== */
+  
+  /* Paragraph rhythm: 24px spacing between paragraphs */
+  .rhythm-paragraph {
+    @apply space-y-6;  /* 24px - 1.5× line-height */
+  }
+  
+  /* Section rhythm: 32px spacing between sections */
+  .rhythm-section {
+    @apply space-y-8;  /* 32px - 2× line-height */
+  }
+  
+  /* List rhythm: 16px spacing between items */
+  .rhythm-list {
+    @apply space-y-4;  /* 16px - comfortable list spacing */
+  }
+  
+  /* Heading rhythm: Progressive spacing based on heading level */
+  .rhythm-heading h1 {
+    @apply mb-6 mt-12;  /* Below: 24px, Above: 48px - major section */
+  }
+  
+  .rhythm-heading h2 {
+    @apply mb-4 mt-8;   /* Below: 16px, Above: 32px - section */
+  }
+  
+  .rhythm-heading h3 {
+    @apply mb-3 mt-6;   /* Below: 12px, Above: 24px - subsection */
+  }
+  
+  .rhythm-heading h4 {
+    @apply mb-2 mt-4;   /* Below: 8px, Above: 16px - minor heading */
+  }
+
+  /* ========================================================================
+   * COMBINED PROSE STYLES - Ready-to-use text containers
+   * Combines measure constraints with vertical rhythm for complete styling
+   * ======================================================================== */
+  
+  /* Standard article/content container with optimal measure and rhythm */
+  .prose-article {
+    max-width: 65ch;
+    margin-left: auto;
+    margin-right: auto;
+    @apply space-y-6;  /* Paragraph rhythm */
+  }
+  
+  /* Narrow article container for modals/side panels */
+  .prose-article-narrow {
+    max-width: 45ch;
+    @apply space-y-6;
+  }
+  
+  /* Wide article container for technical content */
+  .prose-article-wide {
+    max-width: 80ch;
+    @apply space-y-6;
+  }
 }
 
 /* Font-specific styles */

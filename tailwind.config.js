@@ -20,6 +20,19 @@ module.exports = {
         'xl': '22px',   // --text-xl: page titles, headings, "Raf" name
         '2xl': '26px',  // --text-2xl: hero name (desktop), large display text
       },
+      // Measure (Line Length) Constraints for Readability
+      // Based on typographic research: 45-75 characters per line optimal
+      // See app/config/typographyConfig.ts MEASURE_GUIDELINES for full documentation
+      maxWidth: {
+        // Character-based measures (preferred for responsive typography)
+        'prose-narrow': '45ch',  // 40-50 chars - modals, side panels, constrained spaces
+        'prose': '65ch',          // 60-70 chars - optimal for body text, articles
+        'prose-wide': '80ch',     // 75-85 chars - technical content, code examples
+        
+        // Pixel-based alternatives (for specific layout requirements)
+        'reading': '680px',       // Matches 65ch at 14px body text
+        'article': '720px',       // Slightly wider for articles with mixed content
+      },
       fontFamily: {
         sans: ["var(--font-ronzino)"],
         serif: ["var(--font-ronzino)"],

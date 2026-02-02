@@ -20,7 +20,7 @@
  * - app/components/hover (work image interactions)
  */
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ComponentProps, ReactNode, KeyboardEvent } from "react";
 
 type MotionDivProps = ComponentProps<typeof motion.div>;
@@ -1038,6 +1038,69 @@ export function LoadingTransition({
           </motion.div>
         )}
       </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// TEXT SHIMMER - Gradient sweep effect for text highlights
+// ============================================================================
+
+/**
+ * SHIMMER ANIMATION: One-time gradient sweep effect
+ * Creates a subtle light sweep across text for emphasis
+ * Respects reduced motion preferences
+ */
+
+interface TextShimmerProps extends MotionDivWithChildren {
+  delay?: number;
+  duration?: number;
+}
+
+export function TextShimmer({
+  children,
+  delay = 2.5,
+  duration = 1.5,
+  className = "",
+  ...props
+}: TextShimmerProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  // If reduced motion is preferred, render without shimmer effect
+  if (shouldReduceMotion) {
+    return <motion.div className={className} {...props}>{children}</motion.div>;
+  }
+
+  return (
+    <motion.div
+      className={`relative inline-block ${className}`}
+      {...props}
+    >
+      {/* Base text */}
+      <span className="relative z-10">{children}</span>
+      
+      {/* Shimmer gradient overlay */}
+      <motion.div
+        className="absolute inset-0 z-20 pointer-events-none"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255,255,255,0.6) 50%, transparent 60%, transparent 100%)',
+          backgroundSize: '200% 100%',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          mixBlendMode: 'overlay',
+        }}
+        initial={{ backgroundPosition: '-200% 0' }}
+        animate={{ backgroundPosition: '200% 0' }}
+        transition={{
+          duration,
+          delay,
+          ease: EASING.smooth,
+          repeat: 0, // Play once only
+        }}
+      >
+        {children}
+      </motion.div>
     </motion.div>
   );
 }

@@ -13,6 +13,15 @@
  * - h4: text-sm (14px) - Minor headings
  * - p, li: text-sm (14px) - Body text
  *
+ * VERTICAL RHYTHM: Uses rhythm-paragraph and rhythm-heading patterns
+ * - Paragraph spacing: 24px (space-y-6) - 1.5× line-height
+ * - Heading spacing: Progressive (h1: 48px above, 24px below)
+ * - List spacing: 16px (space-y-4)
+ *
+ * MEASURE: Wrap markdown content with prose-article for optimal readability
+ * - Optimal: 65ch (~680px) for comfortable reading
+ * - See TYPOGRAPHY.md for complete measure documentation
+ *
  * See TYPOGRAPHY.md for complete typography system documentation.
  *
  * USAGE:
@@ -20,15 +29,19 @@
  * import { markdownComponents } from "@/app/components/markdown/markdownComponents"
  * import ReactMarkdown from "react-markdown"
  *
- * <ReactMarkdown components={markdownComponents}>
- *   {markdownContent}
- * </ReactMarkdown>
+ * // Recommended: Wrap with prose-article for optimal measure + rhythm
+ * <article className="prose-article mx-auto px-8">
+ *   <ReactMarkdown components={markdownComponents}>
+ *     {markdownContent}
+ *   </ReactMarkdown>
+ * </article>
  * ```
  *
  * FEATURES:
- * - Consistent text sizes and spacing (unified with storyMarkdownComponents)
+ * - Primary heading hierarchy (PRIMARY from HEADING_HIERARCHIES)
+ * - Consistent text sizes and spacing (matches VERTICAL_RHYTHM)
  * - Footer-inspired opacity hierarchy for visual depth
- * - Generous spacing (space-y-4 for lists, my-6 for blockquotes)
+ * - Generous spacing (follows 4px grid system)
  * - list-outside for better optical alignment
  * - Theme-aware colors (foreground, muted-foreground)
  * - Smooth color transitions
