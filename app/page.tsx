@@ -32,6 +32,44 @@ const THEME_BLEND_THRESHOLD = 0.93
 
 const PRIORITY_IMAGE_COUNT = 3
 
+/**
+ * Helper function to parse text and wrap parenthetical content with mono styling.
+ * Identifies text within parentheses and wraps it in a span with mono font and smaller size.
+ * 
+ * @param text - The text to parse
+ * @returns Array of React elements with styled parenthetical content
+ */
+function parseParentheses(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = []
+  let lastIndex = 0
+  const regex = /\(([^)]+)\)/g
+  let match
+  let keyIndex = 0
+
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the parentheses
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index))
+    }
+    
+    // Add the parenthetical content with mono styling
+    parts.push(
+      <span key={`paren-${keyIndex++}`} className="text-2xs font-[family-name:var(--font-mono)]">
+        ({match[1]})
+      </span>
+    )
+    
+    lastIndex = regex.lastIndex
+  }
+  
+  // Add remaining text after the last match
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex))
+  }
+  
+  return parts.length > 0 ? parts : [text]
+}
+
 export default function Page() {
   const timezoneMessage = useTimezoneMessage()
   const { prefersDark, isReady } = useSystemTheme()
@@ -376,7 +414,7 @@ export default function Page() {
                   
                   {/* Line 1: Primary statement */}
                   <p className="type-body-primary">
-                    <span className="font-edu-marist">Raf</span> designs and builds AI products that work at scale.
+                    <span className="font-edu-marist">Raf</span> designs interaction models for AI products and systems at scale.
                   </p>
 
                   {/* Contact Links - Horizontal Layout */}
@@ -513,11 +551,20 @@ export default function Page() {
                       {FOOTER_CONFIG.bio.paragraphs.map((paragraph, index) => {
                         // Keep inline if text starts with punctuation (comma, period, etc.)
                         const isInline = paragraph.text.match(/^[,;.!?]/)
+                        // Get font size class (default to 'text-sm' for type-body)
+                        const fontSizeClass = paragraph.fontSize 
+                          ? `text-${paragraph.fontSize}` 
+                          : 'text-sm'
+                        // Parse parentheses and style them with mono font
+                        const parsedContent = parseParentheses(paragraph.text)
+                        
                         return (
                           <React.Fragment key={index}>
                             {index > 0 && !isInline && <br />}
-                            <span className={paragraph.isSecondary ? 'opacity-80' : ''}>
-                              {paragraph.text}
+                            <span 
+                              className={`${fontSizeClass} ${paragraph.isSecondary ? 'opacity-80' : ''}`}
+                            >
+                              {parsedContent}
                             </span>
                           </React.Fragment>
                         )

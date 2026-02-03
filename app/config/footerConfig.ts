@@ -33,6 +33,13 @@ export interface BioParagraph {
    * Used for supporting statements after the main experience text.
    */
   isSecondary?: boolean;
+  /**
+   * Optional custom font size for the paragraph.
+   * - 'sm': 14px (default body text)
+   * - 'xs': 12px (de-emphasized text)
+   * - '2xs': 10px (minimal text)
+   */
+  fontSize?: 'sm' | 'xs' | '2xs';
 }
 
 /**
@@ -101,21 +108,18 @@ export const FOOTER_CONFIG: FooterConfig = {
     sectionLabel: "About",
     paragraphs: [
       {
-        text: "Staff AI UX Designer at Walmart",
+        text: "Staff AI UX Designer at Walmart, currently designing AI recommendation systems at marketplace scale.",
         isSecondary: false,
       },
       {
-        text: ", currently designing AI recommendation systems at marketplace scale.",
+        text: "Previously: AI design for Obvious, founding designer at Theoriq (agent frameworks), senior roles at Voiceflow (AI agents) and Coinbase (developer tools).",
         isSecondary: true,
       },
-      // {
-      //   text: "I design AI interfaces that handle uncertainty, building trust in high-stakes systems where models can be wrong.",
-      //   isSecondary: true,
-      // },
-      // {
-      //   text: "9+ years designing high-leverage systems across startups and public companies.",
-      //   isSecondary: true,
-      // },
+      {
+        text: "Earlier: design systems at Zalando, accessibility platform at CurbCutOS, early-stage SaaS and web3. Started in engineering, moved to design.",
+        isSecondary: true,
+        fontSize: 'xs',
+      },
     ],
   },
 
