@@ -25,6 +25,10 @@ export default function Page() {
   const wheelAccumRef = useRef(0)
   const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Touch gesture tracking for mobile theme toggle
+  const touchStartY = useRef(0)
+  const touchAccumRef = useRef(0)
+
   // Location message reveal state (one-way animation on theme invert)
   const [hasShownLocationMessage, setHasShownLocationMessage] = useState(false)
 
@@ -81,9 +85,38 @@ export default function Page() {
       }
     }
 
+    // Touch handlers for mobile swipe gestures
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY.current = e.touches[0].clientY
+      touchAccumRef.current = 0
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const deltaY = touchStartY.current - e.touches[0].clientY
+      touchAccumRef.current = deltaY
+
+      if (Math.abs(touchAccumRef.current) >= WHEEL_THRESHOLD) {
+        const swipingDown = touchAccumRef.current > 0
+
+        setThemeInverted((prev) => {
+          const next = swipingDown
+          if (next === prev) return prev
+          return next
+        })
+
+        touchAccumRef.current = 0
+        touchStartY.current = e.touches[0].clientY
+      }
+    }
+
     window.addEventListener('wheel', handleWheel, { passive: false })
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+
     return () => {
       window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current)
     }
   }, [])
@@ -124,6 +157,16 @@ export default function Page() {
       document.documentElement.style.setProperty('--theme-blend-num', initialBlendNum)
     }
   }, [isReady, prefersDark])
+
+  // ============================================================================
+  // MOBILE SCROLL LOCK — prevent rubber-banding on iOS/Android
+  // ============================================================================
+  useEffect(() => {
+    document.documentElement.classList.add('no-mobile-scroll')
+    return () => {
+      document.documentElement.classList.remove('no-mobile-scroll')
+    }
+  }, [])
 
   // ============================================================================
   // URL SYNCING FOR WRITING MODAL
@@ -187,9 +230,9 @@ export default function Page() {
     initial: {
       height: 0,
       opacity: 0,
-      filter: "blur(20px)",
-      y: 16,
-      scale: 0.96
+      filter: "blur(8px)",
+      y: 8,
+      scale: 0.98
     },
     animate: {
       height: "auto" as const,
@@ -199,8 +242,8 @@ export default function Page() {
       scale: 1,
       transition: {
         height: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },      // EASING.spring
-        opacity: { duration: 1.0, ease: [0.25, 0.1, 0.25, 1.0] as const, delay: 0.2 },  // EASING.gentle
-        filter: { duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] as const },  // EASING.textReveal
+        opacity: { duration: 2.8, ease: [0.25, 0.1, 0.25, 1.0] as const, delay: 0.4 },  // EASING.gentle
+        filter: { duration: 3.2, ease: [0.25, 0.1, 0.25, 1.0] as const, delay: 0.3 },  // EASING.gentle
         y: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const },           // EASING.spring
         scale: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const }        // EASING.spring
       }
@@ -213,7 +256,7 @@ export default function Page() {
        * SINGLE 100VH HERO — all content in one viewport
        * Three zones: intro (top), bio (middle), meta (bottom)
        * ================================================================ */}
-      <main className="h-full w-full max-w-[1400px] mx-auto px-4 md:px-20">
+      <main className="h-full w-full max-w-[1400px] md:mx-auto px-4 md:px-20">
         <div className="h-full grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
           <div className="md:col-start-2 h-full flex flex-col justify-center">
 
