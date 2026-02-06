@@ -62,34 +62,26 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Craft",
       paragraphs: [
         {
-          text: "Staff AI UX Designer at Walmart, currently designing AI recommendation systems at marketplace scale.",
+          text: "Previously designed Skills AI at Obvious. Joined Theoriq as founding designer. Held senior roles at Coinbase and Voiceflow. Before that, design systems at Zalando and more. Background in software engineering.",
           isHighlighted: true,
         },
-        {
-          text: "I design AI interfaces that handle uncertainty, edge cases, and evolving behavior—building trust in high-stakes systems where models can be wrong.",
-        },
-        {
-          text: "9+ years across startups and public companies. I work best with founders and leaders who think long-term, move with intent, and care about people as much as outcomes.",
-        },
-       
-        
       ],
     },
     {
       title: "Presence",
       paragraphs: [
         {
-          text: "I’m based in Toronto, Canada and frequently in Lisbon and NYC.",
+          text: `I\u2019m based in Toronto, Canada and frequently in <span class="line-through opacity-50">Lisbon and NYC</span>.`,
           isHighlighted: true,
         },
         {
           text: "I enjoy thoughtful workspaces. How they influence focus, energy, and flow.",
         },
         {
-          text: "I'm usually on a yoga mat. I've been vegetarian for as long as I can remember.",
+          text: "I\u2019m usually on a yoga mat. I\u2019ve been vegetarian for as long as I can remember.",
         },
         {
-          text: "Personality-wise, I'm an ENTJ, a Red–Yellow on the Color Code, and an Enneagram 8.",
+          text: "Personality-wise, I\u2019m an ENTJ, a Red\u2013Yellow on the Color Code, and an Enneagram 8.",
         },
       ],
     },
@@ -127,4 +119,3 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
     "Always happy, never satisfied.",
   ],
 };
-

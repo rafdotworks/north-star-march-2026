@@ -18,6 +18,48 @@ interface AboutModalContentProps {
 }
 
 /**
+ * Parses HTML string and converts to React elements
+ */
+function parseHTMLToReact(htmlString: string, startKey: number): (string | React.ReactElement)[] {
+  const parts: (string | React.ReactElement)[] = [];
+  const htmlRegex = /<span class="([^"]+)">([^<]+)<\/span>/g;
+  let lastIndex = 0;
+  let match;
+  let spanCounter = 0;
+
+  while ((match = htmlRegex.exec(htmlString)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      const beforeText = htmlString.slice(lastIndex, match.index);
+      if (beforeText.length > 0) {
+        parts.push(beforeText);
+      }
+    }
+
+    // Add the span element
+    const className = match[1];
+    const content = match[2];
+    parts.push(
+      <span key={`span-${startKey}-${spanCounter++}`} className={className}>
+        {content}
+      </span>
+    );
+
+    lastIndex = htmlRegex.lastIndex;
+  }
+
+  // Add remaining text
+  if (lastIndex < htmlString.length) {
+    const remainingText = htmlString.slice(lastIndex);
+    if (remainingText.length > 0) {
+      parts.push(remainingText);
+    }
+  }
+
+  return parts.length > 0 ? parts : [htmlString];
+}
+
+/**
  * Renders a paragraph from the modal content with proper formatting
  */
 function renderParagraph(
@@ -28,50 +70,65 @@ function renderParagraph(
 ) {
   const { text, isHighlighted, isEmphasized } = paragraph;
 
-  // Handle text with link placeholders
+  // First, parse HTML elements
+  const htmlParts = parseHTMLToReact(text, index);
+
+  // Then, handle link placeholders within each part
   const parts: (string | React.ReactElement)[] = [];
-  let lastIndex = 0;
-  const regex = /\{(linkedin|x|email|blueprint)\}/g;
-  let match;
   let linkCounter = 0;
 
-  while ((match = regex.exec(text)) !== null) {
-    // Add text before the match
-    if (match.index > lastIndex) {
-      const beforeText = text.slice(lastIndex, match.index);
-      if (beforeText.length > 0) {
-        parts.push(beforeText);
+  htmlParts.forEach((part, partIndex) => {
+    if (typeof part === 'string') {
+      // Process link placeholders in text parts
+      const linkRegex = /\{(linkedin|x|email|blueprint)\}/g;
+      let lastIndex = 0;
+      let match;
+
+      while ((match = linkRegex.exec(part)) !== null) {
+        // Add text before the match
+        if (match.index > lastIndex) {
+          const beforeText = part.slice(lastIndex, match.index);
+          if (beforeText.length > 0) {
+            parts.push(beforeText);
+          }
+        }
+
+        // Add the link component
+        const linkKey = match[1] as "linkedin" | "x" | "email" | "blueprint";
+        const link = links[linkKey];
+        const isExternalLink = linkKey !== "email" && linkKey !== "blueprint";
+        parts.push(
+          <a
+            key={`link-${index}-${linkCounter++}`}
+            href={link.href}
+            target={isExternalLink ? "_blank" : undefined}
+            rel={isExternalLink ? "noopener noreferrer" : undefined}
+            className="text-foreground/85 underline hover:text-foreground transition-colors"
+          >
+            {link.label}
+          </a>
+        );
+
+        lastIndex = linkRegex.lastIndex;
       }
+
+      // Add remaining text
+      if (lastIndex < part.length) {
+        const remainingText = part.slice(lastIndex);
+        if (remainingText.length > 0) {
+          parts.push(remainingText);
+        }
+      } else if (lastIndex === 0) {
+        // No links found, add the original part
+        parts.push(part);
+      }
+    } else {
+      // Add React elements as-is
+      parts.push(React.cloneElement(part, { key: `part-${index}-${partIndex}` }));
     }
+  });
 
-    // Add the link component
-    const linkKey = match[1] as "linkedin" | "x" | "email" | "blueprint";
-    const link = links[linkKey];
-    const isExternalLink = linkKey !== "email" && linkKey !== "blueprint";
-    parts.push(
-      <a
-        key={`link-${index}-${linkCounter++}`}
-        href={link.href}
-        target={isExternalLink ? "_blank" : undefined}
-        rel={isExternalLink ? "noopener noreferrer" : undefined}
-        className="text-foreground/85 underline hover:text-foreground transition-colors"
-      >
-        {link.label}
-      </a>
-    );
-
-    lastIndex = regex.lastIndex;
-  }
-
-  // Add remaining text
-  if (lastIndex < text.length) {
-    const remainingText = text.slice(lastIndex);
-    if (remainingText.length > 0) {
-      parts.push(remainingText);
-    }
-  }
-
-  // If no links were found, use the original text
+  // If no processing was done, use the original text
   const content = parts.length > 0 ? parts : text;
 
   const className = isHighlighted

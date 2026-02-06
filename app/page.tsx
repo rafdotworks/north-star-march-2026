@@ -1,79 +1,16 @@
 "use client"
 
-import React, { useEffect, useState, useRef, useMemo, useCallback } from "react"
-import { useReducedMotion } from "framer-motion"
-import { WorkCard } from "@/app/components/media/WorkCard"
-import { ScrollBottomBlur } from "@/app/components/layout/ScrollBottomBlur"
-import { ScrollTopBlur } from "@/app/components/layout/ScrollTopBlur"
-import { SectionDivider } from "@/app/components/layout/SectionDivider"
+import React, { useEffect, useState, useRef, useMemo } from "react"
 import FooterLink from "@/app/components/layout/FooterLink"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
-import { useIsMobile } from "@/hooks/use-mobile"
-import {
-  PROJECT_ORDER,
-  PROJECTS,
-  PROJECT_CAPTIONS,
-  PROJECT_INTERLEAVED_CAPTIONS,
-  PROJECT_YEARS,
-  PROJECT_ROLES,
-  PROJECT_CONTRACT_TYPES,
-  PROJECT_DISPLAY_NAMES,
-  PROJECT_DISPLAY_MODES,
-  IMAGE_ALT_TEXT,
-  PROJECT_HAS_STORY
-} from "@/app/config/portfolioConfig"
-import { FOOTER_CONFIG } from "@/app/config/footerConfig"
 import SideTray from "@/app/components/page-specific/SideTray"
-
 import { useSystemTheme } from "@/hooks/use-system-theme"
-
-// Theme blend threshold: instant snap at 93% scroll
-const THEME_BLEND_THRESHOLD = 0.93
-
-const PRIORITY_IMAGE_COUNT = 3
-
-/**
- * Helper function to parse text and wrap parenthetical content with mono styling.
- * Identifies text within parentheses and wraps it in a span with mono font and smaller size.
- * 
- * @param text - The text to parse
- * @returns Array of React elements with styled parenthetical content
- */
-function parseParentheses(text: string): React.ReactNode[] {
-  const parts: React.ReactNode[] = []
-  let lastIndex = 0
-  const regex = /\(([^)]+)\)/g
-  let match
-  let keyIndex = 0
-
-  while ((match = regex.exec(text)) !== null) {
-    // Add text before the parentheses
-    if (match.index > lastIndex) {
-      parts.push(text.substring(lastIndex, match.index))
-    }
-    
-    // Add the parenthetical content with mono styling
-    parts.push(
-      <span key={`paren-${keyIndex++}`} className="text-2xs font-[family-name:var(--font-mono)]">
-        ({match[1]})
-      </span>
-    )
-    
-    lastIndex = regex.lastIndex
-  }
-  
-  // Add remaining text after the last match
-  if (lastIndex < text.length) {
-    parts.push(text.substring(lastIndex))
-  }
-  
-  return parts.length > 0 ? parts : [text]
-}
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 
 export default function Page() {
   const timezoneMessage = useTimezoneMessage()
   const { prefersDark, isReady } = useSystemTheme()
-  const isMobile = useIsMobile()
+  const shouldReduceMotion = useReducedMotion()
 
   // Story tray state
   const [selectedStory, setSelectedStory] = useState<string | null>(null)
@@ -82,24 +19,14 @@ export default function Page() {
   const [isWritingOpen, setIsWritingOpen] = useState(false)
   const [selectedWritingArticle, setSelectedWritingArticle] = useState<string | null>(null)
 
-  // Scroll-based hero blur with eased progress
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const ticking = useRef(false)
+  // Theme inversion state (driven by wheel gesture)
+  const [themeInverted, setThemeInverted] = useState(false)
   const prefersDarkRef = useRef(prefersDark)
+  const wheelAccumRef = useRef(0)
+  const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Footer scroll-based blur with eased progress
-  const [footerScrollProgress, setFooterScrollProgress] = useState(0)
-  const [footerRevealProgress, setFooterRevealProgress] = useState(0)
-  const footerRef = useRef<HTMLDivElement>(null)
-  const prefersReduced = useReducedMotion()
-
-  // Metadata blur + opacity for project cards
-  const [metadataOpacityValues, setMetadataOpacityValues] = useState<Array<{ blur: number; opacity: number }>>([])
-  const metadataRefs = useRef<(HTMLDivElement | null)[]>([])
-
-  // Keep refs in sync with state for scroll handler
-  const isMobileRef = useRef(isMobile)
-  const prefersReducedRef = useRef(prefersReduced)
+  // Location message reveal state (one-way animation on theme invert)
+  const [hasShownLocationMessage, setHasShownLocationMessage] = useState(false)
 
   // ============================================================================
   // MEMOIZED STYLES - Prevent object recreation on every render
@@ -107,188 +34,105 @@ export default function Page() {
   const containerStyle = useMemo(() => ({
     backgroundColor: 'var(--bg)',
     color: 'var(--fg)',
-    transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1), color 1s cubic-bezier(0.4, 0, 0.2, 1)'
+    transition: 'background-color var(--theme-transition-duration) var(--theme-transition-easing), color var(--theme-transition-duration) var(--theme-transition-easing)'
   }), [])
-
-  const worksSectionStyle = useMemo(() => ({
-    backgroundColor: 'var(--bg)',
-    transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)'
-  }), [])
-
-  // ============================================================================
-  // STABLE CALLBACKS - Prevent function recreation on every render
-  // ============================================================================
-  const handleReadStory = useCallback((projectKey: string) => {
-    setSelectedStory(projectKey)
-  }, [])
-
-  const setMetadataRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
-    metadataRefs.current[index] = el
-  }, [])
 
   useEffect(() => {
     prefersDarkRef.current = prefersDark
   }, [prefersDark])
 
+  // ============================================================================
+  // WHEEL-GESTURE THEME TOGGLE
+  // ============================================================================
+  // Page is a fixed 100vh viewport — no actual scrolling occurs.
+  // Wheel/trackpad gestures toggle the theme inversion instead.
+  //
+  // How it works:
+  // 1. Accumulate wheel deltaY over a 200ms window
+  // 2. When accumulated delta exceeds threshold (50px), toggle theme
+  // 3. Reset accumulator after toggle or timeout
+  // 4. Scroll down → invert theme, scroll up → revert to original
+  // ============================================================================
   useEffect(() => {
-    isMobileRef.current = isMobile
-  }, [isMobile])
+    const WHEEL_THRESHOLD = 50
 
-  useEffect(() => {
-    prefersReducedRef.current = prefersReduced
-  }, [prefersReduced])
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault()
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!ticking.current) {
-        requestAnimationFrame(() => {
-          const scrollY = window.scrollY
-          const viewportHeight = window.innerHeight
+      wheelAccumRef.current += e.deltaY
 
-          // Dramatic, slower transition: 10vh to 95vh (hero lingers longer, fades deeper)
-          const transitionStart = viewportHeight * 0.1
-          const transitionEnd = viewportHeight * 0.95
+      // Reset accumulator after 200ms of inactivity
+      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current)
+      wheelTimerRef.current = setTimeout(() => {
+        wheelAccumRef.current = 0
+      }, 200)
 
-          if (scrollY <= transitionStart) {
-            setScrollProgress(0)
-          } else if (scrollY >= transitionEnd) {
-            setScrollProgress(1)
-          } else {
-            const progress = (scrollY - transitionStart) / (transitionEnd - transitionStart)
-            // Dramatic cubic ease-out - hero lingers longer, accelerates beautifully
-            setScrollProgress(1 - Math.pow(1 - progress, 3))
-          }
+      // Toggle when accumulated delta exceeds threshold
+      if (Math.abs(wheelAccumRef.current) >= WHEEL_THRESHOLD) {
+        const scrollingDown = wheelAccumRef.current > 0
 
-          // ========================================================================
-          // BINARY THEME BLEND SYSTEM
-          // ========================================================================
-          // Design decision: Binary (instant snap) rather than gradual transition
-          // - Creates clear visual distinction between sections
-          // - 93% threshold chosen through user testing - late enough to feel natural
-          //   but early enough that footer content is visible after transition
-          // - Ties to footer reveal (85-100%), creating cohesive scroll experience
-          //
-          // How it works:
-          // 1. Calculate total page scroll progress (0-1)
-          // 2. At 93% scroll, instantly flip from 0 to 1 (no gradual blend)
-          // 3. Set CSS custom properties that drive color-mix() in CSS
-          // 4. Light mode: starts at 0%, snaps to 100% (light→dark)
-          //    Dark mode: starts at 100%, snaps to 0% (dark→light, inverted)
-          //
-          // CSS integration: --theme-blend used in color-mix() for smooth 1s transitions
-          // despite instant value change (CSS handles the visual smoothness)
-          // ========================================================================
-          const scrollHeight = document.documentElement.scrollHeight - viewportHeight
-          const totalProgress = scrollY / scrollHeight
-
-          // Binary threshold: 0 or 1 (instant snap at 93%)
-          const themeBlend = totalProgress >= THEME_BLEND_THRESHOLD ? 1 : 0
-
-          // Set CSS custom properties for color-mix interpolation
-          // Light mode: 0% → 100% (scroll to dark)
-          // Dark mode: 100% → 0% (scroll to light) - invert the blend
-          const finalBlend = prefersDarkRef.current
-            ? (1 - themeBlend) * 100  // Dark mode: 100% or 0%
-            : themeBlend * 100         // Light mode: 0% or 100%
-          document.documentElement.style.setProperty('--theme-blend', `${finalBlend}%`)
-          // Numeric version for calc() operations (0-1)
-          document.documentElement.style.setProperty('--theme-blend-num', `${finalBlend / 100}`)
-
-          // Unified footer effects based on total page scroll progress
-          // Both blur AND reveal use the same 85%-100% range
-          const FOOTER_START = 0.85  // Start after last project divider
-          const FOOTER_END = 1.0     // Complete at page end
-
-          let footerEffectProgress = 0
-          if (totalProgress <= FOOTER_START) {
-            footerEffectProgress = 1  // Fully blurred/hidden
-          } else if (totalProgress >= FOOTER_END) {
-            footerEffectProgress = 0  // Fully sharp/revealed
-          } else {
-            // Map 85%-100% scroll to 1→0 (inverted: starts blurred, ends sharp)
-            const effectRange = FOOTER_END - FOOTER_START
-            const progressInRange = totalProgress - FOOTER_START
-            const rawProgress = progressInRange / effectRange
-            // Inverted: 1 (blurred) → 0 (sharp)
-            footerEffectProgress = 1 - rawProgress
-          }
-
-          // Use SAME progress for both effects
-          setFooterScrollProgress(footerEffectProgress)
-          setFooterRevealProgress(1 - footerEffectProgress)  // Inverted for reveal mask
-
-          // ========================================================================
-          // METADATA BLUR + OPACITY EFFECT - Blur + fade as next project metadata approaches
-          // ========================================================================
-          // Calculate blur + opacity for each project's metadata based on proximity to next
-          const effectValues = metadataRefs.current.map((metadataEl, index) => {
-            // Skip if mobile, reduced motion, or no element
-            if (!metadataEl || isMobileRef.current || prefersReducedRef.current) {
-              return { blur: 0, opacity: 1 }  // Fully visible, no blur
-            }
-
-            const rect = metadataEl.getBoundingClientRect()
-            const stickyPosition = 48 // md:top-12 = 48px
-
-            // Get next metadata element
-            const nextMetadataEl = metadataRefs.current[index + 1]
-            if (!nextMetadataEl) return { blur: 0, opacity: 1 }  // Last item, no effects
-
-            const nextRect = nextMetadataEl.getBoundingClientRect()
-            const nextMetadataTop = nextRect.top
-
-            // Calculate distance from next metadata to overlap point
-            const triggerDistance = 50  // Start effects at 50px away
-            const overlapPoint = stickyPosition + rect.height
-            const distanceToOverlap = nextMetadataTop - overlapPoint
-
-            if (distanceToOverlap > triggerDistance) {
-              return { blur: 0, opacity: 1 }  // Too far, no effects
-            } else if (distanceToOverlap <= 0) {
-              return { blur: 4, opacity: 0 }  // Fully overlapped, max blur + transparent
-            } else {
-              // Progressive effects: both increase as distance closes
-              const progress = 1 - (distanceToOverlap / triggerDistance)
-              return {
-                blur: progress * 4,      // 0px → 4px blur
-                opacity: 1 - progress    // 1 → 0 opacity (fade to dark)
-              }
-            }
-          })
-
-          setMetadataOpacityValues(effectValues)
-
-          ticking.current = false
+        setThemeInverted((prev) => {
+          const next = scrollingDown
+          if (next === prev) return prev
+          return next
         })
-        ticking.current = true
+
+        wheelAccumRef.current = 0
       }
     }
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll() // Initial calculation
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => {
+      window.removeEventListener('wheel', handleWheel)
+      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current)
+    }
   }, [])
 
   // ============================================================================
-  // URL SYNCING FOR WRITING MODAL
+  // LOCATION MESSAGE REVEAL — trigger one-way animation when theme inverts
   // ============================================================================
-  // Enables shareable URLs for articles while preserving modal UX
-  //
-  // HOW IT WORKS:
-  // 1. Direct link (/?writings=personal-blueprint) auto-opens modal
-  // 2. Clicking article in modal updates URL for sharing
-  // 3. Browser back/forward buttons work naturally
-  // 4. Modal preserves smooth animations from footer clicks
-  //
-  // BENEFIT: Best of both worlds - elegant modal + shareable links!
+  useEffect(() => {
+    if (themeInverted && !hasShownLocationMessage) {
+      setHasShownLocationMessage(true)
+    }
+  }, [themeInverted, hasShownLocationMessage])
+
+  // ============================================================================
+  // THEME BLEND — apply CSS custom properties when themeInverted changes
+  // ============================================================================
+  useEffect(() => {
+    if (!isReady || typeof document === 'undefined') return
+
+    const themeBlend = themeInverted ? 1 : 0
+
+    // Light mode: 0% → 100% (normal → dark)
+    // Dark mode: 100% → 0% (normal → light)
+    const finalBlend = prefersDarkRef.current
+      ? (1 - themeBlend) * 100
+      : themeBlend * 100
+
+    document.documentElement.style.setProperty('--theme-blend', `${finalBlend}%`)
+    document.documentElement.style.setProperty('--theme-blend-num', `${finalBlend / 100}`)
+  }, [themeInverted, isReady])
+
+  // Set initial theme blend based on system preference
+  useEffect(() => {
+    if (isReady && typeof document !== 'undefined') {
+      const initialBlend = prefersDark ? '100%' : '0%'
+      const initialBlendNum = prefersDark ? '1' : '0'
+      document.documentElement.style.setProperty('--theme-blend', initialBlend)
+      document.documentElement.style.setProperty('--theme-blend-num', initialBlendNum)
+    }
+  }, [isReady, prefersDark])
+
+  // ============================================================================
+  // URL SYNCING FOR WRITING MODAL
   // ============================================================================
 
   // Effect 1: Read URL on mount and auto-open modal if query param present
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const writingSlug = params.get('writings')
-
-    // If URL contains ?writings=slug, open modal automatically
     if (writingSlug) {
       setIsWritingOpen(true)
       setSelectedWritingArticle(writingSlug)
@@ -298,15 +142,12 @@ export default function Page() {
   // Effect 2: Update URL when modal state changes (for sharing)
   useEffect(() => {
     if (isWritingOpen && selectedWritingArticle) {
-      // Article selected → Add query param
-      // Example: raf.works → raf.works/?writings=personal-blueprint
       const newUrl = `/?writings=${selectedWritingArticle}`
       window.history.pushState({}, '', newUrl)
     } else if (!isWritingOpen) {
-      // Modal closed → Remove query param
       const params = new URLSearchParams(window.location.search)
       if (params.get('writings')) {
-        window.history.pushState({}, '', '/') // Clean URL
+        window.history.pushState({}, '', '/')
       }
     }
   }, [isWritingOpen, selectedWritingArticle])
@@ -314,343 +155,164 @@ export default function Page() {
   // Effect 3: Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
-      // Read URL after back/forward button click
       const params = new URLSearchParams(window.location.search)
       const writingSlug = params.get('writings')
-
-      // Sync modal state with URL
       if (writingSlug) {
-        // URL has param → Open modal with that article
         setIsWritingOpen(true)
         setSelectedWritingArticle(writingSlug)
       } else {
-        // URL has no param → Close modal
         setIsWritingOpen(false)
         setSelectedWritingArticle(null)
       }
     }
-
-    // Listen for browser navigation events
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // Set initial theme blend based on system preference
-  useEffect(() => {
-    if (isReady && typeof document !== 'undefined') {
-      // CSS handles initial --theme-blend via media query
-      // This ensures it's set correctly on first load
-      const initialBlend = prefersDark ? '100%' : '0%'
-      const initialBlendNum = prefersDark ? '1' : '0'
-      document.documentElement.style.setProperty('--theme-blend', initialBlend)
-      document.documentElement.style.setProperty('--theme-blend-num', initialBlendNum)
+  // ============================================================================
+  // ANIMATION VARIANTS — Location message reveal
+  // ============================================================================
+
+  // Reduced motion variant (accessibility)
+  const locationMessageReducedMotion = {
+    initial: { opacity: 0 },
+    animate: {
+      opacity: 0.5,
+      transition: { duration: 0.3 }
     }
-  }, [isReady, prefersDark])
+  } as const
 
-  // Derived values from scroll progress - three-phase transition with linger
-  // Phase 1 (0-40%): Build up quickly | Phase 2 (40-70%): LINGER at peak | Phase 3 (70-100%): Dramatic exit
-  let heroBlur: number
-  let heroOpacity: number
-  let heroScale: number
-
-  if (scrollProgress < 0.4) {
-    // Phase 1: Build up blur quickly to maximum (0-40%)
-    const phase1Progress = scrollProgress / 0.4
-    const easedProgress = 1 - Math.pow(1 - phase1Progress, 2)  // Ease out curve
-
-    heroBlur = easedProgress * 32           // 0px → 32px
-    heroOpacity = 1 - (easedProgress * 0.05)  // 100% → 95% (minimal fade)
-    heroScale = 1 - (easedProgress * 0.03)    // 100% → 97% (subtle shrink)
-
-  } else if (scrollProgress < 0.7) {
-    // Phase 2: LINGER at peak values (40-70%) - appreciation time for blur effect
-    heroBlur = 32        // Hold at maximum blur
-    heroOpacity = 0.95   // Hold near full visibility
-    heroScale = 0.97     // Hold minimal shrink
-
-  } else {
-    // Phase 3: Dramatic exit to reveal projects (70-100%)
-    const phase3Progress = (scrollProgress - 0.7) / 0.3
-
-    heroBlur = 32                                   // Keep max blur throughout
-    heroOpacity = 0.95 - (phase3Progress * 0.75)    // 95% → 20% (rapid fade)
-    heroScale = 0.97 - (phase3Progress * 0.09)      // 97% → 88% (accelerated shrink)
-  }
-
-  // Y translation stays linear throughout (maintains scroll responsiveness)
-  const heroY = scrollProgress * -48
-
-  // Footer blur derived values - subtle, readable effect
-  const footerBlur = prefersReduced ? 0 : footerScrollProgress * 16  // Max 16px (vs hero's 32px)
-  const footerOpacity = Math.max(0.2, 1 - (footerScrollProgress * 0.6))  // Fade 60%, min 20%
-  const footerY = footerScrollProgress * -24  // Subtle upward drift (vs hero's -48px)
+  // Full motion variant (blur-to-focus with height expansion)
+  const locationMessageVariants = {
+    initial: {
+      height: 0,
+      opacity: 0,
+      filter: "blur(20px)",
+      y: 16,
+      scale: 0.96
+    },
+    animate: {
+      height: "auto" as const,
+      opacity: 0.5,
+      filter: "blur(0px)",
+      y: 0,
+      scale: 1,
+      transition: {
+        height: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },      // EASING.spring
+        opacity: { duration: 1.0, ease: [0.25, 0.1, 0.25, 1.0] as const, delay: 0.2 },  // EASING.gentle
+        filter: { duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] as const },  // EASING.textReveal
+        y: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const },           // EASING.spring
+        scale: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const }        // EASING.spring
+      }
+    }
+  } as const
 
   return (
-    <div className="min-h-screen -mx-[max(16px,calc(env(safe-area-inset-left,0px)+16px))] sm:mx-0 overflow-x-hidden" style={containerStyle}>
+    <div className="h-screen overflow-hidden" style={containerStyle}>
       {/* ================================================================
-       * HERO SECTION - Fixed in background, blurs beautifully on scroll
+       * SINGLE 100VH HERO — all content in one viewport
+       * Three zones: intro (top), bio (middle), meta (bottom)
        * ================================================================ */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
-        <div
-          className="min-h-screen flex items-center"
-          style={{
-            filter: `blur(${heroBlur}px)`,
-            transform: `scale(${heroScale}) translateY(${heroY}px)`,
-            opacity: heroOpacity,
-            willChange: 'filter, transform, opacity'
-          }}
-        >
-          {/* Use same container and grid as works section for alignment */}
-          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20">
-            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
-              {/* Hero content - right column, aligns with project titles */}
-              <div className="md:col-start-2">
-                {/* Single column flowing layout with subtle first-line emphasis */}
-                
-                <div className="space-y-2 max-w-[600px]">
-                  {/* <p className="type-body">
-                    Most AI interfaces assume the model is right.
-                  </p> */}
-                  
-                  {/* Line 1: Primary statement */}
-                  <p className="type-body-primary">
-                    <span className="font-edu-marist">Raf</span> designs interaction models for AI products and systems at scale.
-                  </p>
+      <main className="h-full w-full max-w-[1400px] mx-auto px-4 md:px-20">
+        <div className="h-full grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
+          <div className="md:col-start-2 h-full flex flex-col justify-center">
 
-                  {/* Contact Links - Horizontal Layout */}
-                  <nav className="flex items-center gap-4 group/nav pt-2">
-                    <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
-                    <FooterLink href="mailto:raf@raf.works" label="Email" />
-                    <FooterLink href="https://x.com/rafdotworks" label="X" external />
-                  </nav>
-                </div>
-              </div>
+            {/* ——— BLOCK 1: Name + location ——— */}
+            <div className="max-w-[600px] mb-6">
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--fg)' }}>
+                <span className="font-edu-marist">Raf V.</span>
+              </p>
+              <p className="text-xs leading-relaxed opacity-60" style={{ color: 'var(--fg)' }}>
+                Toronto, Canada → London, UK
+              </p>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* ================================================================
-       * SCROLLABLE CONTENT - Works section scrolls over hero
-       * ================================================================ */}
-      <main className="relative z-10 pointer-events-none">
-        {/* Spacer for hero - allows hero to be visible before works */}
-        <div className="h-screen" />
+            {/* ——— BLOCK 2: Origin + Current role ——— */}
+            <div className="space-y-2  max-w-[600px] mb-6">
+              {/* Origin */}
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--fg)' }}>
+                I am a designer and design engineer who grew up on the Amalfi Coast, Italy.
+              </p>
 
-        {/* Scroll-reactive gradient transition as works come in */}
-        <div
-          className="h-48 -mt-48 relative z-10"
-          style={{
-            background: `linear-gradient(to bottom,
-              transparent 0%,
-              color-mix(in srgb, var(--bg), transparent ${65 - scrollProgress * 65}%) 25%,
-              color-mix(in srgb, var(--bg), transparent ${35 - scrollProgress * 35}%) 50%,
-              color-mix(in srgb, var(--bg), transparent ${10 - scrollProgress * 10}%) 75%,
-              var(--bg) 100%
-            )`,
-            opacity: Math.min(1, 0.5 + scrollProgress * 1.3),
-            transform: `translateY(${(1 - Math.min(1, scrollProgress * 1.5)) * 16}px)`,
-            transition: 'opacity 100ms ease-out',
-          }}
-        />
-
-        {/* Works section with solid background */}
-        <div className="min-h-screen pointer-events-auto" style={worksSectionStyle}>
-          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20 py-12 md:py-20 overflow-hidden md:overflow-visible">
-            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16 gap-y-1 md:gap-y-2">
-
-              {/* Works */}
-              {PROJECT_ORDER.map((projectKey, index) => {
-                const project = PROJECTS[projectKey]
-                const images = project.images
-                const title = PROJECT_DISPLAY_NAMES[projectKey] || projectKey
-                const altText = IMAGE_ALT_TEXT[images[0]] || `${title} project showcase`
-
-                // Get blur + opacity effects for this project
-                const effects = metadataOpacityValues[index] || { blur: 0, opacity: 1 }
-
-                return (
-                  <WorkCard
-                    key={projectKey}
-                    year={PROJECT_YEARS[projectKey] || ""}
-                    role={PROJECT_ROLES[projectKey] || ""}
-                    contractType={PROJECT_CONTRACT_TYPES[projectKey] || ""}
-                    title={title}
-                    description={PROJECT_CAPTIONS[projectKey]}
-                    interleavedDescription={PROJECT_INTERLEAVED_CAPTIONS[projectKey]}
-                    images={images}
-                    altText={altText}
-                    priority={index < PRIORITY_IMAGE_COUNT}
-                    projectIndex={index}
-                    hasStory={PROJECT_HAS_STORY[projectKey] || false}
-                    onReadStory={() => handleReadStory(projectKey)}
-                    metadataBlur={effects.blur}
-                    metadataOpacity={effects.opacity}
-                    metadataRef={setMetadataRef(index)}
-                    displayMode={PROJECT_DISPLAY_MODES[projectKey] || 'stack'}
-                  />
-                )
-              })}
-
-              {/* Divider before footer */}
-              <SectionDivider />
-
+              {/* Current role */}
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--fg)' }}>
+                <span className="font-medium">Currently I am designing AI-powered recommendation interfaces and their systems for Walmart</span>{" "}
+                <span className="opacity-80">as a Staff UX Designer focusing on trust, transparency, and safe adoption at enterprise scale.</span>
+              </p>
             </div>
-          </div>
-        </div>
 
-        {/* ================================================================
-         * FOOTER SECTION - Independent full-viewport section like hero
-         * ================================================================ */}
-        <div
-          ref={footerRef}
-          className="min-h-screen flex items-center pointer-events-auto"
-          style={{
-            backgroundColor: 'var(--bg)',
-            transition: 'background-color 1s cubic-bezier(0.4, 0, 0.2, 1)',
-            filter: `blur(${footerBlur}px)`,
-            opacity: footerOpacity,
-            transform: `translateY(${footerY}px)`,
-            willChange: 'filter, opacity, transform'
-          }}>
-          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-20">
-            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
-              {/* Footer content - right column */}
-              <div
-                className="space-y-5 md:col-start-2"
-                style={{
-                  maskImage: `linear-gradient(to bottom,
-                    black 0%,
-                    black ${footerRevealProgress * 100}%,
-                    rgba(0,0,0,0.7) ${footerRevealProgress * 100 + 15}%,
-                    rgba(0,0,0,0.4) 100%
-                  )`,
-                  WebkitMaskImage: `linear-gradient(to bottom,
-                    black 0%,
-                    black ${footerRevealProgress * 100}%,
-                    rgba(0,0,0,0.7) ${footerRevealProgress * 100 + 15}%,
-                    rgba(0,0,0,0.4) 100%
-                  )`
-                }}
-              >
-                {/* SECTION 1: About (Bio) */}
-                {FOOTER_CONFIG.bio && (
-                  <div className="space-y-2">
-                    {/* Clickable header - opens personal blueprint in writing tray */}
-                    <span
-                      onClick={() => {
-                        setIsWritingOpen(true)
-                        setSelectedWritingArticle("personal-blueprint")
-                      }}
-                      className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
-                    >
-                      {FOOTER_CONFIG.bio.sectionLabel}
-                    </span>
-                    {/* Bio content */}
-                    <p className="type-body">
-                      {FOOTER_CONFIG.bio.paragraphs.map((paragraph, index) => {
-                        // Keep inline if text starts with punctuation (comma, period, etc.)
-                        const isInline = paragraph.text.match(/^[,;.!?]/)
-                        // Get font size class (default to 'text-sm' for type-body)
-                        const fontSizeClass = paragraph.fontSize 
-                          ? `text-${paragraph.fontSize}` 
-                          : 'text-sm'
-                        // Parse parentheses and style them with mono font
-                        const parsedContent = parseParentheses(paragraph.text)
-                        
-                        return (
-                          <React.Fragment key={index}>
-                            {index > 0 && !isInline && <br />}
-                            <span 
-                              className={`${fontSizeClass} ${paragraph.isSecondary ? 'opacity-80' : ''}`}
-                            >
-                              {parsedContent}
-                            </span>
-                          </React.Fragment>
-                        )
-                      })}
-                    </p>
-                  </div>
-                )}
+            {/* ——— BLOCK 3: History + Personal ——— */}
+            <div className="space-y-2 max-w-[600px] mb-6">
+              {/* History - Theoriq */}
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--fg)' }}>
+                I have designed AI Skills for Obvious and was founding designer and design engineer at Theoriq
+                <span className="opacity-80">, where I scaled brand, marketing and product from 0 → 140k active users in 6 months working closely with Engineer and Research.</span>
+              </p>
 
-                {/* SECTION 2: Location */}
-                {FOOTER_CONFIG.location && (
-                  <div className="space-y-2">
-                    {/* Clickable header - opens "moving-to-europe" article */}
-                    <span
-                      onClick={() => {
-                        setIsWritingOpen(true)
-                        setSelectedWritingArticle("moving-to-europe")
-                      }}
-                      className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
-                    >
-                      {FOOTER_CONFIG.location.sectionLabel}
-                    </span>
-                    {/* Location content */}
-                    <p className="type-body">
-                      {FOOTER_CONFIG.location.paragraphs.map((paragraph, index) => {
-                        // Keep inline if text starts with punctuation (comma, period, etc.)
-                        const isInline = paragraph.text.match(/^[,;.!?]/)
-                        // Get font size class (default to 'text-sm' for type-body)
-                        const fontSizeClass = paragraph.fontSize 
-                          ? `text-${paragraph.fontSize}` 
-                          : 'text-sm'
-                        // Parse parentheses and style them with mono font
-                        const parsedContent = parseParentheses(paragraph.text)
-                        
-                        return (
-                          <React.Fragment key={index}>
-                            {index > 0 && !isInline && <br />}
-                            <span 
-                              className={`${fontSizeClass} ${paragraph.isSecondary ? 'opacity-80' : ''}`}
-                            >
-                              {parsedContent}
-                            </span>
-                          </React.Fragment>
-                        )
-                      })}
-                    </p>
-                  </div>
-                )}
+              {/* History - Previous roles */}
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--fg)' }}>
+                Previously, I covered senior design roles at Coinbase {" "}
+                <span className="opacity-50">(developer tools) </span> and Voiceflow{" "}
+                <span className="opacity-50">(AI Agents, onboarding and activation). Before that, design systems at Zalando and more.</span>
+              </p>
 
-                {/* SECTION 3: Writing (existing clickable section) */}
-                <div className="space-y-2">
-                  {/* Clickable header - keeps all interactivity */}
-                  <span
-                    onClick={() => setIsWritingOpen(true)}
-                    className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer block"
-                  >
-                    {FOOTER_CONFIG.writing.sectionLabel}
-                  </span>
-                  {/* Writing principles */}
-                  <p className="type-body text-xs">
-                    {FOOTER_CONFIG.writing.principles.map((principle, index) => (
-                      <React.Fragment key={index}>
-                        {index > 0 && <br />}
-                        <span className="opacity-50 italic font-edu-marist mr-1.5">
-                          {principle.number}
-                        </span>
-                        <span className={index > 0 ? 'opacity-80' : ''}>
-                          {principle.text}
-                        </span>
-                      </React.Fragment>
-                    ))}
-                  </p>
-                </div>
+              {/* Personal */}
+              <p className="text-xs leading-relaxed opacity-50" style={{ color: 'var(--fg)' }}>
+                I studied software engineering and my career started in brand design. I am also an avid writer, photographer and yogi. I{" "}
+                <span
+                  onClick={() => setIsWritingOpen(true)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      setIsWritingOpen(true)
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.textDecorationColor = 'color-mix(in srgb, currentColor 50%, transparent)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.textDecorationColor = 'color-mix(in srgb, currentColor 20%, transparent)'
+                  }}
+                  className="underline underline-offset-2 cursor-pointer transition-all duration-200"
+                  style={{
+                    WebkitTapHighlightColor: 'transparent',
+                    textDecorationColor: 'color-mix(in srgb, currentColor 20%, transparent)'
+                  }}
+                >
+                  write
+                </span>
+                {" "}as a form of meditation. I enjoy thoughtful offices and workspaces.
+              </p>
+            </div>
 
-                <p className="type-caption opacity-50 transition-colors duration-200 pt-5 font-[family-name:var(--font-mono)]">
+            {/* ——— BLOCK 4: Timezone message (animated reveal on theme invert) ——— */}
+            <AnimatePresence mode="wait">
+              {hasShownLocationMessage && (
+                <motion.p
+                  key="location-message"
+                  variants={shouldReduceMotion ? locationMessageReducedMotion : locationMessageVariants}
+                  initial="initial"
+                  animate="animate"
+                  className="text-2xs font-[family-name:var(--font-mono)] max-w-[600px] mb-6 transition-colors duration-200 overflow-hidden"
+                  style={{ willChange: 'height, opacity, filter' }}
+                >
                   {timezoneMessage}
-                </p>
-                
-              </div>
-            </div>
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            {/* ——— BLOCK 5: Contact links ——— */}
+            <nav className="flex items-center gap-4 group/nav max-w-[600px]">
+              <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
+              <FooterLink href="mailto:raf@raf.works" label="Email" />
+              <FooterLink href="https://x.com/rafdotworks" label="X" external />
+            </nav>
+
           </div>
         </div>
       </main>
-
-      {/* Scroll blur effects */}
-      <ScrollBottomBlur />
-      <ScrollTopBlur />
 
       {/* Story side tray */}
       <SideTray

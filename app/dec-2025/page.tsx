@@ -35,7 +35,6 @@ import { ContentGrid } from "../components/page-specific/ContentGrid"
 import { WorkCard } from "../components/media/WorkCard"
 import { SectionDivider } from "../components/layout/SectionDivider"
 import { ScrollBottomBlur } from "../components/layout/ScrollBottomBlur"
-import { ScrollTopBlur } from "../components/layout/ScrollTopBlur"
 import FooterLink from "../components/layout/FooterLink"
 import { useTimezoneMessage } from "@/hooks/use-timezone-message"
 
@@ -185,7 +184,6 @@ export default function Dec2025Page() {
 
       {/* Scroll-based blur effects */}
       <ScrollBottomBlur />
-      <ScrollTopBlur />
     </>
   )
 }
