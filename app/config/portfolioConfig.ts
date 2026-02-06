@@ -372,9 +372,9 @@ export const PROJECT_ALIAS: Record<string, string> = {
  */
 export const PROJECT_ORDER: ProjectKey[] = [
   "currentwork", // Current work (2026)
-  "theo", // Theoriq (2024)
-  "cb", // Coinbase (2025)
-  "earlyworks", // Early work (2017-2019), now includes Voiceflow, Atlas, Zalando, and more
+  // "theo", // Theoriq (2024)
+  // "cb", // Coinbase (2025)
+  // "earlyworks", // Early work (2017-2019), now includes Voiceflow, Atlas, Zalando, and more
 ];
 
 /**

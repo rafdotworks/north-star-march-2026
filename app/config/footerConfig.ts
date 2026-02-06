@@ -59,6 +59,16 @@ export interface LocationInfo {
 }
 
 /**
+ * Location section with paragraph structure (alternative to LocationInfo).
+ */
+export interface LocationParagraphs {
+  /** Section header label */
+  sectionLabel: string;
+  /** Array of location paragraphs */
+  paragraphs: BioParagraph[];
+}
+
+/**
  * Writing principle with roman numeral identifier.
  */
 export interface WritingPrinciple {
@@ -80,8 +90,8 @@ export interface FooterConfig {
   location?: {
     /** Section header label */
     sectionLabel: string;
-    /** Location details */
-    info: LocationInfo;
+    /** Array of location paragraphs */
+    paragraphs: BioParagraph[];
   };
   writing: {
     /** Section header label (clickable - opens SideTray) */
@@ -112,28 +122,32 @@ export const FOOTER_CONFIG: FooterConfig = {
         isSecondary: false,
       },
       {
-        text: "Previously: AI design for Obvious, founding designer at Theoriq (agent frameworks), senior roles at Voiceflow (AI agents) and Coinbase (developer tools).",
+        text: " Previously designed AI at Obvious, founding designer at Theoriq, and senior roles at Coinbase and Voiceflow.",
         isSecondary: true,
       },
       {
-        text: "Earlier: design systems at Zalando, accessibility platform at CurbCutOS, early-stage SaaS and web3. Started in engineering, moved to design.",
+        text: "Before that, design systems at Zalando and more. Background in software engineering.",
         isSecondary: true,
-        fontSize: 'xs',
       },
     ],
   },
 
   location: {
     sectionLabel: "Location",
-    info: {
-      futureMove: "Relocating.",
-      origin: "Born on the Amalfi Coast, Italy, in the 90s.",
-      currentBases: [
-        { city: "Lisbon", isPrevious: true },
-        { city: "NYC", isPrevious: true },
-        { city: "Toronto, Canada", isPrevious: false },
-      ],
-    },
+    paragraphs: [
+      {
+        text: "Relocating in summer 2026.",
+        isSecondary: false,
+      },
+      {
+        text: "Born on the Amalfi Coast, Italy, in the 90s.",
+        isSecondary: true,
+      },
+      {
+        text: "Based in Lisbon NYC Toronto, Canada.",
+        isSecondary: true,
+      },
+    ],
   },
 
   writing: {

@@ -535,7 +535,7 @@ export default function Page() {
               >
                 {/* SECTION 1: About (Bio) */}
                 {FOOTER_CONFIG.bio && (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {/* Clickable header - opens personal blueprint in writing tray */}
                     <span
                       onClick={() => {
@@ -575,7 +575,7 @@ export default function Page() {
 
                 {/* SECTION 2: Location */}
                 {FOOTER_CONFIG.location && (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {/* Clickable header - opens "moving-to-europe" article */}
                     <span
                       onClick={() => {
@@ -588,24 +588,33 @@ export default function Page() {
                     </span>
                     {/* Location content */}
                     <p className="type-body">
-                      {FOOTER_CONFIG.location.info.futureMove}{' '}
-                      <span className="opacity-80">
-                        {FOOTER_CONFIG.location.info.origin}{' '}
-                        Based in {FOOTER_CONFIG.location.info.currentBases.map((base, index) => (
+                      {FOOTER_CONFIG.location.paragraphs.map((paragraph, index) => {
+                        // Keep inline if text starts with punctuation (comma, period, etc.)
+                        const isInline = paragraph.text.match(/^[,;.!?]/)
+                        // Get font size class (default to 'text-sm' for type-body)
+                        const fontSizeClass = paragraph.fontSize 
+                          ? `text-${paragraph.fontSize}` 
+                          : 'text-sm'
+                        // Parse parentheses and style them with mono font
+                        const parsedContent = parseParentheses(paragraph.text)
+                        
+                        return (
                           <React.Fragment key={index}>
-                            {index > 0 && ' '}
-                            <span className={base.isPrevious ? 'line-through opacity-50' : ''}>
-                              {base.city}
+                            {index > 0 && !isInline && <br />}
+                            <span 
+                              className={`${fontSizeClass} ${paragraph.isSecondary ? 'opacity-80' : ''}`}
+                            >
+                              {parsedContent}
                             </span>
                           </React.Fragment>
-                        ))}.
-                      </span>
+                        )
+                      })}
                     </p>
                   </div>
                 )}
 
                 {/* SECTION 3: Writing (existing clickable section) */}
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {/* Clickable header - keeps all interactivity */}
                   <span
                     onClick={() => setIsWritingOpen(true)}
@@ -614,16 +623,19 @@ export default function Page() {
                     {FOOTER_CONFIG.writing.sectionLabel}
                   </span>
                   {/* Writing principles */}
-                  {FOOTER_CONFIG.writing.principles.map((principle, index) => (
-                    <p key={index} className="type-body">
-                      <span className="opacity-50 italic font-edu-marist mr-1.5">
-                        {principle.number}
-                      </span>
-                      <span className={index > 0 ? 'opacity-80' : ''}>
-                        {principle.text}
-                      </span>
-                    </p>
-                  ))}
+                  <p className="type-body text-xs">
+                    {FOOTER_CONFIG.writing.principles.map((principle, index) => (
+                      <React.Fragment key={index}>
+                        {index > 0 && <br />}
+                        <span className="opacity-50 italic font-edu-marist mr-1.5">
+                          {principle.number}
+                        </span>
+                        <span className={index > 0 ? 'opacity-80' : ''}>
+                          {principle.text}
+                        </span>
+                      </React.Fragment>
+                    ))}
+                  </p>
                 </div>
 
                 <p className="type-caption opacity-50 transition-colors duration-200 pt-5 font-[family-name:var(--font-mono)]">
