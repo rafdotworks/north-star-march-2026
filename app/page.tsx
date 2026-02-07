@@ -261,10 +261,10 @@ export default function Page() {
           <div className="md:col-start-2 h-full flex flex-col pt-16 md:pt-0 md:justify-center justify-between pb-safe">
 
             {/* Scrollable content area on mobile if content overflows */}
-            <div className="flex-1 overflow-y-auto min-h-0 md:flex-initial md:overflow-visible">
+            <div className="flex-1 overflow-hidden min-h-0 md:flex-initial md:overflow-visible">
 
             {/* ——— BLOCK 1: Name + location ——— */}
-            <div className="max-w-[600px] mb-8 md:mb-6">
+            <div className="max-w-[600px] mb-4 md:mb-6">
               <p className="text-sm leading-relaxed" style={{ color: 'var(--fg)' }}>
                 <span className="font-edu-marist">Raf V.</span>
               </p>
@@ -274,7 +274,7 @@ export default function Page() {
             </div>
 
             {/* ——— BLOCK 2: Origin + Current role ——— */}
-            <div className="space-y-2  max-w-[600px] mb-8 md:mb-6">
+            <div className="space-y-2  max-w-[600px] mb-4 md:mb-6">
               {/* Origin */}
               <p className="text-sm md:text-xs leading-relaxed" style={{ color: 'var(--fg)' }}>
                 I am a designer and design engineer who grew up on the Amalfi Coast, Italy.
@@ -288,7 +288,7 @@ export default function Page() {
             </div>
 
             {/* ——— BLOCK 3: History + Personal ——— */}
-            <div className="space-y-2 max-w-[600px] mb-8 md:mb-6">
+            <div className="space-y-2 max-w-[600px] mb-4 md:mb-6">
               {/* History - Theoriq */}
               <p className="text-sm md:text-xs leading-relaxed" style={{ color: 'var(--fg)' }}>
                 I have designed AI Skills for Obvious and was founding designer and design engineer at Theoriq
