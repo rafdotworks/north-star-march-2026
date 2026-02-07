@@ -258,17 +258,17 @@ export default function Page() {
        * ================================================================ */}
       <main className="h-full w-full max-w-[1400px] md:mx-auto px-3 md:px-20">
         <div className="h-full grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
-          <div className="md:col-start-2 h-full flex flex-col pt-16 md:pt-0 md:justify-center justify-between pb-safe">
+          <div className="md:col-start-2 h-full flex flex-col pt-16 md:pt-0 md:justify-center pb-safe">
 
             {/* Scrollable content area on mobile if content overflows */}
             <div className="flex-1 overflow-hidden min-h-0 md:flex-initial md:overflow-visible">
 
             {/* ——— BLOCK 1: Name + location ——— */}
             <div className="max-w-[600px] mb-4 md:mb-6">
-              <p className="text-sm leading-relaxed transition-colors duration-200" style={{ color: 'var(--fg)' }}>
+              <p className="text-sm leading-relaxed">
                 <span className="font-edu-marist">Raf V.</span>
               </p>
-              <p className="text-sm md:text-xs leading-relaxed opacity-60 transition-colors duration-200" style={{ color: 'var(--fg)' }}>
+              <p className="text-sm md:text-xs leading-relaxed opacity-60">
                 Toronto, Canada → London, UK
               </p>
             </div>
@@ -276,12 +276,12 @@ export default function Page() {
             {/* ——— BLOCK 2: Origin + Current role ——— */}
             <div className="space-y-2  max-w-[600px] mb-4 md:mb-6">
               {/* Origin */}
-              <p className="text-sm md:text-xs leading-relaxed transition-colors duration-200" style={{ color: 'var(--fg)' }}>
+              <p className="text-sm md:text-xs leading-relaxed">
                 I am a designer and design engineer who grew up on the Amalfi Coast, Italy.
               </p>
 
               {/* Current role */}
-              <p className="text-sm md:text-xs leading-relaxed transition-colors duration-200" style={{ color: 'var(--fg)' }}>
+              <p className="text-sm md:text-xs leading-relaxed">
                 <span className="font-medium">Currently I am designing AI-powered recommendation interfaces and their systems for Walmart</span>{" "}
                 <span className="opacity-80">as a Staff UX Designer focusing on trust, transparency, and safe adoption at enterprise scale.</span>
               </p>
@@ -290,20 +290,20 @@ export default function Page() {
             {/* ——— BLOCK 3: History + Personal ——— */}
             <div className="space-y-2 max-w-[600px] mb-4 md:mb-6">
               {/* History - Theoriq */}
-              <p className="text-sm md:text-xs leading-relaxed transition-colors duration-200" style={{ color: 'var(--fg)' }}>
+              <p className="text-sm md:text-xs leading-relaxed">
                 I have designed AI Skills for Obvious and was founding designer and design engineer at Theoriq
                 <span className="opacity-80">, where I scaled brand, marketing and product from 0 → 140k active users in 6 months working closely with Engineer and Research.</span>
               </p>
 
               {/* History - Previous roles */}
-              <p className="text-sm md:text-xs leading-relaxed transition-colors duration-200" style={{ color: 'var(--fg)' }}>
+              <p className="text-sm md:text-xs leading-relaxed">
                 Previously, I covered senior design roles at Coinbase {" "}
                 <span className="opacity-50">(developer tools) </span> and Voiceflow{" "}
                 <span className="opacity-50">(AI Agents, onboarding and activation). Before that, design systems at Zalando and more.</span>
               </p>
 
               {/* Personal */}
-              <p className="text-sm md:text-xs leading-relaxed opacity-50 transition-colors duration-200" style={{ color: 'var(--fg)' }}>
+              <p className="text-sm md:text-xs leading-relaxed opacity-50">
                 I studied software engineering and my career started in brand design. I am also an avid writer, photographer and yogi. I{" "}
                 <span
                   onClick={() => setIsWritingOpen(true)}
