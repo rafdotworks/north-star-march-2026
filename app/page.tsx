@@ -258,7 +258,10 @@ export default function Page() {
        * ================================================================ */}
       <main className="h-full w-full max-w-[1400px] md:mx-auto px-3 md:px-20">
         <div className="h-full grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
-          <div className="md:col-start-2 h-full flex flex-col pt-16 md:pt-0 md:justify-center relative">
+          <div className="md:col-start-2 h-full flex flex-col pt-16 md:pt-0 md:justify-center justify-between pb-safe">
+
+            {/* Scrollable content area on mobile if content overflows */}
+            <div className="flex-1 overflow-y-auto min-h-0 md:flex-initial md:overflow-visible">
 
             {/* ——— BLOCK 1: Name + location ——— */}
             <div className="max-w-[600px] mb-8 md:mb-6">
@@ -285,7 +288,7 @@ export default function Page() {
             </div>
 
             {/* ——— BLOCK 3: History + Personal ——— */}
-            <div className="space-y-2 max-w-[600px] mb-8 md:mb-6 pb-16 md:pb-0">
+            <div className="space-y-2 max-w-[600px] mb-8 md:mb-6">
               {/* History - Theoriq */}
               <p className="text-sm md:text-xs leading-relaxed" style={{ color: 'var(--fg)' }}>
                 I have designed AI Skills for Obvious and was founding designer and design engineer at Theoriq
@@ -346,10 +349,12 @@ export default function Page() {
               )}
             </AnimatePresence>
 
+            </div>
+            {/* End scrollable content wrapper */}
+
             {/* ——— BLOCK 5: Contact links ——— */}
             <nav
-              className="flex items-center gap-4 group/nav max-w-[600px] absolute left-0 md:static"
-              style={{ bottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
+              className="flex items-center gap-4 group/nav max-w-[600px] flex-shrink-0 pt-4"
             >
               <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
               <FooterLink href="mailto:raf@raf.works" label="Email" />
