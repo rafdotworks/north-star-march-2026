@@ -258,7 +258,7 @@ export default function Page() {
        * ================================================================ */}
       <main className="h-full w-full max-w-[1400px] md:mx-auto px-3 md:px-20">
         <div className="h-full grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[200px_1fr] md:gap-x-16">
-          <div className="md:col-start-2 h-full flex flex-col pt-16 md:pt-0 md:justify-center">
+          <div className="md:col-start-2 h-full flex flex-col pt-16 md:pt-0 md:justify-center relative">
 
             {/* ——— BLOCK 1: Name + location ——— */}
             <div className="max-w-[600px] mb-8 md:mb-6">
@@ -285,7 +285,7 @@ export default function Page() {
             </div>
 
             {/* ——— BLOCK 3: History + Personal ——— */}
-            <div className="space-y-2 max-w-[600px] mb-8 md:mb-6">
+            <div className="space-y-2 max-w-[600px] mb-8 md:mb-6 pb-16 md:pb-0">
               {/* History - Theoriq */}
               <p className="text-sm md:text-xs leading-relaxed" style={{ color: 'var(--fg)' }}>
                 I have designed AI Skills for Obvious and was founding designer and design engineer at Theoriq
@@ -347,7 +347,7 @@ export default function Page() {
             </AnimatePresence>
 
             {/* ——— BLOCK 5: Contact links ——— */}
-            <nav className="flex items-center gap-4 group/nav max-w-[600px]">
+            <nav className="flex items-center gap-4 group/nav max-w-[600px] absolute bottom-8 left-0 md:static md:bottom-auto">
               <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
               <FooterLink href="mailto:raf@raf.works" label="Email" />
               <FooterLink href="https://x.com/rafdotworks" label="X" external />
