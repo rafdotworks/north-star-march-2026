@@ -251,7 +251,7 @@ export default function Page() {
   } as const
 
   return (
-    <div className="h-screen overflow-hidden" style={containerStyle}>
+    <div className="h-dvh overflow-hidden" style={containerStyle}>
       {/* ================================================================
        * SINGLE 100VH HERO — all content in one viewport
        * Three zones: intro (top), bio (middle), meta (bottom)
@@ -347,7 +347,10 @@ export default function Page() {
             </AnimatePresence>
 
             {/* ——— BLOCK 5: Contact links ——— */}
-            <nav className="flex items-center gap-4 group/nav max-w-[600px] absolute bottom-8 left-0 md:static md:bottom-auto">
+            <nav
+              className="flex items-center gap-4 group/nav max-w-[600px] absolute left-0 md:static"
+              style={{ bottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
+            >
               <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
               <FooterLink href="mailto:raf@raf.works" label="Email" />
               <FooterLink href="https://x.com/rafdotworks" label="X" external />
