@@ -156,8 +156,8 @@
     --leading-tight: 1.25;  /* headings, compact text */
     --leading-normal: 1.5;  /* all body text, descriptions */
 
-    /* Theme transition properties - smooth, symmetrical (identical in both directions) */
-    --theme-transition-duration: 0.3s;
+    /* Theme transition properties - instant feel with minimal smoothing */
+    --theme-transition-duration: 0.15s;
     --theme-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
 
     transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
@@ -241,26 +241,31 @@
     --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.06);
     --shadow-md: 0 8px 20px hsl(0 0% 0% / 0.1);
 
-    /* Tailwind-consumed tokens (HSL triplets only, no hsl()) */
+    /* ================================================================
+     * Tailwind-consumed tokens (HSL triplets only, no hsl())
+     * Dynamic tokens use calc() with --theme-blend-num so they
+     * participate in the scroll-driven theme blend system.
+     * Formula: light_L + (dark_L − light_L) × blend
+     * ================================================================ */
     --background: var(--neutral-h) var(--neutral-s) 99%;
     --background-rgb: 245 247 250; /* approximate RGB for subtle overlays */
-    --foreground: var(--neutral-h) 15% 10%;
+    --foreground: var(--neutral-h) 15% calc(10% + 85% * var(--theme-blend-num));
     --card: var(--neutral-h) var(--neutral-s) 99%;
-    --card-foreground: var(--neutral-h) 15% 10%;
+    --card-foreground: var(--neutral-h) 15% calc(10% + 85% * var(--theme-blend-num));
     --popover: var(--neutral-h) var(--neutral-s) 99%;
-    --popover-foreground: var(--neutral-h) 15% 10%;
+    --popover-foreground: var(--neutral-h) 15% calc(10% + 85% * var(--theme-blend-num));
     --primary: var(--accent-h) var(--accent-s) var(--accent-l);
     --primary-foreground: 0 0% 100%;
     --secondary: var(--neutral-h) 12% 92%;
     --secondary-foreground: var(--neutral-h) 15% 12%;
-    --muted: var(--neutral-h) 10% 35%;
-    --muted-foreground: var(--neutral-h) 10% 35%;
+    --muted: var(--neutral-h) 10% calc(35% + 35% * var(--theme-blend-num));
+    --muted-foreground: var(--neutral-h) 10% calc(35% + 35% * var(--theme-blend-num));
     --accent: var(--accent-h) 70% 96%;
     --accent-foreground: var(--accent-h) 60% 28%;
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: var(--neutral-h) 12% 86%;
-    --input: var(--neutral-h) 12% 92%;
+    --border: var(--neutral-h) 12% calc(86% + (18% - 86%) * var(--theme-blend-num));
+    --input: var(--neutral-h) 12% calc(92% + (14% - 92%) * var(--theme-blend-num));
     --ring: var(--accent-h) 90% 60%;
 
     /* Legacy vars mapped to new tokens (for existing CSS) */
@@ -306,26 +311,23 @@
       --modal-fg-muted: var(--fg-muted-dark);
       --modal-border: var(--border-dark);
 
-      /* Tailwind-consumed tokens (dark) - needed for Tailwind utilities */
+      /* Tailwind-consumed tokens (dark) — only non-dynamic ones.
+         Dynamic tokens (--foreground, --muted, --muted-foreground,
+         --card-foreground, --popover-foreground, --border, --input)
+         are driven by calc() + --theme-blend-num and resolve correctly
+         when --theme-blend-num: 1 above. */
       --background: var(--neutral-h) 14% 8%;
       --background-rgb: 20 23 28;
-      --foreground: var(--neutral-h) 15% 95%;
       --card: var(--neutral-h) 14% 8.5%;
-      --card-foreground: var(--neutral-h) 15% 95%;
       --popover: var(--neutral-h) 14% 9%;
-      --popover-foreground: var(--neutral-h) 15% 95%;
       --primary: var(--accent-h) 85% 70%;
       --primary-foreground: var(--neutral-h) 10% 6%;
       --secondary: var(--neutral-h) 12% 16%;
       --secondary-foreground: var(--neutral-h) 12% 92%;
-      --muted: var(--neutral-h) 10% 70%;
-      --muted-foreground: var(--neutral-h) 10% 70%;
       --accent: var(--accent-h) 50% 20%;
       --accent-foreground: var(--accent-h) 90% 84%;
       --destructive: 0 72% 60%;
       --destructive-foreground: var(--neutral-h) 10% 6%;
-      --border: var(--neutral-h) 12% 18%;
-      --input: var(--neutral-h) 12% 14%;
       --ring: var(--accent-h) 95% 66%;
 
       /* Dark mode specific adjustments */
@@ -386,26 +388,19 @@
   --code-bg: hsl(var(--neutral-h) 14% 10%);
   --code-accent: var(--primary-color);
 
-  /* Tailwind triplets */
+  /* Tailwind triplets — only non-dynamic ones (dynamic tokens driven by calc()) */
   --background: var(--neutral-h) 14% 8%;
   --background-rgb: 20 23 28;
-  --foreground: var(--neutral-h) 15% 95%;
   --card: var(--neutral-h) 14% 8.5%;
-  --card-foreground: var(--neutral-h) 15% 95%;
   --popover: var(--neutral-h) 14% 9%;
-  --popover-foreground: var(--neutral-h) 15% 95%;
   --primary: var(--accent-h) 85% 70%;
   --primary-foreground: var(--neutral-h) 10% 6%;
   --secondary: var(--neutral-h) 12% 16%;
   --secondary-foreground: var(--neutral-h) 12% 92%;
-  --muted: var(--neutral-h) 10% 70%;
-  --muted-foreground: var(--neutral-h) 10% 70%;
   --accent: var(--accent-h) 50% 20%;
   --accent-foreground: var(--accent-h) 90% 84%;
   --destructive: 0 72% 60%;
   --destructive-foreground: var(--neutral-h) 10% 6%;
-  --border: var(--neutral-h) 12% 18%;
-  --input: var(--neutral-h) 12% 14%;
   --ring: var(--accent-h) 95% 66%;
 
   /* Legacy mappings (dark) */
@@ -460,26 +455,19 @@
   --code-bg: hsl(var(--neutral-h) 15% 96%);
   --code-accent: var(--primary-color);
 
-  /* Tailwind triplets */
+  /* Tailwind triplets — only non-dynamic ones (dynamic tokens driven by calc()) */
   --background: var(--neutral-h) var(--neutral-s) 99%;
   --background-rgb: 245 247 250;
-  --foreground: var(--neutral-h) 15% 10%;
   --card: var(--neutral-h) var(--neutral-s) 99%;
-  --card-foreground: var(--neutral-h) 15% 10%;
   --popover: var(--neutral-h) var(--neutral-s) 99%;
-  --popover-foreground: var(--neutral-h) 15% 10%;
   --primary: var(--accent-h) var(--accent-s) var(--accent-l);
   --primary-foreground: 0 0% 100%;
   --secondary: var(--neutral-h) 12% 92%;
   --secondary-foreground: var(--neutral-h) 15% 12%;
-  --muted: var(--neutral-h) 10% 35%;
-  --muted-foreground: var(--neutral-h) 10% 35%;
   --accent: var(--accent-h) 70% 96%;
   --accent-foreground: var(--accent-h) 60% 28%;
   --destructive: 0 72% 50%;
   --destructive-foreground: 0 0% 100%;
-  --border: var(--neutral-h) 12% 86%;
-  --input: var(--neutral-h) 12% 92%;
   --ring: var(--accent-h) 90% 60%;
 
   /* Legacy mappings */
@@ -573,9 +561,9 @@ body::before {
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius);
-  transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              border-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
+              border-color var(--theme-transition-duration) var(--theme-transition-easing),
+              color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 .btn-primary {
   background: var(--primary-color);
@@ -590,12 +578,13 @@ textarea {
   background: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--fg);
-  transition: background-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              border-color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
+              border-color var(--theme-transition-duration) var(--theme-transition-easing),
+              color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 a {
-  color: var(--primary-color);
+  color: var(--fg);
+  transition: color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 kbd,
 code,
@@ -823,15 +812,7 @@ h2 {
   color: var(--text-secondary);
 }
 
-a {
-  @apply text-base;
-  color: var(--accent-primary);
-  transition: color 0.2s ease;
-}
-
-a:hover {
-  color: var(--accent-hover);
-}
+/* a tag base styles consolidated above (uses var(--fg) for theme-blend support) */
 
 /* Increased spacing */
 section {

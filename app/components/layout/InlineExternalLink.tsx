@@ -13,7 +13,7 @@ function InlineExternalLink({ href, children }: InlineExternalLinkProps) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="cursor-pointer transition-all duration-200 hover:opacity-100 hover:underline no-underline"
+      className="cursor-pointer transition-[opacity] duration-200 hover:opacity-100 hover:underline no-underline"
       style={{
         WebkitTapHighlightColor: 'transparent',
         color: 'inherit',
