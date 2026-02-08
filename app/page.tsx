@@ -269,42 +269,31 @@ export default function Page() {
                 <span className="font-edu-marist">Raf V.</span>
               </p>
               <p className="text-sm md:text-xs leading-relaxed opacity-60">
-                Toronto, Canada → London, UK
+                Toronto → London
               </p>
             </div>
 
-            {/* ——— BLOCK 2: Origin + Current role ——— */}
-            <div className="space-y-2  max-w-[600px] mb-4 md:mb-6">
-              {/* Origin */}
+            {/* ——— BLOCK 2: Current role ——— */}
+            <div className="max-w-[600px] mb-4 md:mb-6">
               <p className="text-sm md:text-xs leading-relaxed">
-                I am a designer and design engineer who grew up on the Amalfi Coast, Italy.
-              </p>
-
-              {/* Current role */}
-              <p className="text-sm md:text-xs leading-relaxed">
-                <span className="font-medium">Currently I am designing AI-powered recommendation interfaces and their systems for Walmart</span>{" "}
-                <span className="opacity-80">as a Staff UX Designer focusing on trust, transparency, and safe adoption at enterprise scale.</span>
+                <span className="font-medium">Designer and design engineer currently at Walmart as Staff UX Designer,</span>{" "}
+                <span className="opacity-80">designing AI recommendation systems for Sellers with focus on trust, transparency, and enterprise adoption.</span>
               </p>
             </div>
 
             {/* ——— BLOCK 3: History + Personal ——— */}
             <div className="space-y-2 max-w-[600px] mb-4 md:mb-6">
-              {/* History - Theoriq */}
+              {/* History */}
               <p className="text-sm md:text-xs leading-relaxed">
-                I have designed AI Skills for Obvious and was founding designer and design engineer at Theoriq
-                <span className="opacity-80">, where I scaled brand, marketing and product from 0 → 140k active users in 6 months working closely with Engineer and Research.</span>
-              </p>
-
-              {/* History - Previous roles */}
-              <p className="text-sm md:text-xs leading-relaxed">
-                Previously, I covered senior design roles at Coinbase {" "}
-                <span className="opacity-50">(developer tools) </span> and Voiceflow{" "}
-                <span className="opacity-50">(AI Agents, onboarding and activation). Before that, design systems at Zalando and more.</span>
+                Previously designed Skills at Obvious, founding designer at Theoriq, senior roles at Coinbase{" "}
+                <span className="opacity-50">(developer tools)</span> and Voiceflow{" "}
+                <span className="opacity-50">(AI agents, activation and onboarding)</span>.{" "}
+                <span className="opacity-50">Before that, design systems at Zalando and miscellaneous product/design/engineer work.</span>
               </p>
 
               {/* Personal */}
               <p className="text-sm md:text-xs leading-relaxed opacity-50">
-                I studied software engineering and my career started in brand design. I am also an avid writer, photographer and yogi. I{" "}
+                I grew up on the Amalfi Coast where I studied software engineering. Started my career in hospitality and brand design. I{" "}
                 <span
                   onClick={() => setIsWritingOpen(true)}
                   role="button"
@@ -329,7 +318,7 @@ export default function Page() {
                 >
                   write
                 </span>
-                {" "}as a form of meditation. I enjoy thoughtful offices and workspaces.
+                , photograph, and practice yoga.
               </p>
             </div>
 
