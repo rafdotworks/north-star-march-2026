@@ -2,16 +2,15 @@
 
 import React, { useEffect, useState, useRef, useMemo } from "react"
 import FooterLink from "@/app/components/layout/FooterLink"
-import { useTimezoneMessage } from "@/hooks/use-timezone-message"
+import InlineExternalLink from "@/app/components/layout/InlineExternalLink"
+import { useLocationWeather } from "@/hooks/use-timezone-message"
 import SideTray from "@/app/components/page-specific/SideTray"
 import { useSystemTheme } from "@/hooks/use-system-theme"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+
 
 export default function Page() {
-  const timezoneMessage = useTimezoneMessage()
+  const { city, temperature } = useLocationWeather()
   const { prefersDark, isReady } = useSystemTheme()
-  const shouldReduceMotion = useReducedMotion()
-
   // Story tray state
   const [selectedStory, setSelectedStory] = useState<string | null>(null)
 
@@ -28,9 +27,6 @@ export default function Page() {
   // Touch gesture tracking for mobile theme toggle
   const touchStartY = useRef(0)
   const touchAccumRef = useRef(0)
-
-  // Location message reveal state (one-way animation on theme invert)
-  const [hasShownLocationMessage, setHasShownLocationMessage] = useState(false)
 
   // ============================================================================
   // MEMOIZED STYLES - Prevent object recreation on every render
@@ -122,15 +118,6 @@ export default function Page() {
   }, [])
 
   // ============================================================================
-  // LOCATION MESSAGE REVEAL — trigger one-way animation when theme inverts
-  // ============================================================================
-  useEffect(() => {
-    if (themeInverted && !hasShownLocationMessage) {
-      setHasShownLocationMessage(true)
-    }
-  }, [themeInverted, hasShownLocationMessage])
-
-  // ============================================================================
   // THEME BLEND — apply CSS custom properties when themeInverted changes
   // ============================================================================
   useEffect(() => {
@@ -212,44 +199,6 @@ export default function Page() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // ============================================================================
-  // ANIMATION VARIANTS — Location message reveal
-  // ============================================================================
-
-  // Reduced motion variant (accessibility)
-  const locationMessageReducedMotion = {
-    initial: { opacity: 0 },
-    animate: {
-      opacity: 0.5,
-      transition: { duration: 0.3 }
-    }
-  } as const
-
-  // Full motion variant (blur-to-focus with height expansion)
-  const locationMessageVariants = {
-    initial: {
-      height: 0,
-      opacity: 0,
-      filter: "blur(8px)",
-      y: 8,
-      scale: 0.98
-    },
-    animate: {
-      height: "auto" as const,
-      opacity: 0.5,
-      filter: "blur(0px)",
-      y: 0,
-      scale: 1,
-      transition: {
-        height: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },      // EASING.spring
-        opacity: { duration: 2.8, ease: [0.25, 0.1, 0.25, 1.0] as const, delay: 0.4 },  // EASING.gentle
-        filter: { duration: 3.2, ease: [0.25, 0.1, 0.25, 1.0] as const, delay: 0.3 },  // EASING.gentle
-        y: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const },           // EASING.spring
-        scale: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const }        // EASING.spring
-      }
-    }
-  } as const
-
   return (
     <div className="h-dvh overflow-hidden" style={containerStyle}>
       {/* ================================================================
@@ -268,31 +217,26 @@ export default function Page() {
               <p className="text-sm leading-relaxed">
                 <span className="font-edu-marist">Raf V.</span>
               </p>
-              <p className="text-sm md:text-xs leading-relaxed opacity-60">
-                Toronto → London
+              <p className="text-2xs font-[family-name:var(--font-mono)] leading-relaxed opacity-60">
+                Toronto (CA) → London (UK)
               </p>
             </div>
 
-            {/* ——— BLOCK 2: Current role ——— */}
-            <div className="max-w-[600px] mb-4 md:mb-6">
+            {/* ——— BLOCK 2: Current role + History ——— */}
+            <div className="space-y-2 max-w-[600px] mb-4 md:mb-6">
               <p className="text-sm md:text-xs leading-relaxed">
-                <span className="font-medium">Designer and design engineer currently at Walmart as Staff UX Designer,</span>{" "}
+                <span className="font-medium">Designer and design engineer currently at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink> as Staff UX Designer,</span>{" "}
                 <span className="opacity-80">designing AI recommendation systems for Sellers with focus on trust, transparency, and enterprise adoption.</span>
               </p>
+              <p className="text-sm md:text-xs leading-relaxed">
+                <span className="opacity-60">Previously designed AI interfaces and Skills at <InlineExternalLink href="https://obvious.ai">Obvious</InlineExternalLink>, founding designer at <InlineExternalLink href="https://theoriq.ai">Theoriq</InlineExternalLink> and Senior Product Designer for <InlineExternalLink href="https://www.coinbase.com/developer-platform/">Coinbase Developer Platform</InlineExternalLink>.</span>{" "}
+                <span className="opacity-50">Before that, designed AI agents and improved activation at <InlineExternalLink href="https://voiceflow.com">Voiceflow</InlineExternalLink>, led Design Systems at <InlineExternalLink href="https://partner.zalando.com">Zalando</InlineExternalLink> and more.</span>
+              </p>
             </div>
 
-            {/* ——— BLOCK 3: History + Personal ——— */}
-            <div className="space-y-2 max-w-[600px] mb-4 md:mb-6">
-              {/* History */}
-              <p className="text-sm md:text-xs leading-relaxed">
-                Previously designed Skills at Obvious, founding designer at Theoriq, senior roles at Coinbase{" "}
-                <span className="opacity-50">(developer tools)</span> and Voiceflow{" "}
-                <span className="opacity-50">(AI agents, activation and onboarding)</span>.{" "}
-                <span className="opacity-50">Before that, design systems at Zalando and miscellaneous product/design/engineer work.</span>
-              </p>
-
-              {/* Personal */}
-              <p className="text-sm md:text-xs leading-relaxed opacity-50">
+            {/* ——— BLOCK 3: Personal ——— */}
+            <div className="max-w-[600px] mb-4 md:mb-6">
+              <p className="text-sm md:text-xs leading-relaxed opacity-40">
                 I grew up on the Amalfi Coast where I studied software engineering. Started my career in hospitality and brand design. I{" "}
                 <span
                   onClick={() => setIsWritingOpen(true)}
@@ -318,32 +262,16 @@ export default function Page() {
                 >
                   write
                 </span>
-                , photograph, and practice yoga.
+                , photograph, and practice yoga. Currently in {city}{temperature ? ` where it's ${temperature}` : ''}.
               </p>
             </div>
-
-            {/* ——— BLOCK 4: Timezone message (animated reveal on theme invert) ——— */}
-            <AnimatePresence mode="wait">
-              {hasShownLocationMessage && (
-                <motion.p
-                  key="location-message"
-                  variants={shouldReduceMotion ? locationMessageReducedMotion : locationMessageVariants}
-                  initial="initial"
-                  animate="animate"
-                  className="text-2xs font-[family-name:var(--font-mono)] max-w-[600px] transition-colors duration-200 overflow-hidden"
-                  style={{ willChange: 'height, opacity, filter' }}
-                >
-                  {timezoneMessage}
-                </motion.p>
-              )}
-            </AnimatePresence>
 
             </div>
             {/* End scrollable content wrapper */}
 
             {/* ——— BLOCK 5: Contact links ——— */}
             <nav
-              className="flex items-center gap-4 group/nav max-w-[600px] flex-shrink-0 pt-4"
+              className="flex items-center gap-4 group/nav max-w-[600px] flex-shrink-0 pt-2 md:pt-4"
             >
               <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
               <FooterLink href="mailto:raf@raf.works" label="Email" />

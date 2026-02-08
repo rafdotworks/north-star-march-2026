@@ -56,6 +56,7 @@ export interface LocationWeatherData {
   temperatureValue: number    // Raw number for flexibility
   description: string         // Weather description: "partly cloudy"
   timezoneDiff: string        // "3 hours ahead" or "in your timezone"
+  timezoneDiffShort: string   // Compact format: "+3h", "-2h", "±0h"
   isLoading: boolean          // True until initial data loads
 }
 
@@ -258,9 +259,10 @@ export function useLocationWeather(): LocationWeatherData {
 
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [timezoneDiff, setTimezoneDiff] = useState("")
+  const [timezoneDiffShort, setTimezoneDiffShort] = useState("")
   const [isLoading, setIsLoading] = useState(true)
 
-  const calculateTimezoneDifference = (): string => {
+  const calculateTimezoneDifference = (): { long: string; short: string } => {
     const now = new Date()
 
     const targetFormatter = new Intl.DateTimeFormat("en-US", {
@@ -288,18 +290,26 @@ export function useLocationWeather(): LocationWeatherData {
     const differenceHours = Math.round(differenceMinutes / 60)
 
     if (differenceHours === 0) {
-      return "in your timezone"
+      return { long: "in your timezone", short: "±0h" }
     } else if (differenceHours > 0) {
-      return `${differenceHours} hour${differenceHours !== 1 ? 's' : ''} ahead`
+      return {
+        long: `${differenceHours} hour${differenceHours !== 1 ? 's' : ''} ahead`,
+        short: `+${differenceHours}h`
+      }
     } else {
-      return `${Math.abs(differenceHours)} hour${Math.abs(differenceHours) !== 1 ? 's' : ''} behind`
+      return {
+        long: `${Math.abs(differenceHours)} hour${Math.abs(differenceHours) !== 1 ? 's' : ''} behind`,
+        short: `${differenceHours}h`
+      }
     }
   }
 
   // Effect 1: Update timezone difference
   useEffect(() => {
     const updateTimezone = () => {
-      setTimezoneDiff(calculateTimezoneDifference())
+      const diff = calculateTimezoneDifference()
+      setTimezoneDiff(diff.long)
+      setTimezoneDiffShort(diff.short)
     }
 
     updateTimezone()
@@ -357,6 +367,7 @@ export function useLocationWeather(): LocationWeatherData {
     temperatureValue,
     description: weatherData?.description || '',
     timezoneDiff,
+    timezoneDiffShort,
     isLoading: isLoading && !timezoneDiff,
   }
 }
