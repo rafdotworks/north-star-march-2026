@@ -218,7 +218,7 @@ export default function Page() {
                 <span className="font-edu-marist">Raf V.</span>
               </p>
               <p className="text-2xs font-[family-name:var(--font-mono)] leading-relaxed opacity-60">
-                Toronto (CA) → London (UK)
+                Toronto (CA)
               </p>
             </div>
 
