@@ -69,8 +69,6 @@ raf.works/
 │   ├── page.tsx                  # Main minimal portfolio entry point
 │   ├── layout.tsx                # Root layout with fonts & metadata
 │   ├── globals.css               # Global styles & CSS variables
-│   ├── q3-2025/                  # Previous landing page version
-│   │   └── page.tsx              # Previous portfolio (carousel/slideshow)
 │   ├── api/
 │   │   ├── article/              # Article content API
 │   │   ├── story/                # Story content API
@@ -95,8 +93,8 @@ raf.works/
 ## Key Routes
 
 - **`/`** - Main minimal portfolio entry point (text-based layout)
-- **`/q3-2025`** - Previous portfolio version (image carousel/slideshow)
 - **`/deck`** - Redirects to Figma presentation
+- **`/blueprint`**, **`/portfolio`**, **`/cv`**, **`/text-2026`** - Additional pages
 
 ## Architecture Highlights
 
@@ -129,13 +127,7 @@ OPENWEATHERMAP_API_KEY=   # OpenWeatherMap API key for weather data (get free ke
 ## Development Notes
 
 ### Main Page Component
-The main portfolio page ([`app/page.tsx`](app/page.tsx)) is a large component (~1000 lines) that includes:
-- Image carousel with auto-advance and manual controls
-- Video modal with playback controls
-- About modal with biography
-- Responsive touch/mouse interactions
-
-**Note**: When reading this file, use offset/limit parameters due to its size.
+The main portfolio page ([`app/page.tsx`](app/page.tsx)) is the minimal homepage with work grid, writing tray, and about tray. Use offset/limit when reading large sections.
 
 ### Image Optimization
 Images are currently unoptimized (`next.config.js`). This is intentional for:

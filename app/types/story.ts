@@ -13,7 +13,7 @@ export interface StoryFrontmatter {
   /** Project name e.g., "Theoriq" */
   title: string
 
-  /** Role held e.g., "Founding Product Designer" */
+  /** Role held e.g., "Founding AI Product Designer" */
   role?: string
 
   /** Company name e.g., "Theoriq" */

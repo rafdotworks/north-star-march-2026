@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15 portfolio website for Raf, a designer and design engineer. The site features sophisticated animations, custom loading sequences, and a minimal portfolio showcase with advanced scroll effects.
+This is a Next.js 15 portfolio website for Raf, an AI designer and design engineer. The site features sophisticated animations, custom loading sequences, and a minimal portfolio showcase with advanced scroll effects.
 
 ## Development Commands
 
@@ -30,33 +30,31 @@ npm run lint     # Run ESLint
 The app uses Next.js App Router with feature-based component organization:
 
 **Core Routes:**
-- [app/page.tsx](app/page.tsx) - Main minimal portfolio homepage (~380 lines)
+- [app/page.tsx](app/page.tsx) - Main minimal portfolio homepage
 - [app/layout.tsx](app/layout.tsx) - Root layout with fonts, metadata, analytics
 - [app/error.tsx](app/error.tsx) - Global error boundary (moved from root in cleanup)
-- [app/q3-2025/](app/q3-2025/), [app/nov-2025/](app/nov-2025/), [app/dec-2025/](app/dec-2025/) - Archived homepage variants
+- [app/blueprint/](app/blueprint/), [app/portfolio/](app/portfolio/), [app/cv/](app/cv/), [app/text-2026/](app/text-2026/) - Additional pages
 
 **Component Organization (Feature-Based):**
 ```
 app/components/
-├── layout/           - Navigation, footer, dividers, scroll effects
+├── layout/           - Navigation, footer
 │   ├── NavigationItem.tsx
 │   ├── FooterLink.tsx
-│   ├── SectionDivider.tsx
-│   ├── ScrollTopBlur.tsx
-│   └── ScrollBottomBlur.tsx
+│   ├── InlineExternalLink.tsx
+│   └── Section.tsx
 ├── modal/            - Modal content components
 │   ├── AboutModalContent.tsx
 │   └── BlueprintContent.tsx
 ├── media/            - Image and video components
 │   ├── PictureImage.tsx
 │   ├── VimeoInlineEmbed.tsx
-│   └── WorkCard.tsx
+│   ├── WorkCard.tsx
+│   └── DragCarousel.tsx
 ├── effects/          - Visual effects and easter eggs
-│   ├── AtmosphericLayers.tsx
 │   └── ConsoleEasterEgg.tsx
 ├── page-specific/    - Large components for specific pages
-│   ├── ContentGrid.tsx
-│   └── SideTray.tsx (68KB - writing/story viewer)
+│   └── SideTray.tsx (writing/story viewer)
 ├── hover/            - Hover interaction components
 ├── icons/            - SVG icon components
 ├── markdown/         - Markdown rendering components
@@ -172,8 +170,6 @@ app/components/
 - Loading animations use blur effects for sophisticated reveals
 - Mobile-first approach with safe area insets for iOS
 - Vercel Analytics enabled in production
-- Homepage archives (q3-2025/, nov-2025/, dec-2025/) preserved intentionally for design evolution reference
-
 ### Recent Cleanup (January 2026)
 
 The codebase underwent comprehensive cleanup and reorganization:
@@ -208,7 +204,7 @@ Follow the pattern in [components/animations/LoadingAnimations.tsx](components/a
 
 1. **Reading Files**: For large files like [app/page.tsx](app/page.tsx), use offset/limit parameters
 2. **Component Imports**: Use feature-based paths after reorganization (layout/, modal/, media/, etc.)
-3. **Configuration**: All configs in [app/config/](app/config/) use "Config" suffix (except landingPages.ts, typographyConfig.ts)
+3. **Configuration**: All configs in [app/config/](app/config/) use "Config" suffix (except typographyConfig.ts)
 4. **Typography**: Use Golden Ratio scale - see [TYPOGRAPHY.md](TYPOGRAPHY.md) for complete system documentation
 5. **Styling**: Theme-aware components use `useSystemTheme()` hook and CSS variables
 6. **Mobile-First**: Base styles for mobile (< 768px), `md:` prefix for desktop (≥ 768px)

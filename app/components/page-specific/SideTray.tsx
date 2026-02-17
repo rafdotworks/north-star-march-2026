@@ -59,8 +59,10 @@ import ReactMarkdown from "react-markdown"
 import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import FooterLink from "@/app/components/layout/FooterLink"
+import { SUBTLE_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSystemTheme } from "@/hooks/use-system-theme"
+import { useLocationWeather } from "@/hooks/use-timezone-message"
 import { EASING } from "@/components/animations/constants"
 import { markdownComponents } from "@/app/components/markdown/markdownComponents"
 import { storyMarkdownComponents } from "@/app/components/markdown/storyMarkdownComponents"
@@ -100,8 +102,13 @@ import type { StoryFrontmatter } from "@/app/types/story"
 interface SideTrayProps {
   articleId: string | null
   onClose: () => void
+  /** Close only the Writing panel when stacked (About + Writing); reveals About */
+  onCloseWritingOnly?: () => void
   isWritingMode?: boolean
+  isAboutMode?: boolean
   onArticleSelect?: (articleId: string | null) => void
+  /** Called when user clicks "write" in about tagline; page can switch tray to writing mode */
+  onSwitchToWriting?: () => void
   /** API base path for fetching content (default: "/api/article") */
   apiBasePath?: string
 }
@@ -227,27 +234,21 @@ const trayVariants = {
 } as const
 
 /**
- * Mobile-optimized animation variants.
- * 
- * Enhanced multi-dimensional animation for smoother, more inspiring entrance.
- * Slides up from bottom with scale, opacity, and refined spring physics.
- * 
- * ANIMATION ENHANCEMENTS:
- * - y: Slides up from 100% (off-screen bottom) to 0
- * - scale: Subtle zoom-in effect (0.96 → 1.0) for materialization
- * - opacity: Smooth fade-in (0.8 → 1.0) for elegant appearance
- * - Spring physics: Refined parameters (stiffness: 200, damping: 32) for smoother motion
- * - Exit: Keeps panel in place (y: 0, scale: 1) and only fades out opacity for elegant dismissal
- * 
- * TIMING:
- * - Entrance: ~0.5s with natural spring physics for fluid motion
- * - Exit: ~0.3s smooth fade-only (no slide) for responsive dismissal
+ * Mobile-optimized animation variants (iOS-inspired).
+ *
+ * Tuned to match the feel of native iOS bottom sheets:
+ * - Snappy present with a firm settle (no bounce/overshoot)
+ * - Slide-down dismiss so the sheet leaves the way it came
+ * - Slight scale on hidden state for depth
+ *
+ * Spring parameters modeled after UIKit's default sheet presentation:
+ * stiffness ~300, damping ~30 → fast rise, firm stop.
  */
 const mobileTrayVariants = {
   hidden: {
     y: "100%",
-    scale: 0.96,
-    opacity: 0.8
+    scale: 0.97,
+    opacity: 0,
   },
   visible: {
     y: 0,
@@ -255,23 +256,22 @@ const mobileTrayVariants = {
     opacity: 1,
     transition: {
       type: "spring" as const,
-      stiffness: 200,
-      damping: 32,
-      mass: 1,
-      duration: 0.65
-    }
+      stiffness: 300,
+      damping: 30,
+      mass: 0.8,
+    },
   },
   exit: {
-    y: 0,
-    scale: 1,
+    y: "100%",
+    scale: 0.97,
     opacity: 0,
     transition: {
-      opacity: {
-        duration: 0.35,
-        ease: EASING.smooth
-      }
-    }
-  }
+      type: "spring" as const,
+      stiffness: 300,
+      damping: 30,
+      mass: 0.8,
+    },
+  },
 } as const
 
 /**
@@ -609,7 +609,7 @@ function useArticleLoader(apiBasePath: string = "/api/article") {
  * @param {SideTrayProps} props - Component props
  * @returns {JSX.Element} The SideTray component
  */
-function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, apiBasePath = "/api/article" }: SideTrayProps) {
+function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = false, isAboutMode = false, onArticleSelect, onSwitchToWriting, apiBasePath = "/api/article" }: SideTrayProps) {
   // ============================================================================
   // HOOKS & STATE
   // ============================================================================
@@ -618,6 +618,11 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
    * Article loading hook - manages fetching, parsing, and state for articles.
    */
   const { content, isLoading, error, loadArticle, resetContent } = useArticleLoader(apiBasePath)
+
+  /**
+   * Location and weather for about tagline (city, temperature, description).
+   */
+  const { city, temperature, description } = useLocationWeather()
   
   /**
    * Current view mode within the tray.
@@ -641,21 +646,39 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
    */
   const isMobile = useIsMobile()
 
+  /** Stacked mode: About tray pushed left + blurred, Writing tray on top (desktop only) */
+  const isStacked = isAboutMode && isWritingMode && !isMobile
+
+  /** When true, front (Writing) panel is animating out before we call onCloseWritingOnly */
+  const [isWritingPanelExiting, setIsWritingPanelExiting] = useState(false)
+  const showStackedFrontPanel = isStacked || isWritingPanelExiting
+
+  const handleCloseWritingPanel = useCallback(() => {
+    if (!onCloseWritingOnly) return
+    if (isStacked) {
+      setIsWritingPanelExiting(true)
+    } else {
+      onCloseWritingOnly()
+    }
+  }, [isStacked, onCloseWritingOnly])
+
+  /** Called when front (Writing) panel exit animation finishes. Close is triggered by back panel's onAnimationComplete instead to avoid jump. */
+  const handleWritingPanelExitComplete = useCallback(() => {
+    // No-op: onCloseWritingOnly is called from back panel's onAnimationComplete when its reveal finishes
+  }, [])
+
   /**
-   * System theme detection for opposite theme mode.
-   * Only used when isWritingMode is true to invert colors.
+   * System theme detection for tray color scoping.
+   * Used to set CSS variable overrides so Tailwind classes
+   * (text-foreground, text-muted-foreground) resolve correctly
+   * inside the tray regardless of the page's theme-blend state.
    */
   const { prefersDark } = useSystemTheme()
 
   /**
-   * Determine if we should use opposite theme colors.
-   * Writing mode shows the opposite of system preference.
-   */
-  const useOppositeTheme = isWritingMode
-
-  /**
    * Calculate theme-aware colors for the tray.
-   * When useOppositeTheme is true (writing mode), colors are inverted.
+   * Always uses CSS variables matching system preference so the
+   * tray theme is consistent with the hero / page theme.
    *
    * Colors handled:
    * - Background: Main tray background
@@ -663,25 +686,12 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
    * - Muted: Secondary/dimmed text color
    * - Border: Border and divider colors
    */
-  const trayColors = useMemo(() => {
-    if (useOppositeTheme) {
-      // Opposite theme: If system is dark, use light colors (and vice versa)
-      return {
-        bg: prefersDark ? 'hsl(220 10% 99%)' : 'hsl(220 14% 8%)',
-        fg: prefersDark ? 'hsl(220 15% 10%)' : 'hsl(220 15% 95%)',
-        fgMuted: prefersDark ? 'hsl(220 10% 35%)' : 'hsl(220 10% 70%)',
-        border: prefersDark ? 'hsl(220 12% 86%)' : 'hsl(220 12% 18%)',
-      }
-    }
-
-    // Default theme: Use CSS variables (matches system preference)
-    return {
-      bg: 'var(--modal-bg)',
-      fg: 'var(--modal-fg)',
-      fgMuted: 'var(--modal-fg-muted)',
-      border: 'var(--border-color)',
-    }
-  }, [useOppositeTheme, prefersDark])
+  const trayColors = useMemo(() => ({
+    bg: 'var(--modal-bg)',
+    fg: 'var(--modal-fg)',
+    fgMuted: 'var(--modal-fg-muted)',
+    border: 'var(--border-color)',
+  }), [])
 
   /**
    * Personal Notes section expanded/collapsed state.
@@ -872,7 +882,9 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
 
     if (!articleId) {
       resetContent()
-      if (isWritingMode) {
+      if (isAboutMode) {
+        setViewMode('about')
+      } else if (isWritingMode) {
         setViewMode('writing-list')
       } else {
         setViewMode('list')
@@ -909,7 +921,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
     setViewMode('article')
     loadArticle(articleId)
     requestAnimationFrame(() => restoreScrollPosition())
-  }, [articleId, loadArticle, resetContent, isWritingMode, saveScrollPosition, restoreScrollPosition])
+  }, [articleId, loadArticle, resetContent, isWritingMode, isAboutMode, saveScrollPosition, restoreScrollPosition])
 
   // ============================================================================
   // DRAG-TO-DISMISS HANDLERS (MOBILE ONLY)
@@ -993,8 +1005,8 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
     }
     
     const viewportHeight = window.innerHeight
-    const threshold = Math.max(viewportHeight * 0.3, 150) // 30% of viewport or 150px minimum
-    const velocityThreshold = 500 // px/s
+    const threshold = Math.max(viewportHeight * 0.2, 120) // 20% of viewport or 120px — iOS-like shorter commit distance
+    const velocityThreshold = 300 // px/s — respond faster to flick gestures
     
     // Close if dragged beyond threshold OR if velocity is high enough
     if (info.offset.y > threshold || info.velocity.y > velocityThreshold) {
@@ -1111,7 +1123,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
       if (isScrollDismissingRef.current && accumulatedDragY > 0) {
         // Use same threshold logic as drag-to-dismiss
         const viewportHeight = window.innerHeight
-        const threshold = Math.max(viewportHeight * 0.3, 150)
+        const threshold = Math.max(viewportHeight * 0.2, 120)
 
         if (accumulatedDragY > threshold) {
           onClose()
@@ -1261,6 +1273,10 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
   // KEYBOARD NAVIGATION
   // ============================================================================
   
+  // Determine if we should show the tray (used by Escape handler and render)
+  // Show tray if: writing mode (always show), about mode (always show), or articleId is set (normal mode)
+  const shouldShowTray = isWritingMode || isAboutMode || articleId !== null
+
   /**
    * Handles Escape key to close the tray.
    * 
@@ -1269,14 +1285,17 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
    */
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
+        if (e.key === "Escape") {
+        if (showStackedFrontPanel && onCloseWritingOnly) handleCloseWritingPanel()
+        else onClose()
+      }
     }
 
-    if (articleId) {
+    if (shouldShowTray) {
       document.addEventListener("keydown", handleEscape)
       return () => document.removeEventListener("keydown", handleEscape)
     }
-  }, [articleId, onClose])
+  }, [shouldShowTray, showStackedFrontPanel, onClose, onCloseWritingOnly, handleCloseWritingPanel])
 
   // ============================================================================
   // MARKDOWN RENDERING COMPONENTS
@@ -1292,10 +1311,6 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
   // @see app/components/markdown/markdownComponents.tsx
   // @see app/components/markdown/storyMarkdownComponents.tsx
   // @see app/components/markdown/markdownBaseStyles.tsx
-
-  // Determine if we should show the tray
-  // Show tray if: writing mode (always show), or articleId is set (normal mode)
-  const shouldShowTray = isWritingMode || articleId !== null
 
   // Legacy conditions kept for reference (no longer used for tray rendering)
   // Tray stays mounted, viewMode controls content switching
@@ -1321,16 +1336,16 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
             <motion.div
               ref={mainBackdropRef}
               key="backdrop"
-              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'backdrop-blur-xl' : 'backdrop-blur-2xl'}`}
+              className={`fixed inset-0 transition-colors duration-200 z-40 border-0 outline-none ${isMobile ? 'backdrop-blur-sm' : 'backdrop-blur-2xl'}`}
               style={{
-                backgroundColor: isMobile ? `color-mix(in srgb, ${trayColors.bg}, transparent 10%)` : `color-mix(in srgb, ${trayColors.bg}, transparent 60%)`,
+                backgroundColor: isMobile ? 'rgba(0, 0, 0, 0.3)' : `color-mix(in srgb, ${trayColors.bg}, transparent 60%)`,
                 ...(isMobile ? { overscrollBehavior: 'none', touchAction: 'none' } : {})
               }}
               variants={backdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              onClick={onClose}
+              onClick={showStackedFrontPanel && onCloseWritingOnly ? handleCloseWritingPanel : onClose}
               onAnimationStart={(definition) => {
                 // Disable pointer events when exit animation starts
                 // This allows hover events to work immediately after closing
@@ -1348,8 +1363,8 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
             <motion.div
               ref={mainTrayRef}
               key="tray"
-              data-theme={useOppositeTheme ? (prefersDark ? "light" : "dark") : undefined}
-              className={`fixed ${isMobile ? 'inset-0 rounded-t-3xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} ${isMobile ? 'backdrop-blur-xl backdrop-saturate-150 border-t border-border/20' : ''} transition-colors duration-200`}
+              /* Theme matches system preference — no data-theme override */
+              className={`fixed ${isMobile ? 'inset-x-0 bottom-0 rounded-t-2xl' : 'right-0 top-0 h-full w-full md:w-[500px]'} transition-colors duration-200`}
               variants={activeTrayVariants}
               initial="hidden"
               animate="visible"
@@ -1357,71 +1372,283 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               // Drag-to-dismiss functionality (mobile only)
               drag={isMobile ? "y" : false}
               dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.2 }}
+              dragElastic={{ top: 0, bottom: 0.3 }}
               dragMomentum={false}
               onDragStart={handleDragStart}
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
               style={{
-                // Theme-aware colors (opposite of system preference in writing mode)
+                // Theme-aware colors matching system preference
                 backgroundColor: trayColors.bg,
                 color: trayColors.fg,
                 ...(isMobile ? {
-                  // Cover full viewport including safe areas
-                  top: 0,
+                  // iOS-style: sheet starts below status bar, leaving a peek of content
+                  top: 'max(env(safe-area-inset-top, 0px), 10px)',
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  height: '100dvh',
-                  minHeight: '100dvh',
-                  maxHeight: '100dvh',
-                  paddingTop: 'env(safe-area-inset-top, 0px)',
                   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                  boxShadow: '0 -1px 0 rgba(0,0,0,0.04), 0 -8px 32px rgba(0,0,0,0.12)',
                   y: dragY,
-                  // Visual feedback during drag
-                  opacity: dragY > 0 ? Math.max(0.7, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.5) : 1,
-                  scale: dragY > 0 ? Math.max(0.95, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.1) : 1,
+                  // Visual feedback during drag — subtle opacity fade
+                  opacity: dragY > 0 ? Math.max(0.85, 1 - (dragY / (typeof window !== 'undefined' ? window.innerHeight : 1000)) * 0.3) : 1,
                 } : { transformStyle: "preserve-3d", perspective: "1200px" }),
                 // Consistent z-index (no jumping with mode="wait")
                 zIndex: 50,
               }}
             >
+            {/* CSS variable scoping wrapper — ensures Tailwind classes (text-foreground,
+                text-muted-foreground) and custom-property classes (.type-caption using
+                var(--fg-muted)) resolve to system-preference colors inside the tray,
+                even when the page's --theme-blend has been scroll-inverted. Uses a plain
+                <div> because Framer Motion's MotionStyle does not accept CSS custom properties. */}
+            <div
+              className="h-full flex flex-col"
+              style={{
+                '--foreground': prefersDark ? '220 15% 95%' : '220 15% 10%',
+                '--muted-foreground': prefersDark ? '220 10% 70%' : '220 10% 35%',
+                '--border': prefersDark ? '220 12% 18%' : '220 12% 86%',
+                '--fg': prefersDark ? 'hsl(220 15% 95%)' : 'hsl(220 15% 10%)',
+                '--fg-muted': prefersDark ? 'hsl(220 10% 70%)' : 'hsl(220 10% 35%)',
+                '--border-color': prefersDark ? 'hsl(220 12% 18%)' : 'hsl(220 12% 86%)',
+              } as React.CSSProperties}
+            >
+            {isStacked ? (
+              <>
+                {/* Back panel: About — pushed left and blurred when Writing is on top; eases back to center when Writing exits */}
+                <motion.div
+                  className="absolute inset-0"
+                  animate={{
+                    x: isWritingPanelExiting ? 0 : -80,
+                    filter: isWritingPanelExiting ? 'blur(0px)' : 'blur(12px)',
+                    opacity: isWritingPanelExiting ? 1 : 0.9,
+                  }}
+                  transition={{ duration: 0.45, ease: EASING.smooth }}
+                  onAnimationComplete={() => {
+                    if (isWritingPanelExiting) {
+                      onCloseWritingOnly?.()
+                      setIsWritingPanelExiting(false)
+                    }
+                  }}
+                  style={{
+                    pointerEvents: 'none',
+                    backgroundColor: trayColors.bg,
+                    color: trayColors.fg,
+                  }}
+                >
+                  <div className="h-full flex flex-col">
+                    <div
+                      className={`flex-1 overflow-y-auto ${isMobile ? 'px-6 pt-12 pb-8' : 'px-8 pt-16 pb-8'} flex flex-col`}
+                      style={isMobile ? { paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))', overscrollBehavior: 'none', touchAction: 'pan-y' as const } : {}}
+                    >
+                      <div className="flex flex-col min-h-full justify-between">
+                        <div className="space-y-6">
+                          <p className="text-sm text-foreground leading-relaxed transition-colors duration-200 font-medium">
+                            Hello, I am Raf. AI Designer and design engineer. I&apos;ve been shipping code since before the tooling made it easy.
+                          </p>
+                          <div className="space-y-2">
+                            <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                              I care about systems that feel fast, logical, and respectful of attention.
+                            </p>
+                            <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                              Grew up on the Amalfi Coast. Based in Toronto, moving to London in 2026.
+                            </p>
+                            <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                              I{" "}
+                              {onSwitchToWriting ? (
+                                <span className={`cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`} style={{ WebkitTapHighlightColor: "transparent" }}>write</span>
+                              ) : (
+                                "write"
+                              )}
+                              , photograph, and spend time on a yoga mat or chasing light through workspaces.
+                            </p>
+                          </div>
+                          <p className="text-2xs font-[family-name:var(--font-mono)] leading-relaxed opacity-60 transition-colors duration-200 pt-2">
+                            Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
+                          </p>
+                        </div>
+                        <nav className="flex flex-col gap-1 group/nav pt-2">
+                          <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
+                          <FooterLink href="mailto:raf@raf.works" label="Email" />
+                          <FooterLink href="/cv" label="CV" />
+                          <FooterLink href="https://x.com/rafdotworks" label="X" external />
+                        </nav>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+                {/* Front panel: Writing — slides in from right, slides out on close */}
+                <AnimatePresence onExitComplete={handleWritingPanelExitComplete}>
+                  {showStackedFrontPanel && (
+                  <motion.div
+                    key="writing-stack-panel"
+                    className="absolute inset-0 z-10"
+                    initial={{ x: '100%' }}
+                    animate={{ x: isWritingPanelExiting ? '100%' : 0 }}
+                    exit={{ x: '100%' }}
+                    transition={{ type: 'spring', stiffness: 180, damping: 28, mass: 1 }}
+                    style={{
+                      backgroundColor: trayColors.bg,
+                      color: trayColors.fg,
+                    }}
+                  >
+                    <div className="h-full flex flex-col">
+                      {articleId !== null && onArticleSelect && (
+                        <motion.button
+                          onClick={() => onArticleSelect(null)}
+                          className="absolute top-6 left-6 z-10 p-2 group"
+                          aria-label="Back to list"
+                          style={{ background: 'transparent', border: 'none', outline: 'none', color: trayColors.fgMuted, WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
+                          whileHover={{ scale: 1.02, x: -1 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M7 1L2 6L7 11" /></svg>
+                        </motion.button>
+                      )}
+                      {onCloseWritingOnly && (
+                        <motion.button
+                          onClick={handleCloseWritingPanel}
+                          className="absolute top-6 right-6 z-10 p-1.5 group"
+                          aria-label="Close writing"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            boxShadow: 'none',
+                            color: trayColors.fgMuted,
+                            WebkitTapHighlightColor: 'transparent',
+                            cursor: 'pointer',
+                            opacity: 0.6,
+                          }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </motion.button>
+                      )}
+                      <motion.div
+                        className={`flex-1 overflow-y-auto ${isMobile ? 'px-6 pt-12 pb-8' : 'px-8 pt-16 pb-8'}`}
+                        style={isMobile ? { paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))', overscrollBehavior: 'none', touchAction: 'pan-y' as const } : {}}
+                        initial={shouldReduceMotion ? undefined : { opacity: 0 }}
+                        animate={shouldReduceMotion ? undefined : { opacity: 1 }}
+                        transition={shouldReduceMotion ? undefined : { duration: 0.35, delay: 0.15, ease: EASING.smooth }}
+                      >
+                        {articleId === null ? (
+                          <motion.div
+                            key="writing-list"
+                            variants={activeViewTransitionVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                          >
+                            <motion.span
+                              initial={{ opacity: 0, filter: 'blur(4px)' }}
+                              animate={{ opacity: 0.5, filter: 'blur(0px)' }}
+                              transition={{ duration: 0.4 }}
+                              className="type-caption opacity-50 dark:opacity-70 block mb-2"
+                            >
+                              Writings
+                            </motion.span>
+                            <div className="space-y-4">
+                              {writings.map((article, i) => (
+                                <motion.div
+                                  key={article.id}
+                                  custom={i}
+                                  variants={activeListItemVariants}
+                                  initial="hidden"
+                                  animate="visible"
+                                  onClick={() => onArticleSelect?.(article.id)}
+                                  className="cursor-pointer space-y-1"
+                                  whileHover={{ x: 4, opacity: 1 }}
+                                  transition={{ duration: 0.2, ease: EASING.smooth }}
+                                >
+                                  <p className="text-xs transition-colors duration-200" style={{ color: i < 2 ? trayColors.fg : trayColors.fgMuted }}>{article.title}</p>
+                                  <p className="text-[10px] font-light transition-colors duration-200" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{article.date}</p>
+                                </motion.div>
+                              ))}
+                            </div>
+                            <div className="mt-8">
+                              <motion.button
+                                initial={{ opacity: 0, filter: 'blur(4px)' }}
+                                animate={{ opacity: 0.5, filter: 'blur(0px)' }}
+                                transition={{ duration: 0.4, delay: 0.2 }}
+                                onClick={() => setPersonalNotesExpanded(!personalNotesExpanded)}
+                                className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes"
+                                style={{ background: 'transparent', border: 'none', padding: 0, WebkitTapHighlightColor: 'transparent', color: trayColors.fgMuted }}
+                              >
+                                <span>Personal Notes</span>
+                                <svg width="6" height="6" viewBox="0 0 8 8" fill="none" stroke="currentColor" className={isMobile ? "opacity-50 cursor-pointer" : "opacity-0 group-hover/notes:opacity-50 transition-opacity duration-200 cursor-pointer"} style={{ transform: personalNotesExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease-out, opacity 0.2s ease-out' }}>
+                                  <path d="M2 1L5 4L2 7" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </motion.button>
+                              <AnimatePresence>
+                                {personalNotesExpanded && (
+                                  <motion.div initial={{ opacity: 0, filter: 'blur(4px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, filter: 'blur(4px)' }} transition={{ duration: 0.4, ease: EASING.smooth }} className="space-y-4">
+                                    {personalNotes.map((article, i) => (
+                                      <motion.div
+                                        key={article.id}
+                                        custom={i + writings.length}
+                                        variants={activeListItemVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        onClick={() => onArticleSelect?.(article.id)}
+                                        className="cursor-pointer space-y-1"
+                                        whileHover={{ x: 4, opacity: 1 }}
+                                        transition={{ duration: 0.2, ease: EASING.smooth }}
+                                      >
+                                        <p className="text-xs transition-colors duration-200" style={{ color: i < 1 ? trayColors.fg : trayColors.fgMuted }}>{article.title}</p>
+                                        <p className="text-[10px] font-light transition-colors duration-200" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{article.date}</p>
+                                      </motion.div>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </motion.div>
+                        ) : error ? (
+                          <motion.div key="error" initial={{ opacity: 0, filter: 'blur(4px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.4, ease: EASING.smooth }} className="text-center py-8">
+                            <p className="text-xs mb-2" style={{ color: trayColors.fgMuted }}>Unable to load this article</p>
+                            <p className="text-[10px] font-light" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{error}</p>
+                            <motion.button onClick={() => articleId && loadArticle(articleId)} className="mt-4 text-xs type-caption cursor-pointer" style={{ color: trayColors.fgMuted, background: 'transparent', border: 'none', padding: 0, textDecoration: 'underline' }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>Try again</motion.button>
+                          </motion.div>
+                        ) : content ? (
+                          <motion.div key="article" variants={activeViewTransitionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+                            {apiBasePath === "/api/story" && content.frontmatter && <StoryHeader frontmatter={content.frontmatter} isMobile={isMobile} />}
+                            <ReactMarkdown components={apiBasePath === "/api/story" ? storyMarkdownComponents : markdownComponents}>{content.content}</ReactMarkdown>
+                          </motion.div>
+                        ) : null}
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            ) : (
             <motion.div
               className="h-full flex flex-col"
               variants={shouldReduceMotion ? undefined : activeContentVariants}
               initial={shouldReduceMotion ? undefined : "hidden"}
               animate={shouldReduceMotion ? undefined : "visible"}
             >
-              {/* Mobile drag handle */}
+              {/* Mobile drag handle — iOS-style pill */}
               {isMobile && (
-                <motion.div 
-                  className="flex justify-center py-3 pt-4 pb-2 cursor-grab active:cursor-grabbing"
-                  style={{
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                  animate={{
-                    scale: dragY > 0 ? 1.1 : 1,
-                    opacity: dragY > 0 ? 0.6 : 1,
-                  }}
-                  transition={{
-                    duration: 0.2,
-                    ease: EASING.smooth
-                  }}
+                <div 
+                  className="flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <motion.div
-                    className="w-12 h-1.5 rounded-full transition-colors duration-200"
-                    animate={{
-                      backgroundColor: dragY > 0
-                        ? trayColors.fgMuted
-                        : trayColors.fgMuted,
-                      width: dragY > 0 ? 48 : 48,
-                    }}
-                    transition={{
-                      duration: 0.2,
-                      ease: EASING.smooth
+                  <div
+                    className="rounded-full"
+                    style={{
+                      width: 36,
+                      height: 5,
+                      backgroundColor: trayColors.fgMuted,
+                      opacity: dragY > 0 ? 0.4 : 0.25,
+                      transition: 'opacity 0.15s ease',
                     }}
                   />
-                </motion.div>
+                </div>
               )}
 
               {/* Minimal close button - Subtle and smaller */}
@@ -1542,7 +1769,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
               {/* Content - adjusted padding to account for floating buttons */}
               <div
                 ref={mainContentRef}
-                className={`flex-1 overflow-y-auto ${isMobile ? 'px-6 pt-14 pb-8' : 'px-8 pt-16 pb-8'} ${viewMode === 'about' ? 'flex flex-col' : ''}`}
+                className={`flex-1 overflow-y-auto ${isMobile ? 'px-6 pt-12 pb-8' : 'px-8 pt-16 pb-8'} ${viewMode === 'about' ? 'flex flex-col' : ''}`}
                 style={isMobile ? {
                   paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))',
                   overscrollBehavior: 'none',
@@ -1707,7 +1934,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                           <div className="space-y-1.5">
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2024–2025</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Theoriq · Founding Designer, Design Engineer</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Theoriq · Founding AI Designer, Design Engineer</p>
                             </div>
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2023–2024</span>
@@ -1715,11 +1942,11 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                             </div>
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2022–2023</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Crypto Stealth Startup · Senior Product Designer, Design Lead</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Crypto Stealth Startup · Senior Product AI Designer, Design Lead</p>
                             </div>
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2020–2021</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Artscapy · Founding Designer</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Artscapy · Founding AI Designer</p>
                             </div>
                           </div>
                         </div>
@@ -1729,19 +1956,19 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                           <div className="space-y-1.5">
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2025</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Voiceflow · Senior Product Designer, AI Agents</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Voiceflow · Senior Product AI Designer, AI Agents</p>
                             </div>
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2025</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Coinbase · Senior Product Designer, Developer Tools</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Coinbase · Senior Product AI Designer, Developer Tools</p>
                             </div>
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2021–2022</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Zalando · Senior Product Designer, Design System</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Zalando · Senior Product AI Designer, Design System</p>
                             </div>
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2021</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">TravelNest · Senior Product Designer</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">TravelNest · Senior Product AI Designer</p>
                             </div>
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2019</span>
@@ -1755,7 +1982,7 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
                           <div className="space-y-1.5">
                             <div className="flex justify-between items-start">
                               <span className="text-xs text-muted-foreground/70 font-light tabular-nums transition-colors duration-200">2016–present</span>
-                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Never Before Seen Studio · Freelance Designer, Design Lead</p>
+                              <p className="text-xs text-muted-foreground transition-colors duration-200 text-right">Never Before Seen Studio · Freelance AI Designer, Design Lead</p>
                             </div>
                           </div>
                         </div>
@@ -1764,37 +1991,48 @@ function SideTray({ articleId, onClose, isWritingMode = false, onArticleSelect, 
 
                       {/* Text Content Section - at top */}
                       <div className="space-y-6">
-                        {/* Opening */}
+                        {/* 1. Opening (primary) */}
+                        <p className="text-sm text-foreground leading-relaxed transition-colors duration-200 font-medium">
+                          Hello, I am Raf. AI Designer and design engineer. I&apos;ve been shipping code since before the tooling made it easy.
+                        </p>
+
+                        {/* 2–4. Body (secondary) */}
                         <div className="space-y-2">
-                        <p className="text-xs leading-relaxed transition-colors duration-200">
-                        <span className="text-foreground">Hello, I&apos;m Raf. I am designing AI softwares across early stage teams and enterprise retail. </span>
-                        <span className="text-muted-foreground">I&apos;ve spent almost a decade designing across startups and large organizations.</span>
-                        </p>
+                          <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                            I care about systems that feel fast, logical, and respectful of attention.
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                            Grew up on the Amalfi Coast. Based in Toronto, moving to London in 2026.
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
+                            I{" "}
+                            {onSwitchToWriting ? (
+                              <span
+                                onClick={onSwitchToWriting}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault()
+                                    onSwitchToWriting()
+                                  }
+                                }}
+                                className={`cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`}
+                                style={{ WebkitTapHighlightColor: "transparent" }}
+                              >
+                                write
+                              </span>
+                            ) : (
+                              "write"
+                            )}
+                            , photograph, and spend time on a yoga mat or chasing light through workspaces.
+                          </p>
                         </div>
 
-                           {/* Today */}
-                           <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                           I care about contributing to products, systems and experiences that feel fast, logical and emotionally considered.
-                           </p>
-                        {/* <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-Before that, I contributed and shipped design systems, developer tools, and product design foundations across teams like Theoriq, Coinbase, Zalando, Voiceflow and more.
-                        </p> */}
-
-                         
-
-                
-
-                        {/* Location */}
-                        <p className="text-xs text-muted-foreground leading-relaxed transition-colors duration-200">
-                        I grew up on the Amalfi Coast in Italy. I&apos;m based in Toronto and relocating Q2 2026 to London, UK. You&apos;ll usually find me on a yoga mat, on a bike, or chasing light through quiet spaces.
+                        {/* 5. Location/weather (label style, just above links) */}
+                        <p className="text-2xs font-[family-name:var(--font-mono)] leading-relaxed opacity-60 transition-colors duration-200 pt-2">
+                          Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
                         </p>
-
-                        {/* Principles */}
-                        <div className="space-y-1.5">
-                          <p className="text-xs text-muted-foreground transition-colors duration-200">— How you do anything is how you do everything</p>
-                          <p className="text-xs text-muted-foreground transition-colors duration-200">— Always happy, never satisfied</p>
-                          <p className="text-xs text-muted-foreground transition-colors duration-200">— Progress over movement</p>
-                        </div>
                       </div>
 
                       {/* Contact Links Section - at bottom */}
@@ -1922,6 +2160,8 @@ Before that, I contributed and shipped design systems, developer tools, and prod
                 </AnimatePresence>
               </div>
             </motion.div>
+            )}
+            </div>
           </motion.div>
         </>
       )}

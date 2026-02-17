@@ -1,6 +1,6 @@
 ---
 title: Theoriq
-role: Founding Designer, Design Engineer
+role: Founding AI Designer, Design Engineer
 company: Theoriq
 year: 2024–2025
 ---

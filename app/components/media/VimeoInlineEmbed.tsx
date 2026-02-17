@@ -51,9 +51,9 @@ export const VimeoInlineEmbed: React.FC<VimeoInlineEmbedProps> = ({
 
   return (
     <div
-      className={`relative w-full ${className}`}
+      className={`relative w-full overflow-hidden ${className}`}
       style={{
-        paddingBottom: "75%", // 4:3 aspect ratio (adjust as needed)
+        paddingBottom: "56.25%", // 16:9 aspect ratio, matches video and images flow
         position: "relative",
       }}
     >

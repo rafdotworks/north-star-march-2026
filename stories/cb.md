@@ -1,6 +1,6 @@
 ---
 title: Coinbase Developer Platform
-role: Senior Product Designer
+role: Senior Product AI Designer
 company: Coinbase
 year: 2024
 ---
@@ -46,7 +46,7 @@ We needed to reduce friction without hiding what mattered.
 
 My Role
 
-I worked as a senior product designer embedded in the Developer Platform team.
+I worked as a senior product AI designer embedded in the Developer Platform team.
 
 My focus was on:
 - SQL Playground.

@@ -442,7 +442,7 @@ export const IMAGE_ALT_TEXT: Record<string, string> = {
  * 
  * @example
  * ```ts
- * PROJECT_ROLES["theo"] // "Founding Product Designer"
+ * PROJECT_ROLES["theo"] // "Founding AI Product Designer"
  * ```
  */
 export const PROJECT_ROLES: Record<string, string> = {
@@ -450,10 +450,10 @@ export const PROJECT_ROLES: Record<string, string> = {
   theo: "Founding AI Product Designer",
   cb: "Senior AI Product Designer",
   vf: "Senior AI Product Designer",
-  atlas: "Senior Product Designer",
-  curbcut: "Product Designer",
-  zalando: "Senior Design System Designer",
-  earlyworks: "Designer",
+  atlas: "Senior Product AI Designer",
+  curbcut: "Product AI Designer",
+  zalando: "Senior Design System AI Designer",
+  earlyworks: "AI Designer",
 };
 
 /**

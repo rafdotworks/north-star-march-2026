@@ -28,3 +28,34 @@ next-env.d.ts
 
 # cursor
 .cursor/
+
+# macOS
+.DS_Store
+
+# agent / editor config (keep repo clean)
+.agent/
+.agents/
+.cline/
+.codebuddy/
+.commandcode/
+.continue/
+.crush/
+.factory/
+.goose/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.windsurf/
+.zencoder/
+skills/

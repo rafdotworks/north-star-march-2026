@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "raf.works — 2026",
   description:
-    "Raf V. — Designer and Design Engineer. Interaction models for AI products at scale.",
+    "Raf V. — AI Designer and Design Engineer. Interaction models for AI products at scale.",
 }
 
 export default function TextPage() {
@@ -25,7 +25,7 @@ export default function TextPage() {
             <section className="mb-16 space-y-6">
               <p className="type-body-primary">
                 I design interaction models for AI products at scale, currently
-                Staff UX Designer at Walmart Seller.
+                Staff UX AI Designer at Walmart Seller.
               </p>
               <p className="type-body">
                 Previously designed AI at Obvious, founding designer at Theoriq,
