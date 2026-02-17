@@ -208,6 +208,8 @@ function parseBlueprint(content: string): ParsedBlueprint {
 // ============================================================================
 
 export function BlueprintContent({
+  // Prop reserved for future reduced-motion support in modal animations
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   shouldReduceMotion: _shouldReduceMotion = false,
   onBack,
   preFetchedContent,

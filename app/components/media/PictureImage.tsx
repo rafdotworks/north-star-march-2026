@@ -18,7 +18,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { getImageFallback, needsFallback } from "@/app/utils/imageFallback";
+import { getImageFallback } from "@/app/utils/imageFallback";
 
 /**
  * Props compatible with Next.js Image component

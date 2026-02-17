@@ -31,6 +31,7 @@ const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
  */
 export function pageTurnVariants(
   level: AnimationLevel,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- signature kept for API consistency
   _direction: Direction
 ): Variants {
   if (level === 0) {

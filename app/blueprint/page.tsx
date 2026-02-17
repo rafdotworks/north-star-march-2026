@@ -21,7 +21,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { EASING, modalTextStagger } from "@/components/animations/LoadingAnimations";
-import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "next/link";
 
 // ============================================================================
@@ -216,8 +215,7 @@ function parseBlueprint(content: string): ParsedBlueprint {
 
 export default function BlueprintPage() {
   const shouldReduceMotion = useReducedMotion();
-  const isMobile = useIsMobile();
-  
+
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -226,13 +224,7 @@ export default function BlueprintPage() {
   const parsedContent = useMemo(() => {
     if (!content) return null;
     try {
-      const parsed = parseBlueprint(content);
-      console.log('Parsed blueprint:', parsed);
-      console.log('Sections count:', parsed.sections.length);
-      parsed.sections.forEach((section, i) => {
-        console.log(`Section ${i}: "${section.title}" - content: ${section.content.length}, items: ${section.items.length}`);
-      });
-      return parsed;
+      return parseBlueprint(content);
     } catch (err) {
       console.error('Error parsing blueprint:', err);
       return null;
@@ -258,7 +250,6 @@ export default function BlueprintPage() {
         }
         
         const text = await response.text();
-        console.log('Blueprint content loaded:', text.substring(0, 100));
         setContent(text);
       } catch (err) {
         console.error('Error loading blueprint:', err);

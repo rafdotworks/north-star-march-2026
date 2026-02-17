@@ -147,6 +147,8 @@ function renderParagraph(
  * Renders all sections of the About Raf modal
  */
 export function AboutModalContent({
+  // Prop reserved for future reduced-motion support in modal animations
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   shouldReduceMotion: _shouldReduceMotion = false,
   onBlueprintClick,
 }: AboutModalContentProps) {

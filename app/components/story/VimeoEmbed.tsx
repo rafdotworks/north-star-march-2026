@@ -68,7 +68,8 @@ export function VimeoEmbed({ url, aspectRatio = "16/9" }: VimeoEmbedProps) {
               className="absolute inset-0 w-full h-full group cursor-pointer"
               aria-label="Play video"
             >
-              {/* Thumbnail */}
+              {/* Thumbnail: external dynamic URL (vumbnail.com); next/image would require remotePatterns */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={thumbnailUrl}
                 alt="Video thumbnail"

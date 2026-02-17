@@ -80,6 +80,7 @@ export function useLoadingSequence() {
       // Using 'as any' because proper TypeScript interface isn't available in lib.dom.d.ts
       // Falls back gracefully when API isn't supported
       // Reference: https://developer.mozilla.org/en-US/docs/Web/API/Network_Information_API
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Navigator.connection not in lib.dom.d.ts
       const connection = (navigator as any).connection;
       const effectiveType = connection.effectiveType || "unknown";
       const downlink = connection.downlink || 0;
