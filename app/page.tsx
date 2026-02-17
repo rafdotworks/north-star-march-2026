@@ -197,7 +197,7 @@ export default function Page() {
        * HERO SECTION — first viewport with intro content
        * Followed by scrollable work image gallery
        * ================================================================ */}
-      <main className="h-dvh w-full max-w-[1600px] md:mx-auto px-3 md:px-16">
+      <main className="h-dvh w-full max-w-[1400px] md:mx-auto px-3 md:px-24">
         <div
           className="h-full grid grid-cols-1 md:grid-cols-[auto_1fr_auto] md:grid-rows-[auto_auto_auto] gap-x-[2.5vw] md:gap-x-10 gap-y-0 md:gap-y-0 content-start md:content-center items-start md:items-baseline pt-16 md:pt-0 pb-safe overflow-auto md:overflow-visible min-h-0"
           style={{
@@ -242,7 +242,7 @@ export default function Page() {
             <p className="text-sm md:text-xs leading-relaxed">
               AI Designer and Design Engineer
             </p>
-            <div className="flex flex-col gap-0 mt-2.5">
+            <div className="flex flex-col gap-1.5 md:gap-0 mt-2.5">
               <p className="text-sm md:text-xs leading-relaxed">
                 <span className="opacity-80">Currently at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink> designing AI-powered recommendations</span>
               </p>
@@ -277,7 +277,7 @@ export default function Page() {
 
       {/* ================================================================
        * WORK — one section per project, 8–10vh spacing, equal-column grid
-       * Order: obv, walm, theo, cb, vf, atl, zl, ew
+       * Order: current-ai, obv, walm, theo, cb, vf, atl, zl, ew
        * ================================================================ */}
       <Section wide>
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
@@ -289,8 +289,9 @@ export default function Page() {
               transformOrigin: "center center",
             }}
           >
-            <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
+            <Image src="/work/current-ai.webp" alt="Current AI work - animated preview of AI assistant interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
           </motion.div>
+          <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
           <Image src="/work/q2-26-works/obv/obv-2.png" alt="Obvious work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
         </div>
       </Section>
@@ -362,7 +363,7 @@ export default function Page() {
        * FOOTER — principles + contact links (mirrors hero layout)
        * ================================================================ */}
       <footer
-        className="w-full max-w-[1600px] mx-auto px-3 md:px-16 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-x-[2.5vw] md:gap-x-10 items-baseline pb-[16vh]"
+        className="w-full max-w-[1400px] mx-auto px-3 md:px-24 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-x-[2.5vw] md:gap-x-10 items-baseline pb-[16vh]"
         aria-label="Footer"
       >
         <div className="max-w-[600px] flex flex-col gap-1 text-left">
