@@ -27,12 +27,13 @@ export default function Page() {
   const [themeInverted, setThemeInverted] = useState(false)
   const prefersDarkRef = useRef(prefersDark)
   const theoriqSectionRef = useRef<HTMLDivElement>(null)
-  const firstImageWrapperRef = useRef<HTMLDivElement>(null)
+  /** Ref for the actual first image in the work area — entry effect target */
+  const firstWorkImageRef = useRef<HTMLDivElement>(null)
 
-  // First image expand-on-scroll: scale from 0.75 → 1 as image enters viewport
+  // Entry effect: scale 0.75 → 1 as the first work image (and only it) enters viewport
   const shouldReduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll({
-    target: firstImageWrapperRef,
+    target: firstWorkImageRef,
     offset: ["start end", "start start"],
   })
   const firstImageScale = useTransform(scrollYProgress, [0, 1], [0.75, 1])
@@ -277,21 +278,21 @@ export default function Page() {
 
       {/* ================================================================
        * WORK — one section per project, 8–10vh spacing, equal-column grid
-       * Order: current-ai, obv, walm, theo, cb, vf, atl, zl, ew
+       * Order: obv, walm, theo, cb, vf, atl, zl, ew
        * ================================================================ */}
       <Section wide>
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
+          {/* First image in work area — gets entry scale effect */}
           <motion.div
-            ref={firstImageWrapperRef}
+            ref={firstWorkImageRef}
             className="w-full"
             style={{
               scale: shouldReduceMotion ? 1 : firstImageScale,
               transformOrigin: "center center",
             }}
           >
-            <Image src="/work/current-ai.webp" alt="Current AI work - animated preview of AI assistant interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
+            <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
           </motion.div>
-          <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
           <Image src="/work/q2-26-works/obv/obv-2.png" alt="Obvious work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
         </div>
       </Section>
@@ -307,7 +308,6 @@ export default function Page() {
 
       <Section wide>
         <div ref={theoriqSectionRef} className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          <Image src="/work/q2-26-works/theo/theo-1.png" alt="Theoriq work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           {PROJECT_VIDEOS.theo && (
             <VimeoInlineEmbed videoUrl={PROJECT_VIDEOS.theo} className="w-full" />
           )}
@@ -360,10 +360,11 @@ export default function Page() {
       </Section>
 
       {/* ================================================================
-       * FOOTER — principles + contact links (mirrors hero layout)
+       * FOOTER — principles + contact links (mirrors hero layout).
+       * Same horizontal edges as work sections: max-w-[1600px], md:px-16.
        * ================================================================ */}
       <footer
-        className="w-full max-w-[1400px] mx-auto px-3 md:px-24 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-x-[2.5vw] md:gap-x-10 items-baseline pb-[16vh]"
+        className="w-full max-w-[1600px] mx-auto px-3 md:px-16 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-x-[2.5vw] md:gap-x-10 items-baseline pb-[16vh]"
         aria-label="Footer"
       >
         <div className="max-w-[600px] flex flex-col gap-1 text-left">
