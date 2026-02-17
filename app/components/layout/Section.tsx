@@ -36,13 +36,17 @@ const SECTION_PADDING_WIDE = "px-3 md:px-16"
 const SECTION_GAP = "gap-x-[2.5vw]"
 const SECTION_SPACING = "mb-[16vh]"
 
+/** Shared content-band constants for wide layout (work sections + footer). Single source of truth for horizontal edges. */
+export const CONTENT_AREA_WIDE_MAX_WIDTH = "max-w-[1600px]"
+export const CONTENT_AREA_WIDE_PADDING = SECTION_PADDING_WIDE
+
 export function Section({ children, columns = 3, last = false, wide = false, className = "" }: SectionProps) {
   const gridCols =
     columns === 2
       ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
       : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
 
-  const maxWidth = wide ? "max-w-[1600px]" : "max-w-[1400px]"
+  const maxWidth = wide ? CONTENT_AREA_WIDE_MAX_WIDTH : "max-w-[1400px]"
   const padding = wide ? SECTION_PADDING_WIDE : SECTION_PADDING
 
   return (

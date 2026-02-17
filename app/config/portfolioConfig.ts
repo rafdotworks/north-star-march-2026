@@ -282,12 +282,10 @@ export const PROJECTS: Record<ProjectKey, { images: string[] }> = {
   },
   theo: {
     images: [
-      "/work/t-studio.png",
+      "/work/theo-web.png",
       "/work/videos/theoriq-demo.mov",
-      //"/work/t-json.png",
       "/work/t-hubandbuild.png",
-      "/work/theo-web.png"
-    ], // Theoriq - AI platform, founding designer, video is 5th item
+    ], // Theoriq - web first, then demo video, then hub/build
   },
   // Legacy/early works (2017-2022)
   curbcut: { images: ["/work/curbcutos.png"] }, // Accessibility data tools (fixed: removed duplicate)
@@ -371,8 +369,8 @@ export const PROJECT_ALIAS: Record<string, string> = {
  * ```
  */
 export const PROJECT_ORDER: ProjectKey[] = [
+  "theo", // Theoriq (2024) — first image shown is theo-web.png
   "currentwork", // Current work (2026)
-  // "theo", // Theoriq (2024)
   // "cb", // Coinbase (2025)
   // "earlyworks", // Early work (2017-2019), now includes Voiceflow, Atlas, Zalando, and more
 ];

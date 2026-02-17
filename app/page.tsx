@@ -5,7 +5,7 @@ import Image from "next/image"
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion"
 import FooterLink from "@/app/components/layout/FooterLink"
 import InlineExternalLink, { SUBTLE_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
-import { Section } from "@/app/components/layout/Section"
+import { Section, CONTENT_AREA_WIDE_MAX_WIDTH, CONTENT_AREA_WIDE_PADDING } from "@/app/components/layout/Section"
 import { VimeoInlineEmbed } from "@/app/components/media/VimeoInlineEmbed"
 import SideTray from "@/app/components/page-specific/SideTray"
 import { FOOTER_CONFIG } from "@/app/config/footerConfig"
@@ -360,21 +360,20 @@ export default function Page() {
       </Section>
 
       {/* ================================================================
-       * FOOTER — principles + contact links (mirrors hero layout).
-       * Same horizontal edges as work sections: max-w-[1600px], md:px-16.
+       * FOOTER — principles + contact links. Same content band as work sections.
        * ================================================================ */}
       <footer
-        className="w-full max-w-[1600px] mx-auto px-3 md:px-16 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-x-[2.5vw] md:gap-x-10 items-baseline pb-[16vh]"
+        className={`w-full ${CONTENT_AREA_WIDE_MAX_WIDTH} mx-auto ${CONTENT_AREA_WIDE_PADDING} grid grid-cols-[1fr_auto] gap-x-[2.5vw] md:gap-x-10 items-baseline pb-[16vh]`}
         aria-label="Footer"
       >
-        <div className="max-w-[600px] flex flex-col gap-1 text-left">
+        <div className="min-w-0 max-w-prose flex flex-col gap-1 text-left">
           {FOOTER_CONFIG.writing.principles.map(({ number, text }) => (
             <p key={number} className="type-caption font-edu-marist leading-relaxed text-muted-foreground/80">
               <span className="opacity-70">{number}</span> {text}
             </p>
           ))}
         </div>
-        <div className="max-w-[600px] flex flex-col mb-4 md:mb-0 md:justify-self-end">
+        <div className="flex flex-col mb-4 md:mb-0 justify-self-end">
           <nav className="flex flex-col w-full gap-1 group/nav" aria-label="Contact and links">
             <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="block w-full flex justify-end items-center gap-1" />
             <FooterLink href="mailto:raf@raf.works" label="Email" className="block w-full flex justify-end items-center gap-1" />
