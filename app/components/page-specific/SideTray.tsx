@@ -58,7 +58,7 @@ import React, { useEffect, useState, useCallback, useRef, memo, useMemo } from "
 import ReactMarkdown from "react-markdown"
 import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { Sheet, type SheetRef } from "react-modal-sheet"
+import Sheet from "react-modal-sheet"
 import FooterLink from "@/app/components/layout/FooterLink"
 import { SUBTLE_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -688,7 +688,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
    * Ref for react-modal-sheet imperative API (mobile only).
    * Allows programmatic snapping (e.g., snap to 90% when article is selected).
    */
-  const sheetRef = useRef<SheetRef>(null)
+  const sheetRef = useRef<React.ComponentRef<typeof Sheet>>(null)
 
   /**
    * Scroll position preservation for smooth navigation.
@@ -1338,9 +1338,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
         onClose={onClose}
         snapPoints={[0, 0.5, 0.9]}
         initialSnap={1}
-        dragVelocityThreshold={300}
-        dragCloseThreshold={0.4}
-        tweenConfig={{ ease: 'easeOut', duration: 0.3 }}
+        tweenConfig={{ ease: "easeOut", duration: 0.3 }}
         prefersReducedMotion={!!shouldReduceMotion}
       >
         <Sheet.Container
@@ -1413,9 +1411,8 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
           )}
 
           <Sheet.Content
-            disableDrag={(state) => state.scrollPosition !== 'top'}
-            scrollStyle={{
-              paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))',
+            style={{
+              paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))",
             }}
           >
             <div
