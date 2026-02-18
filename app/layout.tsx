@@ -7,7 +7,7 @@
  * Sets up global configuration, fonts, metadata, and analytics.
  *
  * KEY FEATURES:
- * - Custom font loading (Ronzino, Edu Marist)
+ * - Custom font loading (Ronzino, Edu Marist, CoFo Sans Mono)
  * - SEO metadata (Open Graph, Twitter Cards)
  * - Vercel Analytics integration
  * - Console easter egg for developers
@@ -16,8 +16,15 @@
  * FONTS:
  * - Ronzino: Primary body font (--font-ronzino)
  * - Edu Marist: Secondary/accent font (--font-edu-marist)
+ * - CoFo Sans Mono: Code/mono (--font-mono)
  *
- * Both use font-display: swap for performance
+ * Font loading and layout shift:
+ * - font-display: swap for performance (show fallback until custom font loads)
+ * - adjustFontFallback: Next.js generates size-adjust (and related overrides) for
+ *   the fallback so it matches the custom font's metrics; when the real font
+ *   swaps in, layout stays stable and text does not jump. Uses "Times New Roman"
+ *   for Ronzino/Edu Marist and "Arial" for CoFo (Next localFont API accepts
+ *   only these two string values, not boolean true).
  */
 
 import type { Metadata, Viewport } from "next";
@@ -35,6 +42,7 @@ const ronzino = localFont({
   src: "../public/fonts/Ronzino-Regular.otf",
   variable: "--font-ronzino",
   display: "swap", // Show fallback font while loading
+  adjustFontFallback: "Times New Roman", // Match fallback metrics to reduce layout shift on swap
 });
 
 /** Secondary/accent font - Edu Marist Regular */
@@ -42,6 +50,7 @@ const eduMarist = localFont({
   src: "../public/fonts/EduMarist-Regular.woff2",
   variable: "--font-edu-marist",
   display: "swap",
+  adjustFontFallback: "Times New Roman",
 });
 
 /** Monospace font - CoFo Sans Mono */
@@ -49,6 +58,7 @@ const cofoSansMono = localFont({
   src: "../public/fonts/CoFoSansMono-Regular.ttf",
   variable: "--font-mono",
   display: "swap",
+  adjustFontFallback: "Arial", // System fallback; size-adjust still reduces layout shift
 });
 
 // ============================================================================

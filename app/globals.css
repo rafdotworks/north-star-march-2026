@@ -83,6 +83,12 @@
   .rhythm-list {
     @apply space-y-4;  /* 16px - comfortable list spacing */
   }
+
+  /* Scrollbar gutter: reserve space for scrollbar so it does not appear mid-load
+   * and shift content (avoids text jump on hero). Used by app/page.tsx hero container. */
+  .scrollbar-gutter-stable {
+    scrollbar-gutter: stable;
+  }
   
   /* Heading rhythm: Progressive spacing based on heading level */
   .rhythm-heading h1 {
@@ -516,6 +522,7 @@ body {
   font-size: 16px;
   overscroll-behavior: none;
   height: 100%;
+  min-height: 100dvh;
   /* Gradual and beautiful theme transitions */
   transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
               color var(--theme-transition-duration) var(--theme-transition-easing);
@@ -878,7 +885,8 @@ html {
   scroll-behavior: smooth;
   overscroll-behavior: none;
   height: 100%;
-  /* Background color extends to full viewport including status bar area on mobile */
+  min-height: 100dvh;
+  /* Background extends to full viewport including status bar (viewport-fit: cover) */
   background: var(--bg);
   /* Gradual and beautiful theme transitions for html element */
   transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),

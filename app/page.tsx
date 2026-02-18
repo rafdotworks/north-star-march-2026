@@ -11,6 +11,7 @@ import SideTray from "@/app/components/page-specific/SideTray"
 import { FOOTER_CONFIG } from "@/app/config/footerConfig"
 import { PROJECT_VIDEOS } from "@/app/config/portfolioConfig"
 import { useSystemTheme } from "@/hooks/use-system-theme"
+import { LOAD_FOCUS } from "@/components/animations/LoadingAnimations"
 
 
 export default function Page() {
@@ -41,6 +42,9 @@ export default function Page() {
   // Scroll-based hero blur progress (0 = no blur, 1 = fully blurred/faded)
   const [scrollProgress, setScrollProgress] = useState(0)
   const ticking = useRef(false)
+
+  // Load animation complete — hand off to scroll-driven hero style (blur/scale/opacity)
+  const [loadComplete, setLoadComplete] = useState(false)
 
   // ============================================================================
   // MEMOIZED STYLES - Prevent object recreation on every render
@@ -105,21 +109,45 @@ export default function Page() {
   // HERO BLUR ON SCROLL — blur/fade/scale hero as user scrolls to images
   // ============================================================================
   useEffect(() => {
+    const updateProgress = () => {
+      const scrollY = window.scrollY
+      const vh = window.innerHeight
+      const progress = Math.min(1, Math.max(0, scrollY / (vh * 0.8)))
+      setScrollProgress(1 - Math.pow(1 - progress, 3))
+    }
     const handleScroll = () => {
       if (!ticking.current) {
         requestAnimationFrame(() => {
-          const scrollY = window.scrollY
-          const vh = window.innerHeight
-          const progress = Math.min(1, Math.max(0, scrollY / (vh * 0.8)))
-          setScrollProgress(1 - Math.pow(1 - progress, 3))
+          updateProgress()
           ticking.current = false
         })
         ticking.current = true
       }
     }
+    updateProgress() // run once on mount (e.g. if page loads while already scrolled)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // ============================================================================
+  // LOAD ANIMATION COMPLETE — gentle hero load then hand off to scroll-driven style
+  // ============================================================================
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      setLoadComplete(true)
+      return
+    }
+    const timer = setTimeout(() => setLoadComplete(true), 1700)
+    const onScroll = () => {
+      clearTimeout(timer)
+      setLoadComplete(true)
+    }
+    window.addEventListener('scroll', onScroll, { once: true, passive: true })
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [shouldReduceMotion])
 
   // ============================================================================
   // URL SYNCING FOR WRITING MODAL
@@ -199,8 +227,9 @@ export default function Page() {
        * Followed by scrollable work image gallery
        * ================================================================ */}
       <main className="h-dvh w-full max-w-[1200px] md:mx-auto px-3 md:px-28">
+        {/* Scroll-driven blur/scale/opacity on a plain div so it reliably updates with scroll (not overridden by Framer Motion) */}
         <div
-          className="h-full grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-[2.5vw] md:gap-x-10 gap-y-0 content-end md:content-center items-end md:items-baseline pt-16 pt-safe md:pt-0 pb-16 pb-safe overflow-auto md:overflow-visible min-h-0"
+          className="h-full grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-[2.5vw] md:gap-x-10 gap-y-0 content-end md:content-center items-end md:items-baseline pt-16 pt-safe md:pt-0 pb-16 pb-safe overflow-auto md:overflow-visible min-h-0 scrollbar-gutter-stable"
           style={{
             filter: `blur(${heroBlur}px)`,
             transform: `scale(${heroScale})`,
@@ -208,6 +237,14 @@ export default function Page() {
             willChange: scrollProgress > 0 ? 'filter, transform, opacity' : 'auto'
           }}
         >
+          {/* Load-in animation only: blur + fade in; after loadComplete, scroll-driven style above controls appearance */}
+          <motion.div
+            className="h-full grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-[2.5vw] md:gap-x-10 gap-y-0 content-end md:content-center items-end md:items-baseline min-h-0 col-span-1 md:col-span-2"
+            initial={!shouldReduceMotion && !loadComplete ? { filter: `blur(${LOAD_FOCUS.BLUR_PX}px)`, opacity: 0 } : false}
+            animate={!shouldReduceMotion && !loadComplete ? { filter: "blur(0px)", opacity: 1 } : false}
+            transition={{ duration: LOAD_FOCUS.DURATION, ease: LOAD_FOCUS.EASE }}
+            style={loadComplete ? undefined : { willChange: 'filter, opacity' }}
+          >
           {/* Col 1: Identity */}
           <div className="mb-4 md:mb-0 text-left">
             <p className="text-sm leading-relaxed">
@@ -233,9 +270,6 @@ export default function Page() {
                 Raf V.
               </span>
             </p>
-            {/* <p className="text-2xs font-[family-name:var(--font-mono)] leading-relaxed opacity-60">
-              AI Designer
-            </p> */}
           </div>
 
           {/* Col 2: bio + contact row on desktop; bio only on mobile (contact in footer) */}
@@ -252,11 +286,18 @@ export default function Page() {
                   <span className="opacity-80">Staff Designer at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>, designing AI-powered recommendations</span>
                 </p>
                 <p className="hidden md:block text-sm md:text-xs leading-relaxed mt-1">
-                  <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink>, <InlineExternalLink href="https://partner.zalando.com" underlineStyle="subtle">Zalando</InlineExternalLink> and more</span>
+                  <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more</span>
                 </p>
+                <div className="hidden md:block mt-2 text-sm md:text-xs leading-relaxed font-edu-marist">
+                  <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
+                    <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
+                    <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
+                    <FooterLink href="https://x.com/rafdotworks" label="X" external className="inline-flex items-center gap-1" />
+                  </nav>
+                </div>
               </div>
-              {/* Links block — mt-8 from context (structural release) */}
-              <div className="text-sm md:text-xs leading-relaxed font-edu-marist mt-8">
+              {/* Links block — mt-8 from context (structural release); hidden on desktop (links in context block) */}
+              <div className="text-sm md:text-xs leading-relaxed font-edu-marist mt-8 md:hidden">
                 <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
                   <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
                   <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
@@ -265,6 +306,7 @@ export default function Page() {
               </div>
             </div>
           </div>
+          </motion.div>
         </div>
       </main>
 
@@ -272,7 +314,7 @@ export default function Page() {
        * WORK — one section per project, 8–10vh spacing, equal-column grid
        * Order: obv, walm, theo, cb, vf, atl, zl, ew
        * ================================================================ */}
-      <Section wide>
+      <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           {/* First image in work area — gets entry scale effect */}
           <motion.div
@@ -283,71 +325,71 @@ export default function Page() {
               transformOrigin: "center center",
             }}
           >
-            <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
+            <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious: chat interface with workflow progress and “remember this workflow” prompt" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
           </motion.div>
-          <Image src="/work/q2-26-works/obv/obv-2.png" alt="Obvious work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
+          <Image src="/work/q2-26-works/obv/obv-2.png" alt="Obvious: Skills dashboard with “Teach once” and trending workflow cards" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
         </div>
       </Section>
 
-      <Section wide>
+      <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          {/* <Image src="/work/q2-26-works/walm/walm-1.png" alt="Walmart work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
-          {/* <Image src="/work/q2-26-works/walm/walm-2.png" alt="Walmart work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
-          <Image src="/work/q2-26-works/walm/walm-3.png" alt="Walmart work 3" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          {/* <Image src="/work/q2-26-works/walm/walm-4.png" alt="Walmart work 4" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
+          {/* <Image src="/work/q2-26-works/walm/walm-1.png" alt="Walmart: AI recommendations or product interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
+          {/* <Image src="/work/q2-26-works/walm/walm-2.png" alt="Walmart: recommendations experience or dashboard" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
+          <Image src="/work/q2-26-works/walm/walm-3.png" alt="Walmart: AI-powered recommendations interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          {/* <Image src="/work/q2-26-works/walm/walm-4.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
         </div>
       </Section>
 
-      <Section wide>
+      <Section wide spacing="tight">
         <div ref={theoriqSectionRef} className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           {PROJECT_VIDEOS.theo && (
             <VimeoInlineEmbed videoUrl={PROJECT_VIDEOS.theo} className="w-full" />
           )}
-          <Image src="/work/q2-26-works/theo/theo-2.png" alt="Theoriq work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/theo/theo-3.png" alt="Theoriq work 3" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/theo/theo-2.png" alt="Theoriq: Infinity Studio or Hub interface for AI agents" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/theo/theo-3.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
-      <Section wide>
+      <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          <Image src="/work/q2-26-works/cb/cb-1.png" alt="Coinbase work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/cb/cb-2.png" alt="Coinbase work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/cb/cb-3.png" alt="Coinbase work 3" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/cb/cb-4.png" alt="Coinbase work 4" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/cb/cb-5.png" alt="Coinbase work 5" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/cb/cb-1.png" alt="Coinbase Developer Platform: API docs or developer tools" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/cb/cb-2.png" alt="Coinbase Developer Platform: dashboard or project overview" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/cb/cb-3.png" alt="Coinbase Developer Platform: SQL Playground or query interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/cb/cb-4.png" alt="Coinbase Developer Platform: product surface or flow" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/cb/cb-5.png" alt="Coinbase Developer Platform: developer experience or onboarding" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
-      <Section wide>
+      <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          <Image src="/work/q2-26-works/vf/vf-1.png" alt="Voiceflow work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/vf/vf-2.png" alt="Voiceflow work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/vf/vf-1.png" alt="Voiceflow: conversation design or dialog editor" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/vf/vf-2.png" alt="Voiceflow: agent builder or early activation flow" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
-      <Section wide>
+      <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          <Image src="/work/q2-26-works/atl/atl-1.png" alt="Atlan work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/atl/atl-2.png" alt="Atlan work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/atl/atl-1.png" alt="Atlas: crypto marketplace or NFT collections" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/atl/atl-2.png" alt="Atlas: trading, borrowing, or analytics view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
-      <Section wide>
+      <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          <Image src="/work/q2-26-works/zl/zl-1.png" alt="Zalando work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/zl/zl-2.png" alt="Zalando work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/zl/zl-1.png" alt="Zalando B2B: design system documentation or guidelines" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/zl/zl-2.png" alt="Zalando B2B: design system components or patterns" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
-      <Section wide>
+      <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          <Image src="/work/q2-26-works/ew/ew-1.png" alt="Elsewhere work 1" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/ew/ew-2.png" alt="Elsewhere work 2" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/ew/ew-3.png" alt="Elsewhere work 3" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/ew/ew-4.png" alt="Elsewhere work 4" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/ew/ew-5.png" alt="Elsewhere work 5" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/ew/ew-6.png" alt="Elsewhere work 6" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/ew/ew-7.png" alt="Elsewhere work 7" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/ew/ew-1.png" alt="Early work: brand or interface design" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/ew/ew-2.png" alt="Early work: brand or product interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/ew/ew-3.png" alt="Early work: visual design or website" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/ew/ew-4.png" alt="Early work: product or brand project" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/ew/ew-5.png" alt="Early work: interface or identity" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/ew/ew-6.png" alt="Early work: design showcase" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/ew/ew-7.png" alt="Early work: portfolio piece" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 

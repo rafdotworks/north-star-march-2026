@@ -110,6 +110,10 @@ app/components/
 - Returns loading state with progress tracking
 - **Note**: Uses `as any` for Network Information API (non-standard, Chrome/Edge only) - documented with explanation
 
+**Loading layout stability (minimize text jump)**
+- **Font fallback**: [app/layout.tsx](app/layout.tsx) uses Next.js `adjustFontFallback` for Ronzino, Edu Marist, and CoFo Sans Mono so the fallback font has matching metrics (size-adjust, etc.). When the custom font swaps in, layout does not reflow and hero text does not jump.
+- **Scrollbar gutter**: Hero scroll container in [app/page.tsx](app/page.tsx) uses class `scrollbar-gutter-stable` ([app/globals.css](app/globals.css)); `scrollbar-gutter: stable` reserves space for the scrollbar so it does not appear mid-load and shift content.
+
 **Theme System** ([app/page.tsx](app/page.tsx) lines 80-113)
 - Binary theme blend at 93% scroll (instant snap, not gradual)
 - Design decision: Creates clear visual distinction between sections
