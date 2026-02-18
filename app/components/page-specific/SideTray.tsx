@@ -60,7 +60,8 @@ import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import Sheet from "react-modal-sheet"
 import FooterLink from "@/app/components/layout/FooterLink"
-import { SUBTLE_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
+import InlineExternalLink, { SUBTLE_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
+import { COMPANY_LINKS } from "@/app/config/companyLinks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSystemTheme } from "@/hooks/use-system-theme"
 import { useLocationWeather } from "@/hooks/use-timezone-message"
@@ -1162,13 +1163,28 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
               Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
             </p>
 
-            {/* 2–4. Body (secondary) */}
+            {/* Body: background, roles, values, place, personal */}
             <div className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
+              </p>
+              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                My career began in hospitality, brand and web design.
+              </p>
+              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
+              </p>
+              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                I was most recently Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+              </p>
+              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                Before that: <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink>, and more.
+              </p>
               <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
                 I care about systems that feel fast, logical, and respectful of attention.
               </p>
               <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                Grew up on the Amalfi Coast. Based in Toronto, moving to London in 2026.
+                Grew up on the Amalfi Coast. Based in Toronto.
               </p>
               <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
                 I{" "}
@@ -1197,7 +1213,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
               </p>
             </div>
 
-            {/* 5. Location/weather (label style, just above links) */}
+            {/* Location/weather (label style, just above links) */}
             <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] opacity-60 transition-colors duration-200 pt-2">
               Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
             </p>
@@ -1511,10 +1527,25 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                           </p>
                           <div className="space-y-4">
                             <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                              Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
+                            </p>
+                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                              My career began in hospitality, brand and web design.
+                            </p>
+                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                              Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
+                            </p>
+                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                              I was most recently Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+                            </p>
+                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                              Before that: <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink>, and more.
+                            </p>
+                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
                               I care about systems that feel fast, logical, and respectful of attention.
                             </p>
                             <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              Grew up on the Amalfi Coast. Based in Toronto, moving to London in 2026.
+                              Grew up on the Amalfi Coast. Based in Toronto.
                             </p>
                             <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
                               I{" "}

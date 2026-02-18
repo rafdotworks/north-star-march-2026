@@ -198,9 +198,9 @@ export default function Page() {
        * HERO SECTION — first viewport with intro content
        * Followed by scrollable work image gallery
        * ================================================================ */}
-      <main className="h-dvh w-full max-w-[1400px] md:mx-auto px-3 md:px-24">
+      <main className="h-dvh w-full max-w-[1200px] md:mx-auto px-3 md:px-28">
         <div
-          className="h-full grid grid-cols-1 md:grid-cols-[auto_1fr_auto] md:grid-rows-[auto_auto_auto] gap-x-[2.5vw] md:gap-x-10 gap-y-0 md:gap-y-0 content-start md:content-center items-start md:items-baseline pt-16 md:pt-0 pb-safe overflow-auto md:overflow-visible min-h-0"
+          className="h-full grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-[2.5vw] md:gap-x-10 gap-y-0 content-end md:content-center items-end md:items-baseline pt-16 pt-safe md:pt-0 pb-16 pb-safe overflow-auto md:overflow-visible min-h-0"
           style={{
             filter: `blur(${heroBlur}px)`,
             transform: `scale(${heroScale})`,
@@ -208,7 +208,7 @@ export default function Page() {
             willChange: scrollProgress > 0 ? 'filter, transform, opacity' : 'auto'
           }}
         >
-          {/* Row 1, Col 1: Identity */}
+          {/* Col 1: Identity */}
           <div className="mb-4 md:mb-0 text-left">
             <p className="text-sm leading-relaxed">
               <span
@@ -238,41 +238,33 @@ export default function Page() {
             </p> */}
           </div>
 
-          {/* Col 2: single cell spanning 3 rows, unified spacing between blocks */}
-          <div className={`max-w-[600px] mb-4 md:mb-0 md:row-span-3 text-left flex flex-col ${heroStackGap}`}>
-            <p className="text-sm md:text-xs leading-relaxed">
-              AI Designer and Design Engineer
-            </p>
-            <div className="flex flex-col gap-1.5 md:gap-0 mt-2.5">
+          {/* Col 2: bio + contact row on desktop; bio only on mobile (contact in footer) */}
+          <div className="mb-4 md:mb-0 flex flex-col md:flex-row md:gap-x-10 md:items-end min-w-0">
+            {/* Bio block — same as before */}
+            <div className={`max-w-[600px] text-left flex flex-col ${heroStackGap}`}>
+              {/* Title block */}
               <p className="text-sm md:text-xs leading-relaxed">
-                <span className="opacity-80">Currently at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink> designing AI-powered recommendations</span>
+                AI Designer and Design Engineer
               </p>
-              <p className="text-sm md:text-xs leading-relaxed">
-                <span className="opacity-60">Previously <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink>, <InlineExternalLink href="https://partner.zalando.com" underlineStyle="subtle">Zalando</InlineExternalLink> and more</span>
-              </p>
+              {/* Context block — mt-6 from title */}
+              <div className="mt-6">
+                <p className="text-sm md:text-xs leading-relaxed">
+                  <span className="opacity-80">Staff Designer at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>, designing AI-powered recommendations</span>
+                </p>
+                <p className="hidden md:block text-sm md:text-xs leading-relaxed mt-1">
+                  <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink>, <InlineExternalLink href="https://partner.zalando.com" underlineStyle="subtle">Zalando</InlineExternalLink> and more</span>
+                </p>
+              </div>
+              {/* Links block — mt-8 from context (structural release) */}
+              <div className="text-sm md:text-xs leading-relaxed font-edu-marist mt-8">
+                <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
+                  <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
+                  <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
+                  <FooterLink href="https://x.com/rafdotworks" label="X" external className="inline-flex items-center gap-1" />
+                </nav>
+              </div>
             </div>
           </div>
-
-          {/* Row 1, Col 3: Links (same as About side tray, vertical stack) */}
-          <div className="max-w-[600px] mb-4 md:mb-0 hidden md:block flex flex-col md:justify-self-end">
-            <nav className={`flex flex-col w-full ${heroStackGap} group/nav`} aria-label="Contact and links">
-              <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="block w-full flex justify-end items-center gap-1" />
-              <FooterLink href="mailto:raf@raf.works" label="Email" className="block w-full flex justify-end items-center gap-1" />
-              <FooterLink href="https://x.com/rafdotworks" label="X" external className="block w-full flex justify-end items-center gap-1" />
-            </nav>
-          </div>
-
-          {/* Row 2, Col 1: empty */}
-          <div className="hidden md:block" aria-hidden />
-
-          {/* Row 2, Col 3: empty */}
-          <div className="hidden md:block" aria-hidden />
-
-          {/* Row 3, Col 1: empty */}
-          <div className="hidden md:block" aria-hidden />
-
-          {/* Row 3, Col 3: empty */}
-          <div className="hidden md:block" aria-hidden />
         </div>
       </main>
 

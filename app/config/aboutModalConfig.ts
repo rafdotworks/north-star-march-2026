@@ -43,18 +43,14 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Origins",
       paragraphs: [
         {
-          text: "I spent the first 20 years of my life in the Amalfi Coast, Italy.",
+          text: "Hello, I am Raf. I've been shipping code since before the tooling made it easy.",
           isHighlighted: true,
         },
         {
-            text: "I started in design from software engineer + hospitality excellence through curiosity and obligation.",
-          },
-        {
-          text: "I care about clarity, systems, and the stories products tell.",
+          text: "Grew up on the Amalfi Coast. Based in Toronto.",
         },
         {
-          text: "You can find me on {linkedin}, on {x}, and always via email at {email}.",
-
+          text: "You can find me on {linkedin}, on {x}, and at {email}.",
         },
       ],
     },
@@ -62,8 +58,14 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Craft",
       paragraphs: [
         {
-          text: "Previously designed Skills AI at Obvious. Joined Theoriq as founding designer. Held senior roles at Coinbase and Voiceflow. Before that, design systems at Zalando and more. Background in software engineering.",
+          text: "Studied software engineering in Naples, then moved into design where I won some awards. My career began in hospitality, brand and web design. Early on, an internship at Apple as a UX/UI Designer.",
           isHighlighted: true,
+        },
+        {
+          text: "I was most recently Founding designer at Theoriq, leading all the product design, design engineering front-end and marketing efforts. Before that, Obvious, Coinbase, Voiceflow, and more.",
+        },
+        {
+          text: "I care about systems that feel fast, logical, and respectful of attention.",
         },
       ],
     },
@@ -71,17 +73,8 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Presence",
       paragraphs: [
         {
-          text: `I\u2019m based in Toronto, Canada and frequently in <span class="line-through opacity-50">Lisbon and NYC</span>.`,
+          text: "I write, photograph, and spend time on a yoga mat or chasing light through workspaces.",
           isHighlighted: true,
-        },
-        {
-          text: "I enjoy thoughtful workspaces. How they influence focus, energy, and flow.",
-        },
-        {
-          text: "I\u2019m usually on a yoga mat. I\u2019ve been vegetarian for as long as I can remember.",
-        },
-        {
-          text: "Personality-wise, I\u2019m an ENTJ, a Red\u2013Yellow on the Color Code, and an Enneagram 8.",
         },
       ],
     },
@@ -113,9 +106,6 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
     },
   },
   principles: [
-    "Work hard, be kind, spread joy.",
-    "How you do anything is how you do everything.",
-    "What feels right > what charts well.",
-    "Always happy, never satisfied.",
+    "Systems that feel fast, logical, and respectful of attention.",
   ],
 };
