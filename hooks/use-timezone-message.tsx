@@ -27,7 +27,7 @@
  * @returns {string} User-friendly timezone and weather message
  */
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { getCurrentLocation } from "@/app/config/locationConfig"
 
 /**
@@ -116,10 +116,10 @@ export function useTimezoneMessage(): string {
 
   /**
    * Calculates timezone difference and generates timezone portion of message.
-   * 
+   *
    * @returns {string} Timezone difference message (e.g., "3 hours ahead", "in your timezone")
    */
-  const calculateTimezoneDifference = (): string => {
+  const calculateTimezoneDifference = useCallback((): string => {
     const now = new Date()
 
     // Get target location time using proper timezone-aware formatting
@@ -129,7 +129,7 @@ export function useTimezoneMessage(): string {
       hour12: false,
       minute: "2-digit",
     })
-    
+
     const targetParts = targetFormatter.formatToParts(now)
     const targetHour = parseInt(targetParts.find(p => p.type === "hour")?.value || "0", 10)
     const targetMinute = parseInt(targetParts.find(p => p.type === "minute")?.value || "0", 10)
@@ -159,7 +159,7 @@ export function useTimezoneMessage(): string {
     } else {
       return `${Math.abs(differenceHours)} hour${Math.abs(differenceHours) !== 1 ? 's' : ''} behind`
     }
-  }
+  }, [targetTimezone])
 
   // Effect 1: Update timezone difference every minute
   useEffect(() => {
@@ -169,12 +169,12 @@ export function useTimezoneMessage(): string {
 
     // Calculate immediately on mount
     updateTimezone()
-    
+
     // Update every minute
     const interval = setInterval(updateTimezone, TIMEZONE_UPDATE_INTERVAL)
 
     return () => clearInterval(interval)
-  }, [targetTimezone]) // Re-run if timezone changes
+  }, [targetTimezone, calculateTimezoneDifference])
 
   // Effect 2: Fetch weather data with AbortController for cleanup
   useEffect(() => {
@@ -262,7 +262,7 @@ export function useLocationWeather(): LocationWeatherData {
   const [timezoneDiffShort, setTimezoneDiffShort] = useState("")
   const [isLoading, setIsLoading] = useState(true)
 
-  const calculateTimezoneDifference = (): { long: string; short: string } => {
+  const calculateTimezoneDifference = useCallback((): { long: string; short: string } => {
     const now = new Date()
 
     const targetFormatter = new Intl.DateTimeFormat("en-US", {
@@ -302,7 +302,7 @@ export function useLocationWeather(): LocationWeatherData {
         short: `${differenceHours}h`
       }
     }
-  }
+  }, [targetTimezone])
 
   // Effect 1: Update timezone difference
   useEffect(() => {
@@ -316,7 +316,7 @@ export function useLocationWeather(): LocationWeatherData {
     const interval = setInterval(updateTimezone, TIMEZONE_UPDATE_INTERVAL)
 
     return () => clearInterval(interval)
-  }, [targetTimezone])
+  }, [targetTimezone, calculateTimezoneDifference])
 
   // Effect 2: Fetch weather data
   useEffect(() => {
