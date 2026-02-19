@@ -89,6 +89,17 @@
   .scrollbar-gutter-stable {
     scrollbar-gutter: stable;
   }
+
+  /* Side tray About text: vertical opacity fade (top full, bottom subtler).
+   * Used by app/components/page-specific/SideTray.tsx for About content only. */
+  .tray-about-text-fade {
+    mask-image: linear-gradient(to bottom, black 0%, black 25%, rgba(0, 0, 0, 0.9) 60%, rgba(0, 0, 0, 0.55) 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 25%, rgba(0, 0, 0, 0.9) 60%, rgba(0, 0, 0, 0.55) 100%);
+    mask-size: 100% 100%;
+    -webkit-mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+  }
   
   /* Heading rhythm: Progressive spacing based on heading level */
   .rhythm-heading h1 {

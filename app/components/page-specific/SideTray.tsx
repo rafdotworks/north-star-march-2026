@@ -1156,67 +1156,69 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
           exit="exit"
           className="flex flex-col h-full justify-between"
         >
-          {/* Text Content Section - at top */}
-          <div className="space-y-6">
-            {/* 1. Opening (primary) */}
-            <p className="text-base text-foreground leading-relaxed transition-colors duration-200 font-medium">
-              Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
-            </p>
+          {/* Text Content Section - at top (fade: full opacity at top, subtler toward bottom) */}
+          <div className="tray-about-text-fade">
+            <div className="space-y-6">
+              {/* 1. Opening (primary) */}
+              <p className="text-base text-foreground leading-relaxed transition-colors duration-200 font-medium">
+                Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
+              </p>
 
-            {/* Body: background, roles, values, place, personal */}
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
-              </p>
-              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                My career began in hospitality, brand and web design.
-              </p>
-              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
-              </p>
-              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                I was most recently Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
-              </p>
-              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                Before that: <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink>, and more.
-              </p>
-              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                I care about systems that feel fast, logical, and respectful of attention.
-              </p>
-              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                Grew up on the Amalfi Coast. Based in Toronto.
-              </p>
-              <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                I{" "}
-                {onSwitchToWriting ? (
-                  <motion.span
-                    onClick={onSwitchToWriting}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault()
-                        onSwitchToWriting()
-                      }
-                    }}
-                    className={`cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`}
-                    style={{ WebkitTapHighlightColor: "transparent" }}
-                    whileTap={{ scale: 0.97, opacity: 0.85 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    write
-                  </motion.span>
-                ) : (
-                  "write"
-                )}
-                , photograph, and spend time on a yoga mat or chasing light through workspaces.
+              {/* Body: background, roles, values, place, personal */}
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                  Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
+                </p>
+                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                  My career began in hospitality, brand and web design.
+                </p>
+                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                  Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
+                </p>
+                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                  I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+                </p>
+                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                  Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
+                </p>
+                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                  I care about systems that feel fast, logical, and respectful of attention.
+                </p>
+                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                  Grew up on the Amalfi Coast. Based in Toronto.
+                </p>
+                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                  I{" "}
+                  {onSwitchToWriting ? (
+                    <motion.span
+                      onClick={onSwitchToWriting}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault()
+                          onSwitchToWriting()
+                        }
+                      }}
+                      className={`cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`}
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                      whileTap={{ scale: 0.97, opacity: 0.85 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      write
+                    </motion.span>
+                  ) : (
+                    "write"
+                  )}
+                  , photograph, and spend time on a yoga mat or chasing light through workspaces.
+                </p>
+              </div>
+
+              {/* Location/weather (label style, just above links) */}
+              <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] opacity-60 transition-colors duration-200 pt-2">
+                Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
               </p>
             </div>
-
-            {/* Location/weather (label style, just above links) */}
-            <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] opacity-60 transition-colors duration-200 pt-2">
-              Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
-            </p>
           </div>
 
           {/* Contact Links Section - at bottom */}
@@ -1518,14 +1520,15 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                     color: trayColors.fg,
                   }}
                 >
-                  <div className="h-full flex flex-col">
+                    <div className="h-full flex flex-col">
                     <div className="flex-1 overflow-y-auto px-8 pt-16 pb-8 flex flex-col">
                       <div className="flex flex-col min-h-full justify-between">
-                        <div className="space-y-6">
-                          <p className="text-base text-foreground leading-relaxed transition-colors duration-200 font-medium">
-                            Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
-                          </p>
-                          <div className="space-y-4">
+                        <div className="tray-about-text-fade">
+                          <div className="space-y-6">
+                            <p className="text-base text-foreground leading-relaxed transition-colors duration-200 font-medium">
+                              Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
+                            </p>
+                            <div className="space-y-4">
                             <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
                               Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
                             </p>
@@ -1536,10 +1539,10 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                               Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
                             </p>
                             <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              I was most recently Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+                              I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
                             </p>
                             <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              Before that: <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink>, and more.
+                              Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
                             </p>
                             <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
                               I care about systems that feel fast, logical, and respectful of attention.
@@ -1573,9 +1576,10 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                               , photograph, and spend time on a yoga mat or chasing light through workspaces.
                             </p>
                           </div>
-                          <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] opacity-60 transition-colors duration-200 pt-2">
-                            Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
-                          </p>
+                            <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] opacity-60 transition-colors duration-200 pt-2">
+                              Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
+                            </p>
+                          </div>
                         </div>
                         <nav className="flex flex-col gap-1 group/nav pt-2">
                           <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
