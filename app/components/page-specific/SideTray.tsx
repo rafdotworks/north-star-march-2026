@@ -614,6 +614,9 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
   const [isWritingPanelExiting, setIsWritingPanelExiting] = useState(false)
   const showStackedFrontPanel = isStacked || isWritingPanelExiting
 
+  /** When true, whole tray is animating out; onClose() is called after exit completes to avoid flash of list/about */
+  const [isTrayExiting, setIsTrayExiting] = useState(false)
+
   const handleCloseWritingPanel = useCallback(() => {
     if (!onCloseWritingOnly) return
     if (isStacked) {
@@ -864,8 +867,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
   }, [articleId, loadArticle, resetContent, isWritingMode, isAboutMode, isMobile, saveScrollPosition, restoreScrollPosition])
 
   // ============================================================================
-  // BODY SCROLL: intentionally not locked on desktop so the page can still scroll
-  // when the tray is open. Mobile scroll locking is handled by react-modal-sheet.
+  // BODY SCROLL: Lock when tray is open is handled in app/page.tsx (overflow: hidden).
   // ============================================================================
 
   // ============================================================================
@@ -951,11 +953,17 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
    * Only active when tray is open (articleId is not null).
    * Removes event listener when tray closes to prevent memory leaks.
    */
+  /** Start tray exit animation, then call onClose when done (avoids flash of list/about when closing from article view) */
+  const handleTrayCloseRequest = useCallback(() => {
+    if (isTrayExiting) return
+    setIsTrayExiting(true)
+  }, [isTrayExiting])
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
         if (showStackedFrontPanel && onCloseWritingOnly) handleCloseWritingPanel()
-        else onClose()
+        else handleTrayCloseRequest()
       }
     }
 
@@ -963,7 +971,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
       document.addEventListener("keydown", handleEscape)
       return () => document.removeEventListener("keydown", handleEscape)
     }
-  }, [shouldShowTray, showStackedFrontPanel, onClose, onCloseWritingOnly, handleCloseWritingPanel])
+  }, [shouldShowTray, showStackedFrontPanel, onCloseWritingOnly, handleCloseWritingPanel, handleTrayCloseRequest])
 
   // ============================================================================
   // MARKDOWN RENDERING COMPONENTS
@@ -1156,38 +1164,36 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
           exit="exit"
           className="flex flex-col h-full justify-between"
         >
-          {/* Text Content Section - at top (fade: full opacity at top, subtler toward bottom) */}
-          <div className="tray-about-text-fade">
-            <div className="space-y-6">
-              {/* 1. Opening (primary) */}
-              <p className="text-base text-foreground leading-relaxed transition-colors duration-200 font-medium">
+          {/* Text Content Section — hero-like minimalism: one scale, opacity hierarchy, structural spacing */}
+          <div className="tray-about-text-fade max-w-[600px]">
+            <div className="flex flex-col gap-1 text-sm leading-relaxed transition-colors duration-200">
+              <p className="font-edu-marist text-foreground">
                 Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
               </p>
-
-              {/* Body: background, roles, values, place, personal */}
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+              <div className="mt-6 flex flex-col gap-1">
+                <p className="text-foreground opacity-90">
                   Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
                 </p>
-                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                  My career began in hospitality, brand and web design.
+                <p className="text-foreground opacity-90">
+                  My career began in hospitality, brand and web design. Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
                 </p>
-                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                  Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
-                </p>
-                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+              </div>
+              <div className="mt-6 flex flex-col gap-1">
+                <p className="text-foreground opacity-80">
                   I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
                 </p>
-                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                <p className="text-foreground opacity-80">
                   Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
                 </p>
-                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+              </div>
+              <div className="mt-6 flex flex-col gap-1">
+                <p className="text-foreground opacity-70">
                   I care about systems that feel fast, logical, and respectful of attention.
                 </p>
-                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                <p className="text-foreground opacity-70">
                   Grew up on the Amalfi Coast. Based in Toronto.
                 </p>
-                <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
+                <p className="text-foreground opacity-70">
                   I{" "}
                   {onSwitchToWriting ? (
                     <motion.span
@@ -1213,9 +1219,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                   , photograph, and spend time on a yoga mat or chasing light through workspaces.
                 </p>
               </div>
-
-              {/* Location/weather (label style, just above links) */}
-              <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] opacity-60 transition-colors duration-200 pt-2">
+              <p className="mt-6 text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
                 Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
               </p>
             </div>
@@ -1453,9 +1457,16 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
   return (
     <>
       {/* Single persistent tray - content switches inside via nested AnimatePresence */}
+      {/* Use (shouldShowTray || isTrayExiting) so we stay mounted during our own exit and don't flash list/about */}
       <AnimatePresence>
-        {shouldShowTray && (
-          <>
+        {(shouldShowTray || isTrayExiting) && (
+          <motion.div
+            key="tray-wrapper"
+            initial={false}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0 } }}
+            className="contents"
+          >
             {/* Backdrop - always show to enable click-outside-to-close */}
             <motion.div
               ref={mainBackdropRef}
@@ -1466,9 +1477,9 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
               }}
               variants={backdropVariants}
               initial="hidden"
-              animate="visible"
+              animate={isTrayExiting ? "exit" : "visible"}
               exit="exit"
-              onClick={showStackedFrontPanel && onCloseWritingOnly ? handleCloseWritingPanel : onClose}
+              onClick={showStackedFrontPanel && onCloseWritingOnly ? handleCloseWritingPanel : handleTrayCloseRequest}
               onAnimationStart={(definition) => {
                 // Disable pointer events when exit animation starts
                 // This allows hover events to work immediately after closing
@@ -1485,8 +1496,15 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
               className="fixed right-0 top-0 h-full w-full md:w-[500px] transition-colors duration-200"
               variants={trayVariants}
               initial="hidden"
-              animate="visible"
+              animate={isTrayExiting ? "exit" : "visible"}
               exit="exit"
+              onAnimationComplete={(definition) => {
+                if (isTrayExiting && definition === "exit") {
+                  onClose()
+                  // Unmount after parent has cleared state; wrapper exit is instant so no flash
+                  setTimeout(() => setIsTrayExiting(false), 0)
+                }
+              }}
               style={{
                 backgroundColor: trayColors.bg,
                 color: trayColors.fg,
@@ -1523,60 +1541,61 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                     <div className="h-full flex flex-col">
                     <div className="flex-1 overflow-y-auto px-8 pt-16 pb-8 flex flex-col">
                       <div className="flex flex-col min-h-full justify-between">
-                        <div className="tray-about-text-fade">
-                          <div className="space-y-6">
-                            <p className="text-base text-foreground leading-relaxed transition-colors duration-200 font-medium">
+                        <div className="tray-about-text-fade max-w-[600px]">
+                          <div className="flex flex-col gap-1 text-sm leading-relaxed transition-colors duration-200">
+                            <p className="font-edu-marist text-foreground">
                               Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
                             </p>
-                            <div className="space-y-4">
-                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
-                            </p>
-                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              My career began in hospitality, brand and web design.
-                            </p>
-                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
-                            </p>
-                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
-                            </p>
-                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
-                            </p>
-                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              I care about systems that feel fast, logical, and respectful of attention.
-                            </p>
-                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              Grew up on the Amalfi Coast. Based in Toronto.
-                            </p>
-                            <p className="text-sm text-muted-foreground leading-[1.5] transition-colors duration-200">
-                              I{" "}
-                              {onSwitchToWriting ? (
-                                <motion.span
-                                  onClick={onSwitchToWriting}
-                                  role="button"
-                                  tabIndex={0}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                      e.preventDefault()
-                                      onSwitchToWriting()
-                                    }
-                                  }}
-                                  className={`cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`}
-                                  style={{ WebkitTapHighlightColor: "transparent" }}
-                                  whileTap={{ scale: 0.97, opacity: 0.85 }}
-                                  transition={{ duration: 0.15 }}
-                                >
-                                  write
-                                </motion.span>
-                              ) : (
-                                "write"
-                              )}
-                              , photograph, and spend time on a yoga mat or chasing light through workspaces.
-                            </p>
-                          </div>
-                            <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] opacity-60 transition-colors duration-200 pt-2">
+                            <div className="mt-6 flex flex-col gap-1">
+                              <p className="text-foreground opacity-90">
+                                Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
+                              </p>
+                              <p className="text-foreground opacity-90">
+                                My career began in hospitality, brand and web design. Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
+                              </p>
+                            </div>
+                            <div className="mt-6 flex flex-col gap-1">
+                              <p className="text-foreground opacity-80">
+                                I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+                              </p>
+                              <p className="text-foreground opacity-80">
+                                Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
+                              </p>
+                            </div>
+                            <div className="mt-6 flex flex-col gap-1">
+                              <p className="text-foreground opacity-70">
+                                I care about systems that feel fast, logical, and respectful of attention.
+                              </p>
+                              <p className="text-foreground opacity-70">
+                                Grew up on the Amalfi Coast. Based in Toronto.
+                              </p>
+                              <p className="text-foreground opacity-70">
+                                I{" "}
+                                {onSwitchToWriting ? (
+                                  <motion.span
+                                    onClick={onSwitchToWriting}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault()
+                                        onSwitchToWriting()
+                                      }
+                                    }}
+                                    className={`cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`}
+                                    style={{ WebkitTapHighlightColor: "transparent" }}
+                                    whileTap={{ scale: 0.97, opacity: 0.85 }}
+                                    transition={{ duration: 0.15 }}
+                                  >
+                                    write
+                                  </motion.span>
+                                ) : (
+                                  "write"
+                                )}
+                                , photograph, and spend time on a yoga mat or chasing light through workspaces.
+                              </p>
+                            </div>
+                            <p className="mt-6 text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
                               Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
                             </p>
                           </div>
@@ -1870,8 +1889,8 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
             )}
             </div>
           </motion.div>
-        </>
-      )}
+        </motion.div>
+        )}
       </AnimatePresence>
     </>
   )

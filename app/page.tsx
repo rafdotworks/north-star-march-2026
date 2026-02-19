@@ -176,6 +176,19 @@ export default function Page() {
     }
   }, [isWritingOpen, selectedWritingArticle])
 
+  // Lock body scroll when side tray is open (writing or about)
+  const trayOpen = isWritingOpen || isAboutOpen
+  useEffect(() => {
+    if (trayOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [trayOpen])
+
   // Effect 3: Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
