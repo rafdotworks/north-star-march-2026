@@ -13,6 +13,7 @@
  *
  * SPACING:
  * - Default: mb-[16vh] between sections
+ * - tight: mb-[8vh] for reduced gap (e.g. between work sections)
  * - last: use padding-bottom instead of margin so page end has no extra gap
  *
  * Used by: app/page.tsx
@@ -28,6 +29,8 @@ interface SectionProps {
   last?: boolean
   /** When true, use wider max-width (1600px) and moderate desktop padding for more image space */
   wide?: boolean
+  /** "tight" = smaller bottom margin (8vh); "default" = 16vh */
+  spacing?: "default" | "tight"
   className?: string
 }
 
@@ -35,12 +38,13 @@ const SECTION_PADDING = "px-3 md:px-20"
 const SECTION_PADDING_WIDE = "px-3 md:px-16"
 const SECTION_GAP = "gap-x-[2.5vw]"
 const SECTION_SPACING = "mb-[16vh]"
+const SECTION_SPACING_TIGHT = "mb-[8vh]"
 
 /** Shared content-band constants for wide layout (work sections + footer). Single source of truth for horizontal edges. */
 export const CONTENT_AREA_WIDE_MAX_WIDTH = "max-w-[1600px]"
 export const CONTENT_AREA_WIDE_PADDING = SECTION_PADDING_WIDE
 
-export function Section({ children, columns = 3, last = false, wide = false, className = "" }: SectionProps) {
+export function Section({ children, columns = 3, last = false, wide = false, spacing = "default", className = "" }: SectionProps) {
   const gridCols =
     columns === 2
       ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
@@ -48,10 +52,11 @@ export function Section({ children, columns = 3, last = false, wide = false, cla
 
   const maxWidth = wide ? CONTENT_AREA_WIDE_MAX_WIDTH : "max-w-[1400px]"
   const padding = wide ? SECTION_PADDING_WIDE : SECTION_PADDING
+  const bottomSpacing = last ? "pb-[16vh]" : (spacing === "tight" ? SECTION_SPACING_TIGHT : SECTION_SPACING)
 
   return (
     <section
-      className={`w-full ${maxWidth} mx-auto ${padding} ${gridCols} ${SECTION_GAP} grid items-start ${last ? "pb-[16vh]" : SECTION_SPACING} ${className}`.trim()}
+      className={`w-full ${maxWidth} mx-auto ${padding} ${gridCols} ${SECTION_GAP} grid items-start ${bottomSpacing} ${className}`.trim()}
     >
       {children}
     </section>

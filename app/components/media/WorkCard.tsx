@@ -24,6 +24,7 @@
 import React, { memo, useMemo, useCallback, useState, useRef, useEffect } from "react"
 import { PictureImage } from "./PictureImage"
 import { DragCarousel } from "./DragCarousel"
+import { ImageProtectionWrapper } from "./ImageProtectionWrapper"
 import type { InterleavedCaption } from "@/app/config/portfolioConfig"
 
 /** Base z-index for sticky label stacking */
@@ -159,11 +160,6 @@ export const WorkCard = memo(function WorkCard({
     }
   }, [description, interleavedDescription])
 
-  // Memoize event handler to prevent new function creation on each render
-  const preventDefault = useCallback((e: React.SyntheticEvent) => {
-    e.preventDefault()
-  }, [])
-
   // Handle image load errors gracefully
   const handleImageError = useCallback((src: string) => {
     setFailedImages(prev => new Set(prev).add(src))
@@ -260,11 +256,9 @@ export const WorkCard = memo(function WorkCard({
                   const hasFailed = failedImages.has(src)
 
                   return (
-                    <div
+                    <ImageProtectionWrapper
                       key={`${src}-0`}
-                      className="relative w-full select-none"
-                      onDragStart={preventDefault}
-                      onContextMenu={preventDefault}
+                      className="relative w-full"
                     >
                       {isVideo ? (
                         <LazyVideo src={src} />
@@ -291,7 +285,7 @@ export const WorkCard = memo(function WorkCard({
                           onError={() => handleImageError(src)}
                         />
                       )}
-                    </div>
+                    </ImageProtectionWrapper>
                   )
                 })()}
               </div>
@@ -331,11 +325,7 @@ export const WorkCard = memo(function WorkCard({
 
                 {/* Image */}
                 <div className="mt-6 md:mt-3">
-                  <div
-                    className="relative w-full select-none"
-                    onDragStart={preventDefault}
-                    onContextMenu={preventDefault}
-                  >
+                  <ImageProtectionWrapper className="relative w-full">
                     {isVideo ? (
                       <LazyVideo src={src} />
                     ) : hasFailed ? (
@@ -361,7 +351,7 @@ export const WorkCard = memo(function WorkCard({
                         onError={() => handleImageError(src)}
                       />
                     )}
-                  </div>
+                  </ImageProtectionWrapper>
                 </div>
               </React.Fragment>
             )
@@ -421,11 +411,9 @@ export const WorkCard = memo(function WorkCard({
                 const hasFailed = failedImages.has(src)
 
                 return (
-                  <div
+                  <ImageProtectionWrapper
                     key={`${src}-${idx}`}
-                    className="relative w-[85vw] sm:w-full sm:max-w-[800px] flex-shrink-0 select-none"
-                    onDragStart={preventDefault}
-                    onContextMenu={preventDefault}
+                    className="relative w-[85vw] sm:w-full sm:max-w-[800px] flex-shrink-0"
                   >
                     {isVideo ? (
                       <LazyVideo src={src} />
@@ -453,7 +441,7 @@ export const WorkCard = memo(function WorkCard({
                         onError={() => handleImageError(src)}
                       />
                     )}
-                  </div>
+                  </ImageProtectionWrapper>
                 )
               })}
             </DragCarousel>
@@ -464,11 +452,9 @@ export const WorkCard = memo(function WorkCard({
                 const hasFailed = failedImages.has(src)
 
                 return (
-                  <div
+                  <ImageProtectionWrapper
                     key={`${src}-${idx}`}
-                    className="relative w-full select-none"
-                    onDragStart={preventDefault}
-                    onContextMenu={preventDefault}
+                    className="relative w-full"
                   >
                     {isVideo ? (
                       <LazyVideo src={src} />
@@ -496,7 +482,7 @@ export const WorkCard = memo(function WorkCard({
                         onError={() => handleImageError(src)}
                       />
                     )}
-                  </div>
+                  </ImageProtectionWrapper>
                 )
               })}
             </div>

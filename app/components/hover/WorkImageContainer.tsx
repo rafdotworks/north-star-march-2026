@@ -24,6 +24,7 @@
 import React, { useState } from "react";
 import { PictureImage } from "../media/PictureImage";
 import { motion } from "framer-motion";
+import { ImageProtectionWrapper } from "../media/ImageProtectionWrapper";
 import { WorkImageHover } from "./WorkImageHover";
 import { VideoPlayButton } from "./VideoPlayButton";
 import { VimeoInlineEmbed } from "../media/VimeoInlineEmbed";
@@ -218,21 +219,24 @@ export const WorkImageContainer: React.FC<WorkImageContainerProps> = ({
       {isInlineVimeo ? (
         <VimeoInlineEmbed videoUrl={src} className="w-full h-full" />
       ) : (
-        <PictureImage
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          className={imageClasses}
-          style={imageStyle}
-          onLoad={onLoad}
-          loading={loading}
-          priority={priority}
-          placeholder={placeholder}
-          blurDataURL={blurDataURL}
-          sizes={sizes}
-          quality={quality}
-        />
+        <ImageProtectionWrapper className="relative w-full h-full">
+          <PictureImage
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            className={imageClasses}
+            style={imageStyle}
+            onLoad={onLoad}
+            loading={loading}
+            priority={priority}
+            placeholder={placeholder}
+            blurDataURL={blurDataURL}
+            sizes={sizes}
+            quality={quality}
+            draggable={false}
+          />
+        </ImageProtectionWrapper>
       )}
       {!isInlineVimeo && (
         <motion.div

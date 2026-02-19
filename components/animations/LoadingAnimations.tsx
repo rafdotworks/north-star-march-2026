@@ -384,6 +384,23 @@ export const LOADING_SEQUENCE = {
   STAGGER_DELAY: 0.16, // Stagger between elements
 } as const;
 
+// Sequential load blur: each hero element focuses independently, in reading order.
+// Pure blur + opacity only — no positional movement, minimal and undistracting.
+export const LOAD_FOCUS = {
+  BLUR_PX: 5,           // Very subtle — barely-there reveal, no visual tension
+  DURATION: 1.5,        // Longer settling feels graceful
+  EASE: EASING.primary, // [0.12, 1, 0.28, 1] — fast-start, long luxurious tail
+  STAGGER: 0.18,        // Delay between each sequential element
+} as const;
+
+// Gentle single-container hero load: one soft blur + opacity for the whole hero (no stagger).
+export const HERO_LOAD_GENTLE = {
+  BLUR_PX: 8,
+  DURATION: 1.2,
+  EASE: EASING.smooth,
+  INITIAL_OPACITY: 0.92,
+} as const;
+
 // Text Reveal Component
 interface TextRevealProps extends MotionDivWithChildren {
   delay?: number;
