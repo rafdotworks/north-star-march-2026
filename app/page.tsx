@@ -346,7 +346,7 @@ export default function Page() {
 
       <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          {/* <Image src="/work/q2-26-works/walm/walm-1.png" alt="Walmart: AI recommendations or product interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
+          <Image src="/work/q2-26-works/walm/walm-1.png" alt="Walmart: AI recommendations or product interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> 
           {/* <Image src="/work/q2-26-works/walm/walm-2.png" alt="Walmart: recommendations experience or dashboard" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
           <Image src="/work/q2-26-works/walm/walm-3.png" alt="Walmart: AI-powered recommendations interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           {/* <Image src="/work/q2-26-works/walm/walm-4.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
