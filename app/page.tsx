@@ -301,7 +301,7 @@ export default function Page() {
                 <p className="hidden md:block text-sm md:text-xs leading-relaxed mt-1">
                   <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more</span>
                 </p>
-                <div className="hidden md:block mt-2 text-sm md:text-xs leading-relaxed font-edu-marist">
+                <div className="hidden md:block mt-6 text-sm md:text-xs leading-relaxed font-edu-marist">
                   <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
                     <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
                     <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
@@ -340,7 +340,7 @@ export default function Page() {
           >
             <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious: chat interface with workflow progress and “remember this workflow” prompt" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
           </motion.div>
-          <Image src="/work/q2-26-works/obv/obv-2.png" alt="Obvious: Skills dashboard with “Teach once” and trending workflow cards" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
+          {/* <Image src="/work/q2-26-works/obv/obv-2.png" alt="Obvious: Skills dashboard with “Teach once” and trending workflow cards" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} /> */}
         </div>
       </Section>
 
@@ -366,7 +366,7 @@ export default function Page() {
       <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           <Image src="/work/q2-26-works/cb/cb-1.png" alt="Coinbase Developer Platform: API docs or developer tools" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/cb/cb-2.png" alt="Coinbase Developer Platform: dashboard or project overview" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          {/* <Image src="/work/q2-26-works/cb/cb-2.png" alt="Coinbase Developer Platform: dashboard or project overview" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
           <Image src="/work/q2-26-works/cb/cb-3.png" alt="Coinbase Developer Platform: SQL Playground or query interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           <Image src="/work/q2-26-works/cb/cb-4.png" alt="Coinbase Developer Platform: product surface or flow" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           <Image src="/work/q2-26-works/cb/cb-5.png" alt="Coinbase Developer Platform: developer experience or onboarding" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
@@ -376,7 +376,9 @@ export default function Page() {
       <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           <Image src="/work/q2-26-works/vf/vf-1.png" alt="Voiceflow: conversation design or dialog editor" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/vf/vf-2.png" alt="Voiceflow: agent builder or early activation flow" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          {/* <Image src="/work/q2-26-works/vf/vf-2.png" alt="Voiceflow: agent builder or early activation flow" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
+          <Image src="/work/q2-26-works/vf/vf-3.png" alt="Voiceflow: agent builder or early activation flow" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />  
+          <Image src="/work/q2-26-works/vf/vf-4.png" alt="Voiceflow: agent builder or early activation flow" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
