@@ -360,6 +360,8 @@ export default function Page() {
           )}
           <Image src="/work/q2-26-works/theo/theo-2.png" alt="Theoriq: Infinity Studio or Hub interface for AI agents" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           <Image src="/work/q2-26-works/theo/theo-3.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/theo/theo-4.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/theo/theo-6.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
@@ -385,7 +387,9 @@ export default function Page() {
       <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           <Image src="/work/q2-26-works/atl/atl-1.png" alt="Atlas: crypto marketplace or NFT collections" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/atl/atl-2.png" alt="Atlas: trading, borrowing, or analytics view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/atl/atl-2.png" alt="Atlas: trading, borrowing, or analytics view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> 
+          <Image src="/work/q2-26-works/atl/atl-3.png" alt="Atlas: trading, borrowing, or analytics view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/atl/atl-4.png" alt="Atlas: trading, borrowing, or analytics view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
@@ -393,6 +397,8 @@ export default function Page() {
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           <Image src="/work/q2-26-works/zl/zl-1.png" alt="Zalando B2B: design system documentation or guidelines" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           <Image src="/work/q2-26-works/zl/zl-2.png" alt="Zalando B2B: design system components or patterns" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/zl/zl-3.png" alt="Zalando B2B: design system components or patterns" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          <Image src="/work/q2-26-works/zl/zl-6.png" alt="Zalando B2B: design system components or patterns" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
