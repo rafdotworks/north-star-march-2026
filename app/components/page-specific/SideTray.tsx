@@ -1180,10 +1180,14 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                   My career began in hospitality, brand and web design.
                 </p>
               </div>
-              <div className="mt-8 flex flex-col gap-1">
+              <div className="mt-8 flex flex-col gap-4">
                 <p className="text-foreground opacity-80">
-                  I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
-                
+                  I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
+                </p>
+                <p className="text-foreground opacity-80">
+                  I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+                </p>
+                <p className="text-foreground opacity-80">
                   Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
                 </p>
               </div>
@@ -1536,9 +1540,12 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                                 My career began in hospitality, brand and web design. Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
                               </p>
                             </div>
-                            <div className="mt-6 flex flex-col gap-1">
+                            <div className="mt-6 flex flex-col gap-4">
                               <p className="text-foreground opacity-80">
-                                I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+                                I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
+                              </p>
+                              <p className="text-foreground opacity-80">
+                                I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
                               </p>
                               <p className="text-foreground opacity-80">
                                 Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
