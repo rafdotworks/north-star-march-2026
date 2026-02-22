@@ -3,9 +3,18 @@
 import React, { memo } from "react"
 
 /**
- * Shared class string for "subtle underline" hover: underline always present,
- * decoration color transparent by default, fades in on hover. Used by Raf V.,
- * Previously… links, and SideTray write/Raf V. for consistent hero/tray link styling.
+ * Hero/tray primary CTA underline: visible by default (muted), brighter on hover.
+ * Used by the hero "Raf V." button and optionally the SideTray "write" link.
+ * Used by: app/page.tsx, app/components/page-specific/SideTray.tsx
+ */
+export const HERO_UNDERLINE_CLASSES =
+  "underline underline-offset-2 [text-decoration-color:color-mix(in_srgb,currentColor_50%,transparent)] hover:[text-decoration-color:currentColor] transition-[text-decoration-color] duration-300 ease-out"
+
+/**
+ * Shared class string for "subtle underline": underline always present,
+ * decoration color transparent by default, fades in on hover. Used by
+ * Previously… links (Obvious, Theoriq, etc.) and other subtle inline links.
+ * Used by: app/page.tsx (inline company links), SideTray About content
  */
 export const SUBTLE_UNDERLINE_CLASSES =
   "underline underline-offset-2 [text-decoration-color:transparent] hover:[text-decoration-color:color-mix(in_srgb,currentColor_50%,transparent)] transition-[text-decoration-color] duration-300 ease-out"

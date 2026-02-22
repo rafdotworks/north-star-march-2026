@@ -1,10 +1,13 @@
+/**
+ * Minimal portfolio homepage: hero, work gallery, footer, writing/about SideTray.
+ */
 "use client"
 
-import React, { useEffect, useState, useRef, useMemo } from "react"
+import React, { useCallback, useEffect, useState, useRef, useMemo } from "react"
 import Image from "next/image"
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion"
 import FooterLink from "@/app/components/layout/FooterLink"
-import InlineExternalLink, { SUBTLE_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
+import InlineExternalLink, { HERO_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
 import { Section, CONTENT_AREA_WIDE_MAX_WIDTH, CONTENT_AREA_WIDE_PADDING } from "@/app/components/layout/Section"
 import { VimeoInlineEmbed } from "@/app/components/media/VimeoInlineEmbed"
 import SideTray from "@/app/components/page-specific/SideTray"
@@ -23,6 +26,17 @@ export default function Page() {
 
   // About tray state
   const [isAboutOpen, setIsAboutOpen] = useState(false)
+
+  /** Open About tray and close Writing; shared by click and touch so mobile tap works inside transformed hero */
+  const openAboutTray = useCallback(() => {
+    setIsAboutOpen(true)
+    setIsWritingOpen(false)
+    setSelectedWritingArticle(null)
+  }, [])
+
+  /** Touch start position for tap detection (avoid treating scroll as tap) */
+  const aboutTriggerTouchStart = useRef<{ x: number; y: number } | null>(null)
+  const TAP_MOVE_THRESHOLD_PX = 10
 
   // Theme inversion: triggered when first Theoriq images enter viewport (after hero blur)
   const [themeInverted, setThemeInverted] = useState(false)
@@ -261,27 +275,37 @@ export default function Page() {
           {/* Col 1: Identity */}
           <div className="mb-4 md:mb-0 text-left">
             <p className="text-sm leading-relaxed">
-              <span
-                onClick={() => {
-                  setIsAboutOpen(true)
-                  setIsWritingOpen(false)
-                  setSelectedWritingArticle(null)
+              <button
+                type="button"
+                onClick={openAboutTray}
+                onTouchStart={(e) => {
+                  const t = e.targetTouches[0]
+                  if (t) aboutTriggerTouchStart.current = { x: t.clientX, y: t.clientY }
                 }}
-                role="button"
-                tabIndex={0}
+                onTouchEnd={(e) => {
+                  const start = aboutTriggerTouchStart.current
+                  aboutTriggerTouchStart.current = null
+                  if (!start) return
+                  const t = e.changedTouches[0]
+                  if (!t) return
+                  const dx = Math.abs(t.clientX - start.x)
+                  const dy = Math.abs(t.clientY - start.y)
+                  if (dx <= TAP_MOVE_THRESHOLD_PX && dy <= TAP_MOVE_THRESHOLD_PX) {
+                    e.preventDefault()
+                    openAboutTray()
+                  }
+                }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault()
-                    setIsAboutOpen(true)
-                    setIsWritingOpen(false)
-                    setSelectedWritingArticle(null)
+                    openAboutTray()
                   }
                 }}
-                className={`font-edu-marist cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`}
-                style={{ WebkitTapHighlightColor: "transparent" }}
+                className={`font-edu-marist cursor-pointer select-none appearance-none border-0 p-0 text-left text-inherit outline-none ring-0 shadow-none ${HERO_UNDERLINE_CLASSES}`}
+                style={{ background: "transparent", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", WebkitAppearance: "none", MozAppearance: "none" }}
               >
                 Raf V.
-              </span>
+              </button>
             </p>
           </div>
 
@@ -296,7 +320,7 @@ export default function Page() {
               {/* Context block — mt-6 from title */}
               <div className="mt-6">
                 <p className="text-sm md:text-xs leading-relaxed">
-                  <span className="opacity-80">Staff Designer at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>, designing AI-powered recommendations</span>
+                  <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>. Staff UX Designer.</span>
                 </p>
                 <p className="hidden md:block text-sm md:text-xs leading-relaxed mt-1">
                   <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more</span>

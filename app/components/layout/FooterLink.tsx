@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * FOOTER LINK - app/components/layout/FooterLink.tsx
+ * ============================================================================
+ *
+ * Muted caption-style link with optional external icon (desktop). Used in footer
+ * and hero contact row for LinkedIn, Email, X.
+ *
+ * EXPORTS: default FooterLink (memoized)
+ * FEATURES: optional className, external target/rel, aria-label from label
+ * USAGE: app/page.tsx (hero nav, footer nav)
+ */
+
 "use client"
 
 import React, { memo } from "react"
@@ -27,7 +40,7 @@ function FooterLink({ href, label, ariaLabel, external = false, className }: Foo
       {label}
       <ExternalLinkIcon
         size={10}
-        className="hidden md:block w-[8px] h-[8px] opacity-0 group-hover/link:opacity-100 transition-opacity duration-200"
+        className="hidden md:block w-[8px] h-[8px] opacity-0 -ml-0.5 group-hover/link:opacity-100 group-hover/link:ml-0 group-hover/link:animate-pulse-subtle transition-[margin,opacity] duration-300"
       />
     </a>
   )

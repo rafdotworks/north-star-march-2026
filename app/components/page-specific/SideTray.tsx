@@ -60,7 +60,7 @@ import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import Sheet from "react-modal-sheet"
 import FooterLink from "@/app/components/layout/FooterLink"
-import InlineExternalLink, { SUBTLE_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
+import InlineExternalLink, { HERO_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
 import { COMPANY_LINKS } from "@/app/config/companyLinks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSystemTheme } from "@/hooks/use-system-theme"
@@ -877,12 +877,12 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
   /**
    * When an article is selected on mobile, programmatically snap the sheet
    * to the 90% snap point for better reading experience.
+   * snapPoints are [0.9, 0.5, 0] so index 0 = 90% (full), index 2 = 0% (dismissed).
    */
   useEffect(() => {
     if (!isMobile || !articleId || articleId === 'about') return
-    // Snap to index 2 (90%) after a brief delay to allow content to load
     const timer = setTimeout(() => {
-      sheetRef.current?.snapTo(2)
+      sheetRef.current?.snapTo(0)
     }, 100)
     return () => clearTimeout(timer)
   }, [isMobile, articleId])
@@ -962,7 +962,9 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
+        // Mobile: Sheet handles close animation; call onClose directly. Desktop: run exit animation via handleTrayCloseRequest.
         if (showStackedFrontPanel && onCloseWritingOnly) handleCloseWritingPanel()
+        else if (isMobile) onClose()
         else handleTrayCloseRequest()
       }
     }
@@ -971,7 +973,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
       document.addEventListener("keydown", handleEscape)
       return () => document.removeEventListener("keydown", handleEscape)
     }
-  }, [shouldShowTray, showStackedFrontPanel, onCloseWritingOnly, handleCloseWritingPanel, handleTrayCloseRequest])
+  }, [shouldShowTray, showStackedFrontPanel, onCloseWritingOnly, handleCloseWritingPanel, handleTrayCloseRequest, isMobile, onClose])
 
   // ============================================================================
   // MARKDOWN RENDERING COMPONENTS
@@ -1167,59 +1169,60 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
           {/* Text Content Section — hero-like minimalism: one scale, opacity hierarchy, structural spacing */}
           <div className="tray-about-text-fade max-w-[600px]">
             <div className="flex flex-col gap-1 text-sm leading-relaxed transition-colors duration-200">
-              <p className="font-edu-marist text-foreground">
-                Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
+              <p className="font-edu-marist text-lg text-foreground">
+                Hello, call me Raf. I&apos;ve been designing for the last 10 years and shipping code since the beginning.
               </p>
-              <div className="mt-6 flex flex-col gap-1">
+              <div className="mt-8 flex flex-col gap-1">
                 <p className="text-foreground opacity-90">
-                  Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
+                  Studied software engineering in Naples before design pulled me in.
                 </p>
                 <p className="text-foreground opacity-90">
-                  My career began in hospitality, brand and web design. Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
+                  My career began in hospitality, brand and web design.
                 </p>
               </div>
-              <div className="mt-6 flex flex-col gap-1">
+              <div className="mt-8 flex flex-col gap-1">
                 <p className="text-foreground opacity-80">
                   I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
-                </p>
-                <p className="text-foreground opacity-80">
+                
                   Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
                 </p>
               </div>
-              <div className="mt-6 flex flex-col gap-1">
+              <div className="my-10 flex flex-col gap-1">
                 <p className="text-foreground opacity-70">
                   I care about systems that feel fast, logical, and respectful of attention.
                 </p>
-                <p className="text-foreground opacity-70">
-                  Grew up on the Amalfi Coast. Based in Toronto.
-                </p>
-                <p className="text-foreground opacity-70">
-                  I{" "}
-                  {onSwitchToWriting ? (
-                    <motion.span
-                      onClick={onSwitchToWriting}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault()
-                          onSwitchToWriting()
-                        }
-                      }}
-                      className={`cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`}
-                      style={{ WebkitTapHighlightColor: "transparent" }}
-                      whileTap={{ scale: 0.97, opacity: 0.85 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      write
-                    </motion.span>
-                  ) : (
-                    "write"
-                  )}
-                  , photograph, and spend time on a yoga mat or chasing light through workspaces.
-                </p>
+                <div className="flex flex-col gap-1">
+                  <p className="text-foreground opacity-70">
+                    Grew up on the Amalfi Coast. Based in Toronto.
+                  </p>
+                  <p className="text-foreground opacity-70">
+                    I{" "}
+                    {onSwitchToWriting ? (
+                      <motion.span
+                        onClick={onSwitchToWriting}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            onSwitchToWriting()
+                          }
+                        }}
+                        className={`cursor-pointer select-none ${HERO_UNDERLINE_CLASSES}`}
+                        style={{ WebkitTapHighlightColor: "transparent" }}
+                        whileTap={{ scale: 0.97, opacity: 0.85 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        write
+                      </motion.span>
+                    ) : (
+                      "write"
+                    )}
+                    , photograph, and spend time on a yoga mat or chasing light through workspaces.
+                  </p>
+                </div>
               </div>
-              <p className="mt-6 text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
+              <p className="mt-8 text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
                 Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
               </p>
             </div>
@@ -1358,7 +1361,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
         ref={sheetRef}
         isOpen={shouldShowTray}
         onClose={onClose}
-        snapPoints={[0, 0.5, 0.9]}
+        snapPoints={[0.9, 0.5, 0]}
         initialSnap={1}
         tweenConfig={{ ease: "easeOut", duration: 0.3 }}
         prefersReducedMotion={!!shouldReduceMotion}
@@ -1373,31 +1376,6 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
           }}
         >
           <Sheet.Header />
-
-          {/* Close button — floating over content */}
-          <motion.button
-            onClick={onClose}
-            className="absolute top-3 right-5 z-10 p-2.5 group"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 0.6, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.3, ease: EASING.smooth }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label="Close"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              boxShadow: 'none',
-              color: trayColors.fgMuted,
-              WebkitTapHighlightColor: 'transparent',
-              cursor: 'pointer',
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ pointerEvents: 'none' }}>
-              <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
-            </svg>
-          </motion.button>
 
           {/* Back button for article view - only in writing mode */}
           {viewMode === 'article' && articleId !== "all" && isWritingMode && (
@@ -1437,7 +1415,11 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
               paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))",
             }}
           >
+            {/* Accessibility: expose tray as modal dialog with context-specific label */}
             <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={isWritingMode ? "Writings" : "About Raf"}
               className={`px-6 pt-8 pb-8 ${viewMode === 'about' ? 'flex flex-col min-h-full' : ''}`}
               style={{ ...cssVarScoping, color: trayColors.fg }}
             >
@@ -1544,7 +1526,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                         <div className="tray-about-text-fade max-w-[600px]">
                           <div className="flex flex-col gap-1 text-sm leading-relaxed transition-colors duration-200">
                             <p className="font-edu-marist text-foreground">
-                              Hello, I am Raf. I&apos;ve been shipping code since before the tooling made it easy.
+                              Hello, call me Raf. I&apos;ve been designing for the last 10 years and shipping code since the beginning.
                             </p>
                             <div className="mt-6 flex flex-col gap-1">
                               <p className="text-foreground opacity-90">
@@ -1582,7 +1564,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                                         onSwitchToWriting()
                                       }
                                     }}
-                                    className={`cursor-pointer select-none ${SUBTLE_UNDERLINE_CLASSES}`}
+                                    className={`cursor-pointer select-none ${HERO_UNDERLINE_CLASSES}`}
                                     style={{ WebkitTapHighlightColor: "transparent" }}
                                     whileTap={{ scale: 0.97, opacity: 0.85 }}
                                     transition={{ duration: 0.15 }}

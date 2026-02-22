@@ -840,14 +840,12 @@ section {
 /* Brown Theme UI Elements */
 button {
   @apply transition-colors duration-200;
-  background-color: var(--accent-primary);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
 }
 
-button:hover {
-  background-color: var(--accent-hover);
-  color: var(--text-primary);
+/* Remove browser default blue focus ring sitewide; keyboard focus handled per-component */
+button:focus-visible,
+a:focus-visible {
+  outline: none;
 }
 
 /* Cards with brown theme */
@@ -866,10 +864,7 @@ button:hover {
 /* Link hover and active states */
 a:hover,
 a:active,
-a:focus,
-button:hover,
-button:active,
-button:focus:not(:disabled) {
+a:focus {
   color: var(--accent-hover);
 }
 
