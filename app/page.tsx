@@ -317,10 +317,10 @@ export default function Page() {
               <p className="text-sm md:text-xs leading-relaxed">
                 AI Designer and Design Engineer
               </p>
-              {/* Context block — mt-6 from title */}
-              <div className="mt-6">
+              {/* Context block — mt-3 on mobile (match Raf V. gap), mt-6 on desktop */}
+              <div className="mt-3 md:mt-6">
                 <p className="text-sm md:text-xs leading-relaxed">
-                  <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>.</span>
+                  <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink></span>
                 </p>
                 <p className="hidden md:block text-sm md:text-xs leading-relaxed mt-1">
                   <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more</span>
