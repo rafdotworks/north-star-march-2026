@@ -1185,7 +1185,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                   I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
                 </p>
                 <p className="text-foreground opacity-80">
-                  I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+                  I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, front-end design engineering, and brand design.
                 </p>
                 <p className="text-foreground opacity-80">
                   Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
@@ -1545,7 +1545,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                                 I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
                               </p>
                               <p className="text-foreground opacity-80">
-                                I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, design engineering, front-end and marketing.
+                                I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, front-end design engineering, and brand design.
                               </p>
                               <p className="text-foreground opacity-80">
                                 Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
