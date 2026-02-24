@@ -64,9 +64,7 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
         {
           text: "I was most recently Founding designer at Theoriq, leading all the product design, design engineering front-end and marketing efforts. Before that, Obvious, Coinbase, Voiceflow, and more.",
         },
-        {
-          text: "I care about systems that feel fast, logical, and respectful of attention.",
-        },
+        
       ],
     },
     {

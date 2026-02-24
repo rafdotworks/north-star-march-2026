@@ -27,10 +27,14 @@ export default function Page() {
   // About tray state
   const [isAboutOpen, setIsAboutOpen] = useState(false)
 
-  /** Open About tray and close Writing; shared by click and touch so mobile tap works inside transformed hero */
+  // Photos tray state
+  const [isPhotosOpen, setIsPhotosOpen] = useState(false)
+
+  /** Open About tray and close Writing/Photos; shared by click and touch so mobile tap works inside transformed hero */
   const openAboutTray = useCallback(() => {
     setIsAboutOpen(true)
     setIsWritingOpen(false)
+    setIsPhotosOpen(false)
     setSelectedWritingArticle(null)
   }, [])
 
@@ -190,8 +194,8 @@ export default function Page() {
     }
   }, [isWritingOpen, selectedWritingArticle])
 
-  // Lock body scroll when side tray is open (writing or about)
-  const trayOpen = isWritingOpen || isAboutOpen
+  // Lock body scroll when side tray is open (writing, about, or photos)
+  const trayOpen = isWritingOpen || isAboutOpen || isPhotosOpen
   useEffect(() => {
     if (trayOpen) {
       document.body.style.overflow = 'hidden'
@@ -462,23 +466,34 @@ export default function Page() {
         </div>
       </footer>
 
-      {/* Side tray (writing + about modes) */}
+      {/* Side tray (writing + about + photos modes) */}
       <SideTray
         articleId={isWritingOpen ? selectedWritingArticle : null}
         onClose={() => {
           setIsWritingOpen(false)
           setIsAboutOpen(false)
+          setIsPhotosOpen(false)
           setSelectedWritingArticle(null)
         }}
         onCloseWritingOnly={() => {
           setIsWritingOpen(false)
           setSelectedWritingArticle(null)
         }}
+        onClosePhotosOnly={() => {
+          setIsPhotosOpen(false)
+        }}
         isWritingMode={isWritingOpen}
+        isPhotosMode={isPhotosOpen}
         isAboutMode={isAboutOpen}
         onArticleSelect={setSelectedWritingArticle}
         onSwitchToWriting={() => {
           setIsWritingOpen(true)
+          setIsPhotosOpen(false)
+        }}
+        onSwitchToPhotograph={() => {
+          setIsPhotosOpen(true)
+          setIsWritingOpen(false)
+          setSelectedWritingArticle(null)
         }}
       />
     </div>

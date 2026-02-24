@@ -54,7 +54,8 @@
 
 "use client"
 
-import React, { useEffect, useState, useCallback, useRef, memo, useMemo } from "react"
+import React, { useEffect, useLayoutEffect, useState, useCallback, useRef, memo, useMemo } from "react"
+import Image from "next/image"
 import ReactMarkdown from "react-markdown"
 import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
@@ -75,7 +76,15 @@ import {
   writings,
   personalNotes
 } from "@/app/config/writingsConfig"
+import { PHOTOS } from "@/app/config/photosConfig"
 import type { StoryFrontmatter } from "@/app/types/story"
+
+/** Roman numerals I–XIV for photo credits (1-based index). */
+const PHOTO_ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV"] as const
+
+function getPhotoCreditName(photo: { alt?: string; src: string }): string {
+  return (photo.alt ?? photo.src).replace(/\s+[23]$/, "").trim()
+}
 
 /**
  * Props for SideTray component.
@@ -112,6 +121,11 @@ interface SideTrayProps {
   onArticleSelect?: (articleId: string | null) => void
   /** Called when user clicks "write" in about tagline; page can switch tray to writing mode */
   onSwitchToWriting?: () => void
+  /** Called when user clicks "photograph" in about tagline; page can switch tray to photos mode */
+  onSwitchToPhotograph?: () => void
+  /** Close only the Photos panel when stacked (About + Photos); reveals About */
+  onClosePhotosOnly?: () => void
+  isPhotosMode?: boolean
   /** API base path for fetching content (default: "/api/article") */
   apiBasePath?: string
 }
@@ -397,23 +411,67 @@ const closeButtonVariants = {
 } as const
 
 /**
+ * Mobile stacked sheet: back panel recedes when a new sheet is on top.
+ * Same feedback language as desktop SideTray (blur/opacity/offset).
+ *
+ * When stacked: opacity 0.9, scale 0.96, translateY(8) so the sheet feels behind and "taller".
+ * Duration ~0.4s to match desktop back panel.
+ */
+const mobileStackBackVariants = {
+  single: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: EASING.smooth },
+  },
+  stacked: {
+    opacity: 0.9,
+    scale: 0.96,
+    y: 8,
+    transition: { duration: 0.4, ease: EASING.smooth },
+  },
+} as const
+
+/**
+ * Mobile stacked sheet: front panel slides up into view.
+ * New sheet enters cleanly without distraction.
+ */
+const mobileStackFrontVariants = {
+  hidden: {
+    opacity: 0,
+    y: "100%",
+    transition: { duration: 0.35, ease: EASING.smooth },
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 300, damping: 30 },
+  },
+  exit: {
+    opacity: 0,
+    y: "100%",
+    transition: { duration: 0.3, ease: EASING.smooth },
+  },
+} as const
+
+/**
  * View transition variants (for switching between list/article/about views).
- * 
+ *
  * Creates a sophisticated, inspiring transition when switching views within the tray.
  * Content materializes into focus with a smooth blur-to-focus effect and subtle motion.
- * 
+ *
  * ANIMATION:
  * - opacity: Fades in/out
  * - scale: Slightly scales from 0.96 to 1 (subtle zoom)
  * - y: Slides up from 12px to 0 (subtle upward motion)
  * - rotateX: Rotates from -5deg to 0 (3D perspective)
  * - filter: Blurs from 12px to 0px (dramatic focus effect)
- * 
+ *
  * TIMING:
  * - duration: 0.7s (longer for smoother, more inspiring feel)
  * - delayChildren: 0.15s (slightly longer delay for better layering)
  * - staggerChildren: 0.08s between each child animation
- * 
+ *
  * This creates a smooth, layered transition where content feels like it's
  * materializing into focus rather than just fading in.
  */
@@ -571,7 +629,7 @@ function useArticleLoader(apiBasePath: string = "/api/article") {
  * @param {SideTrayProps} props - Component props
  * @returns {JSX.Element} The SideTray component
  */
-function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = false, isAboutMode = false, onArticleSelect, onSwitchToWriting, apiBasePath = "/api/article" }: SideTrayProps) {
+function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, isWritingMode = false, isPhotosMode = false, isAboutMode = false, onArticleSelect, onSwitchToWriting, onSwitchToPhotograph, apiBasePath = "/api/article" }: SideTrayProps) {
   // ============================================================================
   // HOOKS & STATE
   // ============================================================================
@@ -594,7 +652,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
    * - 'about': About content view
    * - 'writing-list': Writing mode article list view
    */
-  const [viewMode, setViewMode] = useState<'list' | 'article' | 'about' | 'writing-list'>('list')
+  const [viewMode, setViewMode] = useState<'list' | 'article' | 'about' | 'writing-list' | 'photos'>('list')
   
   /**
    * Accessibility: Respects user's motion preference.
@@ -608,12 +666,37 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
    */
   const isMobile = useIsMobile()
 
-  /** Stacked mode: About tray pushed left + blurred, Writing tray on top (desktop only) */
-  const isStacked = isAboutMode && isWritingMode && !isMobile
+  /** Stacked mode: About tray pushed left + blurred, Writing or Photos panel on top (desktop only) */
+  const isStacked = isAboutMode && (isWritingMode || isPhotosMode) && !isMobile
+
+  /** Mobile stacked: two layers (back recedes, front slides up). Same feedback as desktop SideTray. */
+  const isMobileStacked =
+    isMobile &&
+    ((isAboutMode && isWritingMode) ||
+      (isAboutMode && isPhotosMode) ||
+      (isWritingMode && articleId !== null && articleId !== "about"))
+  /** Back panel view mode when isMobileStacked (level 0). */
+  const mobileStackBackViewMode: "about" | "writing-list" | "photos" = isAboutMode && isWritingMode
+    ? "about"
+    : isAboutMode && isPhotosMode
+      ? "about"
+      : isWritingMode && articleId
+        ? "writing-list"
+        : "about"
+  /** Front panel view mode when isMobileStacked (level 1). */
+  const mobileStackFrontViewMode: "writing-list" | "photos" | "article" = isAboutMode && isWritingMode
+    ? "writing-list"
+    : isAboutMode && isPhotosMode
+      ? "photos"
+      : isWritingMode && articleId
+        ? "article"
+        : "writing-list"
 
   /** When true, front (Writing) panel is animating out before we call onCloseWritingOnly */
   const [isWritingPanelExiting, setIsWritingPanelExiting] = useState(false)
-  const showStackedFrontPanel = isStacked || isWritingPanelExiting
+  /** When true, front (Photos) panel is animating out before we call onClosePhotosOnly */
+  const [isPhotosPanelExiting, setIsPhotosPanelExiting] = useState(false)
+  const showStackedFrontPanel = isStacked || isWritingPanelExiting || isPhotosPanelExiting
 
   /** When true, whole tray is animating out; onClose() is called after exit completes to avoid flash of list/about */
   const [isTrayExiting, setIsTrayExiting] = useState(false)
@@ -626,6 +709,15 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
       onCloseWritingOnly()
     }
   }, [isStacked, onCloseWritingOnly])
+
+  const handleClosePhotosPanel = useCallback(() => {
+    if (!onClosePhotosOnly) return
+    if (isStacked) {
+      setIsPhotosPanelExiting(true)
+    } else {
+      onClosePhotosOnly()
+    }
+  }, [isStacked, onClosePhotosOnly])
 
   /** Called when front (Writing) panel exit animation finishes. Close is triggered by back panel's onAnimationComplete instead to avoid jump. */
   const handleWritingPanelExitComplete = useCallback(() => {
@@ -809,6 +901,19 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
   // ============================================================================
 
   /**
+   * Reset article state before paint when switching to Writing list or Photos.
+   * Prevents one-frame flash of stale article content in the stacked front panel.
+   */
+  useLayoutEffect(() => {
+    if (articleId !== null) return
+    if (isWritingMode || isPhotosMode) {
+      resetContent()
+      if (isWritingMode) setViewMode('writing-list')
+      else if (isPhotosMode) setViewMode('photos')
+    }
+  }, [articleId, isWritingMode, isPhotosMode, resetContent])
+
+  /**
    * Handles article loading and view mode switching based on articleId.
    * 
    * LOGIC FLOW:
@@ -836,10 +941,12 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
 
     if (!articleId) {
       resetContent()
-      // On mobile, when user switched to writing from About, show writing list in same sheet.
-      // On desktop, stacked mode shows About in back + Writing in front panel.
+      // On mobile, when user switched to writing/photos from About, show list/grid in same sheet.
+      // On desktop, stacked mode shows About in back + Writing or Photos in front panel.
       if (isWritingMode && (isMobile || !isAboutMode)) {
         setViewMode('writing-list')
+      } else if (isPhotosMode && (isMobile || !isAboutMode)) {
+        setViewMode('photos')
       } else if (isAboutMode) {
         setViewMode('about')
       } else {
@@ -877,7 +984,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
     setViewMode('article')
     loadArticle(articleId)
     requestAnimationFrame(() => restoreScrollPosition())
-  }, [articleId, loadArticle, resetContent, isWritingMode, isAboutMode, isMobile, saveScrollPosition, restoreScrollPosition])
+  }, [articleId, loadArticle, resetContent, isWritingMode, isPhotosMode, isAboutMode, isMobile, saveScrollPosition, restoreScrollPosition])
 
   // ============================================================================
   // BODY SCROLL: Lock when tray is open is handled in app/page.tsx (overflow: hidden).
@@ -957,8 +1064,8 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
   // ============================================================================
   
   // Determine if we should show the tray (used by Escape handler and render)
-  // Show tray if: writing mode (always show), about mode (always show), or articleId is set (normal mode)
-  const shouldShowTray = isWritingMode || isAboutMode || articleId !== null
+  // Show tray if: writing mode, photos mode, about mode (always show), or articleId is set (normal mode)
+  const shouldShowTray = isWritingMode || isPhotosMode || isAboutMode || articleId !== null
 
   /**
    * Handles Escape key to close the tray.
@@ -974,10 +1081,22 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-        // Mobile: Sheet handles close animation; call onClose directly. Desktop: run exit animation via handleTrayCloseRequest.
-        if (showStackedFrontPanel && onCloseWritingOnly) handleCloseWritingPanel()
-        else if (isMobile) onClose()
+      if (e.key === "Escape") {
+        // Mobile stacked: pop front panel first (same as back button).
+        if (isMobile && isMobileStacked) {
+          if (mobileStackFrontViewMode === "article" && onArticleSelect) onArticleSelect(null)
+          else if (isWritingMode && onCloseWritingOnly) onCloseWritingOnly()
+          else if (isPhotosMode && onClosePhotosOnly) onClosePhotosOnly()
+          return
+        }
+        // Desktop stacked: close front panel.
+        if (showStackedFrontPanel) {
+          if (isWritingMode && onCloseWritingOnly) handleCloseWritingPanel()
+          else if (isPhotosMode && onClosePhotosOnly) handleClosePhotosPanel()
+          return
+        }
+        // Mobile single sheet: close sheet. Desktop: run exit animation.
+        if (isMobile) onClose()
         else handleTrayCloseRequest()
       }
     }
@@ -986,7 +1105,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
       document.addEventListener("keydown", handleEscape)
       return () => document.removeEventListener("keydown", handleEscape)
     }
-  }, [shouldShowTray, showStackedFrontPanel, onCloseWritingOnly, handleCloseWritingPanel, handleTrayCloseRequest, isMobile, onClose])
+  }, [shouldShowTray, showStackedFrontPanel, isWritingMode, isPhotosMode, onCloseWritingOnly, onClosePhotosOnly, handleCloseWritingPanel, handleClosePhotosPanel, handleTrayCloseRequest, isMobile, onClose, isMobileStacked, mobileStackFrontViewMode, onArticleSelect])
 
   // ============================================================================
   // MARKDOWN RENDERING COMPONENTS
@@ -1042,12 +1161,15 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
   // ============================================================================
 
   /**
-   * The AnimatePresence block with all view modes.
-   * Rendered inside Sheet.Content (mobile) or the scrollable div (desktop).
+   * Renders content for a given view mode. Used for single-panel (viewContent) and for
+   * mobile stacked back/front panels (renderViewContent(backMode) / renderViewContent(frontMode)).
    */
-  const viewContent = (
-    <AnimatePresence mode="wait">
-      {viewMode === 'writing-list' ? (
+  type ViewModeType = "list" | "article" | "about" | "writing-list" | "photos"
+  const renderViewContent = (displayMode?: ViewModeType) => {
+    const mode = displayMode ?? viewMode
+    return (
+      <AnimatePresence mode="wait">
+        {mode === "writing-list" ? (
         // Writing list view with both sections
         <motion.div
           key="writing-list"
@@ -1074,6 +1196,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                 variants={activeListItemVariants}
                 initial="hidden"
                 animate="visible"
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   if (onArticleSelect) {
                     onArticleSelect(article.id)
@@ -1105,6 +1228,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
               initial={{ opacity: 0, filter: 'blur(4px)' }}
               animate={{ opacity: 0.5, filter: 'blur(0px)' }}
               transition={{ duration: 0.4, delay: 0.2 }}
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={() => setPersonalNotesExpanded(!personalNotesExpanded)}
               className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes"
               style={{
@@ -1153,6 +1277,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                       variants={activeListItemVariants}
                       initial="hidden"
                       animate="visible"
+                      onPointerDown={(e) => e.stopPropagation()}
                       onClick={() => {
                         if (onArticleSelect) {
                           onArticleSelect(article.id)
@@ -1181,7 +1306,49 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
             </AnimatePresence>
           </div>
         </motion.div>
-      ) : viewMode === 'about' ? (
+      ) : mode === "photos" ? (
+        <motion.div
+          key="photos"
+          variants={activeViewTransitionVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+          <div className={`flex flex-col gap-4 pb-8 ${isMobile ? '-mx-6' : ''}`}>
+            {PHOTOS.map((photo, i) => (
+              <motion.figure
+                key={photo.src}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: shouldReduceMotion ? 0 : i * 0.04, ease: EASING.smooth }}
+                className="space-y-1 w-full"
+              >
+                <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[2px] bg-muted/20">
+                  <Image
+                    src={photo.src}
+                    alt={photo.alt ?? photo.src}
+                    fill
+                    sizes="(max-width: 500px) 100vw, 500px"
+                    className="object-cover"
+                  />
+                </div>
+                {photo.caption && (
+                  <figcaption className="type-caption text-[10px] leading-tight px-6" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
+                    {photo.caption}
+                  </figcaption>
+                )}
+              </motion.figure>
+            ))}
+            <div className="flex flex-col gap-1 pt-2">
+              {PHOTOS.map((photo, i) => (
+                <p key={photo.src} className="type-caption font-edu-marist leading-relaxed" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
+                  <span className="opacity-70">{PHOTO_ROMAN[i]}</span> {getPhotoCreditName(photo)}
+                </p>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      ) : mode === "about" ? (
         // About content — COMPACT / modal typography: 16 → 14 → 12 (lead → body → caption)
         <motion.div
           key="about"
@@ -1199,7 +1366,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
               </p>
               <div className="mt-8 flex flex-col gap-1">
                 <p className="text-foreground opacity-90">
-                  Studied software engineering in Naples before design pulled me in.
+                  Studied software engineering in Naples before design.
                 </p>
                 <p className="text-foreground opacity-90">
                   My career began in hospitality, brand and web design.
@@ -1217,9 +1384,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                 </p>
               </div>
               <div className="my-10 flex flex-col gap-1">
-                <p className="text-foreground opacity-70">
-                  I care about systems that feel fast, logical, and respectful of attention.
-                </p>
+                
                 <div className="flex flex-col gap-1">
                   <p className="text-foreground opacity-70">
                     Grew up on the Amalfi Coast. Based in Toronto.
@@ -1247,7 +1412,29 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                     ) : (
                       "write"
                     )}
-                    , photograph, and spend time on a yoga mat or chasing light through workspaces.
+                    ,{" "}
+                    {onSwitchToPhotograph ? (
+                      <motion.span
+                        onClick={onSwitchToPhotograph}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            onSwitchToPhotograph()
+                          }
+                        }}
+                        className={`cursor-pointer select-none ${HERO_UNDERLINE_CLASSES}`}
+                        style={{ WebkitTapHighlightColor: "transparent" }}
+                        whileTap={{ scale: 0.97, opacity: 0.85 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        photograph
+                      </motion.span>
+                    ) : (
+                      "photograph"
+                    )}
+                    , and spend time on a yoga mat or chasing light through workspaces.
                   </p>
                 </div>
               </div>
@@ -1265,7 +1452,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
           </nav>
 
         </motion.div>
-      ) : viewMode === 'list' ? (
+      ) : mode === "list" ? (
         // Show all articles list (legacy mode)
         <motion.div
           key="list"
@@ -1384,7 +1571,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
         </motion.div>
       ) : null}
     </AnimatePresence>
-  )
+  ); }; const viewContent = renderViewContent()
 
   // ============================================================================
   // MOBILE RENDER PATH (react-modal-sheet)
@@ -1412,60 +1599,128 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
         >
           <Sheet.Header />
 
-          {/* Back button for article view - only in writing mode */}
-          {viewMode === 'article' && articleId !== "all" && isWritingMode && (
+          {/* Back/close button: when stacked, pops front panel (article→list, or Writing/Photos→About) */}
+          {(isMobileStacked || (viewMode === "article" && articleId !== "all" && isWritingMode)) && (
             <motion.button
-              initial={{ opacity: 0, x: -10, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+              initial={{ opacity: 0, x: -10, filter: "blur(4px)" }}
+              animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
               onClick={() => {
-                if (isWritingMode && onArticleSelect) {
+                if (isMobileStacked) {
+                  if (mobileStackFrontViewMode === "article" && onArticleSelect) onArticleSelect(null)
+                  else if (isWritingMode && onCloseWritingOnly) onCloseWritingOnly()
+                  else if (isPhotosMode && onClosePhotosOnly) onClosePhotosOnly()
+                } else if (isWritingMode && onArticleSelect) {
                   onArticleSelect(null)
                 } else {
-                  setViewMode('list')
+                  setViewMode("list")
                   resetContent()
                 }
               }}
-              className="absolute top-2 left-4 z-10 p-2 group"
+              className="absolute top-2 left-4 z-20 p-2 group"
               whileHover={{ scale: 1.02, x: -1 }}
               whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.4, ease: EASING.gentle }}
-              aria-label="Back to list"
+              aria-label={
+                isMobileStacked && mobileStackFrontViewMode === "article"
+                  ? "Back to list"
+                  : isMobileStacked
+                    ? "Back"
+                    : "Back to list"
+              }
               style={{
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
+                background: "transparent",
+                border: "none",
+                outline: "none",
                 color: trayColors.fgMuted,
-                WebkitTapHighlightColor: 'transparent',
-                cursor: 'pointer',
+                WebkitTapHighlightColor: "transparent",
+                cursor: "pointer",
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ pointerEvents: 'none' }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ pointerEvents: "none" }}>
                 <path d="M7 1L2 6L7 11" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </motion.button>
           )}
 
           <Sheet.Content
+            disableDrag={isMobile}
             style={{
               paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))",
             }}
           >
-            {/* Accessibility: expose tray as modal dialog with context-specific label */}
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label={
-                viewMode === "about"
-                  ? "About Raf"
-                  : viewMode === "article" && content
-                    ? `Article: ${content.title}`
-                    : "Writings"
-              }
-              className={`px-6 pt-8 pb-8 ${viewMode === 'about' ? 'flex flex-col min-h-full' : ''}`}
-              style={{ ...cssVarScoping, color: trayColors.fg }}
-            >
-              {viewContent}
-            </div>
+            {isMobileStacked ? (
+              <>
+                <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
+                  <motion.div
+                    className="absolute inset-0 flex flex-col min-h-full"
+                    style={{ ...cssVarScoping, color: trayColors.fg }}
+                    {...(shouldReduceMotion
+                      ? { animate: { opacity: 0.9 } }
+                      : {
+                          variants: mobileStackBackVariants,
+                          initial: "single",
+                          animate: "stacked",
+                          transition: { duration: 0.4, ease: EASING.smooth },
+                        })}
+                  >
+                    <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-8 pb-8">
+                      {renderViewContent(mobileStackBackViewMode)}
+                    </div>
+                  </motion.div>
+                </div>
+                <motion.div
+                  key={isPhotosMode ? "photos-stack" : "writing-stack"}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={
+                    mobileStackFrontViewMode === "article" && content
+                      ? `Article: ${content.title}`
+                      : mobileStackFrontViewMode === "photos"
+                        ? "Photograph"
+                        : "Writings"
+                  }
+                  className="absolute inset-0 z-10 flex flex-col min-h-full"
+                  style={{
+                    ...cssVarScoping,
+                    color: trayColors.fg,
+                    backgroundColor: trayColors.bg,
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    boxShadow: "0 -2px 12px rgba(0,0,0,0.08)",
+                  }}
+                  {...(shouldReduceMotion
+                    ? { initial: false, animate: { opacity: 1 } }
+                    : {
+                        variants: mobileStackFrontVariants,
+                        initial: "hidden",
+                        animate: "visible",
+                        exit: "exit",
+                      })}
+                >
+                  <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-8 pb-8">
+                    {renderViewContent(mobileStackFrontViewMode)}
+                  </div>
+                </motion.div>
+              </>
+            ) : (
+              <Sheet.Scroller>
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={
+                    viewMode === "about"
+                      ? "About Raf"
+                      : viewMode === "article" && content
+                        ? `Article: ${content.title}`
+                        : "Writings"
+                  }
+                  className={`px-6 pt-8 pb-8 ${viewMode === "about" ? "flex flex-col min-h-full" : ""}`}
+                  style={{ ...cssVarScoping, color: trayColors.fg }}
+                >
+                  {viewContent}
+                </div>
+              </Sheet.Scroller>
+            )}
           </Sheet.Content>
         </Sheet.Container>
         <Sheet.Backdrop onTap={onClose} />
@@ -1502,7 +1757,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
               initial="hidden"
               animate={isTrayExiting ? "exit" : "visible"}
               exit="exit"
-              onClick={showStackedFrontPanel && onCloseWritingOnly ? handleCloseWritingPanel : handleTrayCloseRequest}
+              onClick={showStackedFrontPanel ? (isWritingMode && onCloseWritingOnly ? handleCloseWritingPanel : isPhotosMode && onClosePhotosOnly ? handleClosePhotosPanel : handleTrayCloseRequest) : handleTrayCloseRequest}
               onAnimationStart={(definition) => {
                 // Disable pointer events when exit animation starts
                 // This allows hover events to work immediately after closing
@@ -1544,15 +1799,18 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                 <motion.div
                   className="absolute inset-0"
                   animate={{
-                    x: isWritingPanelExiting ? 0 : -80,
-                    filter: isWritingPanelExiting ? 'blur(0px)' : 'blur(12px)',
-                    opacity: isWritingPanelExiting ? 1 : 0.9,
+                    x: (isWritingPanelExiting || isPhotosPanelExiting) ? 0 : -80,
+                    filter: (isWritingPanelExiting || isPhotosPanelExiting) ? 'blur(0px)' : 'blur(12px)',
+                    opacity: (isWritingPanelExiting || isPhotosPanelExiting) ? 1 : 0.9,
                   }}
-                  transition={{ duration: 0.45, ease: EASING.smooth }}
+                  transition={{ duration: 0.5, ease: EASING.smooth }}
                   onAnimationComplete={() => {
                     if (isWritingPanelExiting) {
                       onCloseWritingOnly?.()
                       setIsWritingPanelExiting(false)
+                    } else if (isPhotosPanelExiting) {
+                      onClosePhotosOnly?.()
+                      setIsPhotosPanelExiting(false)
                     }
                   }}
                   style={{
@@ -1566,18 +1824,18 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                       <div className="flex flex-col min-h-full justify-between">
                         <div className="tray-about-text-fade max-w-[600px]">
                           <div className="flex flex-col gap-1 text-sm leading-relaxed transition-colors duration-200">
-                            <p className="font-edu-marist text-foreground">
+                            <p className="font-edu-marist text-lg text-foreground">
                               Hello, call me Raf. I&apos;ve been designing for the last 10 years and shipping code since the beginning.
                             </p>
-                            <div className="mt-6 flex flex-col gap-1">
+                            <div className="mt-8 flex flex-col gap-1">
                               <p className="text-foreground opacity-90">
-                                Studied software engineering in Naples before design pulled me in. Picked up a few awards since.
+                                Studied software engineering in Naples before design.
                               </p>
                               <p className="text-foreground opacity-90">
-                                My career began in hospitality, brand and web design. Early on, an internship at <InlineExternalLink href={COMPANY_LINKS.apple} underlineStyle="subtle">Apple</InlineExternalLink> as a UX/UI Designer.
+                                My career began in hospitality, brand and web design.
                               </p>
                             </div>
-                            <div className="mt-6 flex flex-col gap-4">
+                            <div className="mt-8 flex flex-col gap-4">
                               <p className="text-foreground opacity-80">
                                 I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
                               </p>
@@ -1588,10 +1846,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                                 Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
                               </p>
                             </div>
-                            <div className="mt-6 flex flex-col gap-1">
-                              <p className="text-foreground opacity-70">
-                                I care about systems that feel fast, logical, and respectful of attention.
-                              </p>
+                            <div className="my-10 flex flex-col gap-1">
                               <p className="text-foreground opacity-70">
                                 Grew up on the Amalfi Coast. Based in Toronto.
                               </p>
@@ -1618,10 +1873,32 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                                 ) : (
                                   "write"
                                 )}
-                                , photograph, and spend time on a yoga mat or chasing light through workspaces.
+                                ,{" "}
+                                {onSwitchToPhotograph ? (
+                                  <motion.span
+                                    onClick={onSwitchToPhotograph}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault()
+                                        onSwitchToPhotograph()
+                                      }
+                                    }}
+                                    className={`cursor-pointer select-none ${HERO_UNDERLINE_CLASSES}`}
+                                    style={{ WebkitTapHighlightColor: "transparent" }}
+                                    whileTap={{ scale: 0.97, opacity: 0.85 }}
+                                    transition={{ duration: 0.15 }}
+                                  >
+                                    photograph
+                                  </motion.span>
+                                ) : (
+                                  "photograph"
+                                )}
+                                , and spend time on a yoga mat or chasing light through workspaces.
                               </p>
                             </div>
-                            <p className="mt-6 text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
+                            <p className="mt-8 text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
                               Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
                             </p>
                           </div>
@@ -1635,23 +1912,23 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                     </div>
                   </div>
                 </motion.div>
-                {/* Front panel: Writing — slides in from right, slides out on close */}
+                {/* Front panel: Writing or Photos — same entrance/exit as first modal (trayVariants) */}
                 <AnimatePresence onExitComplete={handleWritingPanelExitComplete}>
                   {showStackedFrontPanel && (
                   <motion.div
-                    key="writing-stack-panel"
+                    key={isPhotosMode ? "photos-stack-panel" : "writing-stack-panel"}
                     className="absolute inset-0 z-10"
-                    initial={{ x: '100%' }}
-                    animate={{ x: isWritingPanelExiting ? '100%' : 0 }}
-                    exit={{ x: '100%' }}
-                    transition={{ type: 'spring', stiffness: 180, damping: 28, mass: 1 }}
+                    variants={trayVariants}
+                    initial="hidden"
+                    animate={isWritingPanelExiting || isPhotosPanelExiting ? "exit" : "visible"}
+                    exit="exit"
                     style={{
                       backgroundColor: trayColors.bg,
                       color: trayColors.fg,
                     }}
                   >
                     <div className="h-full flex flex-col">
-                      {articleId !== null && onArticleSelect && (
+                      {!isPhotosMode && articleId !== null && onArticleSelect && (
                         <motion.button
                           onClick={() => onArticleSelect(null)}
                           className="absolute top-6 left-6 z-10 p-2 group"
@@ -1663,7 +1940,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M7 1L2 6L7 11" /></svg>
                         </motion.button>
                       )}
-                      {onCloseWritingOnly && (
+                      {(isWritingMode && onCloseWritingOnly) && (
                         <motion.button
                           onClick={handleCloseWritingPanel}
                           className="absolute top-6 right-6 z-10 p-1.5 group"
@@ -1686,13 +1963,71 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                           </svg>
                         </motion.button>
                       )}
+                      {isPhotosMode && onClosePhotosOnly && (
+                        <motion.button
+                          onClick={handleClosePhotosPanel}
+                          className="absolute top-6 right-6 z-10 p-1.5 group"
+                          aria-label="Close photographs"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            boxShadow: 'none',
+                            color: trayColors.fgMuted,
+                            WebkitTapHighlightColor: 'transparent',
+                            cursor: 'pointer',
+                            opacity: 0.6,
+                          }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </motion.button>
+                      )}
                       <motion.div
+                        key={`stack-front-${isPhotosMode ? 'photos' : (articleId ?? 'list')}`}
                         className="flex-1 overflow-y-auto px-8 pt-16 pb-8"
-                        initial={shouldReduceMotion ? undefined : { opacity: 0 }}
-                        animate={shouldReduceMotion ? undefined : { opacity: 1 }}
-                        transition={shouldReduceMotion ? undefined : { duration: 0.35, delay: 0.15, ease: EASING.smooth }}
+                        variants={shouldReduceMotion ? undefined : contentVariants}
+                        initial={shouldReduceMotion ? false : "hidden"}
+                        animate={shouldReduceMotion ? { opacity: 1 } : "visible"}
                       >
-                        {articleId === null ? (
+                        {isPhotosMode ? (
+                          <div className="flex flex-col gap-4 pb-8">
+                            {PHOTOS.map((photo, i) => (
+                              <motion.figure
+                                key={photo.src}
+                                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, delay: shouldReduceMotion ? 0 : i * 0.04, ease: EASING.smooth }}
+                                className="space-y-1 w-full"
+                              >
+                                <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[2px] bg-muted/20">
+                                  <Image
+                                    src={photo.src}
+                                    alt={photo.alt ?? photo.src}
+                                    fill
+                                    sizes="(max-width: 500px) 100vw, 500px"
+                                    className="object-cover"
+                                  />
+                                </div>
+                                {photo.caption && (
+                                  <figcaption className="type-caption text-[10px] leading-tight" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
+                                    {photo.caption}
+                                  </figcaption>
+                                )}
+                              </motion.figure>
+                            ))}
+                            <div className="flex flex-col gap-1 pt-2">
+                              {PHOTOS.map((photo, i) => (
+                                <p key={photo.src} className="type-caption font-edu-marist leading-relaxed" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
+                                  <span className="opacity-70">{PHOTO_ROMAN[i]}</span> {getPhotoCreditName(photo)}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        ) : articleId === null ? (
                           <motion.div
                             key="writing-list"
                             variants={activeViewTransitionVariants}
