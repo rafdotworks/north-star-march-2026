@@ -320,7 +320,7 @@ export default function Page() {
               {/* Context block — mt-2 on mobile (tighter), mt-6 on desktop */}
               <div className="mt-2 md:mt-6">
                 <p className="text-sm md:text-xs leading-relaxed">
-                  <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink></span>
+                  <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>.</span>
                 </p>
                 <p className="hidden md:block text-sm md:text-xs leading-relaxed mt-1">
                   <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.</span>

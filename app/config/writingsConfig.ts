@@ -28,16 +28,18 @@ export interface WritingItem {
   id: string
   title: string
   date: string
+  /** When true, title is shown with a gentle strikethrough (e.g. deprecated or paused pieces). */
+  strikethrough?: boolean
 }
 
 /**
  * WRITINGS SECTION
  * Work-related content, design principles, and professional articles.
- * Featured: First 2 items (Moving to Europe, Working Philosophy)
+ * Featured: First 2 items (Why corporate now, Working Philosophy)
  */
 export const writings: WritingItem[] = [
   // Featured writings (appear in full color)
-  { id: "moving-to-europe", title: "Why I decided to move back to Europe", date: "January 5, 2026" },
+  { id: "why-corporate-now", title: "Why corporate now", date: "February 24, 2026" },
   { id: "working-philosophy", title: "Working Philosophy", date: "Nov 16, 2025" },
   { id: "personal-blueprint", title: "Personal Blueprint", date: "Nov 3, 2025" },
   // Other writings (appear muted)
@@ -53,6 +55,7 @@ export const personalNotes: WritingItem[] = [
   // Featured personal notes (appear in full color)
   { id: "personal-readme", title: "Personal README", date: "Dec 26, 2025" },
   // Other personal notes (appear muted)
+  { id: "moving-to-europe", title: "Why I decided to move back to Europe", date: "January 5, 2026", strikethrough: true },
   { id: "memorable-excellence", title: "Memorable Excellence", date: "Jun 14, 2025" },
   { id: "config-sf-slowing-down", title: "Config, SF, slowing down", date: "May 9, 2025" },
   { id: "the-path-not-the-road", title: "The Path, not the Road", date: "Aug 17, 2025" },

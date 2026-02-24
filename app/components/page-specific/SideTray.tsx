@@ -68,6 +68,7 @@ import { useLocationWeather } from "@/hooks/use-timezone-message"
 import { EASING } from "@/components/animations/constants"
 import { markdownComponents } from "@/app/components/markdown/markdownComponents"
 import { storyMarkdownComponents } from "@/app/components/markdown/storyMarkdownComponents"
+import { trayMarkdownComponents } from "@/app/components/markdown/trayMarkdownComponents"
 import { StoryHeader } from "@/app/components/story"
 import {
   allWritings,
@@ -631,6 +632,11 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
     // No-op: onCloseWritingOnly is called from back panel's onAnimationComplete when its reveal finishes
   }, [])
 
+  /** When stacked, mark that we came from stacked so returning to About skips entrance animation */
+  useEffect(() => {
+    if (isStacked) justReturnedFromStackedRef.current = true
+  }, [isStacked])
+
   /**
    * System theme detection for tray color scoping.
    * Used to set CSS variable overrides so Tailwind classes
@@ -700,6 +706,13 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
    * Key format: "viewMode-articleId" (e.g., "writing-list-null", "article-article-id-1")
    */
   const scrollPositionRef = useRef<{[key: string]: number}>({})
+
+  /**
+   * When true, we were in stacked mode (About + Writing). Used so that when we
+   * switch back to non-stacked About we skip the content entrance animation
+   * and the About view stays still instead of "reloading".
+   */
+  const justReturnedFromStackedRef = useRef(false)
 
   // ============================================================================
   // NESTED TRAY LOGIC
@@ -1012,6 +1025,18 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
     '--border-color': prefersDark ? 'hsl(220 12% 18%)' : 'hsl(220 12% 86%)',
   } as React.CSSProperties
 
+  /** Skip content entrance when returning from stacked (Writing) to About so About stays still */
+  const skipAboutEntrance = !isMobile && !isStacked && isAboutMode && justReturnedFromStackedRef.current
+
+  /** Clear "came from stacked" ref after we used it so next direct About open still animates */
+  useEffect(() => {
+    if (!skipAboutEntrance) return
+    const id = requestAnimationFrame(() => {
+      justReturnedFromStackedRef.current = false
+    })
+    return () => cancelAnimationFrame(id)
+  }, [skipAboutEntrance])
+
   // ============================================================================
   // VIEW CONTENT (shared between mobile Sheet and desktop side panel)
   // ============================================================================
@@ -1138,7 +1163,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                       transition={{ duration: 0.2, ease: EASING.smooth }}
                     >
                       <p
-                        className="text-xs transition-colors duration-200"
+                        className={`text-xs transition-colors duration-200 ${article.strikethrough ? "line-through opacity-70" : ""}`}
                         style={{ color: i < 1 ? trayColors.fg : trayColors.fgMuted }}
                       >
                         {article.title}
@@ -1161,7 +1186,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
         <motion.div
           key="about"
           variants={activeViewTransitionVariants}
-          initial="initial"
+          initial={skipAboutEntrance ? false : "initial"}
           animate="animate"
           exit="exit"
           className="flex flex-col h-full justify-between"
@@ -1326,7 +1351,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
           </motion.button>
         </motion.div>
       ) : content ? (
-        // Article/Story content
+        // Article/Story content — measure and landmark aligned with About tray
         <motion.div
           key="article"
           variants={activeViewTransitionVariants}
@@ -1335,21 +1360,27 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
           exit="exit"
           className="space-y-6"
         >
-          {apiBasePath === "/api/story" && content.frontmatter && (
-            <StoryHeader
-              frontmatter={content.frontmatter}
-              isMobile={isMobile}
-            />
-          )}
-          <ReactMarkdown
-            components={
-              apiBasePath === "/api/story"
-                ? storyMarkdownComponents
-                : markdownComponents
-            }
-          >
-            {content.content}
-          </ReactMarkdown>
+          <article aria-label={content.title || "Article"}>
+            <div className="prose-article-narrow tray-about-text-fade">
+              {apiBasePath === "/api/story" && content.frontmatter && (
+                <StoryHeader
+                  frontmatter={content.frontmatter}
+                  isMobile={isMobile}
+                />
+              )}
+              <ReactMarkdown
+                components={
+                  apiBasePath === "/api/story"
+                    ? storyMarkdownComponents
+                    : apiBasePath === "/api/article"
+                      ? trayMarkdownComponents
+                      : markdownComponents
+                }
+              >
+                {content.content}
+              </ReactMarkdown>
+            </div>
+          </article>
         </motion.div>
       ) : null}
     </AnimatePresence>
@@ -1423,7 +1454,13 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
             <div
               role="dialog"
               aria-modal="true"
-              aria-label={isWritingMode ? "Writings" : "About Raf"}
+              aria-label={
+                viewMode === "about"
+                  ? "About Raf"
+                  : viewMode === "article" && content
+                    ? `Article: ${content.title}`
+                    : "Writings"
+              }
               className={`px-6 pt-8 pb-8 ${viewMode === 'about' ? 'flex flex-col min-h-full' : ''}`}
               style={{ ...cssVarScoping, color: trayColors.fg }}
             >
@@ -1718,7 +1755,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                                         whileHover={{ x: 4, opacity: 1 }}
                                         transition={{ duration: 0.2, ease: EASING.smooth }}
                                       >
-                                        <p className="text-xs transition-colors duration-200" style={{ color: i < 1 ? trayColors.fg : trayColors.fgMuted }}>{article.title}</p>
+                                        <p className={`text-xs transition-colors duration-200 ${article.strikethrough ? "line-through opacity-70" : ""}`} style={{ color: i < 1 ? trayColors.fg : trayColors.fgMuted }}>{article.title}</p>
                                         <p className="text-[10px] font-light transition-colors duration-200" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{article.date}</p>
                                       </motion.div>
                                     ))}
@@ -1735,8 +1772,12 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
                           </motion.div>
                         ) : content ? (
                           <motion.div key="article" variants={activeViewTransitionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
-                            {apiBasePath === "/api/story" && content.frontmatter && <StoryHeader frontmatter={content.frontmatter} isMobile={isMobile} />}
-                            <ReactMarkdown components={apiBasePath === "/api/story" ? storyMarkdownComponents : markdownComponents}>{content.content}</ReactMarkdown>
+                            <article aria-label={content.title || "Article"}>
+                              <div className="prose-article-narrow tray-about-text-fade">
+                                {apiBasePath === "/api/story" && content.frontmatter && <StoryHeader frontmatter={content.frontmatter} isMobile={isMobile} />}
+                                <ReactMarkdown components={apiBasePath === "/api/story" ? storyMarkdownComponents : apiBasePath === "/api/article" ? trayMarkdownComponents : markdownComponents}>{content.content}</ReactMarkdown>
+                              </div>
+                            </article>
                           </motion.div>
                         ) : null}
                       </motion.div>
@@ -1749,7 +1790,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, isWritingMode = fals
             <motion.div
               className="h-full flex flex-col"
               variants={shouldReduceMotion ? undefined : activeContentVariants}
-              initial={shouldReduceMotion ? undefined : "hidden"}
+              initial={shouldReduceMotion ? undefined : (skipAboutEntrance ? false : "hidden")}
               animate={shouldReduceMotion ? undefined : "visible"}
             >
               {/* Close button */}
