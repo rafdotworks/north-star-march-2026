@@ -410,47 +410,49 @@ const closeButtonVariants = {
   }
 } as const
 
+/** Unified duration for mobile stack transitions (back recede + front slide) so they feel like one motion. */
+const MOBILE_STACK_DURATION = 0.35
+
 /**
  * Mobile stacked sheet: back panel recedes when a new sheet is on top.
  * Same feedback language as desktop SideTray (blur/opacity/offset).
  *
  * When stacked: opacity 0.9, scale 0.96, translateY(8) so the sheet feels behind and "taller".
- * Duration ~0.4s to match desktop back panel.
  */
 const mobileStackBackVariants = {
   single: {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { duration: 0.4, ease: EASING.smooth },
+    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
   },
   stacked: {
     opacity: 0.9,
     scale: 0.96,
     y: 8,
-    transition: { duration: 0.4, ease: EASING.smooth },
+    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
   },
 } as const
 
 /**
  * Mobile stacked sheet: front panel slides up into view.
- * New sheet enters cleanly without distraction.
+ * Same duration and easing as back recede so the stack feels like one motion.
  */
 const mobileStackFrontVariants = {
   hidden: {
     opacity: 0,
     y: "100%",
-    transition: { duration: 0.35, ease: EASING.smooth },
+    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
   },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: "spring" as const, stiffness: 300, damping: 30 },
+    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
   },
   exit: {
     opacity: 0,
     y: "100%",
-    transition: { duration: 0.3, ease: EASING.smooth },
+    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
   },
 } as const
 
@@ -793,6 +795,27 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   const sheetRef = useRef<React.ComponentRef<typeof Sheet>>(null)
 
   /**
+   * Current snap point index (0 = 90%, 1 = 50%, 2 = 0). Used for scroll-to-expand:
+   * only expand when at 50% so we don't fight the user after they've dragged.
+   */
+  const currentSnapIndexRef = useRef<number>(1)
+
+  /** Ref to the content div inside Sheet.Scroller (mobile single-sheet path) for scroll-to-expand. */
+  const mobileScrollContentRef = useRef<HTMLDivElement>(null)
+
+  /**
+   * Touch start position for tap detection on mobile (avoids treating scroll as tap).
+   * Article buttons call stopPropagation() in onTouchStart so the sheet scroll container
+   * doesn't capture the touch; otherwise touchEnd may not fire on the button and tap does nothing.
+   */
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null)
+  /** More forgiving than 15px so slight scroll or movement still registers as tap (fixes articles not opening on mobile). */
+  const TAP_MOVE_THRESHOLD_PX = 24
+  /** Guard so touchEnd + click don't both fire onArticleSelect for the same tap. */
+  const articleTapHandledRef = useRef<{ id: string; t: number } | null>(null)
+  const TAP_DEBOUNCE_MS = 450
+
+  /**
    * Scroll position preservation for smooth navigation.
    * Stores scroll positions for different views (list, articles) to restore when navigating back.
    * Key format: "viewMode-articleId" (e.g., "writing-list-null", "article-article-id-1")
@@ -857,7 +880,8 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
     exit: {
       opacity: 0,
       transition: {
-        duration: 0.2
+        duration: 0.3,
+        ease: EASING.smooth
       }
     }
   } as const : viewTransitionVariants)
@@ -895,6 +919,23 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
       })
     }
   }, [viewMode, articleId, isWritingMode])
+
+  /**
+   * Single handler for article tap so touchEnd and click don't both fire (mobile).
+   * Skips if the same article was already selected within TAP_DEBOUNCE_MS.
+   */
+  const handleArticleTap = useCallback((articleId: string) => {
+    const now = Date.now()
+    if (articleTapHandledRef.current?.id === articleId && now - articleTapHandledRef.current.t < TAP_DEBOUNCE_MS) {
+      articleTapHandledRef.current = null
+      return
+    }
+    onArticleSelect?.(articleId)
+    articleTapHandledRef.current = { id: articleId, t: now }
+    setTimeout(() => {
+      articleTapHandledRef.current = null
+    }, TAP_DEBOUNCE_MS)
+  }, [onArticleSelect])
 
   // ============================================================================
   // ARTICLE LOADING LOGIC
@@ -995,17 +1036,64 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   // ============================================================================
 
   /**
-   * When an article is selected on mobile, programmatically snap the sheet
-   * to the 90% snap point for better reading experience.
+   * When an article is selected on mobile, snap the sheet to 90% immediately
+   * so the sheet expansion and content change feel like one action.
    * snapPoints are [0.9, 0.5, 0] so index 0 = 90% (full), index 2 = 0% (dismissed).
    */
   useEffect(() => {
     if (!isMobile || !articleId || articleId === 'about') return
-    const timer = setTimeout(() => {
-      sheetRef.current?.snapTo(0)
-    }, 100)
-    return () => clearTimeout(timer)
+    sheetRef.current?.snapTo(0)
   }, [isMobile, articleId])
+
+  // ============================================================================
+  // MOBILE SHEET: SCROLL-TO-EXPAND (ABOUT ONLY)
+  // ============================================================================
+
+  /** Pixels scrolled down before expanding the About sheet from 50% to 90%. */
+  const SCROLL_EXPAND_THRESHOLD_PX = 48
+
+  /**
+   * When the About bottom sheet is open at 50%, scrolling down inside the content
+   * expands the sheet to 90%. Only runs in single-sheet (non-stacked) mobile path.
+   */
+  useEffect(() => {
+    if (
+      !isMobile ||
+      viewMode !== 'about' ||
+      isMobileStacked ||
+      !(isWritingMode || isPhotosMode || isAboutMode || articleId !== null)
+    ) return
+
+    const contentEl = mobileScrollContentRef.current
+    if (!contentEl) return
+
+    let el: HTMLElement | null = contentEl.parentElement
+    while (el) {
+      const { scrollHeight, clientHeight } = el
+      const overflowY = window.getComputedStyle(el).overflowY
+      if ((overflowY === 'auto' || overflowY === 'scroll') && scrollHeight > clientHeight) break
+      el = el.parentElement
+    }
+    const scrollContainer = el
+    if (!scrollContainer) return
+
+    const handleScroll = () => {
+      if (currentSnapIndexRef.current === 1 && scrollContainer.scrollTop > SCROLL_EXPAND_THRESHOLD_PX) {
+        sheetRef.current?.snapTo(0)
+      }
+    }
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+    return () => scrollContainer.removeEventListener('scroll', handleScroll)
+  }, [
+    isMobile,
+    viewMode,
+    isMobileStacked,
+    isWritingMode,
+    isPhotosMode,
+    isAboutMode,
+    articleId,
+  ])
 
   // ============================================================================
   // SCROLL-BASED BLUR FOR DESKTOP ARTICLE VIEW
@@ -1190,20 +1278,36 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
 
           <div className="space-y-4">
             {writings.map((article, i) => (
-              <motion.div
+              <motion.button
                 key={article.id}
+                type="button"
                 custom={i}
                 variants={activeListItemVariants}
                 initial="hidden"
                 animate="visible"
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => {
-                  if (onArticleSelect) {
-                    onArticleSelect(article.id)
+                onTouchStart={(e) => {
+                  e.stopPropagation()
+                  if (e.touches?.[0]) {
+                    touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
                   }
                 }}
-                className="cursor-pointer space-y-1"
+                onTouchEnd={(e) => {
+                  const start = touchStartPosRef.current
+                  touchStartPosRef.current = null
+                  if (!start || !onArticleSelect || !e.changedTouches?.[0]) return
+                  const t = e.changedTouches[0]
+                  const dx = t.clientX - start.x
+                  const dy = t.clientY - start.y
+                  if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
+                    handleArticleTap(article.id)
+                  }
+                }}
+                onClick={() => handleArticleTap(article.id)}
+                className="tray-list-button cursor-pointer space-y-1 w-full text-left touch-manipulation border-0 bg-transparent p-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
+                style={{ WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
                 whileHover={{ x: 4, opacity: 1 }}
+                whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2, ease: EASING.smooth }}
               >
                 <p
@@ -1218,7 +1322,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                 >
                   {article.date}
                 </p>
-              </motion.div>
+              </motion.button>
             ))}
           </div>
 
@@ -1230,11 +1334,12 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
               transition={{ duration: 0.4, delay: 0.2 }}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => setPersonalNotesExpanded(!personalNotesExpanded)}
-              className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes"
+              className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
               style={{
                 background: 'transparent',
                 border: 'none',
                 padding: 0,
+                outline: 'none',
                 WebkitTapHighlightColor: 'transparent',
                 color: trayColors.fgMuted,
               }}
@@ -1271,20 +1376,36 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   className="space-y-4"
                 >
                   {personalNotes.map((article, i) => (
-                    <motion.div
+                    <motion.button
                       key={article.id}
+                      type="button"
                       custom={i + writings.length}
                       variants={activeListItemVariants}
                       initial="hidden"
                       animate="visible"
                       onPointerDown={(e) => e.stopPropagation()}
-                      onClick={() => {
-                        if (onArticleSelect) {
-                          onArticleSelect(article.id)
+                      onTouchStart={(e) => {
+                        e.stopPropagation()
+                        if (e.touches?.[0]) {
+                          touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
                         }
                       }}
-                      className="cursor-pointer space-y-1"
+                      onTouchEnd={(e) => {
+                        const start = touchStartPosRef.current
+                        touchStartPosRef.current = null
+                        if (!start || !onArticleSelect || !e.changedTouches?.[0]) return
+                        const t = e.changedTouches[0]
+                        const dx = t.clientX - start.x
+                        const dy = t.clientY - start.y
+                        if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
+                          handleArticleTap(article.id)
+                        }
+                      }}
+                      onClick={() => handleArticleTap(article.id)}
+                      className="tray-list-button cursor-pointer space-y-1 w-full text-left touch-manipulation border-0 bg-transparent p-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
+                      style={{ WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
                       whileHover={{ x: 4, opacity: 1 }}
+                      whileTap={{ scale: 0.98 }}
                       transition={{ duration: 0.2, ease: EASING.smooth }}
                     >
                       <p
@@ -1299,7 +1420,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                       >
                         {article.date}
                       </p>
-                    </motion.div>
+                    </motion.button>
                   ))}
                 </motion.div>
               )}
@@ -1339,7 +1460,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                 )}
               </motion.figure>
             ))}
-            <div className="flex flex-col gap-1 pt-2">
+            <div className="flex flex-col gap-1 pt-2 pl-6">
               {PHOTOS.map((photo, i) => (
                 <p key={photo.src} className="type-caption font-edu-marist leading-relaxed" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
                   <span className="opacity-70">{PHOTO_ROMAN[i]}</span> {getPhotoCreditName(photo)}
@@ -1372,7 +1493,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   My career began in hospitality, brand and web design.
                 </p>
               </div>
-              <div className="mt-8 flex flex-col gap-4">
+              <div className="mt-8 flex flex-col gap-1">
                 <p className="text-foreground opacity-80">
                   I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
                 </p>
@@ -1391,7 +1512,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   </p>
                   <p className="text-foreground opacity-70">
                     I{" "}
-                    {onSwitchToWriting ? (
+                    {(!isMobile && onSwitchToWriting) ? (
                       <motion.span
                         onClick={onSwitchToWriting}
                         role="button"
@@ -1413,7 +1534,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                       "write"
                     )}
                     ,{" "}
-                    {onSwitchToPhotograph ? (
+                    {(!isMobile && onSwitchToPhotograph) ? (
                       <motion.span
                         onClick={onSwitchToPhotograph}
                         role="button"
@@ -1438,7 +1559,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   </p>
                 </div>
               </div>
-              <p className="mt-8 text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
+              <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
                 Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
               </p>
             </div>
@@ -1516,12 +1637,13 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
           </p>
           <motion.button
             onClick={() => articleId && loadArticle(articleId)}
-            className="mt-4 text-xs type-caption cursor-pointer"
+            className="mt-4 text-xs type-caption cursor-pointer focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
             style={{
               color: trayColors.fgMuted,
               background: 'transparent',
               border: 'none',
               padding: 0,
+              outline: 'none',
               textDecoration: 'underline',
             }}
             whileHover={{ scale: 1.02 }}
@@ -1584,8 +1706,9 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
         isOpen={shouldShowTray}
         onClose={onClose}
         snapPoints={[0.9, 0.5, 0]}
-        initialSnap={1}
-        tweenConfig={{ ease: "easeOut", duration: 0.3 }}
+        initialSnap={isWritingMode ? 0 : 1}
+        onSnap={(index) => { currentSnapIndexRef.current = index }}
+        tweenConfig={{ ease: "easeOut", duration: 0.35 }}
         prefersReducedMotion={!!shouldReduceMotion}
       >
         <Sheet.Container
@@ -1616,7 +1739,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   resetContent()
                 }
               }}
-              className="absolute top-2 left-4 z-20 p-2 group"
+              className="absolute top-2 left-4 z-20 p-2 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
               whileHover={{ scale: 1.02, x: -1 }}
               whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.4, ease: EASING.gentle }}
@@ -1660,7 +1783,6 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                           variants: mobileStackBackVariants,
                           initial: "single",
                           animate: "stacked",
-                          transition: { duration: 0.4, ease: EASING.smooth },
                         })}
                   >
                     <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-8 pb-8">
@@ -1698,13 +1820,26 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                       })}
                 >
                   <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-8 pb-8">
-                    {renderViewContent(mobileStackFrontViewMode)}
+                    {mobileStackFrontViewMode === "article" ? (
+                      <motion.div
+                        key="stack-article-content"
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: "12%" }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: MOBILE_STACK_DURATION, ease: EASING.smooth }}
+                        className="min-h-full"
+                      >
+                        {renderViewContent(mobileStackFrontViewMode)}
+                      </motion.div>
+                    ) : (
+                      renderViewContent(mobileStackFrontViewMode)
+                    )}
                   </div>
                 </motion.div>
               </>
             ) : (
               <Sheet.Scroller>
                 <div
+                  ref={mobileScrollContentRef}
                   role="dialog"
                   aria-modal="true"
                   aria-label={
@@ -1715,7 +1850,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                         : "Writings"
                   }
                   className={`px-6 pt-8 pb-8 ${viewMode === "about" ? "flex flex-col min-h-full" : ""}`}
-                  style={{ ...cssVarScoping, color: trayColors.fg }}
+                  style={{ ...cssVarScoping, color: trayColors.fg, WebkitTapHighlightColor: "transparent" }}
                 >
                   {viewContent}
                 </div>
@@ -1835,7 +1970,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                                 My career began in hospitality, brand and web design.
                               </p>
                             </div>
-                            <div className="mt-8 flex flex-col gap-4">
+                            <div className="mt-8 flex flex-col gap-1">
                               <p className="text-foreground opacity-80">
                                 I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
                               </p>
@@ -1852,7 +1987,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                               </p>
                               <p className="text-foreground opacity-70">
                                 I{" "}
-                                {onSwitchToWriting ? (
+                                {(!isMobile && onSwitchToWriting) ? (
                                   <motion.span
                                     onClick={onSwitchToWriting}
                                     role="button"
@@ -1874,7 +2009,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                                   "write"
                                 )}
                                 ,{" "}
-                                {onSwitchToPhotograph ? (
+                                {(!isMobile && onSwitchToPhotograph) ? (
                                   <motion.span
                                     onClick={onSwitchToPhotograph}
                                     role="button"
@@ -1898,10 +2033,10 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                                 , and spend time on a yoga mat or chasing light through workspaces.
                               </p>
                             </div>
-                            <p className="mt-8 text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
-                              Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
-                            </p>
                           </div>
+                          <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
+                            Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
+                          </p>
                         </div>
                         <nav className="flex flex-col gap-1 group/nav pt-2">
                           <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
@@ -1931,7 +2066,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                       {!isPhotosMode && articleId !== null && onArticleSelect && (
                         <motion.button
                           onClick={() => onArticleSelect(null)}
-                          className="absolute top-6 left-6 z-10 p-2 group"
+                          className="absolute top-6 left-6 z-10 p-2 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                           aria-label="Back to list"
                           style={{ background: 'transparent', border: 'none', outline: 'none', color: trayColors.fgMuted, WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
                           whileHover={{ scale: 1.02, x: -1 }}
@@ -1943,7 +2078,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                       {(isWritingMode && onCloseWritingOnly) && (
                         <motion.button
                           onClick={handleCloseWritingPanel}
-                          className="absolute top-6 right-6 z-10 p-1.5 group"
+                          className="absolute top-6 right-6 z-10 p-1.5 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                           aria-label="Close writing"
                           style={{
                             background: 'transparent',
@@ -1966,7 +2101,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                       {isPhotosMode && onClosePhotosOnly && (
                         <motion.button
                           onClick={handleClosePhotosPanel}
-                          className="absolute top-6 right-6 z-10 p-1.5 group"
+                          className="absolute top-6 right-6 z-10 p-1.5 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                           aria-label="Close photographs"
                           style={{
                             background: 'transparent',
@@ -2045,20 +2180,41 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                             </motion.span>
                             <div className="space-y-4">
                               {writings.map((article, i) => (
-                                <motion.div
+                                <motion.button
                                   key={article.id}
+                                  type="button"
                                   custom={i}
                                   variants={activeListItemVariants}
                                   initial="hidden"
                                   animate="visible"
-                                  onClick={() => onArticleSelect?.(article.id)}
-                                  className="cursor-pointer space-y-1"
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onTouchStart={(e) => {
+                                    e.stopPropagation()
+                                    if (e.touches?.[0]) {
+                                      touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+                                    }
+                                  }}
+                                  onTouchEnd={(e) => {
+                                    const start = touchStartPosRef.current
+                                    touchStartPosRef.current = null
+                                    if (!start || !onArticleSelect || !e.changedTouches?.[0]) return
+                                    const t = e.changedTouches[0]
+                                    const dx = t.clientX - start.x
+                                    const dy = t.clientY - start.y
+                                    if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
+                                      handleArticleTap(article.id)
+                                    }
+                                  }}
+                                  onClick={() => handleArticleTap(article.id)}
+                                  className="tray-list-button cursor-pointer space-y-1 w-full text-left touch-manipulation border-0 bg-transparent p-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
+                                  style={{ WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
                                   whileHover={{ x: 4, opacity: 1 }}
+                                  whileTap={{ scale: 0.98 }}
                                   transition={{ duration: 0.2, ease: EASING.smooth }}
                                 >
                                   <p className="text-xs transition-colors duration-200" style={{ color: i < 2 ? trayColors.fg : trayColors.fgMuted }}>{article.title}</p>
                                   <p className="text-[10px] font-light transition-colors duration-200" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{article.date}</p>
-                                </motion.div>
+                                </motion.button>
                               ))}
                             </div>
                             <div className="mt-8">
@@ -2066,9 +2222,10 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                                 initial={{ opacity: 0, filter: 'blur(4px)' }}
                                 animate={{ opacity: 0.5, filter: 'blur(0px)' }}
                                 transition={{ duration: 0.4, delay: 0.2 }}
+                                onPointerDown={(e) => e.stopPropagation()}
                                 onClick={() => setPersonalNotesExpanded(!personalNotesExpanded)}
-                                className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes"
-                                style={{ background: 'transparent', border: 'none', padding: 0, WebkitTapHighlightColor: 'transparent', color: trayColors.fgMuted }}
+                                className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes touch-manipulation focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
+                                style={{ background: 'transparent', border: 'none', padding: 0, outline: 'none', WebkitTapHighlightColor: 'transparent', color: trayColors.fgMuted }}
                               >
                                 <span>Personal Notes</span>
                                 <svg width="6" height="6" viewBox="0 0 8 8" fill="none" stroke="currentColor" className={isMobile ? "opacity-50 cursor-pointer" : "opacity-0 group-hover/notes:opacity-50 transition-opacity duration-200 cursor-pointer"} style={{ transform: personalNotesExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease-out, opacity 0.2s ease-out' }}>
@@ -2079,20 +2236,41 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                                 {personalNotesExpanded && (
                                   <motion.div initial={{ opacity: 0, filter: 'blur(4px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, filter: 'blur(4px)' }} transition={{ duration: 0.4, ease: EASING.smooth }} className="space-y-4">
                                     {personalNotes.map((article, i) => (
-                                      <motion.div
+                                      <motion.button
                                         key={article.id}
+                                        type="button"
                                         custom={i + writings.length}
                                         variants={activeListItemVariants}
                                         initial="hidden"
                                         animate="visible"
-                                        onClick={() => onArticleSelect?.(article.id)}
-                                        className="cursor-pointer space-y-1"
+                                        onPointerDown={(e) => e.stopPropagation()}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation()
+                                          if (e.touches?.[0]) {
+                                            touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+                                          }
+                                        }}
+                                        onTouchEnd={(e) => {
+                                          const start = touchStartPosRef.current
+                                          touchStartPosRef.current = null
+                                          if (!start || !onArticleSelect || !e.changedTouches?.[0]) return
+                                          const t = e.changedTouches[0]
+                                          const dx = t.clientX - start.x
+                                          const dy = t.clientY - start.y
+                                          if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
+                                            handleArticleTap(article.id)
+                                          }
+                                        }}
+                                        onClick={() => handleArticleTap(article.id)}
+                                        className="tray-list-button cursor-pointer space-y-1 w-full text-left touch-manipulation border-0 bg-transparent p-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
+                                        style={{ WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
                                         whileHover={{ x: 4, opacity: 1 }}
+                                        whileTap={{ scale: 0.98 }}
                                         transition={{ duration: 0.2, ease: EASING.smooth }}
                                       >
                                         <p className={`text-xs transition-colors duration-200 ${article.strikethrough ? "line-through opacity-70" : ""}`} style={{ color: i < 1 ? trayColors.fg : trayColors.fgMuted }}>{article.title}</p>
                                         <p className="text-[10px] font-light transition-colors duration-200" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{article.date}</p>
-                                      </motion.div>
+                                      </motion.button>
                                     ))}
                                   </motion.div>
                                 )}
@@ -2103,7 +2281,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                           <motion.div key="error" initial={{ opacity: 0, filter: 'blur(4px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.4, ease: EASING.smooth }} className="text-center py-8">
                             <p className="text-xs mb-2" style={{ color: trayColors.fgMuted }}>Unable to load this article</p>
                             <p className="text-[10px] font-light" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{error}</p>
-                            <motion.button onClick={() => articleId && loadArticle(articleId)} className="mt-4 text-xs type-caption cursor-pointer" style={{ color: trayColors.fgMuted, background: 'transparent', border: 'none', padding: 0, textDecoration: 'underline' }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>Try again</motion.button>
+                            <motion.button onClick={() => articleId && loadArticle(articleId)} className="mt-4 text-xs type-caption cursor-pointer focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0" style={{ color: trayColors.fgMuted, background: 'transparent', border: 'none', padding: 0, outline: 'none', textDecoration: 'underline' }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>Try again</motion.button>
                           </motion.div>
                         ) : content ? (
                           <motion.div key="article" variants={activeViewTransitionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
@@ -2131,12 +2309,12 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
               {/* Close button */}
               <motion.button
                 onClick={onClose}
-                className="absolute top-6 right-6 z-10 p-1.5 group"
+                className="absolute top-6 right-6 z-10 p-1.5 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                 variants={shouldReduceMotion ? undefined : closeButtonVariants}
                 initial={shouldReduceMotion ? undefined : "hidden"}
                 animate={shouldReduceMotion ? undefined : "visible"}
                 exit={shouldReduceMotion ? undefined : "exit"}
-                whileHover={shouldReduceMotion ? {} : { scale: 1.1, rotate: 15 }}
+                whileHover={shouldReduceMotion ? {} : { rotate: 15 }}
                 whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
                 transition={{ duration: 0.4, ease: EASING.gentle }}
                 aria-label="Close"
@@ -2198,7 +2376,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                       resetContent()
                     }
                   }}
-                  className="absolute top-6 left-6 z-10 p-2 group"
+                  className="absolute top-6 left-6 z-10 p-2 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                   whileHover={{ scale: 1.02, x: -1 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.4, ease: EASING.gentle }}

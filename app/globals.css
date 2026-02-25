@@ -842,10 +842,19 @@ button {
   @apply transition-colors duration-200;
 }
 
-/* Remove browser default blue focus ring sitewide; keyboard focus handled per-component */
+/* Remove browser default blue focus ring sitewide; :focus and :focus-visible so click never shows blue ring */
+button:focus,
 button:focus-visible,
+a:focus,
 a:focus-visible {
   outline: none;
+}
+
+/* Custom keyboard-only focus indicator so we replace the default, not just hide it */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid hsl(var(--border));
+  outline-offset: 2px;
 }
 
 /* Cards with brown theme */
@@ -875,6 +884,17 @@ button.bg-accent:hover,
 button[class*="bg-"]:hover {
   background-color: var(--accent-hover);
   color: var(--text-primary);
+}
+
+/* Side tray writing list items: override above so no blue hover (same/higher specificity, later wins) */
+button.tray-list-button,
+button.tray-list-button:hover,
+button.tray-list-button:focus,
+button.tray-list-button:focus-visible {
+  outline: none;
+  box-shadow: none;
+  background-color: transparent;
+  color: inherit;
 }
 
 .rounded-lg {
