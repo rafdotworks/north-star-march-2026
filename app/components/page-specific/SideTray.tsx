@@ -1049,17 +1049,17 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   // MOBILE SHEET: SCROLL-TO-EXPAND (ABOUT ONLY)
   // ============================================================================
 
-  /** Pixels scrolled down before expanding the About sheet from 50% to 90%. */
+  /** Pixels scrolled down before expanding the sheet from 50% to 90%. */
   const SCROLL_EXPAND_THRESHOLD_PX = 48
 
   /**
-   * When the About bottom sheet is open at 50%, scrolling down inside the content
-   * expands the sheet to 90%. Only runs in single-sheet (non-stacked) mobile path.
+   * When the bottom sheet is open at 50%, scrolling down inside the content
+   * expands the sheet to 90%. Applies to all views (about, writing-list, photos, article)
+   * in the single-sheet (non-stacked) mobile path. iOS-friendly: no need to hit the header to expand.
    */
   useEffect(() => {
     if (
       !isMobile ||
-      viewMode !== 'about' ||
       isMobileStacked ||
       !(isWritingMode || isPhotosMode || isAboutMode || articleId !== null)
     ) return
@@ -1765,8 +1765,9 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
             </motion.button>
           )}
 
+          {/* Content drag enabled so at scroll top user can drag to expand (Sheet.Scroller draggableAt="top"); revert to disableDrag={isMobile} if accidental drags occur */}
           <Sheet.Content
-            disableDrag={isMobile}
+            disableDrag={false}
             style={{
               paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))",
             }}
