@@ -12,13 +12,17 @@ import { Section, CONTENT_AREA_WIDE_MAX_WIDTH, CONTENT_AREA_WIDE_PADDING } from 
 import { VimeoInlineEmbed } from "@/app/components/media/VimeoInlineEmbed"
 import SideTray from "@/app/components/page-specific/SideTray"
 import { FOOTER_CONFIG } from "@/app/config/footerConfig"
+import { MOBILE_HERO_COPY } from "@/app/config/aboutModalConfig"
 import { PROJECT_VIDEOS } from "@/app/config/portfolioConfig"
 import { useSystemTheme } from "@/hooks/use-system-theme"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { LOAD_FOCUS } from "@/components/animations/LoadingAnimations"
+import { SEMANTIC_TYPOGRAPHY } from "@/app/config/typographyConfig"
 
 
 export default function Page() {
   const { prefersDark, isReady } = useSystemTheme()
+  const isMobile = useIsMobile()
 
   // Writing tray state
   const [isWritingOpen, setIsWritingOpen] = useState(false)
@@ -270,15 +274,49 @@ export default function Page() {
         >
           {/* Load-in animation only: blur + fade in; after loadComplete, scroll-driven style above controls appearance */}
           <motion.div
-            className="h-full grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-[2.5vw] md:gap-x-10 gap-y-0 content-end md:content-center items-end md:items-baseline min-h-0 col-span-1 md:col-span-2"
+            className={isMobile
+              ? "h-full flex flex-col justify-end min-h-0 col-span-1 md:col-span-2 text-left max-w-[600px]"
+              : "h-full grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-[2.5vw] md:gap-x-10 gap-y-0 content-end md:content-center items-end md:items-baseline min-h-0 col-span-1 md:col-span-2"
+            }
             initial={!shouldReduceMotion && !loadComplete ? { filter: `blur(${LOAD_FOCUS.BLUR_PX}px)`, opacity: 0 } : false}
             animate={!shouldReduceMotion && !loadComplete ? { filter: "blur(0px)", opacity: 1 } : false}
-            transition={{ duration: LOAD_FOCUS.DURATION, ease: LOAD_FOCUS.EASE }}
+            transition={{
+              opacity: { duration: LOAD_FOCUS.DURATION_OPACITY, ease: LOAD_FOCUS.EASE },
+              filter: { duration: LOAD_FOCUS.DURATION_BLUR, ease: LOAD_FOCUS.EASE },
+            }}
             style={loadComplete ? undefined : { willChange: 'filter, opacity' }}
           >
-          {/* Col 1: Identity */}
+          {isMobile ? (
+            /* Mobile hero: single column, spacing + opacity hierarchy */
+            <div className="flex flex-col space-y-5 pb-6">
+              <p className={`font-edu-marist ${SEMANTIC_TYPOGRAPHY.heading.mobile} ${SEMANTIC_TYPOGRAPHY.heading.lineHeight}`}>
+                {MOBILE_HERO_COPY.name}
+              </p>
+              {/* MOBILE_HERO_COPY.lines[0] — hidden per feedback */}
+              <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} leading-relaxed opacity-80`}>
+                Designing AI recommendations at{" "}
+                <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>
+                . Previously{" "}
+                <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>
+                , <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>
+                , <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>
+                , <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink>
+                {" "}and more.
+              </p>
+              <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} leading-relaxed opacity-70`}>
+                {MOBILE_HERO_COPY.lines[2]}
+              </p>
+              <nav className={`font-edu-marist ${SEMANTIC_TYPOGRAPHY.secondary.mobile} ${SEMANTIC_TYPOGRAPHY.secondary.lineHeight} flex flex-row flex-wrap items-center gap-x-6 group/nav opacity-90`} aria-label="Contact and links">
+                <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
+                <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
+                <FooterLink href="https://x.com/rafdotworks" label="X" external className="inline-flex items-center gap-1" />
+              </nav>
+            </div>
+          ) : (
+            <>
+          {/* Col 1: Identity (desktop only — opens About tray) */}
           <div className="mb-4 md:mb-0 text-left">
-            <p className="text-sm leading-relaxed">
+            <p className="type-body-primary leading-relaxed">
               <button
                 type="button"
                 onClick={openAboutTray}
@@ -313,23 +351,20 @@ export default function Page() {
             </p>
           </div>
 
-          {/* Col 2: bio + contact row on desktop; bio only on mobile (contact in footer) */}
+          {/* Col 2: bio + contact row on desktop */}
           <div className="mb-4 md:mb-0 flex flex-col md:flex-row md:gap-x-10 md:items-end min-w-0">
-            {/* Bio block — same as before */}
             <div className={`max-w-[600px] text-left flex flex-col ${heroStackGap}`}>
-              {/* Title block — mt-2 on mobile so this line sits lower (not second line moving up) */}
-              <p className="mt-2 md:mt-0 text-sm md:text-xs leading-relaxed">
+              <p className="mt-2 md:mt-0 type-body leading-relaxed">
                 AI Designer and Design Engineer
               </p>
-              {/* Context block — mt-2 on mobile (tighter), mt-6 on desktop */}
               <div className="mt-2 md:mt-6">
-                <p className="text-sm md:text-xs leading-relaxed">
+                <p className="type-body leading-relaxed">
                   <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>.</span>
                 </p>
-                <p className="hidden md:block text-sm md:text-xs leading-relaxed mt-1">
+                <p className="hidden md:block type-body leading-relaxed mt-1">
                   <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.</span>
                 </p>
-                <div className="hidden md:block mt-6 text-sm md:text-xs leading-relaxed font-edu-marist">
+                <div className="hidden md:block mt-6 type-caption font-edu-marist leading-relaxed">
                   <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
                     <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
                     <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
@@ -337,27 +372,43 @@ export default function Page() {
                   </nav>
                 </div>
               </div>
-              {/* Links block — mt-8 from context (structural release); hidden on desktop (links in context block) */}
-              <div className="text-sm md:text-xs leading-relaxed font-edu-marist mt-8 md:hidden">
-                <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
-                  <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
-                  <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
-                  <FooterLink href="https://x.com/rafdotworks" label="X" external className="inline-flex items-center gap-1" />
-                </nav>
-              </div>
             </div>
           </div>
+          </>
+          )}
           </motion.div>
         </div>
       </main>
 
       {/* ================================================================
-       * WORK — one section per project, 8–10vh spacing, equal-column grid
-       * Order: obv, walm, theo, cb, vf, atl, zl, ew
+       * WORK — mobile: 6-image strip; desktop: full gallery
        * ================================================================ */}
+      {isMobile ? (
+        <Section wide spacing="tight">
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
+            <motion.div
+              ref={firstWorkImageRef}
+              className="w-full"
+              style={{
+                scale: shouldReduceMotion ? 1 : firstImageScale,
+                transformOrigin: "center center",
+              }}
+            >
+              <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious: chat interface with workflow progress and “remember this workflow” prompt" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
+            </motion.div>
+            <Image src="/work/q2-26-works/walm/walm-5.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+            <div ref={theoriqSectionRef}>
+              <Image src="/work/q2-26-works/theo/theo-2.png" alt="Theoriq: Infinity Studio or Hub interface for AI agents" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+            </div>
+            <Image src="/work/q2-26-works/cb/cb-1.png" alt="Coinbase Developer Platform: API docs or developer tools" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+            <Image src="/work/q2-26-works/vf/vf-1.png" alt="Voiceflow: conversation design or dialog editor" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+            <Image src="/work/q2-26-works/atl/atl-1.png" alt="Atlas: crypto marketplace or NFT collections" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          </div>
+        </Section>
+      ) : (
+        <>
       <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          {/* First image in work area — gets entry scale effect */}
           <motion.div
             ref={firstWorkImageRef}
             className="w-full"
@@ -366,18 +417,13 @@ export default function Page() {
               transformOrigin: "center center",
             }}
           >
-            <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious: chat interface with workflow progress and “remember this workflow” prompt" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
+            <Image src="/work/q2-26-works/obv/obv-1.png" alt={'Obvious: chat interface with workflow progress and "remember this workflow" prompt'} width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
           </motion.div>
-          {/* <Image src="/work/q2-26-works/obv/obv-2.png" alt="Obvious: Skills dashboard with “Teach once” and trending workflow cards" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} /> */}
         </div>
       </Section>
 
       <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
-          {/* <Image src="/work/q2-26-works/walm/walm-1.png" alt="Walmart: AI recommendations or product interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />  */}
-          {/* <Image src="/work/q2-26-works/walm/walm-2.png" alt="Walmart: recommendations experience or dashboard" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
-            {/* <Image src="/work/q2-26-works/walm/walm-3.png" alt="Walmart: AI-powered recommendations interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
-          {/* <Image src="/work/q2-26-works/walm/walm-4.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
         <Image src="/work/q2-26-works/walm/walm-5.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
@@ -442,12 +488,14 @@ export default function Page() {
           <Image src="/work/q2-26-works/ew/ew-7.png" alt="Early work: portfolio piece" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
+        </>
+      )}
 
       {/* ================================================================
        * FOOTER — principles + contact links. Same content band as work sections.
        * ================================================================ */}
       <footer
-        className={`w-full ${CONTENT_AREA_WIDE_MAX_WIDTH} mx-auto ${CONTENT_AREA_WIDE_PADDING} grid grid-cols-[1fr_auto] gap-x-[2.5vw] md:gap-x-10 items-baseline pb-[16vh]`}
+        className={`w-full ${CONTENT_AREA_WIDE_MAX_WIDTH} mx-auto ${CONTENT_AREA_WIDE_PADDING} grid grid-cols-[1fr_auto] gap-x-[2.5vw] md:gap-x-10 items-baseline pb-10 md:pb-[16vh]`}
         aria-label="Footer"
       >
         <div className="min-w-0 max-w-prose flex flex-col gap-1 text-left">

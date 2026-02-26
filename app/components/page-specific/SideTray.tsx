@@ -706,6 +706,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   const handleCloseWritingPanel = useCallback(() => {
     if (!onCloseWritingOnly) return
     if (isStacked) {
+      aboutScrollWhenReturningFromStackedRef.current = backPanelScrollRef.current?.scrollTop ?? 0
       setIsWritingPanelExiting(true)
     } else {
       onCloseWritingOnly()
@@ -715,6 +716,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   const handleClosePhotosPanel = useCallback(() => {
     if (!onClosePhotosOnly) return
     if (isStacked) {
+      aboutScrollWhenReturningFromStackedRef.current = backPanelScrollRef.current?.scrollTop ?? 0
       setIsPhotosPanelExiting(true)
     } else {
       onClosePhotosOnly()
@@ -729,6 +731,17 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   /** When stacked, mark that we came from stacked so returning to About skips entrance animation */
   useEffect(() => {
     if (isStacked) justReturnedFromStackedRef.current = true
+  }, [isStacked])
+
+  /** When leaving stacked, restore main content scroll so About view does not jump */
+  useEffect(() => {
+    if (!isStacked && aboutScrollWhenReturningFromStackedRef.current !== undefined) {
+      const saved = aboutScrollWhenReturningFromStackedRef.current
+      aboutScrollWhenReturningFromStackedRef.current = undefined
+      requestAnimationFrame(() => {
+        if (mainContentRef.current) mainContentRef.current.scrollTop = saved
+      })
+    }
   }, [isStacked])
 
   /**
@@ -828,6 +841,15 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
    * and the About view stays still instead of "reloading".
    */
   const justReturnedFromStackedRef = useRef(false)
+
+  /**
+   * Ref to the back panel's scroll container (stacked desktop). Used to read
+   * scroll position when closing the front panel so we can restore it when
+   * switching back to the main About view and avoid text jump.
+   */
+  const backPanelScrollRef = useRef<HTMLDivElement>(null)
+  /** Saved scroll position when returning from stacked; restored in useEffect when isStacked becomes false. */
+  const aboutScrollWhenReturningFromStackedRef = useRef<number | undefined>(undefined)
 
   // ============================================================================
   // NESTED TRAY LOGIC
@@ -1487,28 +1509,25 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
               </p>
               <div className="mt-8 flex flex-col gap-1">
                 <p className="text-foreground opacity-90">
-                  Studied software engineering in Naples before design.
-                </p>
-                <p className="text-foreground opacity-90">
-                  My career began in hospitality, brand and web design.
+                  Studied software engineering in Naples, Italy. My career began in hospitality, brand and web design.
                 </p>
               </div>
               <div className="mt-8 flex flex-col gap-1">
                 <p className="text-foreground opacity-80">
-                  I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
+                  I&apos;m leading design for Seller AI at <InlineExternalLink href={COMPANY_LINKS.walmart} underlineStyle="subtle">Walmart</InlineExternalLink><span className="opacity-75">, where I am working at the intersection of AI systems and product design while building on the side.</span>
                 </p>
                 <p className="text-foreground opacity-80">
-                  I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, front-end design engineering, and brand design.
+                  I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink><span className="opacity-75">, leading product design, front-end design engineering, and brand design.</span>
                 </p>
                 <p className="text-foreground opacity-80">
-                  Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
+                  Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink><span className="opacity-75"> design work, </span><InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink><span className="opacity-75"> for product activation </span>and more.
                 </p>
               </div>
               <div className="my-10 flex flex-col gap-1">
                 
                 <div className="flex flex-col gap-1">
                   <p className="text-foreground opacity-70">
-                    Grew up on the Amalfi Coast. Based in Toronto.
+                    Grew up on the Amalfi Coast, Italy. Based in Toronto.
                   </p>
                   <p className="text-foreground opacity-70">
                     I{" "}
@@ -1559,7 +1578,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   </p>
                 </div>
               </div>
-              <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
+              <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60 min-h-5">
                 Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
               </p>
             </div>
@@ -1956,7 +1975,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   }}
                 >
                     <div className="h-full flex flex-col">
-                    <div className="flex-1 overflow-y-auto px-8 pt-16 pb-8 flex flex-col">
+                    <div ref={backPanelScrollRef} className="flex-1 overflow-y-auto px-8 pt-16 pb-8 flex flex-col">
                       <div className="flex flex-col min-h-full justify-between">
                         <div className="tray-about-text-fade max-w-[600px]">
                           <div className="flex flex-col gap-1 text-sm leading-relaxed transition-colors duration-200">
@@ -1965,26 +1984,23 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                             </p>
                             <div className="mt-8 flex flex-col gap-1">
                               <p className="text-foreground opacity-90">
-                                Studied software engineering in Naples before design.
-                              </p>
-                              <p className="text-foreground opacity-90">
-                                My career began in hospitality, brand and web design.
+                                Studied software engineering in Naples, Italy. My career began in hospitality, brand and web design.
                               </p>
                             </div>
                             <div className="mt-8 flex flex-col gap-1">
                               <p className="text-foreground opacity-80">
-                                I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>.
+                                I&apos;m leading design for Seller AI at <InlineExternalLink href={COMPANY_LINKS.walmart} underlineStyle="subtle">Walmart</InlineExternalLink><span className="opacity-75">, where I am working at the intersection of AI systems and product design while building on the side.</span>
                               </p>
                               <p className="text-foreground opacity-80">
-                                I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink>, leading product design, front-end design engineering, and brand design.
+                                I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink><span className="opacity-75">, leading product design, front-end design engineering, and brand design.</span>
                               </p>
                               <p className="text-foreground opacity-80">
-                                Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink>, <InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.
+                                Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink><span className="opacity-75"> design work, </span><InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink><span className="opacity-75"> for product activation </span>and more.
                               </p>
                             </div>
                             <div className="my-10 flex flex-col gap-1">
                               <p className="text-foreground opacity-70">
-                                Grew up on the Amalfi Coast. Based in Toronto.
+                                Grew up on the Amalfi Coast, Italy. Based in Toronto.
                               </p>
                               <p className="text-foreground opacity-70">
                                 I{" "}
@@ -2035,7 +2051,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                               </p>
                             </div>
                           </div>
-                          <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60">
+                          <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60 min-h-5">
                             Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
                           </p>
                         </div>

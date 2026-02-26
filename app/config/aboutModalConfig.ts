@@ -47,7 +47,7 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
           isHighlighted: true,
         },
         {
-          text: "Grew up on the Amalfi Coast. Based in Toronto.",
+          text: "Grew up on the Amalfi Coast, Italy. Based in Toronto.",
         },
         {
           text: "You can find me on {linkedin}, on {x}, and at {email}.",
@@ -107,3 +107,18 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
     "Systems that feel fast, logical, and respectful of attention.",
   ],
 };
+
+/**
+ * MOBILE_HERO_COPY: Inline hero text for mobile only (no About tray trigger).
+ * Mix of current hero role + About modal (Origins, Craft, Presence).
+ * Used by: app/page.tsx for mobile hero content.
+ */
+export const MOBILE_HERO_COPY = {
+  name: "Raf",
+  lines: [
+    "AI Designer and Design Engineer.",
+    "Designing AI recommendations at Walmart. Previously Theoriq, Obvious, Coinbase, Voiceflow and more.",
+    "Grew up on the Amalfi Coast, Italy. Based in Toronto.",
+    "I write, photograph, and spend time on a yoga mat or chasing light through workspaces.",
+  ],
+} as const;

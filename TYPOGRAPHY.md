@@ -9,6 +9,7 @@ This document is the definitive guide to the typography system used throughout t
 
 ## Table of Contents
 
+0. [Minimal Identity & Hero](#0-minimal-identity--hero)
 1. [Typography Scale](#i-typography-scale)
 2. [Semantic Labels](#ii-semantic-labels)
 3. [Heading Hierarchies](#iii-heading-hierarchies)
@@ -18,6 +19,23 @@ This document is the definitive guide to the typography system used throughout t
 7. [Font Families](#vii-font-families)
 8. [Implementation Guide](#viii-implementation-guide)
 9. [Common Patterns](#ix-common-patterns)
+
+---
+
+## 0. Minimal Identity & Hero
+
+The site identity is **minimal and simple**: typography should feel calm, readable, and restrained—never loud or oversized.
+
+**Rules for the main site hero (homepage identity block):**
+
+- **Max size for main hero:** 22px (`text-xl`). The main identity hero does not use 26px (`text-2xl`).
+- **Preferred range:** Use **body** (14px), **secondary** (14px mobile / 12px desktop), and **caption** for supporting text. Optionally use one **title** size (22px) for a single emphasized line.
+- **26px (Display):** Reserved for rare emphasis outside the main hero (e.g. work card titles, special layouts). Do not use for the primary hero identity.
+- **Single source of truth:** Hero typography uses the same semantic classes as the rest of the site (e.g. `type-body-primary`, `type-body`, `type-caption`) so changes are consistent.
+
+This keeps the hero inspirational through clarity and hierarchy, not through large type.
+
+**Portfolio hero:** The portfolio page hero ([`app/portfolio/portfolio.module.css`](app/portfolio/portfolio.module.css)) uses the same principle: `.heroTitle` is capped at 22px (1.375rem) via a small clamp (20px–22px) so it aligns with the main site minimal identity.
 
 ---
 
@@ -35,7 +53,7 @@ The typography system uses a **Golden Ratio scale** (φ ≈ 1.618) with a **14px
 | `base` | 16px | `text-base` | Modal content, emphasized body text |
 | `lg` | 20px | `text-lg` | Subheadings, section titles |
 | `xl` | 22px | `text-xl` | Page titles, main headings, "Raf" name |
-| `2xl` | 26px | `text-2xl` | Hero text (desktop), large display |
+| `2xl` | 26px | `text-2xl` | Rare emphasis, large display; **not for main hero identity** |
 
 ### Why Golden Ratio?
 

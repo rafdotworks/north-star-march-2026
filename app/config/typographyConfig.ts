@@ -4,6 +4,9 @@
  * ============================================================================
  *
  * Centralized typography system configuration for programmatic access.
+ * The system is tuned for minimal identity: prefer body, secondary, and
+ * caption for the main hero; max size for main hero = 22px (xl). Use
+ * 26px (display) only for rare emphasis outside the hero.
  *
  * EXPORTS:
  * - TYPOGRAPHY_SCALE: Golden Ratio size progression (10px–26px)
@@ -27,7 +30,7 @@ export const TYPOGRAPHY_SCALE = {
   'base': '16px', // Modal content, emphasized body text
   'lg': '20px',   // Subheadings
   'xl': '22px',   // Page titles, main headings, "Raf" name
-  '2xl': '26px',  // Hero name (desktop), large display text
+  '2xl': '26px',  // Rare emphasis, large display; not for main hero identity
 } as const
 
 /**
@@ -245,6 +248,8 @@ export const TYPOGRAPHY_BREAKPOINT = 768 as const
  * 
  * Maps semantic intent to responsive size classes.
  * Choose typography by meaning (Display, Heading, Body) not by size number.
+ * For minimal identity: hero uses body, secondary, caption (and optionally
+ * title); avoid Display (26px) for the main site hero—cap at 22px (xl).
  * 
  * Usage:
  * - Use semantic names when meaning matters more than exact size
@@ -254,13 +259,13 @@ export const TYPOGRAPHY_BREAKPOINT = 768 as const
 export const SEMANTIC_TYPOGRAPHY = {
   /**
    * DISPLAY: Largest, most prominent text
-   * Use for: Hero text, page hero names, largest emphasis
+   * Use for: Rare emphasis, work card titles; NOT for main hero identity (max 22px there)
    */
   display: {
     mobile: 'text-xl',   // 22px - Fits mobile screens without overwhelming
     desktop: 'text-2xl', // 26px - Maximum impact on large screens
     lineHeight: 'leading-tight', // 1.25 - Tight for large text
-    use: 'Hero text, page hero names, largest headings',
+    use: 'Rare emphasis, large headings; not for main site hero',
   },
   
   /**

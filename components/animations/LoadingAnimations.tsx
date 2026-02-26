@@ -52,6 +52,8 @@ export const EASING = {
   textReveal: [0.25, 0.46, 0.45, 0.94],
   // Staggered text easing
   staggeredText: [0.19, 1, 0.22, 1],
+  // Gentle focus: softer start for load blur — "breathing in" not "switching on"
+  gentleFocus: [0.33, 0.5, 0.2, 1],
 } as const;
 
 // Enhanced text reveal animation with sophisticated blur-to-focus effect
@@ -386,11 +388,14 @@ export const LOADING_SEQUENCE = {
 
 // Sequential load blur: each hero element focuses independently, in reading order.
 // Pure blur + opacity only — no positional movement, minimal and undistracting.
+// Per-property timing: opacity arrives first, blur settles gently after (fluent, joyful).
 export const LOAD_FOCUS = {
-  BLUR_PX: 5,           // Very subtle — barely-there reveal, no visual tension
-  DURATION: 1.5,        // Longer settling feels graceful
-  EASE: EASING.primary, // [0.12, 1, 0.28, 1] — fast-start, long luxurious tail
-  STAGGER: 0.18,        // Delay between each sequential element
+  BLUR_PX: 5,                    // Very subtle — barely-there reveal, no visual tension
+  DURATION: 1.5,                 // Legacy single duration; prefer per-property below
+  DURATION_OPACITY: 1.1,          // Content "arrives" clearly
+  DURATION_BLUR: 1.65,           // Focus "settles" after content visible
+  EASE: EASING.gentleFocus,      // Softer start — breathing in, not switching on
+  STAGGER: 0.18,                 // Delay between each sequential element
 } as const;
 
 // Gentle single-container hero load: one soft blur + opacity for the whole hero (no stagger).

@@ -33,7 +33,7 @@ export default function TextPage() {
                 software engineering.
               </p>
               <p className="type-body">
-                Born and raised on the Amalfi Coast. Based in{" "}
+                Born and raised on the Amalfi Coast, Italy. Based in{" "}
                 <span className="line-through opacity-50">Lisbon</span>{" "}
                 <span className="line-through opacity-50">New York</span>{" "}
                 Toronto. Relocating summer 2026.

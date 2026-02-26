@@ -358,7 +358,7 @@ Typography uses a refined, minimal approach:
 
 ## Typography Quick Reference
 
-> **Full Documentation**: See [`TYPOGRAPHY.md`](TYPOGRAPHY.md) for comprehensive typography system documentation.
+> **Full Documentation**: See [`TYPOGRAPHY.md`](TYPOGRAPHY.md) for comprehensive typography system documentation, including **minimal identity** and **hero** rules (main hero max 22px; use body/secondary/caption; 26px for rare emphasis only).
 
 ### Golden Ratio Scale
 
@@ -372,7 +372,7 @@ All text sizes use a **Golden Ratio scale** (φ ≈ 1.618) with a 14px anchor po
 | base | 16px   | `text-base` | `--text-base` | Modal content, emphasized text |
 | lg   | 20px   | `text-lg` | `--text-lg` | Subheadings |
 | xl   | 22px   | `text-xl` | `--text-xl` | Page titles, "Raf" name |
-| 2xl  | 26px   | `text-2xl` | `--text-2xl` | Hero text, large display |
+| 2xl  | 26px   | `text-2xl` | `--text-2xl` | Rare emphasis, large display; not for main hero identity |
 
 ### Semantic Typography Classes
 

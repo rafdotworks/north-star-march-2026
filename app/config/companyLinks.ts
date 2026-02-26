@@ -12,5 +12,6 @@ export const COMPANY_LINKS = {
   obvious: "https://obvious.ai",
   coinbase: "https://www.coinbase.com/developer-platform/",
   voiceflow: "https://voiceflow.com",
+  walmart: "https://www.walmart.com",
   zalando: "https://partner.zalando.com",
 } as const;

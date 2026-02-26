@@ -2,14 +2,10 @@
 
 ## What You Have
 
-**TYPOGRAPHY.md** = Implementation layer
-Concrete token system. Ready to ship.
+**TYPOGRAPHY.md** (repo root) = Implementation layer
+Concrete token system. Ready to ship. Single source of truth for the typography system, including minimal identity and hero rules.
 
-**TYPOGRAPHY-AGENT.md** = Analysis framework
-Instructions for extracting patterns from other sources.
-
-These are not competing systems.
-One is a product. One is a process.
+**TYPOGRAPHY-AGENT.md** = Not present in this repo. This doc originally described an analysis framework for extracting patterns from other sources; that file was retired or never added. Use TYPOGRAPHY.md for all system and hero rules.
 
 ---
 
@@ -81,13 +77,13 @@ You merge patterns.
 
 ## Recommendation
 
-**Keep them separate.**
+**Keep them separate.** (Note: TYPOGRAPHY-AGENT.md is not in the repo; the workflow below applies if you add an agent doc later.)
 
-Rename for clarity:
-- `TYPOGRAPHY.md` → `typography-system.md`
-- `TYPOGRAPHY-AGENT.md` → `typography-agent-prompt.md`
+Rename for clarity (optional):
+- `TYPOGRAPHY.md` → keep as-is (canonical system doc)
+- If adding an agent: e.g. `typography-agent-prompt.md`
 
-Add a third file:
+Optional third file:
 - `typography-analysis.md` = Agent output archive
 
 Workflow:
