@@ -293,15 +293,20 @@ export default function Page() {
                 {MOBILE_HERO_COPY.name}
               </p>
               {/* MOBILE_HERO_COPY.lines[0] — hidden per feedback */}
-              <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} leading-relaxed opacity-80`}>
-                Designing AI recommendations at{" "}
-                <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>
-                . Previously{" "}
-                <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>
-                , <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>
-                , <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>
-                , <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink>
-                {" "}and more.
+              <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} leading-relaxed`}>
+                <span>
+                  Designing AI recommendations at{" "}
+                  <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>
+                  .{" "}
+                </span>
+                <span className="opacity-70">
+                  Previously{" "}
+                  <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>
+                  , <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>
+                  , <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>
+                  , <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink>
+                  {" "}and more.
+                </span>
               </p>
               <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} leading-relaxed opacity-70`}>
                 {MOBILE_HERO_COPY.lines[2]}
