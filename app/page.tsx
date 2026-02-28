@@ -261,7 +261,7 @@ export default function Page() {
        * HERO SECTION — first viewport with intro content
        * Followed by scrollable work image gallery
        * ================================================================ */}
-      <main className="h-dvh w-full max-w-[1200px] md:mx-auto px-3 md:px-28">
+      <main className={`h-dvh w-full max-w-[1200px] md:mx-auto px-3 md:px-28 ${isMobile ? "min-h-dvh" : ""}`}>
         {/* Scroll-driven blur/scale/opacity on a plain div so it reliably updates with scroll (not overridden by Framer Motion) */}
         <div
           className="h-full grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-[2.5vw] md:gap-x-10 gap-y-0 content-end md:content-center items-end md:items-baseline pt-16 pt-safe md:pt-0 pb-16 pb-safe overflow-auto md:overflow-visible min-h-0 scrollbar-gutter-stable"
@@ -321,7 +321,7 @@ export default function Page() {
             <>
           {/* Col 1: Identity (desktop only — opens About tray) */}
           <div className="mb-4 md:mb-0 text-left">
-            <p className="type-body-primary leading-relaxed">
+            <p className="type-body leading-relaxed text-[var(--fg)]">
               <button
                 type="button"
                 onClick={openAboutTray}
@@ -364,10 +364,10 @@ export default function Page() {
               </p>
               <div className="mt-2 md:mt-6">
                 <p className="type-body leading-relaxed">
-                  <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>.</span>
+                  <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink></span>
                 </p>
                 <p className="hidden md:block type-body leading-relaxed mt-1">
-                  <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more.</span>
+                  <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more</span>
                 </p>
                 <div className="hidden md:block mt-6 type-caption font-edu-marist leading-relaxed">
                   <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
@@ -389,13 +389,13 @@ export default function Page() {
        * WORK — mobile: 6-image strip; desktop: full gallery
        * ================================================================ */}
       {isMobile ? (
-        <Section wide spacing="tight">
+        <Section wide spacing="tight" className="pt-[12vh]">
           <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
             <motion.div
               ref={firstWorkImageRef}
               className="w-full"
               style={{
-                scale: shouldReduceMotion ? 1 : firstImageScale,
+                scale: shouldReduceMotion || isMobile ? 1 : firstImageScale,
                 transformOrigin: "center center",
               }}
             >
@@ -403,6 +403,9 @@ export default function Page() {
             </motion.div>
             <Image src="/work/q2-26-works/walm/walm-5.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
             <div ref={theoriqSectionRef}>
+              {PROJECT_VIDEOS.theo && (
+                <VimeoInlineEmbed videoUrl={PROJECT_VIDEOS.theo} className="w-full" />
+              )}
               <Image src="/work/q2-26-works/theo/theo-2.png" alt="Theoriq: Infinity Studio or Hub interface for AI agents" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
             </div>
             <Image src="/work/q2-26-works/cb/cb-1.png" alt="Coinbase Developer Platform: API docs or developer tools" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
@@ -412,7 +415,7 @@ export default function Page() {
         </Section>
       ) : (
         <>
-      <Section wide spacing="tight">
+      <Section wide spacing="tight" className="pt-[12vh]">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           <motion.div
             ref={firstWorkImageRef}
@@ -440,7 +443,7 @@ export default function Page() {
           )}
           <Image src="/work/q2-26-works/theo/theo-2.png" alt="Theoriq: Infinity Studio or Hub interface for AI agents" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           <Image src="/work/q2-26-works/theo/theo-3.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-          <Image src="/work/q2-26-works/theo/theo-4.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+          {/* <Image src="/work/q2-26-works/theo/theo-4.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
           <Image src="/work/q2-26-works/theo/theo-6.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>

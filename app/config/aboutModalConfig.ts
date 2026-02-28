@@ -114,11 +114,11 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
  * Used by: app/page.tsx for mobile hero content.
  */
 export const MOBILE_HERO_COPY = {
-  name: "Raf",
+  name: "Raf V.",
   lines: [
     "AI Designer and Design Engineer.",
     "Designing AI recommendations at Walmart. Previously Theoriq, Obvious, Coinbase, Voiceflow and more.",
-    "Grew up on the Amalfi Coast, Italy. Based in Toronto.",
+    "Grew up on the Amalfi Coast, Italy. Based in Toronto, Canada.",
     "I write, photograph, and spend time on a yoga mat or chasing light through workspaces.",
   ],
 } as const;
