@@ -515,9 +515,9 @@ export default function Page() {
         </div>
         <div className="flex flex-col mb-4 md:mb-0 justify-self-end">
           <nav className="flex flex-col w-full gap-1 group/nav" aria-label="Contact and links">
-            <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="block w-full flex justify-end items-center gap-1" />
-            <FooterLink href="mailto:raf@raf.works" label="Email" className="block w-full flex justify-end items-center gap-1" />
-            <FooterLink href="https://x.com/rafdotworks" label="X" external className="block w-full flex justify-end items-center gap-1" />
+            <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external fontFamily="body" className="block w-full flex justify-end items-center gap-1" />
+            <FooterLink href="mailto:raf@raf.works" label="Email" fontFamily="body" className="block w-full flex justify-end items-center gap-1" />
+            <FooterLink href="https://x.com/rafdotworks" label="X" external fontFamily="body" className="block w-full flex justify-end items-center gap-1" />
           </nav>
         </div>
       </footer>
