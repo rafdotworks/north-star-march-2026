@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "raf.works — 2026",
   description:
-    "Raf V. — AI Designer and Design Engineer. Interaction models for AI products at scale.",
+    "Raf V. — Staff AI Designer and Design Engineer. Interaction models for AI workflows at scale.",
 }
 
 export default function TextPage() {

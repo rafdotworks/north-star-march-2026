@@ -116,8 +116,8 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
 export const MOBILE_HERO_COPY = {
   name: "Raf V.",
   lines: [
-    "AI Designer and Design Engineer.",
-    "Designing AI recommendations at Walmart. Previously Theoriq, Obvious, Coinbase, Voiceflow and more.",
+    "Staff AI Designer and Design Engineer.",
+    "Designing AI workflows and recommendations at Walmart. Previously Theoriq, Obvious, Coinbase, Voiceflow and more.",
     "Grew up on the Amalfi Coast, Italy. Based in Toronto, Canada.",
     "I write, photograph, and spend time on a yoga mat or chasing light through workspaces.",
   ],

@@ -21,20 +21,26 @@ interface FooterLinkProps {
   label: string
   ariaLabel?: string
   external?: boolean
+  fontFamily?: "accent" | "body"
   /** Optional: e.g. "block w-full flex justify-end" for right-aligned text in hero/footer */
   className?: string
 }
 
 const baseClasses =
-  "type-caption font-edu-marist group/link inline-flex items-center gap-1 w-fit text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/15 hover:!text-muted-foreground visited:text-muted-foreground/40 md:group-hover/nav:visited:text-muted-foreground/15 active:text-muted-foreground focus-visible:text-muted-foreground/40 transition-colors duration-150 focus:outline-none"
+  "type-caption group/link inline-flex items-center gap-1 w-fit text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/15 hover:!text-muted-foreground visited:text-muted-foreground/40 md:group-hover/nav:visited:text-muted-foreground/15 active:text-muted-foreground focus-visible:text-muted-foreground/40 transition-colors duration-150 focus:outline-none"
 
-function FooterLink({ href, label, ariaLabel, external = false, className }: FooterLinkProps) {
+const fontFamilyClasses = {
+  accent: "font-edu-marist",
+  body: "font-sans",
+} as const
+
+function FooterLink({ href, label, ariaLabel, external = false, fontFamily = "accent", className }: FooterLinkProps) {
   return (
     <a
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className={className ? `${baseClasses} ${className}` : baseClasses}
+      className={`${baseClasses} ${fontFamilyClasses[fontFamily]}${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel || label}
     >
       {label}

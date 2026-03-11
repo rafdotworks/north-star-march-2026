@@ -288,14 +288,14 @@ export default function Page() {
           >
           {isMobile ? (
             /* Mobile hero: single column, spacing + opacity hierarchy */
-            <div className="flex flex-col space-y-5 pb-6">
-              <p className={`font-edu-marist ${SEMANTIC_TYPOGRAPHY.heading.mobile} ${SEMANTIC_TYPOGRAPHY.heading.lineHeight}`}>
+            <div className="flex flex-col space-y-4 pb-5">
+              <p className={`font-edu-marist ${SEMANTIC_TYPOGRAPHY.body.mobile} leading-tight text-balance text-[var(--fg)]`}>
                 {MOBILE_HERO_COPY.name}
               </p>
               {/* MOBILE_HERO_COPY.lines[0] — hidden per feedback */}
-              <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} leading-relaxed`}>
+              <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} text-pretty text-[var(--fg)]`}>
                 <span>
-                  Designing AI recommendations at{" "}
+                  Designing AI workflows and recommendations at{" "}
                   <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink>
                   .{" "}
                 </span>
@@ -308,20 +308,20 @@ export default function Page() {
                   {" "}and more.
                 </span>
               </p>
-              <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} leading-relaxed opacity-70`}>
+              <p className={`${SEMANTIC_TYPOGRAPHY.body.mobile} ${SEMANTIC_TYPOGRAPHY.body.lineHeight} text-pretty text-[var(--fg)] opacity-60`}>
                 {MOBILE_HERO_COPY.lines[2]}
               </p>
-              <nav className={`font-edu-marist ${SEMANTIC_TYPOGRAPHY.secondary.mobile} ${SEMANTIC_TYPOGRAPHY.secondary.lineHeight} flex flex-row flex-wrap items-center gap-x-6 group/nav opacity-90`} aria-label="Contact and links">
-                <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
-                <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
-                <FooterLink href="https://x.com/rafdotworks" label="X" external className="inline-flex items-center gap-1" />
+              <nav className={`flex flex-row flex-wrap items-center gap-x-6 group/nav opacity-75`} aria-label="Contact and links">
+                <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external fontFamily="body" className="inline-flex items-center gap-1" />
+                <FooterLink href="mailto:raf@raf.works" label="Email" fontFamily="body" className="inline-flex items-center gap-1" />
+                <FooterLink href="https://x.com/rafdotworks" label="X" external fontFamily="body" className="inline-flex items-center gap-1" />
               </nav>
             </div>
           ) : (
             <>
           {/* Col 1: Identity (desktop only — opens About tray) */}
           <div className="mb-4 md:mb-0 text-left">
-            <p className="type-body leading-relaxed text-[var(--fg)]">
+            <p className="text-sm leading-relaxed text-[var(--fg)] text-balance">
               <button
                 type="button"
                 onClick={openAboutTray}
@@ -359,21 +359,21 @@ export default function Page() {
           {/* Col 2: bio + contact row on desktop */}
           <div className="mb-4 md:mb-0 flex flex-col md:flex-row md:gap-x-10 md:items-end min-w-0">
             <div className={`max-w-[600px] text-left flex flex-col ${heroStackGap}`}>
-              <p className="mt-2 md:mt-0 type-body leading-relaxed">
-                AI Designer and Design Engineer
+              <p className="mt-2 md:mt-0 text-xs leading-relaxed text-[var(--fg)] opacity-70">
+                Staff AI Designer and Design Engineer
               </p>
-              <div className="mt-2 md:mt-6">
-                <p className="type-body leading-relaxed">
-                  <span className="opacity-80">Designing AI recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink></span>
+              <div className="mt-2 md:mt-5">
+                <p className="text-xs leading-relaxed text-pretty text-[var(--fg)]">
+                  <span className="opacity-80">Designing AI workflows and recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink></span>
                 </p>
-                <p className="hidden md:block type-body leading-relaxed mt-1">
+                <p className="hidden md:block mt-1 text-xs leading-relaxed text-pretty text-[var(--fg)]">
                   <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more</span>
                 </p>
-                <div className="hidden md:block mt-6 type-caption font-edu-marist leading-relaxed">
+                <div className="hidden md:block mt-5 opacity-75">
                   <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
-                    <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external className="inline-flex items-center gap-1" />
-                    <FooterLink href="mailto:raf@raf.works" label="Email" className="inline-flex items-center gap-1" />
-                    <FooterLink href="https://x.com/rafdotworks" label="X" external className="inline-flex items-center gap-1" />
+                    <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external fontFamily="body" className="inline-flex items-center gap-1" />
+                    <FooterLink href="mailto:raf@raf.works" label="Email" fontFamily="body" className="inline-flex items-center gap-1" />
+                    <FooterLink href="https://x.com/rafdotworks" label="X" external fontFamily="body" className="inline-flex items-center gap-1" />
                   </nav>
                 </div>
               </div>
