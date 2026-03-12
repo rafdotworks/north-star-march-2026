@@ -46,7 +46,7 @@ export default function Page() {
   const aboutTriggerTouchStart = useRef<{ x: number; y: number } | null>(null)
   const TAP_MOVE_THRESHOLD_PX = 10
 
-  // Theme inversion: enters on the Theoriq video and stays active through Coinbase
+  // Theme inversion: active from when Theoriq starts entering until Coinbase starts entering
   const [themeInverted, setThemeInverted] = useState(false)
   const prefersDarkRef = useRef(prefersDark)
   const theoriqVideoRef = useRef<HTMLDivElement>(null)
@@ -128,10 +128,10 @@ export default function Page() {
       const theoriqRect = theoriqVideo.getBoundingClientRect()
       const coinbaseRect = coinbaseSection.getBoundingClientRect()
 
-      // Enter when the Theoriq video has fully arrived in the viewport.
-      const themeStartY = scrollY + theoriqRect.bottom - vh
-      // Exit after the Coinbase block has been fully scrolled past.
-      const themeEndY = scrollY + coinbaseRect.bottom
+      // Enter when the Theoriq block starts entering from the bottom of the viewport.
+      const themeStartY = scrollY + theoriqRect.top - vh
+      // Exit when the Coinbase block starts entering from the bottom of the viewport.
+      const themeEndY = scrollY + coinbaseRect.top - vh
 
       setThemeInverted(scrollY >= themeStartY && scrollY < themeEndY)
     }
