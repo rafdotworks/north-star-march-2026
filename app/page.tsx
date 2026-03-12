@@ -51,13 +51,14 @@ export default function Page() {
   const prefersDarkRef = useRef(prefersDark)
   const theoriqVideoRef = useRef<HTMLDivElement>(null)
   const coinbaseSectionRef = useRef<HTMLDivElement>(null)
-  /** Ref for the actual first image in the work area — entry effect target */
-  const firstWorkImageRef = useRef<HTMLDivElement>(null)
+  /** Dedicated refs avoid useScroll staying bound to the wrong responsive branch. */
+  const mobileFirstWorkImageRef = useRef<HTMLDivElement>(null)
+  const desktopFirstWorkImageRef = useRef<HTMLDivElement>(null)
 
   // Entry effect: scale 0.75 → 1 as the first work image (and only it) enters viewport
   const shouldReduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll({
-    target: firstWorkImageRef,
+    target: isMobile ? mobileFirstWorkImageRef : desktopFirstWorkImageRef,
     offset: ["start end", "start start"],
   })
   const firstImageScale = useTransform(scrollYProgress, [0, 1], [0.75, 1])
@@ -393,7 +394,7 @@ export default function Page() {
         <Section wide spacing="tight" className="pt-[12vh]">
           <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
             <motion.div
-              ref={firstWorkImageRef}
+              ref={mobileFirstWorkImageRef}
               className="w-full"
               style={{
                 scale: shouldReduceMotion ? 1 : firstImageScale,
@@ -424,7 +425,7 @@ export default function Page() {
       <Section wide spacing="tight" className="pt-[12vh]">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           <motion.div
-            ref={firstWorkImageRef}
+            ref={desktopFirstWorkImageRef}
             className="w-full"
             style={{
               scale: shouldReduceMotion ? 1 : firstImageScale,
