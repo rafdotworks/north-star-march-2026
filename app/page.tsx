@@ -46,10 +46,11 @@ export default function Page() {
   const aboutTriggerTouchStart = useRef<{ x: number; y: number } | null>(null)
   const TAP_MOVE_THRESHOLD_PX = 10
 
-  // Theme inversion: triggered when first Theoriq images enter viewport (after hero blur)
+  // Theme inversion: enters on the Theoriq video and stays active through Coinbase
   const [themeInverted, setThemeInverted] = useState(false)
   const prefersDarkRef = useRef(prefersDark)
-  const theoriqSectionRef = useRef<HTMLDivElement>(null)
+  const theoriqVideoRef = useRef<HTMLDivElement>(null)
+  const coinbaseSectionRef = useRef<HTMLDivElement>(null)
   /** Ref for the actual first image in the work area — entry effect target */
   const firstWorkImageRef = useRef<HTMLDivElement>(null)
 
@@ -82,24 +83,6 @@ export default function Page() {
   }, [prefersDark])
 
   // ============================================================================
-  // THEME SWITCH WHEN THEORIQ ENTERS VIEW — after hero blur, invert theme as first Theoriq images appear
-  // ============================================================================
-  useEffect(() => {
-    const el = theoriqSectionRef.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries
-        if (entry) setThemeInverted(entry.isIntersecting)
-      },
-      { threshold: 0 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
-  // ============================================================================
   // THEME BLEND — apply CSS custom properties when themeInverted changes
   // ============================================================================
   useEffect(() => {
@@ -128,7 +111,7 @@ export default function Page() {
   }, [isReady, prefersDark])
 
   // ============================================================================
-  // HERO BLUR ON SCROLL — blur/fade/scale hero as user scrolls to images
+  // HERO BLUR + THEME WINDOW ON SCROLL
   // ============================================================================
   useEffect(() => {
     const updateProgress = () => {
@@ -136,6 +119,21 @@ export default function Page() {
       const vh = window.innerHeight
       const progress = Math.min(1, Math.max(0, scrollY / (vh * 0.8)))
       setScrollProgress(1 - Math.pow(1 - progress, 3))
+
+      const theoriqVideo = theoriqVideoRef.current
+      const coinbaseSection = coinbaseSectionRef.current
+
+      if (!theoriqVideo || !coinbaseSection) return
+
+      const theoriqRect = theoriqVideo.getBoundingClientRect()
+      const coinbaseRect = coinbaseSection.getBoundingClientRect()
+
+      // Enter when the Theoriq video has fully arrived in the viewport.
+      const themeStartY = scrollY + theoriqRect.bottom - vh
+      // Exit after the Coinbase block has been fully scrolled past.
+      const themeEndY = scrollY + coinbaseRect.bottom
+
+      setThemeInverted(scrollY >= themeStartY && scrollY < themeEndY)
     }
     const handleScroll = () => {
       if (!ticking.current) {
@@ -148,7 +146,11 @@ export default function Page() {
     }
     updateProgress() // run once on mount (e.g. if page loads while already scrolled)
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('resize', updateProgress)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', updateProgress)
+    }
   }, [])
 
   // ============================================================================
@@ -302,7 +304,6 @@ export default function Page() {
                 <span className="opacity-70">
                   Previously{" "}
                   <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>
-                  , <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>
                   , <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>
                   , <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink>
                   {" "}and more.
@@ -367,7 +368,7 @@ export default function Page() {
                   <span className="opacity-80">Designing AI workflows and recommendations at <InlineExternalLink href="https://www.walmart.com">Walmart</InlineExternalLink></span>
                 </p>
                 <p className="hidden md:block mt-1 text-xs leading-relaxed text-pretty text-[var(--fg)]">
-                  <span className="opacity-60">Previously <InlineExternalLink href="https://obvious.ai" underlineStyle="subtle">Obvious</InlineExternalLink>, <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more</span>
+                  <span className="opacity-60">Previously <InlineExternalLink href="https://theoriq.ai" underlineStyle="subtle">Theoriq</InlineExternalLink>, <InlineExternalLink href="https://www.coinbase.com/developer-platform/" underlineStyle="subtle">Coinbase</InlineExternalLink>, <InlineExternalLink href="https://voiceflow.com" underlineStyle="subtle">Voiceflow</InlineExternalLink> and more</span>
                 </p>
                 <div className="hidden md:block mt-5 opacity-75">
                   <nav className="flex flex-row flex-wrap items-center gap-x-6 group/nav" aria-label="Contact and links">
@@ -395,20 +396,25 @@ export default function Page() {
               ref={firstWorkImageRef}
               className="w-full"
               style={{
-                scale: shouldReduceMotion || isMobile ? 1 : firstImageScale,
+                scale: shouldReduceMotion ? 1 : firstImageScale,
                 transformOrigin: "center center",
               }}
             >
               <Image src="/work/q2-26-works/obv/obv-1.png" alt="Obvious: chat interface with workflow progress and “remember this workflow” prompt" width={2400} height={1600} sizes="100vw" className="w-full h-auto" priority quality={85} />
             </motion.div>
             <Image src="/work/q2-26-works/walm/walm-5.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
-            <div ref={theoriqSectionRef}>
+            <Image src="/work/q2-26-works/walm/walm-6.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+            <div>
               {PROJECT_VIDEOS.theo && (
-                <VimeoInlineEmbed videoUrl={PROJECT_VIDEOS.theo} className="w-full" />
+                <div ref={theoriqVideoRef}>
+                  <VimeoInlineEmbed videoUrl={PROJECT_VIDEOS.theo} className="w-full" />
+                </div>
               )}
               <Image src="/work/q2-26-works/theo/theo-2.png" alt="Theoriq: Infinity Studio or Hub interface for AI agents" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
             </div>
-            <Image src="/work/q2-26-works/cb/cb-1.png" alt="Coinbase Developer Platform: API docs or developer tools" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+            <div ref={coinbaseSectionRef}>
+              <Image src="/work/q2-26-works/cb/cb-1.png" alt="Coinbase Developer Platform: API docs or developer tools" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+            </div>
             <Image src="/work/q2-26-works/vf/vf-1.png" alt="Voiceflow: conversation design or dialog editor" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
             <Image src="/work/q2-26-works/atl/atl-1.png" alt="Atlas: crypto marketplace or NFT collections" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           </div>
@@ -433,13 +439,16 @@ export default function Page() {
       <Section wide spacing="tight">
         <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
         <Image src="/work/q2-26-works/walm/walm-5.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
+        <Image src="/work/q2-26-works/walm/walm-6.png" alt="Walmart: AI product or design detail" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
         </div>
       </Section>
 
       <Section wide spacing="tight">
-        <div ref={theoriqSectionRef} className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
+        <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           {PROJECT_VIDEOS.theo && (
-            <VimeoInlineEmbed videoUrl={PROJECT_VIDEOS.theo} className="w-full" />
+            <div ref={theoriqVideoRef}>
+              <VimeoInlineEmbed videoUrl={PROJECT_VIDEOS.theo} className="w-full" />
+            </div>
           )}
           <Image src="/work/q2-26-works/theo/theo-2.png" alt="Theoriq: Infinity Studio or Hub interface for AI agents" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           <Image src="/work/q2-26-works/theo/theo-3.png" alt="Theoriq: agent workspace or marketplace view" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
@@ -449,7 +458,7 @@ export default function Page() {
       </Section>
 
       <Section wide spacing="tight">
-        <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
+        <div ref={coinbaseSectionRef} className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col gap-2">
           <Image src="/work/q2-26-works/cb/cb-1.png" alt="Coinbase Developer Platform: API docs or developer tools" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />
           {/* <Image src="/work/q2-26-works/cb/cb-2.png" alt="Coinbase Developer Platform: dashboard or project overview" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} /> */}
           <Image src="/work/q2-26-works/cb/cb-3.png" alt="Coinbase Developer Platform: SQL Playground or query interface" width={2400} height={1600} sizes="100vw" className="w-full h-auto" loading="lazy" quality={85} />

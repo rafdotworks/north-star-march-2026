@@ -158,6 +158,11 @@ interface ArticleContent {
 // ANIMATION VARIANTS
 // ============================================================================
 
+/** Backdrop fade-in duration (slightly longer than out for a more deliberate entrance). */
+const TRAY_BACKDROP_IN = 0.35
+/** Backdrop fade-out duration (quick, so the background reasserts itself). */
+const TRAY_BACKDROP_OUT = 0.25
+
 /**
  * Backdrop animation variants.
  * 
@@ -176,14 +181,14 @@ const backdropVariants = {
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.35,
+      duration: TRAY_BACKDROP_IN,
       ease: EASING.smooth
     }
   },
   exit: {
     opacity: 0,
     transition: {
-      duration: 0.25,
+      duration: TRAY_BACKDROP_OUT,
       ease: EASING.smooth
     }
   }

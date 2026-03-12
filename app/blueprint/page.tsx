@@ -24,6 +24,15 @@ import { EASING, modalTextStagger } from "@/components/animations/LoadingAnimati
 import Link from "next/link";
 
 // ============================================================================
+// ANIMATION CONSTANTS
+// ============================================================================
+
+/** Duration for the main title word reveal (blur-to-focus) */
+const TITLE_WORD_DURATION = 1.4;
+/** Stagger delay between each title word */
+const TITLE_WORD_STAGGER = 0.18;
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -304,8 +313,8 @@ export default function BlueprintPage() {
                     initial={{ opacity: 0, filter: "blur(12px)" }}
                     animate={{ opacity: 1, filter: "blur(0px)" }}
                     transition={{
-                      duration: 1.4,
-                      delay: 0.18 * (index + 1),
+                      duration: TITLE_WORD_DURATION,
+                      delay: TITLE_WORD_STAGGER * (index + 1),
                       ease: EASING.textReveal,
                     }}
                   >

@@ -36,6 +36,28 @@ const IMAGE_ERROR_FALLBACK = "linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(
 /** Simple gray blur placeholder for instant visual feedback (no text) */
 const BLUR_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2U1ZTVlNSIvPjwvc3ZnPg=="
 
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Renders a text block, preserving single newlines as <br /> elements.
+ * Extracted to eliminate the repeated split/filter/map pattern.
+ */
+function TextBlock({ text, className }: { text: string; className?: string }) {
+  const lines = text.split('\n').filter(line => line.trim())
+  return (
+    <p className={className}>
+      {lines.map((line, idx) => (
+        <React.Fragment key={idx}>
+          {line}
+          {idx < lines.length - 1 && <br />}
+        </React.Fragment>
+      ))}
+    </p>
+  )
+}
+
 /** Lazy-loaded video that only loads/plays when visible in viewport */
 function LazyVideo({ src }: { src: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -71,6 +93,66 @@ function LazyVideo({ src }: { src: string }) {
       className="w-full h-auto object-contain rounded-sm"
       aria-label="Project showcase video"
     />
+  )
+}
+
+/**
+ * Renders a single media item (image or video) with error fallback.
+ * Extracted to eliminate the identical isVideo/hasFailed/PictureImage branch
+ * that was repeated 3 times across the interleaved and stack rendering paths.
+ */
+function MediaItem({
+  src,
+  altText,
+  imageIndex,
+  priority,
+  failedImages,
+  handleImageError,
+  sizes = "(max-width: 768px) 100vw, 800px",
+  wrapperClassName = "relative w-full",
+  containerClassName,
+}: {
+  src: string
+  altText: string
+  imageIndex: number
+  priority?: boolean
+  failedImages: Set<string>
+  handleImageError: (src: string) => void
+  sizes?: string
+  wrapperClassName?: string
+  containerClassName?: string
+}) {
+  const isVideo = /\.(mov|mp4|webm)$/i.test(src)
+  const hasFailed = failedImages.has(src)
+
+  return (
+    <ImageProtectionWrapper className={wrapperClassName}>
+      {isVideo ? (
+        <LazyVideo src={src} />
+      ) : hasFailed ? (
+        <div
+          className={`w-full aspect-[3/2] rounded-sm ${containerClassName ?? ""}`}
+          style={{ background: IMAGE_ERROR_FALLBACK }}
+          aria-label={`${altText} - Image unavailable`}
+        />
+      ) : (
+        <PictureImage
+          src={src}
+          alt={`${altText} - Image ${imageIndex + 1}`}
+          width={1200}
+          height={800}
+          sizes={sizes}
+          className="w-full h-auto object-contain pointer-events-none rounded-sm"
+          loading={priority ? "eager" : "lazy"}
+          priority={priority}
+          quality={85}
+          placeholder="blur"
+          blurDataURL={BLUR_PLACEHOLDER}
+          draggable={false}
+          onError={() => handleImageError(src)}
+        />
+      )}
+    </ImageProtectionWrapper>
   )
 }
 
@@ -200,14 +282,7 @@ export const WorkCard = memo(function WorkCard({
 
       {/* Description intro - natural order (0) appears third on mobile */}
       <div className="pt-2 md:pt-0 self-baseline">
-        <p className="type-body">
-          {descriptionBlocks.intro.split('\n').filter(line => line.trim()).map((line, index, arr) => (
-            <React.Fragment key={index}>
-              {line}
-              {index < arr.length - 1 && <br />}
-            </React.Fragment>
-          ))}
-        </p>
+        <TextBlock text={descriptionBlocks.intro} className="type-body" />
       </div>
 
       {/* Read the full story link - only shows for projects with stories */}
@@ -242,271 +317,118 @@ export const WorkCard = memo(function WorkCard({
       {/* Render images with interleaved text chunks if using interleaved format */}
       {descriptionBlocks.isInterleaved && descriptionBlocks.chunks ? (
         <>
-          {/* First image - no text before it */}
+          {/* First image - no text chunk before it */}
           {images.length > 0 && (
             <>
-              {/* Empty left column */}
               <div className="hidden md:block" />
-
-              {/* First image */}
               <div className="mt-6 md:mt-1">
-                {(() => {
-                  const src = images[0]
-                  const isVideo = /\.(mov|mp4|webm)$/i.test(src)
-                  const hasFailed = failedImages.has(src)
-
-                  return (
-                    <ImageProtectionWrapper
-                      key={`${src}-0`}
-                      className="relative w-full"
-                    >
-                      {isVideo ? (
-                        <LazyVideo src={src} />
-                      ) : hasFailed ? (
-                        <div
-                          className="w-full aspect-[3/2] rounded-sm"
-                          style={{ background: IMAGE_ERROR_FALLBACK }}
-                          aria-label={`${altText} - Image unavailable`}
-                        />
-                      ) : (
-                        <PictureImage
-                          src={src}
-                          alt={`${altText} - Image 1`}
-                          width={1200}
-                          height={800}
-                          sizes="(max-width: 768px) 100vw, 800px"
-                          className="w-full h-auto object-contain pointer-events-none rounded-sm"
-                          loading={priority ? "eager" : "lazy"}
-                          priority={priority}
-                          quality={85}
-                          placeholder="blur"
-                          blurDataURL={BLUR_PLACEHOLDER}
-                          draggable={false}
-                          onError={() => handleImageError(src)}
-                        />
-                      )}
-                    </ImageProtectionWrapper>
-                  )
-                })()}
+                <MediaItem
+                  src={images[0]}
+                  altText={altText}
+                  imageIndex={0}
+                  priority={priority}
+                  failedImages={failedImages}
+                  handleImageError={handleImageError}
+                />
               </div>
             </>
           )}
 
-          {/* Remaining images with text chunks before each */}
+          {/* Remaining images, each preceded by its text chunk */}
           {images.slice(1).map((src, idx) => {
             const actualIdx = idx + 1
-            const chunkIdx = idx
-            const textChunk = descriptionBlocks.chunks?.[chunkIdx]
-            const isVideo = /\.(mov|mp4|webm)$/i.test(src)
-            const hasFailed = failedImages.has(src)
+            const textChunk = descriptionBlocks.chunks?.[idx]
 
             return (
               <React.Fragment key={`interleaved-${src}-${actualIdx}`}>
-                {/* Text chunk before this image */}
                 {textChunk && (
                   <>
-                    {/* Empty left column */}
                     <div className="hidden md:block" />
-
-                    {/* Text chunk */}
-                    <p className="type-body mt-6 md:mt-4">
-                      {textChunk.split('\n').filter(line => line.trim()).map((line, lineIdx, arr) => (
-                        <React.Fragment key={lineIdx}>
-                          {line}
-                          {lineIdx < arr.length - 1 && <br />}
-                        </React.Fragment>
-                      ))}
-                    </p>
+                    <TextBlock text={textChunk} className="type-body mt-6 md:mt-4" />
                   </>
                 )}
-
-                {/* Empty left column */}
                 <div className="hidden md:block" />
-
-                {/* Image */}
                 <div className="mt-6 md:mt-3">
-                  <ImageProtectionWrapper className="relative w-full">
-                    {isVideo ? (
-                      <LazyVideo src={src} />
-                    ) : hasFailed ? (
-                      <div
-                        className="w-full aspect-[3/2] rounded-sm"
-                        style={{ background: IMAGE_ERROR_FALLBACK }}
-                        aria-label={`${altText} - Image unavailable`}
-                      />
-                    ) : (
-                      <PictureImage
-                        src={src}
-                        alt={`${altText} - Image ${actualIdx + 1}`}
-                        width={1200}
-                        height={800}
-                        sizes="(max-width: 768px) 100vw, 800px"
-                        className="w-full h-auto object-contain pointer-events-none rounded-sm"
-                        loading={priority && actualIdx < 3 ? "eager" : "lazy"}
-                        priority={priority && actualIdx < 3}
-                        quality={85}
-                        placeholder="blur"
-                        blurDataURL={BLUR_PLACEHOLDER}
-                        draggable={false}
-                        onError={() => handleImageError(src)}
-                      />
-                    )}
-                  </ImageProtectionWrapper>
+                  <MediaItem
+                    src={src}
+                    altText={altText}
+                    imageIndex={actualIdx}
+                    priority={priority && actualIdx < 3}
+                    failedImages={failedImages}
+                    handleImageError={handleImageError}
+                  />
                 </div>
               </React.Fragment>
             )
           })}
 
-          {/* Render any remaining text chunks that don't have corresponding images */}
-          {descriptionBlocks.chunks && images.length > 0 && (
-            <>
-              {descriptionBlocks.chunks.slice(images.length - 1).map((textChunk, idx) => (
-                <React.Fragment key={`remaining-chunk-${idx}`}>
-                  {/* Empty left column */}
-                  <div className="hidden md:block" />
+          {/* Remaining text chunks that don't have a corresponding image */}
+          {descriptionBlocks.chunks && images.length > 0 &&
+            descriptionBlocks.chunks.slice(images.length - 1).map((textChunk, idx) => (
+              <React.Fragment key={`remaining-chunk-${idx}`}>
+                <div className="hidden md:block" />
+                <TextBlock text={textChunk} className="type-body mt-6 md:mt-4" />
+              </React.Fragment>
+            ))
+          }
 
-                  {/* Remaining text chunk */}
-                  <p className="type-body mt-6 md:mt-4">
-                    {textChunk.split('\n').filter(line => line.trim()).map((line, lineIdx, arr) => (
-                      <React.Fragment key={lineIdx}>
-                        {line}
-                        {lineIdx < arr.length - 1 && <br />}
-                      </React.Fragment>
-                    ))}
-                  </p>
-                </React.Fragment>
-              ))}
-            </>
-          )}
-
-          {/* Conclusion text (shown after remaining text chunks) */}
+          {/* Conclusion paragraph */}
           {descriptionBlocks.conclusion && (
             <>
-              {/* Empty left column */}
               <div className="hidden md:block" />
-
-              {/* Conclusion paragraph */}
-              <p className="type-body mt-6 md:mt-4 mb-24 md:mb-24">
-                {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
-                  <React.Fragment key={index}>
-                    {line}
-                    {index < arr.length - 1 && <br />}
-                  </React.Fragment>
-                ))}
-              </p>
+              <TextBlock text={descriptionBlocks.conclusion} className="type-body mt-6 md:mt-4 mb-24 md:mb-24" />
             </>
           )}
         </>
       ) : (
         <>
-          {/* Default layout: all images, then conclusion */}
-          {/* Empty left column */}
+          {/* Default layout: all images stacked or in carousel, then conclusion */}
           <div className="hidden md:block" />
 
-          {/* Carousel or vertical stack - right column */}
           {shouldUseCarousel ? (
             <DragCarousel className="mt-6 mb-6 md:mb-1">
-              {images.map((src, idx) => {
-                const isVideo = /\.(mov|mp4|webm)$/i.test(src)
-                const hasFailed = failedImages.has(src)
-
-                return (
-                  <ImageProtectionWrapper
-                    key={`${src}-${idx}`}
-                    className="relative w-[85vw] sm:w-full sm:max-w-[800px] flex-shrink-0"
-                  >
-                    {isVideo ? (
-                      <LazyVideo src={src} />
-                    ) : hasFailed ? (
-                      // Fallback for failed images - maintains aspect ratio
-                      <div
-                        className="w-full aspect-[3/2] rounded-sm"
-                        style={{ background: IMAGE_ERROR_FALLBACK }}
-                        aria-label={`${altText} - Image unavailable`}
-                      />
-                    ) : (
-                      <PictureImage
-                        src={src}
-                        alt={`${altText} - Image ${idx + 1}`}
-                        width={1200}
-                        height={800}
-                        sizes="800px"
-                        className="w-full h-auto object-contain pointer-events-none rounded-sm"
-                        loading={priority ? "eager" : "lazy"}
-                        priority={priority}
-                        quality={85}
-                        placeholder="blur"
-                        blurDataURL={BLUR_PLACEHOLDER}
-                        draggable={false}
-                        onError={() => handleImageError(src)}
-                      />
-                    )}
-                  </ImageProtectionWrapper>
-                )
-              })}
+              {images.map((src, idx) => (
+                <MediaItem
+                  key={`${src}-${idx}`}
+                  src={src}
+                  altText={altText}
+                  imageIndex={idx}
+                  priority={priority}
+                  failedImages={failedImages}
+                  handleImageError={handleImageError}
+                  sizes="800px"
+                  wrapperClassName="relative w-[85vw] sm:w-full sm:max-w-[800px] flex-shrink-0"
+                />
+              ))}
             </DragCarousel>
           ) : (
             <div className="mt-6 md:mt-1 mb-24 md:mb-24 flex flex-col gap-3 md:gap-4">
-              {images.map((src, idx) => {
-                const isVideo = /\.(mov|mp4|webm)$/i.test(src)
-                const hasFailed = failedImages.has(src)
-
-                return (
-                  <ImageProtectionWrapper
-                    key={`${src}-${idx}`}
-                    className="relative w-full"
-                  >
-                    {isVideo ? (
-                      <LazyVideo src={src} />
-                    ) : hasFailed ? (
-                      // Fallback for failed images - maintains aspect ratio
-                      <div
-                        className="w-full aspect-[3/2] rounded-sm"
-                        style={{ background: IMAGE_ERROR_FALLBACK }}
-                        aria-label={`${altText} - Image unavailable`}
-                      />
-                    ) : (
-                      <PictureImage
-                        src={src}
-                        alt={`${altText} - Image ${idx + 1}`}
-                        width={1200}
-                        height={800}
-                        sizes="(max-width: 768px) 100vw, 800px"
-                        className="w-full h-auto object-contain pointer-events-none rounded-sm"
-                        loading={priority ? "eager" : "lazy"}
-                        priority={priority}
-                        quality={85}
-                        placeholder="blur"
-                        blurDataURL={BLUR_PLACEHOLDER}
-                        draggable={false}
-                        onError={() => handleImageError(src)}
-                      />
-                    )}
-                  </ImageProtectionWrapper>
-                )
-              })}
+              {images.map((src, idx) => (
+                <MediaItem
+                  key={`${src}-${idx}`}
+                  src={src}
+                  altText={altText}
+                  imageIndex={idx}
+                  priority={priority}
+                  failedImages={failedImages}
+                  handleImageError={handleImageError}
+                />
+              ))}
             </div>
           )}
 
-          {/* Conclusion text (last paragraph) - shown after images */}
+          {/* Conclusion paragraph - shown after images */}
           {descriptionBlocks.conclusion && (
             <>
-              {/* Empty left column */}
               <div className="hidden md:block" />
-
-              {/* Conclusion paragraph - right column */}
-              <p className={`type-body mb-24 md:mb-24 ${
-                shouldUseCarousel
-                  ? 'mt-0'             // No top margin, carousel has bottom margin now
-                  : '-mt-8 md:-mt-6'   // Negative margin for stack (pulls up from stack's bottom margin)
-              }`}>
-                {descriptionBlocks.conclusion.split('\n').filter(line => line.trim()).map((line, index, arr) => (
-                  <React.Fragment key={index}>
-                    {line}
-                    {index < arr.length - 1 && <br />}
-                  </React.Fragment>
-                ))}
-              </p>
+              <TextBlock
+                text={descriptionBlocks.conclusion}
+                className={`type-body mb-24 md:mb-24 ${
+                  shouldUseCarousel
+                    ? 'mt-0'           // No top margin, carousel has its own bottom margin
+                    : '-mt-8 md:-mt-6' // Negative margin for stack pulls up from stack's bottom margin
+                }`}
+              />
             </>
           )}
         </>

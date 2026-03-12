@@ -214,6 +214,7 @@ Follow the pattern in [components/animations/LoadingAnimations.tsx](components/a
 6. **Mobile-First**: Base styles for mobile (< 768px), `md:` prefix for desktop (≥ 768px)
 7. **Animations**: Respect `prefers-reduced-motion` using Framer Motion's `useReducedMotion()`
 8. **Type Safety**: Strict TypeScript - only acceptable `as any` is for non-standard browser APIs (documented)
+9. **Haptics**: Optional haptic feedback via `web-haptics`; see [docs/WEB_HAPTICS.md](docs/WEB_HAPTICS.md) and demo at `/haptics-demo`
 
 ### Common Patterns
 

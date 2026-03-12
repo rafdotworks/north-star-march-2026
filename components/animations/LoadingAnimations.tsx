@@ -46,14 +46,20 @@ export const EASING = {
   tertiary: [0.22, 1, 0.36, 1],
   // Bounce easing for playful interactions
   bounce: [0.68, -0.55, 0.265, 1.55],
-  // Smooth easing for continuous animations
+  // Smooth easing for continuous animations (material design standard)
   smooth: [0.4, 0, 0.2, 1],
+  // Gentle, organic motion for content fades and filter transitions
+  gentle: [0.25, 0.1, 0.25, 1.0],
   // Ultra-smooth easing for text reveals
   textReveal: [0.25, 0.46, 0.45, 0.94],
   // Staggered text easing
   staggeredText: [0.19, 1, 0.22, 1],
   // Gentle focus: softer start for load blur — "breathing in" not "switching on"
   gentleFocus: [0.33, 0.5, 0.2, 1],
+  // Aliases for components that import from constants.ts (spring = secondary, elastic = primary, stagger = staggeredText)
+  spring: [0.16, 1, 0.3, 1],
+  elastic: [0.12, 1, 0.28, 1],
+  stagger: [0.19, 1, 0.22, 1],
 } as const;
 
 // Enhanced text reveal animation with sophisticated blur-to-focus effect

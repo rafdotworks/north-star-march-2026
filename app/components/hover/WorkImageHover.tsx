@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { EASING } from "@/components/animations/LoadingAnimations";
 
 interface WorkImageHoverProps {
   children: React.ReactNode;
@@ -26,14 +27,17 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
   className = "",
   variant = "desktop",
 }) => {
-  // Localized hover configurations based on variant
+  // Localized hover configurations based on variant.
+  // Using EASING.primary ([0.12, 1, 0.28, 1]) — expressive deceleration for lift effect.
+  // The transition prop inside whileHover/whileTap governs FM-controlled properties (scale, y).
+  // Shadow transition is handled separately by Tailwind's transition-shadow class.
   const hoverConfig = {
     mobile: {
       scale: 1.005,
       y: -1,
       transition: {
         duration: 0.8,
-        ease: [0.12, 1, 0.25, 1] as const,
+        ease: EASING.primary,
       },
     },
     desktop: {
@@ -41,27 +45,27 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
       y: -1,
       transition: {
         duration: 0.9,
-        ease: [0.12, 1, 0.25, 1] as const,
+        ease: EASING.primary,
       },
     },
-  } as const;
+  };
 
   const tapConfig = {
     mobile: {
       scale: 0.998,
       transition: {
         duration: 0.2,
-        ease: [0.12, 1, 0.25, 1] as const,
+        ease: EASING.primary,
       },
     },
     desktop: {
       scale: 0.999,
       transition: {
         duration: 0.2,
-        ease: [0.12, 1, 0.25, 1] as const,
+        ease: EASING.primary,
       },
     },
-  } as const;
+  };
 
   const shadowClasses =
     variant === "mobile"
@@ -72,11 +76,6 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
     variant === "mobile"
       ? "group relative w-full overflow-hidden"
       : "group relative flex h-full w-full items-center justify-center overflow-hidden";
-
-  const transitionStyle =
-    variant === "mobile"
-      ? "all 0.8s cubic-bezier(0.12, 1, 0.25, 1)"
-      : "all 0.9s cubic-bezier(0.12, 1, 0.25, 1)";
 
   return (
     <motion.div
@@ -89,7 +88,7 @@ export const WorkImageHover: React.FC<WorkImageHoverProps> = ({
       whileHover={hoverConfig[variant]}
       whileTap={tapConfig[variant]}
       style={{
-        transition: transitionStyle,
+        // height only — FM manages scale/y/transition; no raw CSS transition override
         height: variant === "desktop" ? "100%" : undefined,
         cursor: hasVideo ? "pointer" : undefined,
       }}

@@ -144,12 +144,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // suppressHydrationWarning: the scroll-blend JS and font variables inject attributes
+    // at runtime (CSS vars on <body>, class changes on <html>) that differ from SSR HTML.
+    // The mismatch is intentional — suppressing is the right fix, not removing the JS.
     <html
       lang="en"
       className={`${ronzino.variable} ${eduMarist.variable} ${cofoSansMono.variable}`}
       suppressHydrationWarning
     >
       <head />
+      {/* suppressHydrationWarning on body: same reason as html above */}
       <body className={ronzino.className} suppressHydrationWarning>
         {/* SVG filter for film grain effect - hidden from DOM */}
         <svg

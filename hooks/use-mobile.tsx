@@ -5,7 +5,7 @@
  *
  * Detects mobile viewport based on screen width breakpoint.
  *
- * BREAKPOINT: 768px
+ * BREAKPOINT: TYPOGRAPHY_BREAKPOINT (768px, Tailwind 'md')
  * - < 768px: Mobile (true)
  * - >= 768px: Desktop (false)
  *
@@ -20,9 +20,10 @@
  */
 
 import * as React from "react";
+import { TYPOGRAPHY_BREAKPOINT } from "@/app/config/typographyConfig";
 
-/** Mobile breakpoint in pixels (Tailwind 'md' breakpoint) */
-const MOBILE_BREAKPOINT = 768;
+/** Mobile breakpoint in pixels — single source of truth from typographyConfig */
+const MOBILE_BREAKPOINT = TYPOGRAPHY_BREAKPOINT;
 
 /**
  * Hook to detect if viewport is mobile-sized
