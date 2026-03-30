@@ -1,12 +1,19 @@
-"use client";
-
 /**
  * Demo page for web-haptics. Renders HapticsDemo and a link back to home.
  * See docs/WEB_HAPTICS.md for API and usage.
  */
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import HapticsDemo from "@/app/components/effects/HapticsDemo";
+
+export const metadata: Metadata = {
+  title: "Haptics Demo | Raf V.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function HapticsDemoPage() {
   return (

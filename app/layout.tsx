@@ -67,9 +67,8 @@ const cofoSansMono = localFont({
 
 /** Site metadata for SEO and social sharing */
 export const metadata: Metadata = {
-  title: "Raf V. - Staff AI Designer and Design Engineer",
-  description:
-    "Staff AI Designer and Design Engineer focused on AI workflows, clarity, decision-making, and human judgment in AI-driven systems.",
+  title: "Raf V. - Designer and Design Engineer",
+  description: "Raf V. - AI Designer",
   keywords: [
     "design systems",
     "AI/agent UX",
@@ -96,22 +95,19 @@ export const metadata: Metadata = {
       { url: "/favicon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/favicon-180x180.png", sizes: "180x180", type: "image/png" },
     ],
-    shortcut: "/favicon.ico",
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Raf V. - Staff AI Designer and Design Engineer",
-    description:
-      "Staff AI Designer and Design Engineer focused on AI workflows, clarity, decision-making, and human judgment in AI-driven systems.",
+    title: "Raf V. - Designer and Design Engineer",
+    description: "Raf V. - AI Designer",
     url: "https://raf.works",
     siteName: "Raf V. - Personal Website",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
+        url: "/image-portrait.jpeg",
+        alt: "Raf V.",
       },
     ],
     locale: "en_US",
@@ -119,11 +115,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Raf V. - Staff AI Designer and Design Engineer",
-    description:
-      "Staff AI Designer and Design Engineer focused on AI workflows, clarity, decision-making, and human judgment in AI-driven systems.",
+    title: "Raf V. - Designer and Design Engineer",
+    description: "Raf V. - AI Designer",
     creator: "@rafdotworks",
-    images: ["/og-image.png"],
+    images: ["/image-portrait.jpeg"],
   },
 };
 

@@ -14,7 +14,6 @@
 "use client"
 
 import React, { memo } from "react"
-import { ExternalLinkIcon } from "@/app/components/icons/ExternalLinkIcon"
 
 interface FooterLinkProps {
   href: string
@@ -27,7 +26,7 @@ interface FooterLinkProps {
 }
 
 const baseClasses =
-  "type-caption group/link inline-flex items-center gap-1 w-fit text-muted-foreground/40 md:group-hover/nav:text-muted-foreground/15 hover:!text-muted-foreground visited:text-muted-foreground/40 md:group-hover/nav:visited:text-muted-foreground/15 active:text-muted-foreground focus-visible:text-muted-foreground/40 transition-colors duration-150 focus:outline-none"
+  "type-caption inline-flex w-fit text-inherit visited:text-inherit hover:text-inherit focus-visible:text-inherit active:text-inherit no-underline opacity-80 transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none"
 
 const fontFamilyClasses = {
   accent: "font-edu-marist",
@@ -42,12 +41,12 @@ function FooterLink({ href, label, ariaLabel, external = false, fontFamily = "ac
       rel={external ? "noopener noreferrer" : undefined}
       className={`${baseClasses} ${fontFamilyClasses[fontFamily]}${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel || label}
+      style={{
+        color: "inherit",
+        WebkitTapHighlightColor: "transparent",
+      }}
     >
       {label}
-      <ExternalLinkIcon
-        size={10}
-        className="hidden md:block w-[8px] h-[8px] opacity-0 -ml-0.5 group-hover/link:opacity-100 group-hover/link:ml-0 group-hover/link:animate-pulse-subtle transition-[margin,opacity] duration-300"
-      />
     </a>
   )
 }

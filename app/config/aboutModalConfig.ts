@@ -7,6 +7,9 @@
  * Structured for easy localization and future translations.
  */
 
+import { COMPANY_LINKS } from "@/app/config/companyLinks";
+import { CONTACT_LINKS } from "@/app/config/contactLinks";
+
 export interface AboutModalSection {
   title: string;
   paragraphs: Array<{
@@ -30,8 +33,35 @@ export interface AboutModalContent {
     email: AboutModalLink;
     blueprint: AboutModalLink;
   };
+  companyLinks: {
+    walmart: AboutModalLink;
+    theoriq: AboutModalLink;
+    coinbase: AboutModalLink;
+    voiceflow: AboutModalLink;
+    zalando: AboutModalLink;
+  };
   principles: string[];
 }
+
+/**
+ * ABOUT_BIO_COPY: Canonical sentence-level copy shared across the About tray,
+ * mobile hero summary, modal content, and /api/me bio.
+ */
+export const ABOUT_BIO_COPY = {
+  lead: "Hello, call me Raf. I am grateful to call myself a builder and a designer.",
+  path:
+    "I grew up between computers and the Amalfi Coast, Italy, studied engineering in Naples, then found my way to design through hospitality, brand, and the web.",
+  currentRole:
+    "Today I design AI product systems at {walmart}, helping sellers understand recommendations, make decisions, and act with confidence at scale. I have other smaller AI initiatives I contribute to.",
+  previousRole:
+    "Before that: Founding Designer at {theoriq}. Developer tools at {coinbase}. Growth at {voiceflow}. Design systems at {zalando}. A decade of independent work across crypto, fintech, and developer tools.",
+  location: "I am based in Toronto, Canada and frequently in Lisbon, Portugal and Brooklyn, New York. I don't work from coffee shops. I deeply believe in the power of working in person.",
+  outsideWork:
+    "Outside work, I {write}, {photograph}, and chase light everywhere I go. I am inspired by office spaces, architecture, and teaching vinyasa yoga.",
+  mobileCurrentRole: "Designing AI product systems at {walmart}.",
+  mobilePreviousRole:
+    "Previously {theoriq}, {coinbase}, {voiceflow}, {zalando}, and independent work across crypto, developer tools and more.",
+} as const;
 
 /**
  * ABOUT_MODAL_CONTENT: All copy for the About Raf modal
@@ -43,14 +73,11 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Origins",
       paragraphs: [
         {
-          text: "Hello, I am Raf. I've been shipping code since before the tooling made it easy.",
+          text: ABOUT_BIO_COPY.lead,
           isHighlighted: true,
         },
         {
-          text: "Grew up on the Amalfi Coast, Italy. Based in Toronto.",
-        },
-        {
-          text: "You can find me on {linkedin}, on {x}, and at {email}.",
+          text: ABOUT_BIO_COPY.path,
         },
       ],
     },
@@ -58,21 +85,23 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       title: "Craft",
       paragraphs: [
         {
-          text: "Studied software engineering in Naples, then moved into design where I won some awards. My career began in hospitality, brand and web design. Early on, an internship at Apple as a UX/UI Designer.",
+          text: ABOUT_BIO_COPY.currentRole,
           isHighlighted: true,
         },
         {
-          text: "I was most recently Founding designer at Theoriq, leading all the product design, design engineering front-end and marketing efforts. Before that, Obvious, Coinbase, Voiceflow, and more.",
+          text: ABOUT_BIO_COPY.previousRole,
         },
-        
       ],
     },
     {
       title: "Presence",
       paragraphs: [
         {
-          text: "I write, photograph, and spend time on a yoga mat or chasing light through workspaces.",
+          text: ABOUT_BIO_COPY.location,
           isHighlighted: true,
+        },
+        {
+          text: ABOUT_BIO_COPY.outsideWork,
         },
       ],
     },
@@ -83,19 +112,19 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
   ],
   contactLinks: {
     linkedin: {
-      label: "LinkedIn",
-      href: "https://www.linkedin.com/in/raffaelevitaledesign",
-      ariaLabel: "Raf on LinkedIn",
+      label: CONTACT_LINKS.linkedin.label,
+      href: CONTACT_LINKS.linkedin.href,
+      ariaLabel: CONTACT_LINKS.linkedin.ariaLabel,
     },
     x: {
-      label: "X",
-      href: "https://x.com/rafdotworks",
-      ariaLabel: "Raf on X",
+      label: CONTACT_LINKS.x.label,
+      href: CONTACT_LINKS.x.href,
+      ariaLabel: CONTACT_LINKS.x.ariaLabel,
     },
     email: {
-      label: "raf@raf.works",
-      href: "mailto:raf@raf.works",
-      ariaLabel: "Email Raf",
+      label: CONTACT_LINKS.email.label,
+      href: CONTACT_LINKS.email.href,
+      ariaLabel: CONTACT_LINKS.email.ariaLabel,
     },
     blueprint: {
       label: "Blueprint",
@@ -103,9 +132,34 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
       ariaLabel: "Blueprint",
     },
   },
-  principles: [
-    "Systems that feel fast, logical, and respectful of attention.",
-  ],
+  companyLinks: {
+    walmart: {
+      label: "Walmart",
+      href: COMPANY_LINKS.walmart,
+      ariaLabel: "Walmart",
+    },
+    theoriq: {
+      label: "Theoriq",
+      href: COMPANY_LINKS.theoriq,
+      ariaLabel: "Theoriq",
+    },
+    coinbase: {
+      label: "Coinbase",
+      href: COMPANY_LINKS.coinbase,
+      ariaLabel: "Coinbase",
+    },
+    voiceflow: {
+      label: "Voiceflow",
+      href: COMPANY_LINKS.voiceflow,
+      ariaLabel: "Voiceflow",
+    },
+    zalando: {
+      label: "Zalando",
+      href: COMPANY_LINKS.zalando,
+      ariaLabel: "Zalando",
+    },
+  },
+  principles: [],
 };
 
 /**
@@ -115,10 +169,8 @@ export const ABOUT_MODAL_CONTENT: AboutModalContent = {
  */
 export const MOBILE_HERO_COPY = {
   name: "Raf V.",
-  lines: [
-    "Staff AI Designer and Design Engineer.",
-    "Designing AI workflows and recommendations at Walmart. Previously Theoriq, Obvious, Coinbase, Voiceflow and more.",
-    "Grew up on the Amalfi Coast, Italy. Based in Toronto, Canada.",
-    "I write, photograph, and spend time on a yoga mat or chasing light through workspaces.",
-  ],
+  summaryPrimary: ABOUT_BIO_COPY.mobileCurrentRole,
+  summarySecondary: ABOUT_BIO_COPY.mobilePreviousRole,
+  location: ABOUT_BIO_COPY.location,
+  outsideWork: ABOUT_BIO_COPY.outsideWork,
 } as const;

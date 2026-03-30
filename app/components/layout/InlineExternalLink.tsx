@@ -3,34 +3,31 @@
 import React, { memo } from "react"
 
 /**
- * Hero/tray primary CTA underline: visible by default (muted), brighter on hover.
- * Used by the hero "Raf V." button and optionally the SideTray "write" link.
- * Used by: app/page.tsx, app/components/page-specific/SideTray.tsx
+ * Hero/tray identity underline: quiet by default and slightly clearer on hover.
+ * Never shifts link color; hover feedback is underline/opacity only.
  */
 export const HERO_UNDERLINE_CLASSES =
-  "underline underline-offset-2 [text-decoration-color:color-mix(in_srgb,currentColor_50%,transparent)] hover:[text-decoration-color:currentColor] transition-[text-decoration-color] duration-300 ease-out"
+  "text-inherit visited:text-inherit hover:text-inherit focus:text-inherit focus-visible:text-inherit active:text-inherit underline underline-offset-2 [text-decoration-color:color-mix(in_srgb,currentColor_22%,transparent)] hover:[text-decoration-color:color-mix(in_srgb,currentColor_38%,transparent)] focus:[text-decoration-color:color-mix(in_srgb,currentColor_38%,transparent)] focus-visible:[text-decoration-color:color-mix(in_srgb,currentColor_38%,transparent)] transition-[text-decoration-color,opacity] duration-150 hover:opacity-[0.92] focus:opacity-[0.92] focus-visible:opacity-[0.92] focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:[box-shadow:none] focus-visible:[box-shadow:none]"
 
 /**
- * Shared class string for "subtle underline": underline always present,
- * decoration color transparent by default, fades in on hover. Used by
- * Previously… links (Obvious, Theoriq, etc.) and other subtle inline links.
- * Used by: app/page.tsx (inline company links), SideTray About content
+ * Shared class string for quiet inline links that should feel close to the
+ * surrounding body copy. Used by company links in hero/tray/modal content.
  */
-export const SUBTLE_UNDERLINE_CLASSES =
-  "underline underline-offset-2 [text-decoration-color:transparent] hover:[text-decoration-color:color-mix(in_srgb,currentColor_50%,transparent)] transition-[text-decoration-color] duration-300 ease-out"
+export const MINIMAL_TEXT_LINK_CLASSES =
+  "cursor-pointer text-inherit visited:text-inherit hover:text-inherit focus-visible:text-inherit active:text-inherit underline underline-offset-2 [text-decoration-color:color-mix(in_srgb,currentColor_14%,transparent)] hover:[text-decoration-color:color-mix(in_srgb,currentColor_32%,transparent)] focus-visible:[text-decoration-color:color-mix(in_srgb,currentColor_32%,transparent)] transition-[text-decoration-color,opacity] duration-150 focus-visible:outline-none"
 
 interface InlineExternalLinkProps {
   href: string
   children: React.ReactNode
-  /** When "subtle", uses same underline fade-in/out as Raf V. (hero/tray consistency). */
+  /** When "subtle", keeps the link visually close to surrounding body copy. */
   underlineStyle?: "default" | "subtle"
 }
 
 function InlineExternalLink({ href, children, underlineStyle = "default" }: InlineExternalLinkProps) {
-  const isSubtle = underlineStyle === "subtle"
-  const linkClassName = isSubtle
-    ? `cursor-pointer ${SUBTLE_UNDERLINE_CLASSES}`
-    : "cursor-pointer transition-[opacity] duration-200 hover:opacity-100 hover:underline no-underline"
+  const linkClassName =
+    underlineStyle === "subtle"
+      ? MINIMAL_TEXT_LINK_CLASSES
+      : MINIMAL_TEXT_LINK_CLASSES
 
   return (
     <a

@@ -9,11 +9,16 @@ This is a Next.js 15 portfolio website for Raf, an AI designer and design engine
 ## Development Commands
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
+npm run dev         # Start development server
+npm run build       # Build for production
+npm run start       # Start production server
+npm run lint        # Run ESLint
+npm run typecheck   # TypeScript only (tsc --noEmit; fast)
+npm run test        # Vitest unit tests (*.test.ts)
+npm run test:watch  # Vitest watch mode
 ```
+
+Operational map, CI, `/api/me`, and performance notes: [docs/ENGINEERING.md](docs/ENGINEERING.md).
 
 ## Tech Stack
 
@@ -30,7 +35,8 @@ npm run lint     # Run ESLint
 The app uses Next.js App Router with feature-based component organization:
 
 **Core Routes:**
-- [app/page.tsx](app/page.tsx) - Main minimal portfolio homepage
+- [app/page.tsx](app/page.tsx) - Server entry for `/`; redirects `?writings=` to `/works`; renders [HomeLanding](app/components/pages/HomeLanding.tsx) (minimal landing + gallery + tray)
+- [app/works/page.tsx](app/works/page.tsx) - `/works`; renders [WorksHomepage](app/components/pages/WorksHomepage.tsx) (full hero + gallery + URL-synced writing tray)
 - [app/layout.tsx](app/layout.tsx) - Root layout with fonts, metadata, analytics
 - [app/error.tsx](app/error.tsx) - Global error boundary (moved from root in cleanup)
 - [app/blueprint/](app/blueprint/), [app/portfolio/](app/portfolio/), [app/cv/](app/cv/), [app/text-2026/](app/text-2026/) - Additional pages
@@ -53,6 +59,7 @@ app/components/
 │   └── DragCarousel.tsx
 ├── effects/          - Visual effects and easter eggs
 │   └── ConsoleEasterEgg.tsx
+├── pages/              - Route-level UI: HomeLanding, WorksHomepage, SharedHomepageWorkGallery, homepage/*
 ├── page-specific/    - Large components for specific pages
 │   └── SideTray.tsx (writing/story viewer)
 ├── hover/            - Hover interaction components
@@ -112,9 +119,9 @@ app/components/
 
 **Loading layout stability (minimize text jump)**
 - **Font fallback**: [app/layout.tsx](app/layout.tsx) uses Next.js `adjustFontFallback` for Ronzino, Edu Marist, and CoFo Sans Mono so the fallback font has matching metrics (size-adjust, etc.). When the custom font swaps in, layout does not reflow and hero text does not jump.
-- **Scrollbar gutter**: Hero scroll container in [app/page.tsx](app/page.tsx) uses class `scrollbar-gutter-stable` ([app/globals.css](app/globals.css)); `scrollbar-gutter: stable` reserves space for the scrollbar so it does not appear mid-load and shift content.
+- **Scrollbar gutter**: On **`/works`**, the hero scroll container in [WorksHomepage](app/components/pages/WorksHomepage.tsx) uses class `scrollbar-gutter-stable` ([app/globals.css](app/globals.css)); `scrollbar-gutter: stable` reserves space for the scrollbar so it does not appear mid-load and shift content.
 
-**Theme System** ([app/page.tsx](app/page.tsx) lines 80-113)
+**Theme System** ([useHomepageScrollEffects](app/components/pages/useHomepageScrollEffects.ts), used by HomeLanding and WorksHomepage)
 - Binary theme blend at 93% scroll (instant snap, not gradual)
 - Design decision: Creates clear visual distinction between sections
 - 93% threshold chosen through user testing
@@ -169,7 +176,7 @@ app/components/
 
 ### Important Notes
 
-- Main page is ~380 lines - use offset/limit when reading large sections
+- Large route components ([HomeLanding](app/components/pages/HomeLanding.tsx), [WorksHomepage](app/components/pages/WorksHomepage.tsx)) — use offset/limit when reading
 - Component imports use feature-based paths (e.g., `@/app/components/layout/NavigationItem`)
 - Loading animations use blur effects for sophisticated reveals
 - Mobile-first approach with safe area insets for iOS
@@ -181,7 +188,7 @@ The codebase underwent comprehensive cleanup and reorganization:
 2. **Reorganized**: Components into feature-based folders for better scalability
 3. **Archived**: 12 unused work images to [public/work/archive/](public/work/archive/)
 4. **Optimized**: Config files (Tailwind, Next.js), removed commented code
-5. **Documented**: Complex logic in [app/page.tsx](app/page.tsx) (theme blend system, scroll effects)
+5. **Documented**: Complex scroll/theme logic in homepage hooks and page components (e.g. [useHomepageScrollEffects](app/components/pages/useHomepageScrollEffects.ts))
 6. **Renamed**: `aboutModalContent.ts` → `aboutModalConfig.ts` for naming consistency
 7. **Fixed**: All import paths (50+ files updated) after reorganization
 
@@ -206,7 +213,7 @@ Follow the pattern in [components/animations/LoadingAnimations.tsx](components/a
 
 ### When Working with This Codebase
 
-1. **Reading Files**: For large files like [app/page.tsx](app/page.tsx), use offset/limit parameters
+1. **Reading Files**: For large files like [HomeLanding](app/components/pages/HomeLanding.tsx) or [WorksHomepage](app/components/pages/WorksHomepage.tsx), use offset/limit parameters
 2. **Component Imports**: Use feature-based paths after reorganization (layout/, modal/, media/, etc.)
 3. **Configuration**: All configs in [app/config/](app/config/) use "Config" suffix (except typographyConfig.ts)
 4. **Typography**: Use Golden Ratio scale - see [TYPOGRAPHY.md](TYPOGRAPHY.md) for complete system documentation
@@ -272,10 +279,8 @@ const shouldReduceMotion = useReducedMotion()
 
 ### Testing Strategy
 
-Currently manual testing workflow (no test suite):
-- Build verification: `npm run build`
-- Lint checking: `npm run lint`
-- Visual regression: Manual testing across routes
-- Browser testing: Chrome (desktop), iOS Safari (mobile)
+- **Automated**: `npm run test` (Vitest) — pure logic in [app/lib/](app/lib/) and similar; colocate `*.test.ts` with sources.
+- **CI**: GitHub Actions on `main` runs `lint` → `typecheck` → `test` → `build` (see [.github/workflows/ci.yml](.github/workflows/ci.yml)).
+- **Manual**: Build verification (`npm run build`), lint (`npm run lint`), visual regression across routes, Chrome (desktop) and iOS Safari (mobile). See [TESTING_GUIDE.md](TESTING_GUIDE.md) and [docs/ENGINEERING.md](docs/ENGINEERING.md).
 
-**When to add tests**: If multiple contributors join, complex business logic is added, or regressions appear.
+**When to add tests**: Expand Vitest coverage when logic grows beyond trivial; add Playwright smoke if deploy regressions appear.

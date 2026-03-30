@@ -28,6 +28,9 @@ next-env.d.ts
 
 # cursor
 .cursor/
+.playwright-cli/
+output/
+test-results/
 
 # macOS
 .DS_Store

@@ -11,6 +11,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { modalTextStagger } from "@/components/animations/LoadingAnimations";
 import { ABOUT_MODAL_CONTENT } from "@/app/config/aboutModalConfig";
+import { MINIMAL_TEXT_LINK_CLASSES } from "@/app/components/layout/InlineExternalLink";
 
 interface AboutModalContentProps {
   shouldReduceMotion?: boolean;
@@ -64,7 +65,7 @@ function parseHTMLToReact(htmlString: string, startKey: number): (string | React
  */
 function renderParagraph(
   paragraph: { text: string; isHighlighted?: boolean; isEmphasized?: boolean },
-  links: typeof ABOUT_MODAL_CONTENT.contactLinks,
+  links: typeof ABOUT_MODAL_CONTENT.contactLinks & typeof ABOUT_MODAL_CONTENT.companyLinks,
   index: number,
   key: string | number
 ) {
@@ -80,7 +81,7 @@ function renderParagraph(
   htmlParts.forEach((part, partIndex) => {
     if (typeof part === 'string') {
       // Process link placeholders in text parts
-      const linkRegex = /\{(linkedin|x|email|blueprint)\}/g;
+      const linkRegex = /\{(linkedin|x|email|blueprint|walmart|theoriq|coinbase|voiceflow|zalando|write|photograph)\}/g;
       let lastIndex = 0;
       let match;
 
@@ -94,20 +95,25 @@ function renderParagraph(
         }
 
         // Add the link component
-        const linkKey = match[1] as "linkedin" | "x" | "email" | "blueprint";
-        const link = links[linkKey];
-        const isExternalLink = linkKey !== "email" && linkKey !== "blueprint";
-        parts.push(
-          <a
-            key={`link-${index}-${linkCounter++}`}
-            href={link.href}
-            target={isExternalLink ? "_blank" : undefined}
-            rel={isExternalLink ? "noopener noreferrer" : undefined}
-            className="text-foreground/85 underline hover:text-foreground transition-colors"
-          >
-            {link.label}
-          </a>
-        );
+        const tokenKey = match[1] as "linkedin" | "x" | "email" | "blueprint" | "walmart" | "theoriq" | "coinbase" | "voiceflow" | "zalando" | "write" | "photograph";
+
+        if (tokenKey === "write" || tokenKey === "photograph") {
+          parts.push(tokenKey);
+        } else {
+          const link = links[tokenKey];
+          const isExternalLink = link.href.startsWith("http");
+          parts.push(
+            <a
+              key={`link-${index}-${linkCounter++}`}
+              href={link.href}
+              target={isExternalLink ? "_blank" : undefined}
+              rel={isExternalLink ? "noopener noreferrer" : undefined}
+              className={MINIMAL_TEXT_LINK_CLASSES}
+            >
+              {link.label}
+            </a>
+          );
+        }
 
         lastIndex = linkRegex.lastIndex;
       }
@@ -152,6 +158,11 @@ export function AboutModalContent({
   shouldReduceMotion: _shouldReduceMotion = false,
   onBlueprintClick,
 }: AboutModalContentProps) {
+  const modalLinks = {
+    ...ABOUT_MODAL_CONTENT.contactLinks,
+    ...ABOUT_MODAL_CONTENT.companyLinks,
+  };
+
   return (
     <motion.div
       variants={modalTextStagger.container}
@@ -183,7 +194,7 @@ export function AboutModalContent({
                 {highlightedParagraphs.map((paragraph, paraIndex) =>
                   renderParagraph(
                     paragraph,
-                    ABOUT_MODAL_CONTENT.contactLinks,
+                    modalLinks,
                     sectionIndex * 100 + paraIndex,
                     `highlighted-${sectionIndex}-${paraIndex}`
                   )
@@ -194,7 +205,7 @@ export function AboutModalContent({
                 {regularParagraphs.map((paragraph, paraIndex) =>
                   renderParagraph(
                     paragraph,
-                    ABOUT_MODAL_CONTENT.contactLinks,
+                    modalLinks,
                     sectionIndex * 100 + highlightedParagraphs.length + paraIndex,
                     `regular-${sectionIndex}-${paraIndex}`
                   )
@@ -221,7 +232,7 @@ export function AboutModalContent({
                               onBlueprintClick();
                             }
                           }}
-                          className="text-foreground cursor-pointer underline decoration-foreground/20 hover:decoration-foreground/50 underline-offset-2 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-sm hover:bg-foreground/5 transition-all duration-200 inline-block"
+                          className={`${MINIMAL_TEXT_LINK_CLASSES} inline-block`}
                           style={{ 
                             WebkitTapHighlightColor: 'transparent'
                           }}
@@ -231,7 +242,7 @@ export function AboutModalContent({
                       ) : (
                         <a
                           href={ABOUT_MODAL_CONTENT.contactLinks.blueprint.href}
-                          className="text-foreground/85 underline hover:text-foreground transition-colors"
+                          className={MINIMAL_TEXT_LINK_CLASSES}
                         >
                           {ABOUT_MODAL_CONTENT.contactLinks.blueprint.label}
                         </a>
@@ -256,4 +267,3 @@ export function AboutModalContent({
     </motion.div>
   );
 }
-

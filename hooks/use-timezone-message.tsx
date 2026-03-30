@@ -29,6 +29,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { getCurrentLocation } from "@/app/config/locationConfig"
+import { formatRafTimezoneMessage } from "@/app/lib/locationWeather"
 
 /**
  * Update interval for timezone message (in milliseconds).
@@ -105,140 +106,18 @@ function usesFahrenheit(temperatureScale: "C" | "F"): boolean {
  * "Raf is currently in Toronto (in your timezone)"
  */
 export function useTimezoneMessage(): string {
-  // Get current location from config (outside effect to avoid re-fetching)
-  const location = getCurrentLocation()
-  const { city, timezone: targetTimezone, coordinates, temperatureScale } = location
+  const { city, temperature, description, timezoneDiff } = useLocationWeather()
 
-  // SSR guard - return consistent initial value to prevent hydration mismatch
-  const [timezoneMessage, setTimezoneMessage] = useState(`Raf is currently in ${city}.`)
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
-  const [timezoneDiff, setTimezoneDiff] = useState("")
+  if (!timezoneDiff) {
+    return `Raf is currently in ${city}.`
+  }
 
-  /**
-   * Calculates timezone difference and generates timezone portion of message.
-   *
-   * @returns {string} Timezone difference message (e.g., "3 hours ahead", "in your timezone")
-   */
-  const calculateTimezoneDifference = useCallback((): string => {
-    const now = new Date()
-
-    // Get target location time using proper timezone-aware formatting
-    const targetFormatter = new Intl.DateTimeFormat("en-US", {
-      timeZone: targetTimezone,
-      hour: "2-digit",
-      hour12: false,
-      minute: "2-digit",
-    })
-
-    const targetParts = targetFormatter.formatToParts(now)
-    const targetHour = parseInt(targetParts.find(p => p.type === "hour")?.value || "0", 10)
-    const targetMinute = parseInt(targetParts.find(p => p.type === "minute")?.value || "0", 10)
-    const targetTotalMinutes = targetHour * 60 + targetMinute
-
-    // Get user's local time
-    const userTotalMinutes = now.getHours() * 60 + now.getMinutes()
-
-    // Calculate difference in minutes
-    let differenceMinutes = targetTotalMinutes - userTotalMinutes
-
-    // Handle day boundary crossing (normalize to -12 to +12 hours range)
-    if (differenceMinutes > 12 * 60) {
-      differenceMinutes -= 24 * 60
-    } else if (differenceMinutes < -12 * 60) {
-      differenceMinutes += 24 * 60
-    }
-
-    // Convert to hours (round to nearest hour)
-    const differenceHours = Math.round(differenceMinutes / 60)
-
-    // Generate timezone difference message
-    if (differenceHours === 0) {
-      return "in your timezone"
-    } else if (differenceHours > 0) {
-      return `${differenceHours} hour${differenceHours !== 1 ? 's' : ''} ahead`
-    } else {
-      return `${Math.abs(differenceHours)} hour${Math.abs(differenceHours) !== 1 ? 's' : ''} behind`
-    }
-  }, [targetTimezone])
-
-  // Effect 1: Update timezone difference every minute
-  useEffect(() => {
-    const updateTimezone = () => {
-      setTimezoneDiff(calculateTimezoneDifference())
-    }
-
-    // Calculate immediately on mount
-    updateTimezone()
-
-    // Update every minute
-    const interval = setInterval(updateTimezone, TIMEZONE_UPDATE_INTERVAL)
-
-    return () => clearInterval(interval)
-  }, [targetTimezone, calculateTimezoneDifference])
-
-  // Effect 2: Fetch weather data with AbortController for cleanup
-  useEffect(() => {
-    const abortController = new AbortController()
-
-    /**
-     * Fetches weather data from API.
-     * Silently fails if API is unavailable (per option 4b).
-     * Uses AbortController to prevent memory leaks on unmount.
-     */
-    const fetchWeather = async () => {
-      try {
-        const response = await fetch(
-          `/api/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`,
-          { signal: abortController.signal }
-        )
-
-        if (!response.ok) {
-          // Silently fail - weather is optional
-          return
-        }
-
-        const data: WeatherData = await response.json()
-        setWeatherData(data)
-      } catch (error) {
-        // Ignore abort errors, silently fail others
-        if (error instanceof Error && error.name === 'AbortError') return
-        // Silently fail - weather is optional
-        // The timezone message will display without weather data
-      }
-    }
-
-    // Fetch immediately on mount
-    fetchWeather()
-
-    // Re-fetch periodically (cache handles rate limiting)
-    const interval = setInterval(fetchWeather, TIMEZONE_UPDATE_INTERVAL)
-
-    return () => {
-      abortController.abort()
-      clearInterval(interval)
-    }
-  }, [coordinates.lat, coordinates.lon]) // Re-run if coordinates change
-
-  // Effect 3: Update message when timezone or weather changes
-  useEffect(() => {
-    if (!timezoneDiff) return // Wait for initial timezone calculation
-
-    // Build base message with location and timezone
-    let message = `Raf is currently in ${city} (${timezoneDiff})`
-    
-    // Append weather if available
-    if (weatherData) {
-      const useFahrenheit = usesFahrenheit(temperatureScale)
-      const temperature = useFahrenheit 
-        ? `${weatherData.tempF}°F`
-        : `${weatherData.tempC}°C`
-      message += ` where it's ${temperature} and ${weatherData.description}`
-    }
-    
-    setTimezoneMessage(message)
-  }, [timezoneDiff, weatherData, city, temperatureScale])
-
-  return timezoneMessage
+  return formatRafTimezoneMessage({
+    city,
+    timezoneDiff,
+    temperature,
+    description,
+  })
 }
 
 /**
@@ -253,7 +132,7 @@ export function useTimezoneMessage(): string {
  * // description: "partly cloudy"
  * // timezoneDiff: "in your timezone" or "3 hours ahead"
  */
-export function useLocationWeather(): LocationWeatherData {
+export function useLocationWeather(enabled = true): LocationWeatherData {
   const location = getCurrentLocation()
   const { city, timezone: targetTimezone, coordinates, temperatureScale } = location
 
@@ -306,6 +185,12 @@ export function useLocationWeather(): LocationWeatherData {
 
   // Effect 1: Update timezone difference
   useEffect(() => {
+    if (!enabled) {
+      setTimezoneDiff("")
+      setTimezoneDiffShort("")
+      return
+    }
+
     const updateTimezone = () => {
       const diff = calculateTimezoneDifference()
       setTimezoneDiff(diff.long)
@@ -316,10 +201,17 @@ export function useLocationWeather(): LocationWeatherData {
     const interval = setInterval(updateTimezone, TIMEZONE_UPDATE_INTERVAL)
 
     return () => clearInterval(interval)
-  }, [targetTimezone, calculateTimezoneDifference])
+  }, [enabled, targetTimezone, calculateTimezoneDifference])
 
   // Effect 2: Fetch weather data
   useEffect(() => {
+    if (!enabled) {
+      setWeatherData(null)
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
     const abortController = new AbortController()
 
     const fetchWeather = async () => {
@@ -350,7 +242,7 @@ export function useLocationWeather(): LocationWeatherData {
       abortController.abort()
       clearInterval(interval)
     }
-  }, [coordinates.lat, coordinates.lon])
+  }, [coordinates.lat, coordinates.lon, enabled])
 
   // Format temperature with unit
   const useFahrenheit = usesFahrenheit(temperatureScale)
@@ -368,7 +260,6 @@ export function useLocationWeather(): LocationWeatherData {
     description: weatherData?.description || '',
     timezoneDiff,
     timezoneDiffShort,
-    isLoading: isLoading && !timezoneDiff,
+    isLoading: enabled ? isLoading && !timezoneDiff : false,
   }
 }
-

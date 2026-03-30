@@ -117,4 +117,3 @@ export const markdownComponents: Components = {
   em: ({ children }) => <em className="italic">{children}</em>,
   hr: () => <hr className="border-border my-6 transition-colors duration-200" />
 }
-

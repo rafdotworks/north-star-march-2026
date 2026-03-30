@@ -14,8 +14,10 @@
 
 import { NextResponse } from "next/server";
 import { ABOUT_MODAL_CONTENT } from "@/app/config/aboutModalConfig";
+import { CONTACT_LINKS } from "@/app/config/contactLinks";
 import { getCurrentLocation } from "@/app/config/locationConfig";
 import { writings, personalNotes } from "@/app/config/writingsConfig";
+import { stripAboutCopyTokens } from "@/app/lib/aboutCopyTokens";
 
 const CACHE_MAX_AGE_SECONDS = 60;
 const SITE_URL = "https://raf.works";
@@ -28,8 +30,7 @@ function getBio(): string {
   for (const section of ABOUT_MODAL_CONTENT.sections) {
     const highlighted = section.paragraphs.find((p) => p.isHighlighted && p.text);
     if (highlighted?.text) {
-      return highlighted.text
-        .replace(/\{linkedin\}|\{x\}|\{email\}/gi, "")
+      return stripAboutCopyTokens(highlighted.text)
         .replace(/<[^>]+>/g, "")
         .replace(/\s+/g, " ")
         .trim();
@@ -51,9 +52,9 @@ export async function GET() {
         timezone: location.timezone,
       },
       contact: {
-        email: ABOUT_MODAL_CONTENT.contactLinks.email.href.replace(/^mailto:/i, ""),
-        linkedin: ABOUT_MODAL_CONTENT.contactLinks.linkedin.href,
-        x: ABOUT_MODAL_CONTENT.contactLinks.x.href,
+        email: CONTACT_LINKS.email.href.replace(/^mailto:/i, ""),
+        linkedin: CONTACT_LINKS.linkedin.href,
+        x: CONTACT_LINKS.x.href,
       },
       principles: ABOUT_MODAL_CONTENT.principles,
       writings: [

@@ -55,552 +55,33 @@
 "use client"
 
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef, memo, useMemo } from "react"
-import Image from "next/image"
-import ReactMarkdown from "react-markdown"
-import matter from "gray-matter"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import Sheet from "react-modal-sheet"
-import FooterLink from "@/app/components/layout/FooterLink"
-import InlineExternalLink, { HERO_UNDERLINE_CLASSES } from "@/app/components/layout/InlineExternalLink"
-import { COMPANY_LINKS } from "@/app/config/companyLinks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSystemTheme } from "@/hooks/use-system-theme"
 import { useLocationWeather } from "@/hooks/use-timezone-message"
 import { EASING } from "@/components/animations/constants"
-import { markdownComponents } from "@/app/components/markdown/markdownComponents"
-import { storyMarkdownComponents } from "@/app/components/markdown/storyMarkdownComponents"
-import { trayMarkdownComponents } from "@/app/components/markdown/trayMarkdownComponents"
-import { StoryHeader } from "@/app/components/story"
+import { allWritings } from "@/app/config/writingsConfig"
+import AboutTrayBiography from "@/app/components/page-specific/side-tray/AboutTrayBiography"
+import { ArticleErrorView, ArticleView } from "@/app/components/page-specific/side-tray/ArticleView"
 import {
-  allWritings,
-  writings,
-  personalNotes
-} from "@/app/config/writingsConfig"
-import { PHOTOS } from "@/app/config/photosConfig"
-import type { StoryFrontmatter } from "@/app/types/story"
-
-/** Roman numerals I–XIV for photo credits (1-based index). */
-const PHOTO_ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV"] as const
-
-function getPhotoCreditName(photo: { alt?: string; src: string }): string {
-  return (photo.alt ?? photo.src).replace(/\s+[23]$/, "").trim()
-}
-
-/**
- * Props for SideTray component.
- * 
- * @interface SideTrayProps
- * @property {string | null} articleId - The article ID to display, or null to show list (writing mode) or close tray
- * @property {() => void} onClose - Callback when tray should be closed
- * @property {boolean} [isWritingMode=false] - If true, enables writing mode with two-step navigation
- * @property {(articleId: string | null) => void} [onArticleSelect] - Callback when article is selected (required in writing mode)
- * 
- * @example
- * // Normal mode (About)
- * <SideTray 
- *   articleId="about" 
- *   onClose={() => setSelectedArticle(null)} 
- * />
- * 
- * @example
- * // Writing mode (with article selection)
- * <SideTray 
- *   articleId={selectedWritingArticle}
- *   onClose={handleClose}
- *   isWritingMode={true}
- *   onArticleSelect={setSelectedWritingArticle}
- * />
- */
-interface SideTrayProps {
-  articleId: string | null
-  onClose: () => void
-  /** Close only the Writing panel when stacked (About + Writing); reveals About */
-  onCloseWritingOnly?: () => void
-  isWritingMode?: boolean
-  isAboutMode?: boolean
-  onArticleSelect?: (articleId: string | null) => void
-  /** Called when user clicks "write" in about tagline; page can switch tray to writing mode */
-  onSwitchToWriting?: () => void
-  /** Called when user clicks "photograph" in about tagline; page can switch tray to photos mode */
-  onSwitchToPhotograph?: () => void
-  /** Close only the Photos panel when stacked (About + Photos); reveals About */
-  onClosePhotosOnly?: () => void
-  isPhotosMode?: boolean
-  /** API base path for fetching content (default: "/api/article") */
-  apiBasePath?: string
-}
-
-/**
- * Parsed article content structure.
- *
- * @interface ArticleContent
- * @property {string} title - Article title from frontmatter
- * @property {string} date - Article date from frontmatter
- * @property {string} content - Article markdown content (without frontmatter)
- * @property {StoryFrontmatter} [frontmatter] - Full frontmatter for stories
- */
-interface ArticleContent {
-  title: string
-  date: string
-  content: string
-  /** Full frontmatter for story rendering */
-  frontmatter?: StoryFrontmatter
-}
-
-// ============================================================================
-// ANIMATION CONFIGURATION
-// ============================================================================
-// 
-// Easing curves are imported from shared constants file.
-// @see components/animations/constants.ts
-
-// ============================================================================
-// ANIMATION VARIANTS
-// ============================================================================
-
-/** Backdrop fade-in duration (slightly longer than out for a more deliberate entrance). */
-const TRAY_BACKDROP_IN = 0.35
-/** Backdrop fade-out duration (quick, so the background reasserts itself). */
-const TRAY_BACKDROP_OUT = 0.25
-
-/**
- * Backdrop animation variants.
- * 
- * Fades in/out the semi-transparent backdrop behind the tray.
- * Provides visual separation and enables click-outside-to-close.
- * 
- * ENHANCED FOR MOBILE:
- * - Faster entrance (0.35s) to establish visual hierarchy before modal
- * - Coordinated timing with modal entrance for polished feel
- * - Scale animation removed to prevent visible rectangle artifact
- */
-const backdropVariants = {
-  hidden: { 
-    opacity: 0
-  },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: TRAY_BACKDROP_IN,
-      ease: EASING.smooth
-    }
-  },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: TRAY_BACKDROP_OUT,
-      ease: EASING.smooth
-    }
-  }
-} as const
-
-/**
- * Desktop tray animation variants.
- * 
- * Creates a sophisticated 3D slide-in effect from the right side.
- * 
- * ANIMATION STAGES:
- * 1. x: Slides in from 100% (off-screen right) to 0
- * 2. scale: Slightly scales up from 0.98 to 1 (subtle zoom effect)
- * 3. rotateY: Rotates from -5deg to 0 (3D perspective effect)
- * 
- * TIMING:
- * - x: Spring animation (natural bounce) - 0.5s
- * - scale: Elastic easing with 0.1s delay - 0.6s
- * - rotateY: Spring easing with 0.05s delay - 0.7s
- * 
- * The staggered delays create a layered, sophisticated entrance.
- * Exit animation keeps panel in place (x: 0, scale: 1, rotateY: 0) and
- * only fades out opacity for elegant, non-sliding dismissal.
- */
-const trayVariants = {
-  hidden: {
-    x: "100%",
-    scale: 0.98,
-    rotateY: -5,
-  },
-  visible: {
-    x: 0,
-    scale: 1,
-    rotateY: 0,
-    transition: {
-      x: {
-        type: "spring" as const,
-        stiffness: 180,
-        damping: 28,
-        mass: 1,
-        duration: 0.7
-      },
-      scale: {
-        duration: 0.8,
-        ease: EASING.elastic,
-        delay: 0.1
-      },
-      rotateY: {
-        duration: 0.9,
-        ease: EASING.spring,
-        delay: 0.05
-      }
-    }
-  },
-  exit: {
-    x: "100%",
-    scale: 0.98,
-    rotateY: -5,
-    opacity: 0,
-    transition: {
-      duration: 0.5,
-      ease: EASING.gentle
-    }
-  }
-} as const
-
-/**
- * Content fade-in animation variants.
- * 
- * Creates a smooth blur-to-focus effect when content loads.
- * 
- * ANIMATION:
- * - opacity: Fades from 0 to 1
- * - filter: Blurs from 8px to 0px (creates focus effect)
- * 
- * TIMING:
- * - Both animations start after 0.3s delay (allows tray to slide in first)
- * - opacity: 0.6s duration
- * - filter: 0.8s duration (slightly longer for smooth blur transition)
- * 
- * This creates a layered animation: tray slides in, then content fades in.
- */
-const contentVariants = {
-  hidden: {
-    opacity: 0,
-    filter: "blur(8px)"
-  },
-  visible: {
-    opacity: 1,
-    filter: "blur(0px)",
-    transition: {
-      opacity: {
-        duration: 0.6,
-        ease: EASING.smooth,
-        delay: 0.3
-      },
-      filter: {
-        duration: 0.8,
-        ease: EASING.gentle,
-        delay: 0.3
-      }
-    }
-  },
-  exit: {
-    opacity: 0,
-    filter: "blur(4px)",
-    transition: {
-      duration: 0.25,
-      ease: EASING.smooth
-    }
-  }
-} as const
-
-/**
- * List item animation variants (for article lists).
- * 
- * Creates a staggered entrance effect for list items.
- * 
- * ANIMATION:
- * - opacity: Fades in
- * - x: Slides in from -20px (left)
- * - filter: Blurs from 4px to 0px
- * 
- * STAGGERING:
- * - Each item has a delay of i * 0.04s (40ms per item)
- * - Creates a cascading effect as items appear sequentially
- * 
- * @param {number} i - Index of the item (used for delay calculation)
- */
-const listItemVariants = {
-  hidden: {
-    opacity: 0,
-    x: -20,
-    filter: "blur(4px)"
-  },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    filter: "blur(0px)",
-    transition: {
-      duration: 0.4,
-      ease: EASING.stagger,
-      delay: i * 0.04,
-      filter: {
-        duration: 0.5,
-        ease: EASING.gentle
-      }
-    }
-  })
-}
-
-/**
- * Mobile-optimized list item animation variants.
- * 
- * Simplified animation for mobile to avoid distracting "line update" effect.
- * Removes blur, slide, and stagger effects that create a cascading "checking" appearance.
- * 
- * ANIMATION:
- * - opacity: Simple fade-in (0 → 1)
- * - No blur: Removed to eliminate scanning effect
- * - No slide: Removed to eliminate wave effect
- * - No stagger: All items appear simultaneously for clean appearance
- * 
- * TIMING:
- * - Duration: 0.3s with smooth easing
- * - All items animate together for instant, clean appearance
- */
-const mobileListItemVariants = {
-  hidden: {
-    opacity: 0
-  },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: EASING.smooth
-    }
-  }
-}
-
-/**
- * Close button animation variants.
- * 
- * Beautiful entrance animation coordinated with tray entrance.
- * Appears after tray slides in, creating a polished, inspiring feel.
- * 
- * ANIMATION:
- * - opacity: Fades from 0 to 1
- * - scale: Scales from 0.9 to 1 (subtle zoom-in effect)
- * 
- * TIMING:
- * - Delay: 0.6s (appears after tray finishes sliding in ~0.5s)
- * - Duration: 0.5s for smooth, elegant appearance
- * - Creates inspiring reveal effect as tray settles
- */
-const closeButtonVariants = {
-  hidden: {
-    opacity: 0,
-    scale: 0.9,
-  },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      opacity: {
-        duration: 0.5,
-        ease: EASING.smooth,
-        delay: 0.6
-      },
-      scale: {
-        duration: 0.5,
-        ease: EASING.elastic,
-        delay: 0.6
-      }
-    }
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.9,
-    transition: {
-      duration: 0.2,
-      ease: EASING.smooth
-    }
-  }
-} as const
-
-/** Unified duration for mobile stack transitions (back recede + front slide) so they feel like one motion. */
-const MOBILE_STACK_DURATION = 0.35
-
-/**
- * Mobile stacked sheet: back panel recedes when a new sheet is on top.
- * Same feedback language as desktop SideTray (blur/opacity/offset).
- *
- * When stacked: opacity 0.9, scale 0.96, translateY(8) so the sheet feels behind and "taller".
- */
-const mobileStackBackVariants = {
-  single: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
-  },
-  stacked: {
-    opacity: 0.9,
-    scale: 0.96,
-    y: 8,
-    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
-  },
-} as const
-
-/**
- * Mobile stacked sheet: front panel slides up into view.
- * Same duration and easing as back recede so the stack feels like one motion.
- */
-const mobileStackFrontVariants = {
-  hidden: {
-    opacity: 0,
-    y: "100%",
-    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
-  },
-  exit: {
-    opacity: 0,
-    y: "100%",
-    transition: { duration: MOBILE_STACK_DURATION, ease: EASING.smooth },
-  },
-} as const
-
-/**
- * View transition variants (for switching between list/article/about views).
- *
- * Creates a sophisticated, inspiring transition when switching views within the tray.
- * Content materializes into focus with a smooth blur-to-focus effect and subtle motion.
- *
- * ANIMATION:
- * - opacity: Fades in/out
- * - scale: Slightly scales from 0.96 to 1 (subtle zoom)
- * - y: Slides up from 12px to 0 (subtle upward motion)
- * - rotateX: Rotates from -5deg to 0 (3D perspective)
- * - filter: Blurs from 12px to 0px (dramatic focus effect)
- *
- * TIMING:
- * - duration: 0.7s (longer for smoother, more inspiring feel)
- * - delayChildren: 0.15s (slightly longer delay for better layering)
- * - staggerChildren: 0.08s between each child animation
- *
- * This creates a smooth, layered transition where content feels like it's
- * materializing into focus rather than just fading in.
- */
-const viewTransitionVariants = {
-  initial: {
-    opacity: 0,
-    filter: "blur(8px)"
-  },
-  animate: {
-    opacity: 1,
-    filter: "blur(0px)",
-    transition: {
-      duration: 0.4,
-      ease: EASING.smooth,
-      staggerChildren: 0.06,
-      delayChildren: 0.1
-    }
-  },
-  exit: {
-    opacity: 0,
-    filter: "blur(4px)",
-    transition: {
-      duration: 0.25,
-      ease: EASING.smooth
-    }
-  }
-}
-
-// ============================================================================
-// CUSTOM HOOKS
-// ============================================================================
-
-/**
- * Custom hook for loading and managing article content.
- * 
- * Handles:
- * - Fetching articles from API endpoint
- * - Parsing frontmatter (title, date) from markdown
- * - Loading, error, and success states
- * - Content reset when article changes
- * 
- * API ENDPOINT:
- * Fetches from /api/article/[id] which returns markdown content with frontmatter.
- * 
- * FRONTMATTER PARSING:
- * Uses gray-matter to parse YAML frontmatter from markdown files.
- * Extracts title and date, leaving content as markdown string.
- * 
- * ERROR HANDLING:
- * - Catches fetch errors and parsing errors
- * - Sets error message for display
- * - Resets content on error
- * 
- * @returns {Object} Object containing:
- *   - content: Parsed article content (title, date, content) or null
- *   - isLoading: Boolean indicating if article is currently loading
- *   - error: Error message string or null
- *   - loadArticle: Function to load an article by ID
- *   - resetContent: Function to reset content state
- * 
- * @example
- * const { content, isLoading, error, loadArticle } = useArticleLoader()
- * loadArticle("working-philosophy")
- */
-function useArticleLoader(apiBasePath: string = "/api/article") {
-  const [content, setContent] = useState<ArticleContent | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadArticle = useCallback(async (articleId: string) => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`${apiBasePath}/${articleId}`)
-
-      if (!response.ok) {
-        throw new Error(`Failed to load article: ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (!data.content) {
-        throw new Error("Article content is empty")
-      }
-
-      // Use gray-matter to parse frontmatter
-      const parsed = matter(data.content)
-
-      setContent({
-        title: parsed.data.title || "Untitled",
-        date: typeof parsed.data.date === 'string'
-          ? parsed.data.date
-          : parsed.data.date?.toLocaleDateString() || "",
-        content: parsed.content,
-        // Include full frontmatter for story rendering
-        frontmatter: {
-          title: parsed.data.title || "Untitled",
-          role: parsed.data.role,
-          company: parsed.data.company,
-          year: parsed.data.year,
-          heroImage: parsed.data.heroImage,
-          heroAlt: parsed.data.heroAlt,
-        }
-      })
-    } catch (err) {
-      console.error("Error loading article:", err)
-      setError(err instanceof Error ? err.message : "Failed to load article")
-      setContent(null)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [apiBasePath])
-
-  const resetContent = useCallback(() => {
-    setContent(null)
-    setError(null)
-    setIsLoading(false)
-  }, [])
-
-  return { content, isLoading, error, loadArticle, resetContent }
-}
+  backdropVariants,
+  closeButtonVariants,
+  contentVariants,
+  listItemVariants,
+  mobileListItemVariants,
+  mobileStackBackVariants,
+  mobileStackFrontVariants,
+  MOBILE_STACK_DURATION,
+  MOBILE_SHEET_SNAP_POINTS,
+  MOBILE_SHEET_TWEEN,
+  trayVariants,
+  viewTransitionVariants,
+} from "@/app/components/page-specific/side-tray/animations"
+import PhotosView from "@/app/components/page-specific/side-tray/PhotosView"
+import type { SideTrayProps, ViewModeType } from "@/app/components/page-specific/side-tray/types"
+import { useArticleLoader } from "@/app/components/page-specific/side-tray/useArticleLoader"
+import WritingListView from "@/app/components/page-specific/side-tray/WritingListView"
 
 /**
  * SideTray Component
@@ -659,19 +140,20 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
    * - 'about': About content view
    * - 'writing-list': Writing mode article list view
    */
-  const [viewMode, setViewMode] = useState<'list' | 'article' | 'about' | 'writing-list' | 'photos'>('list')
+  const [viewMode, setViewMode] = useState<ViewModeType>('list')
   
   /**
    * Accessibility: Respects user's motion preference.
    * When true, animations are simplified or disabled.
    */
-  const shouldReduceMotion = useReducedMotion()
+  const shouldReduceMotion = useReducedMotion() ?? false
   
   /**
    * Responsive: Detects if user is on mobile device.
    * Used to switch between mobile (bottom sheet) and desktop (side panel) layouts.
-   */
+  */
   const isMobile = useIsMobile()
+  const initialMobileSnapIndex = isAboutMode && !isWritingMode && !isPhotosMode ? 1 : 0
 
   /** Stacked mode: About tray pushed left + blurred, Writing or Photos panel on top (desktop only) */
   const isStacked = isAboutMode && (isWritingMode || isPhotosMode) && !isMobile
@@ -793,10 +275,9 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   const mainTrayRef = useRef<HTMLDivElement>(null)
 
   /**
-   * Refs to scrollable content containers (used for scroll position preservation
-   * and desktop scroll-based blur effect).
+   * Scrollable desktop content container.
+   * Used for scroll position preservation and header blur state.
    */
-  const writingListContentRef = useRef<HTMLDivElement>(null)
   const mainContentRef = useRef<HTMLDivElement>(null)
 
   /**
@@ -808,28 +289,33 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
 
   /**
    * Ref for react-modal-sheet imperative API (mobile only).
-   * Allows programmatic snapping (e.g., snap to 90% when article is selected).
+   * Allows programmatic snapping to the large detent when content needs more room.
    */
   const sheetRef = useRef<React.ComponentRef<typeof Sheet>>(null)
 
   /**
-   * Current snap point index (0 = 90%, 1 = 50%, 2 = 0). Used for scroll-to-expand:
-   * only expand when at 50% so we don't fight the user after they've dragged.
+   * Current snap point index (0 = large detent, 1 = medium detent, 2 = dismissed).
+   * Tracked both imperatively and reactively so mobile content ownership can switch
+   * between sheet drag and inner scrolling without waiting on DOM inspection.
    */
-  const currentSnapIndexRef = useRef<number>(1)
-
-  /** Ref to the content div inside Sheet.Scroller (mobile single-sheet path) for scroll-to-expand. */
-  const mobileScrollContentRef = useRef<HTMLDivElement>(null)
+  const currentSnapIndexRef = useRef<number>(initialMobileSnapIndex)
+  const lastOpenMobileSnapIndexRef = useRef<number>(initialMobileSnapIndex)
+  const dismissedMobileSnapIndex = MOBILE_SHEET_SNAP_POINTS.length - 1
+  const [mobileSnapIndex, setMobileSnapIndex] = useState<number | null>(null)
+  const resolvedMobileSnapIndex = mobileSnapIndex ?? initialMobileSnapIndex
+  const isMobileFullyExpanded = !isMobile || resolvedMobileSnapIndex === 0
+  const mobileSingleSheetScrollRef = useRef<HTMLDivElement>(null)
+  const mobileStackFrontScrollRef = useRef<HTMLDivElement>(null)
+  const mobileScrollPositionsRef = useRef<{ [key: string]: number }>({})
 
   /**
-   * Touch start position for tap detection on mobile (avoids treating scroll as tap).
-   * Article buttons call stopPropagation() in onTouchStart so the sheet scroll container
-   * doesn't capture the touch; otherwise touchEnd may not fire on the button and tap does nothing.
+   * Pointer start position for interactive row taps.
+   * We keep article taps reliable without blocking the sheet scroller's touch state.
    */
-  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null)
-  /** More forgiving than 15px so slight scroll or movement still registers as tap (fixes articles not opening on mobile). */
+  const pointerStartPosRef = useRef<{ x: number; y: number; pointerId: number } | null>(null)
+  /** More forgiving than 15px so slight scroll or movement still registers as tap. */
   const TAP_MOVE_THRESHOLD_PX = 24
-  /** Guard so touchEnd + click don't both fire onArticleSelect for the same tap. */
+  /** Guard so pointer taps and click fallback don't both fire onArticleSelect for the same tap. */
   const articleTapHandledRef = useRef<{ id: string; t: number } | null>(null)
   const TAP_DEBOUNCE_MS = 450
 
@@ -855,6 +341,78 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   const backPanelScrollRef = useRef<HTMLDivElement>(null)
   /** Saved scroll position when returning from stacked; restored in useEffect when isStacked becomes false. */
   const aboutScrollWhenReturningFromStackedRef = useRef<number | undefined>(undefined)
+  const getActiveMobileScrollKey = useCallback(() => (
+    isMobileStacked
+      ? `${mobileStackFrontViewMode}-${articleId ?? 'null'}`
+      : `${viewMode}-${articleId ?? 'null'}`
+  ), [isMobileStacked, mobileStackFrontViewMode, viewMode, articleId])
+
+  const syncActiveMobileScrollPosition = useCallback((scrollTop: number, key = getActiveMobileScrollKey()) => {
+    mobileScrollPositionsRef.current[key] = scrollTop
+  }, [getActiveMobileScrollKey])
+
+  const restoreActiveMobileScrollPosition = useCallback((
+    element: HTMLDivElement | null,
+    key = getActiveMobileScrollKey()
+  ) => {
+    if (!element) return
+
+    const savedScrollTop = mobileScrollPositionsRef.current[key]
+    if (savedScrollTop === undefined) return
+
+    requestAnimationFrame(() => {
+      element.scrollTop = savedScrollTop
+    })
+  }, [getActiveMobileScrollKey])
+
+  const handleActiveMobileScrollCapture = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    syncActiveMobileScrollPosition(event.currentTarget.scrollTop)
+  }, [syncActiveMobileScrollPosition])
+
+  const restoreMobileSheetToLastOpenSnap = useCallback(() => {
+    if (!isMobile) return
+
+    const nextSnapIndex = lastOpenMobileSnapIndexRef.current
+    currentSnapIndexRef.current = nextSnapIndex
+    setMobileSnapIndex(nextSnapIndex)
+
+    requestAnimationFrame(() => {
+      sheetRef.current?.snapTo(nextSnapIndex)
+    })
+  }, [isMobile])
+
+  const handleMobileSheetDismiss = useCallback(() => {
+    if (isMobile && isMobileStacked) {
+      if (mobileStackFrontViewMode === "article" && onArticleSelect) {
+        restoreMobileSheetToLastOpenSnap()
+        onArticleSelect(null)
+        return
+      }
+
+      if (mobileStackFrontViewMode === "writing-list" && onCloseWritingOnly) {
+        restoreMobileSheetToLastOpenSnap()
+        onCloseWritingOnly()
+        return
+      }
+
+      if (mobileStackFrontViewMode === "photos" && onClosePhotosOnly) {
+        restoreMobileSheetToLastOpenSnap()
+        onClosePhotosOnly()
+        return
+      }
+    }
+
+    onClose()
+  }, [
+    isMobile,
+    isMobileStacked,
+    mobileStackFrontViewMode,
+    onArticleSelect,
+    onCloseWritingOnly,
+    onClosePhotosOnly,
+    onClose,
+    restoreMobileSheetToLastOpenSnap,
+  ])
 
   // ============================================================================
   // NESTED TRAY LOGIC
@@ -922,12 +480,11 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
    * Stores scroll position in ref with unique key for current view.
    */
   const saveScrollPosition = useCallback(() => {
-    const contentRef = isWritingMode && articleId === null ? writingListContentRef : mainContentRef
-    if (contentRef.current) {
+    if (mainContentRef.current) {
       const viewKey = `${viewMode}-${articleId || 'null'}`
-      scrollPositionRef.current[viewKey] = contentRef.current.scrollTop
+      scrollPositionRef.current[viewKey] = mainContentRef.current.scrollTop
     }
-  }, [viewMode, articleId, isWritingMode])
+  }, [viewMode, articleId])
 
   /**
    * Restore scroll position after view changes.
@@ -935,20 +492,19 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
    */
   const restoreScrollPosition = useCallback(() => {
     const viewKey = `${viewMode}-${articleId || 'null'}`
-    const contentRef = isWritingMode && articleId === null ? writingListContentRef : mainContentRef
 
-    if (contentRef.current && scrollPositionRef.current[viewKey] !== undefined) {
+    if (mainContentRef.current && scrollPositionRef.current[viewKey] !== undefined) {
       // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
-        if (contentRef.current) {
-          contentRef.current.scrollTop = scrollPositionRef.current[viewKey]
+        if (mainContentRef.current) {
+          mainContentRef.current.scrollTop = scrollPositionRef.current[viewKey]
         }
       })
     }
-  }, [viewMode, articleId, isWritingMode])
+  }, [viewMode, articleId])
 
   /**
-   * Single handler for article tap so touchEnd and click don't both fire (mobile).
+   * Single handler for article tap so pointer taps and click fallback don't both fire.
    * Skips if the same article was already selected within TAP_DEBOUNCE_MS.
    */
   const handleArticleTap = useCallback((articleId: string) => {
@@ -963,6 +519,41 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
       articleTapHandledRef.current = null
     }, TAP_DEBOUNCE_MS)
   }, [onArticleSelect])
+
+  const handleInteractivePointerDown = useCallback((event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "touch" || event.pointerType === "pen") {
+      pointerStartPosRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+        pointerId: event.pointerId,
+      }
+      return
+    }
+
+    event.stopPropagation()
+    pointerStartPosRef.current = null
+  }, [])
+
+  const clearInteractivePointer = useCallback(() => {
+    pointerStartPosRef.current = null
+  }, [])
+
+  const handleInteractiveArticlePointerUp = useCallback((
+    event: React.PointerEvent<HTMLElement>,
+    articleId: string
+  ) => {
+    const start = pointerStartPosRef.current
+    pointerStartPosRef.current = null
+
+    if (!start || start.pointerId !== event.pointerId) return
+
+    const dx = event.clientX - start.x
+    const dy = event.clientY - start.y
+
+    if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
+      handleArticleTap(articleId)
+    }
+  }, [handleArticleTap])
 
   // ============================================================================
   // ARTICLE LOADING LOGIC
@@ -1059,68 +650,17 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   // ============================================================================
 
   // ============================================================================
-  // MOBILE SHEET: SNAP TO 90% ON ARTICLE SELECT
+  // MOBILE SHEET: SNAP TO LARGE DETENT ON ARTICLE SELECT
   // ============================================================================
 
   /**
-   * When an article is selected on mobile, snap the sheet to 90% immediately
+   * When an article is selected on mobile, snap the sheet to the large detent immediately
    * so the sheet expansion and content change feel like one action.
-   * snapPoints are [0.9, 0.5, 0] so index 0 = 90% (full), index 2 = 0% (dismissed).
    */
   useEffect(() => {
     if (!isMobile || !articleId || articleId === 'about') return
     sheetRef.current?.snapTo(0)
   }, [isMobile, articleId])
-
-  // ============================================================================
-  // MOBILE SHEET: SCROLL-TO-EXPAND (ABOUT ONLY)
-  // ============================================================================
-
-  /** Pixels scrolled down before expanding the sheet from 50% to 90%. */
-  const SCROLL_EXPAND_THRESHOLD_PX = 48
-
-  /**
-   * When the bottom sheet is open at 50%, scrolling down inside the content
-   * expands the sheet to 90%. Applies to all views (about, writing-list, photos, article)
-   * in the single-sheet (non-stacked) mobile path. iOS-friendly: no need to hit the header to expand.
-   */
-  useEffect(() => {
-    if (
-      !isMobile ||
-      isMobileStacked ||
-      !(isWritingMode || isPhotosMode || isAboutMode || articleId !== null)
-    ) return
-
-    const contentEl = mobileScrollContentRef.current
-    if (!contentEl) return
-
-    let el: HTMLElement | null = contentEl.parentElement
-    while (el) {
-      const { scrollHeight, clientHeight } = el
-      const overflowY = window.getComputedStyle(el).overflowY
-      if ((overflowY === 'auto' || overflowY === 'scroll') && scrollHeight > clientHeight) break
-      el = el.parentElement
-    }
-    const scrollContainer = el
-    if (!scrollContainer) return
-
-    const handleScroll = () => {
-      if (currentSnapIndexRef.current === 1 && scrollContainer.scrollTop > SCROLL_EXPAND_THRESHOLD_PX) {
-        sheetRef.current?.snapTo(0)
-      }
-    }
-
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
-    return () => scrollContainer.removeEventListener('scroll', handleScroll)
-  }, [
-    isMobile,
-    viewMode,
-    isMobileStacked,
-    isWritingMode,
-    isPhotosMode,
-    isAboutMode,
-    articleId,
-  ])
 
   // ============================================================================
   // SCROLL-BASED BLUR FOR DESKTOP ARTICLE VIEW
@@ -1181,6 +721,33 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
   // Determine if we should show the tray (used by Escape handler and render)
   // Show tray if: writing mode, photos mode, about mode (always show), or articleId is set (normal mode)
   const shouldShowTray = isWritingMode || isPhotosMode || isAboutMode || articleId !== null
+
+  useEffect(() => {
+    if (!isMobile || !shouldShowTray) {
+      currentSnapIndexRef.current = initialMobileSnapIndex
+      lastOpenMobileSnapIndexRef.current = initialMobileSnapIndex
+      setMobileSnapIndex(null)
+    }
+  }, [initialMobileSnapIndex, isMobile, shouldShowTray])
+
+  useEffect(() => {
+    if (!isMobile || !shouldShowTray || !isMobileFullyExpanded) return
+
+    const activeScrollElement = isMobileStacked
+      ? mobileStackFrontScrollRef.current
+      : mobileSingleSheetScrollRef.current
+
+    restoreActiveMobileScrollPosition(activeScrollElement)
+  }, [
+    isMobile,
+    shouldShowTray,
+    isMobileFullyExpanded,
+    isMobileStacked,
+    mobileStackFrontViewMode,
+    viewMode,
+    articleId,
+    restoreActiveMobileScrollPosition,
+  ])
 
   /**
    * Handles Escape key to close the tray.
@@ -1279,181 +846,23 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
    * Renders content for a given view mode. Used for single-panel (viewContent) and for
    * mobile stacked back/front panels (renderViewContent(backMode) / renderViewContent(frontMode)).
    */
-  type ViewModeType = "list" | "article" | "about" | "writing-list" | "photos"
   const renderViewContent = (displayMode?: ViewModeType) => {
     const mode = displayMode ?? viewMode
     return (
       <AnimatePresence mode="wait">
         {mode === "writing-list" ? (
-        // Writing list view with both sections
-        <motion.div
-          key="writing-list"
-          variants={activeViewTransitionVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-        >
-          {/* WRITINGS SECTION */}
-          <motion.span
-            initial={{ opacity: 0, filter: 'blur(4px)' }}
-            animate={{ opacity: 0.5, filter: 'blur(0px)' }}
-            transition={{ duration: 0.4 }}
-            className="type-caption opacity-50 dark:opacity-70 block mb-2"
-          >
-            Writings
-          </motion.span>
-
-          <div className="space-y-4">
-            {writings.map((article, i) => (
-              <motion.button
-                key={article.id}
-                type="button"
-                custom={i}
-                variants={activeListItemVariants}
-                initial="hidden"
-                animate="visible"
-                onPointerDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => {
-                  e.stopPropagation()
-                  if (e.touches?.[0]) {
-                    touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-                  }
-                }}
-                onTouchEnd={(e) => {
-                  const start = touchStartPosRef.current
-                  touchStartPosRef.current = null
-                  if (!start || !onArticleSelect || !e.changedTouches?.[0]) return
-                  const t = e.changedTouches[0]
-                  const dx = t.clientX - start.x
-                  const dy = t.clientY - start.y
-                  if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
-                    handleArticleTap(article.id)
-                  }
-                }}
-                onClick={() => handleArticleTap(article.id)}
-                className="tray-list-button cursor-pointer space-y-1 w-full text-left touch-manipulation border-0 bg-transparent p-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-                style={{ WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
-                whileHover={{ x: 4, opacity: 1 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2, ease: EASING.smooth }}
-              >
-                <p
-                  className="text-xs transition-colors duration-200"
-                  style={{ color: i < 2 ? trayColors.fg : trayColors.fgMuted }}
-                >
-                  {article.title}
-                </p>
-                <p
-                  className="text-[10px] font-light transition-colors duration-200"
-                  style={{ color: trayColors.fgMuted, opacity: 0.7 }}
-                >
-                  {article.date}
-                </p>
-              </motion.button>
-            ))}
-          </div>
-
-          {/* PERSONAL NOTES SECTION - Collapsible */}
-          <div className="mt-8">
-            <motion.button
-              initial={{ opacity: 0, filter: 'blur(4px)' }}
-              animate={{ opacity: 0.5, filter: 'blur(0px)' }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => setPersonalNotesExpanded(!personalNotesExpanded)}
-              className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                padding: 0,
-                outline: 'none',
-                WebkitTapHighlightColor: 'transparent',
-                color: trayColors.fgMuted,
-              }}
-            >
-              <span>Personal Notes</span>
-              <svg
-                width="6"
-                height="6"
-                viewBox="0 0 8 8"
-                fill="none"
-                stroke="currentColor"
-                className={isMobile ? "opacity-50 cursor-pointer" : "opacity-0 group-hover/notes:opacity-50 transition-opacity duration-200 cursor-pointer"}
-                style={{
-                  transform: personalNotesExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
-                }}
-              >
-                <path
-                  d="M2 1L5 4L2 7"
-                  strokeWidth="1"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </motion.button>
-
-            <AnimatePresence>
-              {personalNotesExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, filter: 'blur(4px)' }}
-                  animate={{ opacity: 1, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, filter: 'blur(4px)' }}
-                  transition={{ duration: 0.4, ease: EASING.smooth }}
-                  className="space-y-4"
-                >
-                  {personalNotes.map((article, i) => (
-                    <motion.button
-                      key={article.id}
-                      type="button"
-                      custom={i + writings.length}
-                      variants={activeListItemVariants}
-                      initial="hidden"
-                      animate="visible"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => {
-                        e.stopPropagation()
-                        if (e.touches?.[0]) {
-                          touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-                        }
-                      }}
-                      onTouchEnd={(e) => {
-                        const start = touchStartPosRef.current
-                        touchStartPosRef.current = null
-                        if (!start || !onArticleSelect || !e.changedTouches?.[0]) return
-                        const t = e.changedTouches[0]
-                        const dx = t.clientX - start.x
-                        const dy = t.clientY - start.y
-                        if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
-                          handleArticleTap(article.id)
-                        }
-                      }}
-                      onClick={() => handleArticleTap(article.id)}
-                      className="tray-list-button cursor-pointer space-y-1 w-full text-left touch-manipulation border-0 bg-transparent p-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-                      style={{ WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
-                      whileHover={{ x: 4, opacity: 1 }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={{ duration: 0.2, ease: EASING.smooth }}
-                    >
-                      <p
-                        className={`text-xs transition-colors duration-200 ${article.strikethrough ? "line-through opacity-70" : ""}`}
-                        style={{ color: i < 1 ? trayColors.fg : trayColors.fgMuted }}
-                      >
-                        {article.title}
-                      </p>
-                      <p
-                        className="text-[10px] font-light transition-colors duration-200"
-                        style={{ color: trayColors.fgMuted, opacity: 0.7 }}
-                      >
-                        {article.date}
-                      </p>
-                    </motion.button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
+          <WritingListView
+            isMobile={isMobile}
+            trayColors={trayColors}
+            transitionVariants={activeViewTransitionVariants}
+            activeListItemVariants={activeListItemVariants}
+            personalNotesExpanded={personalNotesExpanded}
+            onTogglePersonalNotes={() => setPersonalNotesExpanded((expanded) => !expanded)}
+            onArticleTap={handleArticleTap}
+            onPointerDown={handleInteractivePointerDown}
+            onPointerCancel={clearInteractivePointer}
+            onArticlePointerUp={handleInteractiveArticlePointerUp}
+          />
       ) : mode === "photos" ? (
         <motion.div
           key="photos"
@@ -1462,39 +871,7 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
           animate="animate"
           exit="exit"
         >
-          <div className={`flex flex-col gap-4 pb-8 ${isMobile ? '-mx-6' : ''}`}>
-            {PHOTOS.map((photo, i) => (
-              <motion.figure
-                key={photo.src}
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: shouldReduceMotion ? 0 : i * 0.04, ease: EASING.smooth }}
-                className="space-y-1 w-full"
-              >
-                <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[2px] bg-muted/20">
-                  <Image
-                    src={photo.src}
-                    alt={photo.alt ?? photo.src}
-                    fill
-                    sizes="(max-width: 500px) 100vw, 500px"
-                    className="object-cover"
-                  />
-                </div>
-                {photo.caption && (
-                  <figcaption className="type-caption text-[10px] leading-tight px-6" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
-                    {photo.caption}
-                  </figcaption>
-                )}
-              </motion.figure>
-            ))}
-            <div className="flex flex-col gap-1 pt-2 pl-6">
-              {PHOTOS.map((photo, i) => (
-                <p key={photo.src} className="type-caption font-edu-marist leading-relaxed" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
-                  <span className="opacity-70">{PHOTO_ROMAN[i]}</span> {getPhotoCreditName(photo)}
-                </p>
-              ))}
-            </div>
-          </div>
+          <PhotosView trayColors={trayColors} shouldReduceMotion={shouldReduceMotion} flushMobileEdges={isMobile} />
         </motion.div>
       ) : mode === "about" ? (
         // About content — COMPACT / modal typography: 16 → 14 → 12 (lead → body → caption)
@@ -1504,98 +881,17 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
           initial={skipAboutEntrance ? false : "initial"}
           animate="animate"
           exit="exit"
-          className="flex flex-col h-full justify-between"
+          className="flex h-full flex-col"
         >
-          {/* Text Content Section — hero-like minimalism: one scale, opacity hierarchy, structural spacing */}
-          <div className="tray-about-text-fade max-w-[600px]">
-            <div className="flex flex-col gap-1 text-sm leading-relaxed transition-colors duration-200">
-              <p className="font-edu-marist text-lg text-foreground">
-                Hello, call me Raf. I&apos;ve been designing for the last 10 years and shipping code since the beginning.
-              </p>
-              <div className="mt-8 flex flex-col gap-1">
-                <p className="text-foreground opacity-90">
-                  Studied software engineering in Naples, Italy. My career began in hospitality, brand and web design.
-                </p>
-              </div>
-              <div className="mt-8 flex flex-col gap-1">
-                <p className="text-foreground opacity-80">
-                  I&apos;m leading design for Seller AI at <InlineExternalLink href={COMPANY_LINKS.walmart} underlineStyle="subtle">Walmart</InlineExternalLink><span className="opacity-75">, where I am working at the intersection of AI systems and product design while building on the side.</span>
-                </p>
-                <p className="text-foreground opacity-80">
-                  I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink><span className="opacity-75">, leading product design, front-end design engineering, and brand design.</span>
-                </p>
-                <p className="text-foreground opacity-80">
-                  Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink><span className="opacity-75"> design work, </span><InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink><span className="opacity-75"> for product activation </span>and more.
-                </p>
-              </div>
-              <div className="my-10 flex flex-col gap-1">
-                
-                <div className="flex flex-col gap-1">
-                  <p className="text-foreground opacity-70">
-                    Grew up on the Amalfi Coast, Italy. Based in Toronto.
-                  </p>
-                  <p className="text-foreground opacity-70">
-                    I{" "}
-                    {(!isMobile && onSwitchToWriting) ? (
-                      <motion.span
-                        onClick={onSwitchToWriting}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault()
-                            onSwitchToWriting()
-                          }
-                        }}
-                        className={`cursor-pointer select-none ${HERO_UNDERLINE_CLASSES}`}
-                        style={{ WebkitTapHighlightColor: "transparent" }}
-                        whileTap={{ scale: 0.97, opacity: 0.85 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        write
-                      </motion.span>
-                    ) : (
-                      "write"
-                    )}
-                    ,{" "}
-                    {(!isMobile && onSwitchToPhotograph) ? (
-                      <motion.span
-                        onClick={onSwitchToPhotograph}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault()
-                            onSwitchToPhotograph()
-                          }
-                        }}
-                        className={`cursor-pointer select-none ${HERO_UNDERLINE_CLASSES}`}
-                        style={{ WebkitTapHighlightColor: "transparent" }}
-                        whileTap={{ scale: 0.97, opacity: 0.85 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        photograph
-                      </motion.span>
-                    ) : (
-                      "photograph"
-                    )}
-                    , and spend time on a yoga mat or chasing light through workspaces.
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60 min-h-5">
-                Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
-              </p>
-            </div>
-          </div>
-
-          {/* Contact Links Section - at bottom */}
-          <nav className="flex flex-col gap-1 group/nav pt-2">
-            <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
-            <FooterLink href="mailto:raf@raf.works" label="Email" />
-            <FooterLink href="https://x.com/rafdotworks" label="X" external />
-          </nav>
-
+          {/* Text content — editorial hierarchy with a single anchored ambient footer */}
+          <AboutTrayBiography
+            isMobile={isMobile}
+            onSwitchToWriting={onSwitchToWriting}
+            onSwitchToPhotograph={onSwitchToPhotograph}
+            city={city}
+            temperature={temperature}
+            description={description}
+          />
         </motion.div>
       ) : mode === "list" ? (
         // Show all articles list (legacy mode)
@@ -1644,77 +940,22 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
           ))}
         </motion.div>
       ) : error ? (
-        // Error state
-        <motion.div
-          key="error"
-          initial={{ opacity: 0, filter: 'blur(4px)' }}
-          animate={{ opacity: 1, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, filter: 'blur(4px)' }}
-          transition={{ duration: 0.4, ease: EASING.smooth }}
-          className="text-center py-8"
-        >
-          <p className="text-xs mb-2" style={{ color: trayColors.fgMuted }}>
-            Unable to load this article
-          </p>
-          <p className="text-[10px] font-light" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>
-            {error}
-          </p>
-          <motion.button
-            onClick={() => articleId && loadArticle(articleId)}
-            className="mt-4 text-xs type-caption cursor-pointer focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-            style={{
-              color: trayColors.fgMuted,
-              background: 'transparent',
-              border: 'none',
-              padding: 0,
-              outline: 'none',
-              textDecoration: 'underline',
-            }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.2 }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = trayColors.fg
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = trayColors.fgMuted
-            }}
-          >
-            Try again
-          </motion.button>
-        </motion.div>
+        <ArticleErrorView
+          error={error}
+          onRetry={() => {
+            if (articleId) {
+              void loadArticle(articleId)
+            }
+          }}
+          trayColors={trayColors}
+        />
       ) : content ? (
-        // Article/Story content — measure and landmark aligned with About tray
-        <motion.div
-          key="article"
-          variants={activeViewTransitionVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          className="space-y-6"
-        >
-          <article aria-label={content.title || "Article"}>
-            <div className="prose-article-narrow tray-about-text-fade">
-              {apiBasePath === "/api/story" && content.frontmatter && (
-                <StoryHeader
-                  frontmatter={content.frontmatter}
-                  isMobile={isMobile}
-                />
-              )}
-              <ReactMarkdown
-                components={
-                  apiBasePath === "/api/story"
-                    ? storyMarkdownComponents
-                    : apiBasePath === "/api/article"
-                      ? trayMarkdownComponents
-                      : markdownComponents
-                }
-              >
-                {content.content}
-              </ReactMarkdown>
-            </div>
-          </article>
-        </motion.div>
+        <ArticleView
+          content={content}
+          apiBasePath={apiBasePath}
+          isMobile={isMobile}
+          transitionVariants={activeViewTransitionVariants}
+        />
       ) : null}
     </AnimatePresence>
   ); }; const viewContent = renderViewContent()
@@ -1728,26 +969,48 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
       <Sheet
         ref={sheetRef}
         isOpen={shouldShowTray}
-        onClose={onClose}
-        snapPoints={[0.9, 0.5, 0]}
-        initialSnap={isWritingMode ? 0 : 1}
-        onSnap={(index) => { currentSnapIndexRef.current = index }}
-        tweenConfig={{ ease: "easeOut", duration: 0.35 }}
+        onClose={handleMobileSheetDismiss}
+        snapPoints={[...MOBILE_SHEET_SNAP_POINTS]}
+        initialSnap={initialMobileSnapIndex}
+        onSnap={(index) => {
+          currentSnapIndexRef.current = index
+          if (index !== dismissedMobileSnapIndex) {
+            lastOpenMobileSnapIndexRef.current = index
+          }
+          setMobileSnapIndex(index)
+        }}
+        tweenConfig={MOBILE_SHEET_TWEEN}
         prefersReducedMotion={!!shouldReduceMotion}
       >
         <Sheet.Container
           style={{
-            backgroundColor: trayColors.bg,
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            boxShadow: '0 -1px 0 rgba(0,0,0,0.04), 0 -8px 32px rgba(0,0,0,0.12)',
+            background: `linear-gradient(180deg, color-mix(in srgb, ${trayColors.bg} 97%, white 3%) 0%, ${trayColors.bg} 22%, ${trayColors.bg} 100%)`,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            boxShadow: '0 -8px 24px rgba(15,23,42,0.08), 0 -22px 64px rgba(15,23,42,0.18)',
             overflow: 'hidden',
           }}
         >
-          <Sheet.Header />
+          <Sheet.Header
+            style={{
+              paddingTop: "max(0.3rem, calc(env(safe-area-inset-top, 0px) * 0.12))",
+            }}
+          >
+            <div className="pointer-events-none flex w-full justify-center px-5 pb-2 pt-3">
+              <div
+                className="h-1.5 w-10 rounded-full"
+                style={{
+                  background: `color-mix(in srgb, ${trayColors.fg} 18%, white 62%)`,
+                  boxShadow: "0 1px 0 rgba(255,255,255,0.38) inset, 0 0 0 1px rgba(255,255,255,0.08)",
+                  opacity: 0.96,
+                }}
+              />
+            </div>
+          </Sheet.Header>
 
-          {/* Back/close button: when stacked, pops front panel (article→list, or Writing/Photos→About) */}
-          {(isMobileStacked || (viewMode === "article" && articleId !== "all" && isWritingMode)) && (
+          {/* Back button for article detail only. Nested writing/photos sheets intentionally omit the chevron. */}
+          {((isMobileStacked && mobileStackFrontViewMode === "article") ||
+            (!isMobileStacked && viewMode === "article" && articleId !== "all" && isWritingMode)) && (
             <motion.button
               initial={{ opacity: 0, x: -10, filter: "blur(4px)" }}
               animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
@@ -1763,17 +1026,11 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   resetContent()
                 }
               }}
-              className="absolute top-2 left-4 z-20 p-2 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
+              className="absolute left-4 top-4 z-20 p-2 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
               whileHover={{ scale: 1.02, x: -1 }}
               whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.4, ease: EASING.gentle }}
-              aria-label={
-                isMobileStacked && mobileStackFrontViewMode === "article"
-                  ? "Back to list"
-                  : isMobileStacked
-                    ? "Back"
-                    : "Back to list"
-              }
+              aria-label="Back to list"
               style={{
                 background: "transparent",
                 border: "none",
@@ -1785,6 +1042,45 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ pointerEvents: "none" }}>
                 <path d="M7 1L2 6L7 11" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </motion.button>
+          )}
+
+          {isMobileStacked && (
+            (mobileStackFrontViewMode === "writing-list" && onCloseWritingOnly) ||
+            (mobileStackFrontViewMode === "photos" && onClosePhotosOnly)
+          ) && (
+            <motion.button
+              initial={{ opacity: 0, x: 10, filter: "blur(4px)" }}
+              animate={{ opacity: 0.6, x: 0, filter: "blur(0px)" }}
+              onClick={handleMobileSheetDismiss}
+              className="absolute right-4 top-4 z-20 p-1.5 group focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.35, ease: EASING.gentle }}
+              aria-label={mobileStackFrontViewMode === "photos" ? "Close photographs" : "Close writings"}
+              style={{
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                boxShadow: "none",
+                color: trayColors.fgMuted,
+                WebkitTapHighlightColor: "transparent",
+                cursor: "pointer",
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ pointerEvents: "none" }}
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </motion.button>
           )}
@@ -1830,10 +1126,10 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                   style={{
                     ...cssVarScoping,
                     color: trayColors.fg,
-                    backgroundColor: trayColors.bg,
-                    borderTopLeftRadius: 16,
-                    borderTopRightRadius: 16,
-                    boxShadow: "0 -2px 12px rgba(0,0,0,0.08)",
+                    background: `linear-gradient(180deg, color-mix(in srgb, ${trayColors.bg} 97%, white 3%) 0%, ${trayColors.bg} 22%, ${trayColors.bg} 100%)`,
+                    borderTopLeftRadius: 28,
+                    borderTopRightRadius: 28,
+                    boxShadow: "0 -6px 18px rgba(15,23,42,0.08), 0 -18px 48px rgba(15,23,42,0.14)",
                   }}
                   {...(shouldReduceMotion
                     ? { initial: false, animate: { opacity: 1 } }
@@ -1844,46 +1140,99 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                         exit: "exit",
                       })}
                 >
-                  <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-8 pb-8">
-                    {mobileStackFrontViewMode === "article" ? (
-                      <motion.div
-                        key="stack-article-content"
-                        initial={shouldReduceMotion ? false : { opacity: 0, y: "12%" }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: MOBILE_STACK_DURATION, ease: EASING.smooth }}
-                        className="min-h-full"
-                      >
-                        {renderViewContent(mobileStackFrontViewMode)}
-                      </motion.div>
-                    ) : (
-                      renderViewContent(mobileStackFrontViewMode)
-                    )}
-                  </div>
+                  {isMobileFullyExpanded ? (
+                    <Sheet.Scroller
+                      ref={mobileStackFrontScrollRef}
+                      draggableAt="both"
+                      onScrollCapture={handleActiveMobileScrollCapture}
+                      className="flex-1 min-h-0 px-6 pt-8 pb-8"
+                    >
+                      {mobileStackFrontViewMode === "article" ? (
+                        <motion.div
+                          key="stack-article-content"
+                          initial={shouldReduceMotion ? false : { opacity: 0, y: "12%" }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: MOBILE_STACK_DURATION, ease: EASING.smooth }}
+                          className="min-h-full"
+                        >
+                          {renderViewContent(mobileStackFrontViewMode)}
+                        </motion.div>
+                      ) : (
+                        renderViewContent(mobileStackFrontViewMode)
+                      )}
+                    </Sheet.Scroller>
+                  ) : (
+                    <div className="flex-1 min-h-0 overflow-hidden px-6 pt-8 pb-8">
+                      {mobileStackFrontViewMode === "article" ? (
+                        <motion.div
+                          key="stack-article-content"
+                          initial={shouldReduceMotion ? false : { opacity: 0, y: "12%" }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: MOBILE_STACK_DURATION, ease: EASING.smooth }}
+                          className="min-h-full"
+                        >
+                          {renderViewContent(mobileStackFrontViewMode)}
+                        </motion.div>
+                      ) : (
+                        renderViewContent(mobileStackFrontViewMode)
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               </>
             ) : (
-              <Sheet.Scroller>
-                <div
-                  ref={mobileScrollContentRef}
-                  role="dialog"
-                  aria-modal="true"
-                  aria-label={
-                    viewMode === "about"
-                      ? "About Raf"
-                      : viewMode === "article" && content
-                        ? `Article: ${content.title}`
-                        : "Writings"
-                  }
-                  className={`px-6 pt-8 pb-8 ${viewMode === "about" ? "flex flex-col min-h-full" : ""}`}
-                  style={{ ...cssVarScoping, color: trayColors.fg, WebkitTapHighlightColor: "transparent" }}
+              isMobileFullyExpanded ? (
+                <Sheet.Scroller
+                  ref={mobileSingleSheetScrollRef}
+                  draggableAt="both"
+                  onScrollCapture={handleActiveMobileScrollCapture}
                 >
-                  {viewContent}
+                  <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={
+                      viewMode === "about"
+                        ? "About Raf"
+                        : viewMode === "article" && content
+                          ? `Article: ${content.title}`
+                          : "Writings"
+                    }
+                    className={`px-6 pt-8 pb-8 ${viewMode === "about" ? "flex flex-col min-h-full" : ""}`}
+                    style={{ ...cssVarScoping, color: trayColors.fg, WebkitTapHighlightColor: "transparent" }}
+                  >
+                    {viewContent}
+                  </div>
+                </Sheet.Scroller>
+              ) : (
+                <div className="h-full overflow-hidden">
+                  <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={
+                      viewMode === "about"
+                        ? "About Raf"
+                        : viewMode === "article" && content
+                          ? `Article: ${content.title}`
+                          : "Writings"
+                    }
+                    className={`px-6 pt-8 pb-8 ${viewMode === "about" ? "flex flex-col min-h-full" : ""}`}
+                    style={{ ...cssVarScoping, color: trayColors.fg, WebkitTapHighlightColor: "transparent" }}
+                  >
+                    {viewContent}
+                  </div>
                 </div>
-              </Sheet.Scroller>
+              )
             )}
           </Sheet.Content>
         </Sheet.Container>
-        <Sheet.Backdrop onTap={onClose} />
+        <Sheet.Backdrop
+          onTap={handleMobileSheetDismiss}
+          style={{
+            backgroundColor: `color-mix(in srgb, ${trayColors.bg}, transparent 76%)`,
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+          }}
+        />
       </Sheet>
     )
   }
@@ -1959,11 +1308,11 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                 <motion.div
                   className="absolute inset-0"
                   animate={{
-                    x: (isWritingPanelExiting || isPhotosPanelExiting) ? 0 : -80,
-                    filter: (isWritingPanelExiting || isPhotosPanelExiting) ? 'blur(0px)' : 'blur(12px)',
-                    opacity: (isWritingPanelExiting || isPhotosPanelExiting) ? 1 : 0.9,
+                    x: (isWritingPanelExiting || isPhotosPanelExiting) ? 0 : -48,
+                    filter: (isWritingPanelExiting || isPhotosPanelExiting) ? 'blur(0px)' : 'blur(8px)',
+                    opacity: (isWritingPanelExiting || isPhotosPanelExiting) ? 1 : 0.82,
                   }}
-                  transition={{ duration: 0.5, ease: EASING.smooth }}
+                  transition={{ duration: 0.42, ease: EASING.smooth }}
                   onAnimationComplete={() => {
                     if (isWritingPanelExiting) {
                       onCloseWritingOnly?.()
@@ -1981,90 +1330,15 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                 >
                     <div className="h-full flex flex-col">
                     <div ref={backPanelScrollRef} className="flex-1 overflow-y-auto px-8 pt-16 pb-8 flex flex-col">
-                      <div className="flex flex-col min-h-full justify-between">
-                        <div className="tray-about-text-fade max-w-[600px]">
-                          <div className="flex flex-col gap-1 text-sm leading-relaxed transition-colors duration-200">
-                            <p className="font-edu-marist text-lg text-foreground">
-                              Hello, call me Raf. I&apos;ve been designing for the last 10 years and shipping code since the beginning.
-                            </p>
-                            <div className="mt-8 flex flex-col gap-1">
-                              <p className="text-foreground opacity-90">
-                                Studied software engineering in Naples, Italy. My career began in hospitality, brand and web design.
-                              </p>
-                            </div>
-                            <div className="mt-8 flex flex-col gap-1">
-                              <p className="text-foreground opacity-80">
-                                I&apos;m leading design for Seller AI at <InlineExternalLink href={COMPANY_LINKS.walmart} underlineStyle="subtle">Walmart</InlineExternalLink><span className="opacity-75">, where I am working at the intersection of AI systems and product design while building on the side.</span>
-                              </p>
-                              <p className="text-foreground opacity-80">
-                                I designed Skills and AI workflows at <InlineExternalLink href={COMPANY_LINKS.obvious} underlineStyle="subtle">Obvious</InlineExternalLink>. I was Founding designer at <InlineExternalLink href={COMPANY_LINKS.theoriq} underlineStyle="subtle">Theoriq</InlineExternalLink><span className="opacity-75">, leading product design, front-end design engineering, and brand design.</span>
-                              </p>
-                              <p className="text-foreground opacity-80">
-                                Before that: <InlineExternalLink href={COMPANY_LINKS.coinbase} underlineStyle="subtle">Coinbase Developer Platform</InlineExternalLink><span className="opacity-75"> design work, </span><InlineExternalLink href={COMPANY_LINKS.voiceflow} underlineStyle="subtle">Voiceflow</InlineExternalLink><span className="opacity-75"> for product activation </span>and more.
-                              </p>
-                            </div>
-                            <div className="my-10 flex flex-col gap-1">
-                              <p className="text-foreground opacity-70">
-                                Grew up on the Amalfi Coast, Italy. Based in Toronto.
-                              </p>
-                              <p className="text-foreground opacity-70">
-                                I{" "}
-                                {(!isMobile && onSwitchToWriting) ? (
-                                  <motion.span
-                                    onClick={onSwitchToWriting}
-                                    role="button"
-                                    tabIndex={0}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault()
-                                        onSwitchToWriting()
-                                      }
-                                    }}
-                                    className={`cursor-pointer select-none ${HERO_UNDERLINE_CLASSES}`}
-                                    style={{ WebkitTapHighlightColor: "transparent" }}
-                                    whileTap={{ scale: 0.97, opacity: 0.85 }}
-                                    transition={{ duration: 0.15 }}
-                                  >
-                                    write
-                                  </motion.span>
-                                ) : (
-                                  "write"
-                                )}
-                                ,{" "}
-                                {(!isMobile && onSwitchToPhotograph) ? (
-                                  <motion.span
-                                    onClick={onSwitchToPhotograph}
-                                    role="button"
-                                    tabIndex={0}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault()
-                                        onSwitchToPhotograph()
-                                      }
-                                    }}
-                                    className={`cursor-pointer select-none ${HERO_UNDERLINE_CLASSES}`}
-                                    style={{ WebkitTapHighlightColor: "transparent" }}
-                                    whileTap={{ scale: 0.97, opacity: 0.85 }}
-                                    transition={{ duration: 0.15 }}
-                                  >
-                                    photograph
-                                  </motion.span>
-                                ) : (
-                                  "photograph"
-                                )}
-                                , and spend time on a yoga mat or chasing light through workspaces.
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-xs font-[family-name:var(--font-mono)] leading-[1.4] text-foreground opacity-60 min-h-5">
-                            Currently in {city}{temperature ? ` where it's ${temperature}${description ? ` and ${description}` : ""}` : ""}.
-                          </p>
-                        </div>
-                        <nav className="flex flex-col gap-1 group/nav pt-2">
-                          <FooterLink href="https://linkedin.com/in/raffaelevitaledesign" label="LinkedIn" external />
-                          <FooterLink href="mailto:raf@raf.works" label="Email" />
-                          <FooterLink href="https://x.com/rafdotworks" label="X" external />
-                        </nav>
+                      <div className="flex min-h-full flex-col">
+                        <AboutTrayBiography
+                          isMobile={isMobile}
+                          onSwitchToWriting={onSwitchToWriting}
+                          onSwitchToPhotograph={onSwitchToPhotograph}
+                          city={city}
+                          temperature={temperature}
+                          description={description}
+                        />
                       </div>
                     </div>
                   </div>
@@ -2151,169 +1425,37 @@ function SideTray({ articleId, onClose, onCloseWritingOnly, onClosePhotosOnly, i
                         animate={shouldReduceMotion ? { opacity: 1 } : "visible"}
                       >
                         {isPhotosMode ? (
-                          <div className="flex flex-col gap-4 pb-8">
-                            {PHOTOS.map((photo, i) => (
-                              <motion.figure
-                                key={photo.src}
-                                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.35, delay: shouldReduceMotion ? 0 : i * 0.04, ease: EASING.smooth }}
-                                className="space-y-1 w-full"
-                              >
-                                <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[2px] bg-muted/20">
-                                  <Image
-                                    src={photo.src}
-                                    alt={photo.alt ?? photo.src}
-                                    fill
-                                    sizes="(max-width: 500px) 100vw, 500px"
-                                    className="object-cover"
-                                  />
-                                </div>
-                                {photo.caption && (
-                                  <figcaption className="type-caption text-[10px] leading-tight" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
-                                    {photo.caption}
-                                  </figcaption>
-                                )}
-                              </motion.figure>
-                            ))}
-                            <div className="flex flex-col gap-1 pt-2">
-                              {PHOTOS.map((photo, i) => (
-                                <p key={photo.src} className="type-caption font-edu-marist leading-relaxed" style={{ color: trayColors.fgMuted, opacity: 0.8 }}>
-                                  <span className="opacity-70">{PHOTO_ROMAN[i]}</span> {getPhotoCreditName(photo)}
-                                </p>
-                              ))}
-                            </div>
-                          </div>
+                          <PhotosView trayColors={trayColors} shouldReduceMotion={shouldReduceMotion} />
                         ) : articleId === null ? (
-                          <motion.div
-                            key="writing-list"
-                            variants={activeViewTransitionVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                          >
-                            <motion.span
-                              initial={{ opacity: 0, filter: 'blur(4px)' }}
-                              animate={{ opacity: 0.5, filter: 'blur(0px)' }}
-                              transition={{ duration: 0.4 }}
-                              className="type-caption opacity-50 dark:opacity-70 block mb-2"
-                            >
-                              Writings
-                            </motion.span>
-                            <div className="space-y-4">
-                              {writings.map((article, i) => (
-                                <motion.button
-                                  key={article.id}
-                                  type="button"
-                                  custom={i}
-                                  variants={activeListItemVariants}
-                                  initial="hidden"
-                                  animate="visible"
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                  onTouchStart={(e) => {
-                                    e.stopPropagation()
-                                    if (e.touches?.[0]) {
-                                      touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-                                    }
-                                  }}
-                                  onTouchEnd={(e) => {
-                                    const start = touchStartPosRef.current
-                                    touchStartPosRef.current = null
-                                    if (!start || !onArticleSelect || !e.changedTouches?.[0]) return
-                                    const t = e.changedTouches[0]
-                                    const dx = t.clientX - start.x
-                                    const dy = t.clientY - start.y
-                                    if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
-                                      handleArticleTap(article.id)
-                                    }
-                                  }}
-                                  onClick={() => handleArticleTap(article.id)}
-                                  className="tray-list-button cursor-pointer space-y-1 w-full text-left touch-manipulation border-0 bg-transparent p-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-                                  style={{ WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
-                                  whileHover={{ x: 4, opacity: 1 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  transition={{ duration: 0.2, ease: EASING.smooth }}
-                                >
-                                  <p className="text-xs transition-colors duration-200" style={{ color: i < 2 ? trayColors.fg : trayColors.fgMuted }}>{article.title}</p>
-                                  <p className="text-[10px] font-light transition-colors duration-200" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{article.date}</p>
-                                </motion.button>
-                              ))}
-                            </div>
-                            <div className="mt-8">
-                              <motion.button
-                                initial={{ opacity: 0, filter: 'blur(4px)' }}
-                                animate={{ opacity: 0.5, filter: 'blur(0px)' }}
-                                transition={{ duration: 0.4, delay: 0.2 }}
-                                onPointerDown={(e) => e.stopPropagation()}
-                                onClick={() => setPersonalNotesExpanded(!personalNotesExpanded)}
-                                className="type-caption opacity-50 dark:opacity-70 hover:opacity-80 dark:hover:opacity-90 transition-opacity duration-300 ease-out cursor-pointer flex items-center gap-1.5 w-full mb-2 text-left group/notes touch-manipulation focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-                                style={{ background: 'transparent', border: 'none', padding: 0, outline: 'none', WebkitTapHighlightColor: 'transparent', color: trayColors.fgMuted }}
-                              >
-                                <span>Personal Notes</span>
-                                <svg width="6" height="6" viewBox="0 0 8 8" fill="none" stroke="currentColor" className={isMobile ? "opacity-50 cursor-pointer" : "opacity-0 group-hover/notes:opacity-50 transition-opacity duration-200 cursor-pointer"} style={{ transform: personalNotesExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease-out, opacity 0.2s ease-out' }}>
-                                  <path d="M2 1L5 4L2 7" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </motion.button>
-                              <AnimatePresence>
-                                {personalNotesExpanded && (
-                                  <motion.div initial={{ opacity: 0, filter: 'blur(4px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, filter: 'blur(4px)' }} transition={{ duration: 0.4, ease: EASING.smooth }} className="space-y-4">
-                                    {personalNotes.map((article, i) => (
-                                      <motion.button
-                                        key={article.id}
-                                        type="button"
-                                        custom={i + writings.length}
-                                        variants={activeListItemVariants}
-                                        initial="hidden"
-                                        animate="visible"
-                                        onPointerDown={(e) => e.stopPropagation()}
-                                        onTouchStart={(e) => {
-                                          e.stopPropagation()
-                                          if (e.touches?.[0]) {
-                                            touchStartPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-                                          }
-                                        }}
-                                        onTouchEnd={(e) => {
-                                          const start = touchStartPosRef.current
-                                          touchStartPosRef.current = null
-                                          if (!start || !onArticleSelect || !e.changedTouches?.[0]) return
-                                          const t = e.changedTouches[0]
-                                          const dx = t.clientX - start.x
-                                          const dy = t.clientY - start.y
-                                          if (dx * dx + dy * dy < TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) {
-                                            handleArticleTap(article.id)
-                                          }
-                                        }}
-                                        onClick={() => handleArticleTap(article.id)}
-                                        className="tray-list-button cursor-pointer space-y-1 w-full text-left touch-manipulation border-0 bg-transparent p-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-                                        style={{ WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
-                                        whileHover={{ x: 4, opacity: 1 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        transition={{ duration: 0.2, ease: EASING.smooth }}
-                                      >
-                                        <p className={`text-xs transition-colors duration-200 ${article.strikethrough ? "line-through opacity-70" : ""}`} style={{ color: i < 1 ? trayColors.fg : trayColors.fgMuted }}>{article.title}</p>
-                                        <p className="text-[10px] font-light transition-colors duration-200" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{article.date}</p>
-                                      </motion.button>
-                                    ))}
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          </motion.div>
+                          <WritingListView
+                            isMobile={isMobile}
+                            trayColors={trayColors}
+                            transitionVariants={activeViewTransitionVariants}
+                            activeListItemVariants={activeListItemVariants}
+                            personalNotesExpanded={personalNotesExpanded}
+                            onTogglePersonalNotes={() => setPersonalNotesExpanded((expanded) => !expanded)}
+                            onArticleTap={handleArticleTap}
+                            onPointerDown={handleInteractivePointerDown}
+                            onPointerCancel={clearInteractivePointer}
+                            onArticlePointerUp={handleInteractiveArticlePointerUp}
+                          />
                         ) : error ? (
-                          <motion.div key="error" initial={{ opacity: 0, filter: 'blur(4px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.4, ease: EASING.smooth }} className="text-center py-8">
-                            <p className="text-xs mb-2" style={{ color: trayColors.fgMuted }}>Unable to load this article</p>
-                            <p className="text-[10px] font-light" style={{ color: trayColors.fgMuted, opacity: 0.7 }}>{error}</p>
-                            <motion.button onClick={() => articleId && loadArticle(articleId)} className="mt-4 text-xs type-caption cursor-pointer focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0" style={{ color: trayColors.fgMuted, background: 'transparent', border: 'none', padding: 0, outline: 'none', textDecoration: 'underline' }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>Try again</motion.button>
-                          </motion.div>
+                          <ArticleErrorView
+                            error={error}
+                            onRetry={() => {
+                              if (articleId) {
+                                void loadArticle(articleId)
+                              }
+                            }}
+                            trayColors={trayColors}
+                          />
                         ) : content ? (
-                          <motion.div key="article" variants={activeViewTransitionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
-                            <article aria-label={content.title || "Article"}>
-                              <div className="prose-article-narrow tray-about-text-fade">
-                                {apiBasePath === "/api/story" && content.frontmatter && <StoryHeader frontmatter={content.frontmatter} isMobile={isMobile} />}
-                                <ReactMarkdown components={apiBasePath === "/api/story" ? storyMarkdownComponents : apiBasePath === "/api/article" ? trayMarkdownComponents : markdownComponents}>{content.content}</ReactMarkdown>
-                              </div>
-                            </article>
-                          </motion.div>
+                          <ArticleView
+                            content={content}
+                            apiBasePath={apiBasePath}
+                            isMobile={isMobile}
+                            transitionVariants={activeViewTransitionVariants}
+                          />
                         ) : null}
                       </motion.div>
                     </div>

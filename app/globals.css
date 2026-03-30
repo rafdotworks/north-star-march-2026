@@ -10,30 +10,30 @@
   /* Caption: quiet text - principles, timestamps, meta (12px) */
   .type-caption {
     font-size: 12px;
-    line-height: 1.4;
-    letter-spacing: 0.02em;
+    line-height: 1.45;
+    letter-spacing: 0.01em;
     color: var(--fg-muted);
-    @apply font-light;
+    @apply font-normal;
   }
 
   /* Body: default text - descriptions, secondary content (14px) */
   .type-body {
     font-size: 14px;
-    line-height: 1.65;
+    line-height: 1.6;
     color: var(--fg-muted);
   }
 
   /* Body Primary: emphasized text - hero intro (14px) */
   .type-body-primary {
     font-size: 14px;
-    line-height: 1.65;
+    line-height: 1.6;
     color: var(--fg);
   }
 
   /* Title: work card titles (22px) */
   .type-title {
     font-size: 22px;
-    line-height: 1.3;
+    line-height: 1.18;
     color: var(--fg);
     @apply font-normal font-edu-marist;
   }
@@ -98,7 +98,7 @@
     mask-repeat: no-repeat;
     -webkit-mask-repeat: no-repeat;
   }
-  
+
   /* Heading rhythm: Progressive spacing based on heading level */
   .rhythm-heading h1 {
     @apply mb-6 mt-12;  /* Below: 24px, Above: 48px - major section */
@@ -139,6 +139,173 @@
   .prose-article-wide {
     max-width: 80ch;
     @apply space-y-6;
+  }
+
+  .mobile-home-shell {
+    --mobile-home-scene-1-bg-start: #2c4a6e;
+    --mobile-home-scene-1-bg-end: #264060;
+    --mobile-home-scene-1-title: #faf6f0;
+    --mobile-home-scene-1-primary: #faf6f0;
+    --mobile-home-scene-1-meta: #d6cfc4;
+    --mobile-home-scene-1-link: #e8d5b8;
+    --mobile-home-scene-2-bg-start: #264060;
+    --mobile-home-scene-2-bg-end: #335680;
+    --mobile-home-scene-2-title: #e8d5b8;
+    --mobile-home-scene-2-primary: #faf6f0;
+    --mobile-home-scene-2-meta: #d6cfc4;
+    --mobile-home-scene-2-link: #e8d5b8;
+    --mobile-home-scene-3-bg-start: #335680;
+    --mobile-home-scene-3-bg-end: #2c4a6e;
+    --mobile-home-scene-3-title: #faf6f0;
+    --mobile-home-scene-3-primary: #faf6f0;
+    --mobile-home-scene-3-meta: #d6cfc4;
+    --mobile-home-scene-3-link: #e8d5b8;
+    --mobile-home-scene-4-bg-start: #141e2e;
+    --mobile-home-scene-4-bg-end: #1a2738;
+    --mobile-home-scene-4-title: #d6cfc4;
+    --mobile-home-scene-4-primary: #faf6f0;
+    --mobile-home-scene-4-meta: #d6cfc4;
+    --mobile-home-scene-4-link: #d6cfc4;
+    --mobile-home-bg-start: var(--mobile-home-scene-1-bg-start);
+    --mobile-home-bg-end: var(--mobile-home-scene-1-bg-end);
+    --mobile-home-title: var(--mobile-home-scene-1-title);
+    --mobile-home-primary: var(--mobile-home-scene-1-primary);
+    --mobile-home-meta: var(--mobile-home-scene-1-meta);
+    --mobile-home-link: var(--mobile-home-scene-1-link);
+    position: relative;
+    min-height: max(100vh, 100dvh);
+    width: 100%;
+    overflow-x: clip;
+    overflow-y: visible;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--mobile-home-title) 14%, transparent) 0%, transparent 34%),
+      linear-gradient(160deg, var(--mobile-home-bg-start) 0%, var(--mobile-home-bg-end) 100%);
+    transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
+                color var(--theme-transition-duration) var(--theme-transition-easing);
+  }
+
+  .mobile-home-stage {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    min-height: max(100vh, 100dvh);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-left: max(1.25rem, calc(env(safe-area-inset-left, 0px) + 1rem));
+    padding-right: max(1.25rem, calc(env(safe-area-inset-right, 0px) + 1rem));
+    padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.9rem));
+    padding-bottom: max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem));
+  }
+
+  .mobile-home-stage-content {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .mobile-home-scrub-rail {
+    height: 320dvh;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .mobile-home-hero {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.1rem, 2.8vh, 1.75rem);
+    width: min(100%, 25rem);
+    padding-top: 0.1rem;
+  }
+
+  .mobile-home-hero-header {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.5rem, 4vh, 2.75rem);
+  }
+
+  .mobile-home-hero-title {
+    max-width: 22rem;
+  }
+
+  .mobile-home-title {
+    color: var(--mobile-home-title);
+  }
+
+  .mobile-home-section-label {
+    color: var(--mobile-home-meta);
+    opacity: 0.56;
+  }
+
+  .mobile-home-work-list {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .mobile-home-identity-link {
+    color: var(--mobile-home-primary);
+    text-decoration-color: color-mix(in srgb, var(--mobile-home-link) 70%, transparent);
+  }
+
+  .mobile-home-identity-link:hover,
+  .mobile-home-identity-link:focus,
+  .mobile-home-identity-link:focus-visible {
+    text-decoration-color: color-mix(in srgb, var(--mobile-home-link) 88%, transparent);
+  }
+
+  .mobile-home-contact-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    color: var(--mobile-home-link);
+  }
+
+  .mobile-home-contact-link {
+    min-height: 2.25rem;
+    padding: 0.2rem 0.08rem;
+    margin: -0.2rem -0.08rem;
+    border-radius: 999px;
+    opacity: 0.96;
+    text-decoration-line: underline !important;
+    text-decoration-color: color-mix(in srgb, var(--mobile-home-link) 72%, transparent);
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.22em;
+    transition:
+      opacity var(--theme-transition-duration) var(--theme-transition-easing),
+      text-decoration-color var(--theme-transition-duration) var(--theme-transition-easing),
+      box-shadow var(--theme-transition-duration) var(--theme-transition-easing);
+  }
+
+  .mobile-home-contact-link:hover,
+  .mobile-home-contact-link:focus,
+  .mobile-home-contact-link:focus-visible {
+    opacity: 1;
+    text-decoration-color: color-mix(in srgb, var(--mobile-home-link) 100%, transparent);
+  }
+
+  .mobile-home-contact-link:focus-visible {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--mobile-home-link) 64%, transparent),
+      0 0 0 6px color-mix(in srgb, var(--mobile-home-link) 16%, transparent);
+  }
+
+  /*
+   * The global mobile gutter is useful for most pages, but the homepage mobile
+   * shell is designed as a full-bleed scene. Cancel the wrapper padding so the
+   * background and scroll container actually span the viewport edge-to-edge.
+   */
+  .mobile-full-bleed {
+    width: calc(100% + (var(--mobile-gutter-x, 0px) * 2));
+    max-width: none;
+    margin-left: calc(var(--mobile-gutter-x, 0px) * -1);
+    margin-right: calc(var(--mobile-gutter-x, 0px) * -1);
   }
 }
 
@@ -367,6 +534,36 @@
       /* Grain blend mode can't be interpolated - keep as dark override */
       --grain-blend: overlay;
     }
+
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .mobile-home-shell {
+    --mobile-home-scene-1-bg-start: #141e2e;
+    --mobile-home-scene-1-bg-end: #1a2738;
+    --mobile-home-scene-1-title: #faf6f0;
+    --mobile-home-scene-1-primary: #faf6f0;
+    --mobile-home-scene-1-meta: #a89e90;
+    --mobile-home-scene-1-link: #d6cfc4;
+    --mobile-home-scene-2-bg-start: #1a2738;
+    --mobile-home-scene-2-bg-end: #1f2f44;
+    --mobile-home-scene-2-title: #d6cfc4;
+    --mobile-home-scene-2-primary: #faf6f0;
+    --mobile-home-scene-2-meta: #a89e90;
+    --mobile-home-scene-2-link: #d6cfc4;
+    --mobile-home-scene-3-bg-start: #1f2f44;
+    --mobile-home-scene-3-bg-end: #141e2e;
+    --mobile-home-scene-3-title: #faf6f0;
+    --mobile-home-scene-3-primary: #faf6f0;
+    --mobile-home-scene-3-meta: #a89e90;
+    --mobile-home-scene-3-link: #d6cfc4;
+    --mobile-home-scene-4-bg-start: #0f1a28;
+    --mobile-home-scene-4-bg-end: #141e2e;
+    --mobile-home-scene-4-title: #d6cfc4;
+    --mobile-home-scene-4-primary: #faf6f0;
+    --mobile-home-scene-4-meta: #a89e90;
+    --mobile-home-scene-4-link: #d6cfc4;
   }
 }
 
@@ -516,6 +713,60 @@
   --grain-blend: multiply;
 }
 
+[data-theme="dark"] .mobile-home-shell {
+  --mobile-home-scene-1-bg-start: #141e2e;
+  --mobile-home-scene-1-bg-end: #1a2738;
+  --mobile-home-scene-1-title: #faf6f0;
+  --mobile-home-scene-1-primary: #faf6f0;
+  --mobile-home-scene-1-meta: #a89e90;
+  --mobile-home-scene-1-link: #d6cfc4;
+  --mobile-home-scene-2-bg-start: #1a2738;
+  --mobile-home-scene-2-bg-end: #1f2f44;
+  --mobile-home-scene-2-title: #d6cfc4;
+  --mobile-home-scene-2-primary: #faf6f0;
+  --mobile-home-scene-2-meta: #a89e90;
+  --mobile-home-scene-2-link: #d6cfc4;
+  --mobile-home-scene-3-bg-start: #1f2f44;
+  --mobile-home-scene-3-bg-end: #141e2e;
+  --mobile-home-scene-3-title: #faf6f0;
+  --mobile-home-scene-3-primary: #faf6f0;
+  --mobile-home-scene-3-meta: #a89e90;
+  --mobile-home-scene-3-link: #d6cfc4;
+  --mobile-home-scene-4-bg-start: #0f1a28;
+  --mobile-home-scene-4-bg-end: #141e2e;
+  --mobile-home-scene-4-title: #d6cfc4;
+  --mobile-home-scene-4-primary: #faf6f0;
+  --mobile-home-scene-4-meta: #a89e90;
+  --mobile-home-scene-4-link: #d6cfc4;
+}
+
+[data-theme="light"] .mobile-home-shell {
+  --mobile-home-scene-1-bg-start: #2c4a6e;
+  --mobile-home-scene-1-bg-end: #264060;
+  --mobile-home-scene-1-title: #faf6f0;
+  --mobile-home-scene-1-primary: #faf6f0;
+  --mobile-home-scene-1-meta: #d6cfc4;
+  --mobile-home-scene-1-link: #e8d5b8;
+  --mobile-home-scene-2-bg-start: #264060;
+  --mobile-home-scene-2-bg-end: #335680;
+  --mobile-home-scene-2-title: #e8d5b8;
+  --mobile-home-scene-2-primary: #faf6f0;
+  --mobile-home-scene-2-meta: #d6cfc4;
+  --mobile-home-scene-2-link: #e8d5b8;
+  --mobile-home-scene-3-bg-start: #335680;
+  --mobile-home-scene-3-bg-end: #2c4a6e;
+  --mobile-home-scene-3-title: #faf6f0;
+  --mobile-home-scene-3-primary: #faf6f0;
+  --mobile-home-scene-3-meta: #d6cfc4;
+  --mobile-home-scene-3-link: #e8d5b8;
+  --mobile-home-scene-4-bg-start: #141e2e;
+  --mobile-home-scene-4-bg-end: #1a2738;
+  --mobile-home-scene-4-title: #d6cfc4;
+  --mobile-home-scene-4-primary: #faf6f0;
+  --mobile-home-scene-4-meta: #d6cfc4;
+  --mobile-home-scene-4-link: #d6cfc4;
+}
+
 /* Add system preference support */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
@@ -649,11 +900,13 @@ pre {
 
   /* Site-wide mobile gutter matching modal spacing (16px + safe-area) */
   .mobile-gutter {
-    padding-left: max(16px, calc(env(safe-area-inset-left, 0px) + 16px));
-    padding-right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
+    --mobile-gutter-x: max(16px, calc(env(safe-area-inset-left, 0px) + 16px));
+    padding-left: var(--mobile-gutter-x);
+    padding-right: var(--mobile-gutter-x);
   }
   @media (min-width: 640px) {
     .mobile-gutter {
+      --mobile-gutter-x: 0px;
       padding-left: 0;
       padding-right: 0;
     }
@@ -845,13 +1098,6 @@ a:focus-visible {
   border-right: 1px solid var(--border);
 }
 
-/* Link hover and active states */
-a:hover,
-a:active,
-a:focus {
-  color: var(--accent-hover);
-}
-
 /* Buttons with bg need special handling */
 button.bg-primary:hover,
 button.bg-secondary:hover,
@@ -892,25 +1138,6 @@ html {
   /* Gradual and beautiful theme transitions for html element */
   transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
               color var(--theme-transition-duration) var(--theme-transition-easing);
-}
-
-/* Prevent scrolling on mobile for fixed viewport pages */
-/* Only applies when html element has .no-mobile-scroll class */
-@media (max-width: 767px) {
-  html.no-mobile-scroll,
-  html.no-mobile-scroll body {
-    overflow: hidden;
-    height: 100dvh;
-    max-height: 100dvh;
-    width: 100%;
-  }
-  
-  /* Ensure mobile-gutter doesn't cause overflow when no-scroll is active */
-  html.no-mobile-scroll .mobile-gutter {
-    height: 100%;
-    max-height: 100dvh;
-    overflow: hidden;
-  }
 }
 
 /* Snap scroll container */

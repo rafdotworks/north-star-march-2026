@@ -6,7 +6,7 @@
  * Centralized list of photographs displayed in the Photos side tray.
  * Paths are relative to public (e.g. "/photos/filename.webp").
  *
- * Used by: app/components/page-specific/SideTray.tsx (photos mode)
+ * Used by: app/components/page-specific/SideTray.tsx (photos mode + optional About tray image)
  *
  * TO ADD PHOTOS: Add files to public/photos/ and add an entry here.
  */
@@ -15,6 +15,15 @@ export interface PhotoEntry {
   src: string
   alt?: string
   caption?: string
+}
+
+/**
+ * Optional personal image for the About tray.
+ * Set to `null` to keep the slot collapsed.
+ */
+export const ABOUT_TRAY_IMAGE: PhotoEntry | null = {
+  src: "/image-canvas.JPG",
+  alt: "Portrait of Raf",
 }
 
 export const PHOTOS: PhotoEntry[] = [
