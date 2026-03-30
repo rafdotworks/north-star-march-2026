@@ -81,7 +81,7 @@ Captured **2026-03-30** from `npm run build` (Next 15.5.14). Re-run the build an
 
 ## CI and agent tooling
 
-- **GitHub Actions**: [.github/workflows/ci.yml](../.github/workflows/ci.yml) runs `lint` → `typecheck` → `test` → `build` on every push and PR to `main` (Node 22, `npm ci`).
+- **GitHub Actions**: [.github/workflows/ci.yml](../.github/workflows/ci.yml) runs `lint` → `typecheck` → `test` → `build` on every push and PR to `main` (Node 22, `npm ci`). If a push is rejected with *refusing to allow an OAuth App to create or update workflow … without `workflow` scope*, commit this file from a normal terminal using **SSH** or a **personal access token** that includes the **workflow** scope (some IDE/Git integrations omit it).
 - **`skills-lock.json`** (repo root): optional hash lock for externally sourced agent skills; safe to commit so collaborators get the same skill revisions.
 
 ## Ship checklist
